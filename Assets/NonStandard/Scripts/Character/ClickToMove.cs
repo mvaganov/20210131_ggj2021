@@ -2,7 +2,7 @@
 
 namespace NonStandard.Character {
 	public class ClickToMove : MonoBehaviour {
-	public CharacterMove characterToMove;
+	public CharacterMoveProxy characterToMove;
 	public KeyCode key = KeyCode.Mouse0;
 	public Camera _camera;
 	public LayerMask validToMove = -1;
@@ -10,8 +10,8 @@ namespace NonStandard.Character {
 #if UNITY_EDITOR
 	/// called when created by Unity Editor
 	void Reset() {
-		if (characterToMove == null) { characterToMove = transform.GetComponentInParent<CharacterMove>(); }
-		if (characterToMove == null) { characterToMove = FindObjectOfType<CharacterMove>(); }
+		if (characterToMove == null) { characterToMove = transform.GetComponentInParent<CharacterMoveProxy>(); }
+		if (characterToMove == null) { characterToMove = FindObjectOfType<CharacterMoveProxy>(); }
 		if (_camera == null) { _camera = GetComponent<Camera>(); }
 		if (_camera == null) { _camera = Camera.main; }
 		if (_camera == null) { _camera = FindObjectOfType<Camera>(); ; }

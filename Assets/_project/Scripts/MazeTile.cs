@@ -8,6 +8,7 @@ public class MazeTile : MonoBehaviour
 	public Kind kind = Kind.None;
 	public Coord coord;
 	public bool _discovered = false;
+	public float goalScore;
 	public bool discovered => _discovered;
 	Transform t;
 	public Vector3 CalcLocalPosition(Discovery d) {
@@ -57,7 +58,7 @@ public class MazeTile : MonoBehaviour
 	Color endColor;
 	long duration;
 	void Animate() {
-		float p = (float)(Clock.Now - started) / duration;
+		float p = duration > 0 ? (float)(Clock.Now - started) / duration : 1;
 		if (p >= 1) {
 			t.localPosition = endPos;
 			r.material.color = endColor;
