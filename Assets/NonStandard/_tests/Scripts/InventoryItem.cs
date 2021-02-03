@@ -1,10 +1,12 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.Events;
 
 public class InventoryItem : MonoBehaviour {
 	public string itemName;
 	public Collider _pickupCollider;
-
+	public Action<Inventory> onAddToInventory;
+	public Action<Inventory> onRemoveFromInventory;
 	public void Start() {
 		if(_pickupCollider == null) { _pickupCollider = GetComponent<Collider>(); }
 		CollisionTrigger trigger = _pickupCollider.gameObject.AddComponent<CollisionTrigger>();

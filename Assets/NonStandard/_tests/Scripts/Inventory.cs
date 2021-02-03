@@ -1,6 +1,7 @@
 ﻿using NonStandard;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEngine.ParticleSystem;
 
 public class Inventory : MonoBehaviour {
 
@@ -13,7 +14,8 @@ public class Inventory : MonoBehaviour {
 		if (pickupParticle != null) {
 			pickupParticle.transform.position = itemObject.transform.position;
 			pickupParticle.transform.LookAt(transform);
-			pickupParticle.Emit(10);
+			EmitParams ep = new EmitParams() { startColor = itemObject.GetComponent<Renderer>().material.color };
+			pickupParticle.Emit(ep, 10);
 		}
 		items.Add(itemObject);
 		itemObject.SetActive(false);
@@ -22,9 +24,11 @@ public class Inventory : MonoBehaviour {
 		InventoryItem item = itemObject.GetComponent<InventoryItem>();
 		string name = item != null ? item.itemName : null;
 		if(string.IsNullOrEmpty(name)) { name = itemObject.name; }
+		item.onAddToInventory?.Invoke(this);
 		return inventoryUi.AddItem(itemObject, name, () => {
 			RemoveItem(itemObject);
 			inventoryUi.RemoveItem(itemObject);
+			item.onRemoveFromInventory?.Invoke(this);
 		});
 	}
 

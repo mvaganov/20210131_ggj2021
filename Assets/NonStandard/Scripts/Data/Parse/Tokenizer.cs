@@ -87,6 +87,7 @@ namespace NonStandard.Data.Parse {
 			return sb.ToString();
 		}
 		protected void Tokenize(Context a_context = null, int index = 0) {
+			if (string.IsNullOrEmpty(str)) return;
 			List<Context.Entry> contextStack = new List<Context.Entry>();
 			if (a_context == null) a_context = CodeRules.Default;
 			else { contextStack.Add(a_context.GetEntry(tokens, -1, null)); }
