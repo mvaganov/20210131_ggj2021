@@ -1,0 +1,18 @@
+﻿{n¤ dialog+color o¤[
+	{=Co¤ c¤ "set color "+color}
+	{=Co¤ r¤ color+"Given"==0 c¤ "start dialog"+color+"A"}
+	//{=Co¤ r¤ color+"Given"==1 c¤ "start dialog"+color+"B"}
+	//{=Co¤ r¤ color+"Given"==2 c¤ "start dialog"+color+"C"}
+	//{=Co¤ r¤ color+"Given"==3 c¤ "start dialog"+color+"D"}
+	//{=Co¤ r¤ color+"Given"==4 c¤ "start dialog"+color+"E"}
+]}
+{n¤ "dialog"+color+"A" o¤[{=T¤ t¤ textA
+}{=Ch¤ r¤ color>=1 t¤ "try to help" c¤ "give {0};++ {0}Given;start dialog"%(color)}]}
+//{n¤ "dialog"+color+"B" o¤[{=T¤ t¤ textB
+//}{=Ch¤ r¤ color>=1 t¤ "observe the situation" c¤ "give {0};++ {0}Given;start dialog"%(color)}]}
+//{n¤ "dialog"+color+"C" o¤[{=T¤ t¤ textC
+//}{=Ch¤ r¤ color>=1 t¤ "witness their loss" c¤ "give {0};++ {0}Given;start dialog"%(color)}]}
+//{n¤ "dialog"+color+"D" o¤[{=T¤ t¤ textD
+//}{=Ch¤ r¤ color>=1 t¤ "show compassion" c¤ "give {0};++ {0}Given;start dialog"%(color)}]}
+//{n¤ "dialog"+color+"E" o¤[{=T¤ t¤ textE
+//}{=Ch¤ r¤ color>=1 t¤ "\"Join me.\"" c¤ "give {0};++ {0}Given;claimplayer"%(color)}]}

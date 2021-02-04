@@ -72,7 +72,7 @@ public class MazeLevel : MonoBehaviour
         });
         floorTiles.Sort((a, b) => a.goalScore.CompareTo(b.goalScore));
         //Debug.Log(below2 + " " + below3);
-        Debug.Log(floorTiles.Join(", ", mt => mt.goalScore.ToString()));
+        Debug.Log(floorTiles.JoinToString(", ", mt => mt.goalScore.ToString()));
         idols = CreateIdols(0, below2);
         for(int i = 0; i < below2; ++i) {
             PlaceObjectOverTile(idols[i].transform, floorTiles[i]);

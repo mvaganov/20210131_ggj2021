@@ -28,6 +28,7 @@ using NonStandard.Data.Parse;
 public class DialogViewer : MonoBehaviour {
 	public TextAsset dialogAsset;
 	public List<Dialog> dialogs;
+	public Text title;
 	public ScrollRect scrollRect;
 	public DictionaryKeeper scriptedVariableScope;
 	Dictionary<string, Action<Tokenizer>> commandListing = new Dictionary<string, Action<Tokenizer>>();
@@ -99,7 +100,7 @@ public class DialogViewer : MonoBehaviour {
 		tokenizer = new Tokenizer();
 		CodeConvert.TryParse(dialogAsset.text, out dialogs, GetScriptScope(), tokenizer);
 		if (tokenizer.errors.Count > 0) {
-			Debug.LogError(tokenizer.errors.Join("\n"));
+			Debug.LogError(tokenizer.errors.JoinToString("\n"));
 		}
 		//Debug.Log(tokenizer.DebugPrint());
 		//Debug.Log(NonStandard.Show.Stringify(dialogs, true));

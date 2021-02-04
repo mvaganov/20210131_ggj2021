@@ -58,7 +58,7 @@ namespace NonStandard {
 		/// <param name="rStack">used to prevent recursion stack overflows</param>
 		/// <param name="filter">object0 is the object, object1 is the member, object2 is the value. if it returns null, print as usual. if returns "", skip print.</param>
 		/// <returns></returns>
-		public static string Stringify(object obj, bool pretty = false, bool showType = true, int depth = 0, 
+		public static string Stringify(object obj, bool pretty = true, bool showType = true, int depth = 0, 
 			List<object> rStack = null, Func<object,object,object,string> filter = null) {
 			if (obj == null) return "null";
 			if(filter != null) { string res = filter.Invoke(obj, null, null); if(res != null) { return res; } }

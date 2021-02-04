@@ -734,6 +734,20 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 758763485, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
   m_PrefabInstance: {fileID: 516913402}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &516913406
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 516913403}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d2658aad290d684aa5d7b678ea4e3ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dialogTemplate: {fileID: 4900000, guid: be6e0ac068aaed045a3939f6024a7daf, type: 3}
+  dialogData: {fileID: 4900000, guid: 93fd4e5650eb6944fb9ec01407e9ce79, type: 3}
 --- !u!114 &516913410
 MonoBehaviour:
   m_ObjectHideFlags: 0

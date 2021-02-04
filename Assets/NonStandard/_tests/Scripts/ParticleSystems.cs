@@ -20,7 +20,7 @@ public class ParticleSystems : MonoBehaviour {
 		ParticleSystem pSys = ps.Find(p => p.name == particleSystemName);
 		if(pSys == null) {
 			Show.Warning(transform.HierarchyPath()+" could not find particle \"" + particleSystemName + "\", try: " +
-				ps.Join(", ", p => p.name)+" ("+ps.Count+")");
+				ps.JoinToString(", ", p => p.name)+" ("+ps.Count+")");
 		}
 		return pSys;
 	}

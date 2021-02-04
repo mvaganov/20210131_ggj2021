@@ -51,7 +51,7 @@ namespace NonStandard.Data.Parse {
 		}
 		public ParseError AddError(Token token, string message) { return AddError(token.index, message); }
 		public void AddError(ParseError error) { errors.Add(error); }
-		public override string ToString() { return errors.Join(", "); }
+		public override string ToString() { return errors.JoinToString(", "); }
 		public void Tokenize(string str, Context context = null) {
 			this.str = str;
 			errors.Clear();
@@ -181,36 +181,52 @@ namespace NonStandard.Data.Parse {
 		}
 
 		protected void ApplyOperators() {
-			List<int[]> paths = FindTokenPaths(t => t.meta is DelimOp);
-			paths.Sort((a, b) => {
+			int SortByOrderOfOperations(TokenPath a, TokenPath b) {
 				int comp;
-				comp = b.Length.CompareTo(a.Length);
-				if(comp != 0) { return comp; }
+				comp = b.path.Length.CompareTo(a.path.Length);
+				if (comp != 0) { return comp; }
 				Context.Entry e = null;
-				Token ta = GetTokenAt(tokens, a, ref e);
-				Token tb = GetTokenAt(tokens, b, ref e);
+				Token ta = a.token;//GetTokenAt(tokens, a, ref e);
+				Token tb = b.token;//GetTokenAt(tokens, b, ref e);
 				DelimOp da = ta.meta as DelimOp;
 				DelimOp db = tb.meta as DelimOp;
 				comp = da.order.CompareTo(db.order);
+				// do the last one in the line first, so future indexes don't get offset as the tokens are combined
 				if (comp == 0) { comp = ta.index.CompareTo(tb.index); }
 				return comp;
-			});
-			for(int i = 0; i < paths.Count; ++i) {
-				Context.Entry pathNode = null;
-				Token t = GetTokenAt(tokens, paths[i], ref pathNode);
-				DelimOp op = t.meta as DelimOp;
-				//Context.Entry opEntry = 
-					op.isSyntaxValid.Invoke(this, pathNode.tokens, paths[i][paths[i].Length - 1]);
-				if(pathNode.tokenCount != pathNode.tokens.Count) {
-					pathNode.tokenCount = pathNode.tokens.Count;
-				}
 			}
+			List<TokenPath> paths = FindTokenPaths(t => t.meta is DelimOp);
+			paths.Sort(SortByOrderOfOperations);
+			List<int> finishedTokens = new List<int>();
+			bool operatorWasLostInTheShuffle;
+			do {
+				operatorWasLostInTheShuffle = false;
+				for (int i = 0; i < paths.Count; ++i) {
+					Context.Entry pathNode = null;
+					Token t = GetTokenAt(tokens, paths[i].path, ref pathNode);
+					if (paths[i].token.index != t.index) {
+						operatorWasLostInTheShuffle = true;
+						continue;
+					}
+					DelimOp op = t.meta as DelimOp;
+					//Context.Entry opEntry = 
+						op.isSyntaxValid.Invoke(this, pathNode.tokens, paths[i].path[paths[i].path.Length - 1]);
+					if (pathNode.tokenCount != pathNode.tokens.Count) {
+						pathNode.tokenCount = pathNode.tokens.Count;
+					}
+					finishedTokens.Add(t.index);
+				}
+				if (operatorWasLostInTheShuffle) {
+					paths = FindTokenPaths(t => t.meta is DelimOp && finishedTokens.IndexOf(t.index) < 0);
+					paths.Sort(SortByOrderOfOperations);
+				}
+			} while (operatorWasLostInTheShuffle);
 		}
 		protected string PrintTokenPaths(IList<int[]> paths) {
-			return paths.Join("\n", arr => {
+			return paths.JoinToString("\n", arr => {
 				Context.Entry e = null;
 				Token t = GetTokenAt(tokens, arr, ref e);
-				return arr.Join(", ") + ":" + t + " @" + ParseError.FilePositionOf(t, rows);
+				return arr.JoinToString(", ") + ":" + t + " @" + ParseError.FilePositionOf(t, rows);
 			});
 		}
 		Token GetTokenAt(List<Token> currentPath, IList<int> index, ref Context.Entry lastPathNode) {
@@ -220,19 +236,23 @@ namespace NonStandard.Data.Parse {
 			lastPathNode = t.GetAsContextEntry();
 			return GetTokenAt(lastPathNode.tokens, index, ref lastPathNode);
 		}
-		List<int[]> FindTokenPaths(Func<Token, bool> predicate, bool justOne = false) {
-			if (tokens.Count == 0) return new List<int[]>();
+		struct TokenPath {
+			public int[] path; public Token token; public Context.Entry pathNode;
+		}
+		List<TokenPath> FindTokenPaths(Func<Token, bool> predicate, bool justOne = false) {
+			if (tokens.Count == 0) return new List<TokenPath>();
 			List<List<Token>> path = new List<List<Token>>();
 			List<int> position = new List<int>();
-			List<int[]> paths = new List<int[]>();
+			List<TokenPath> paths = new List<TokenPath>();
 			path.Add(tokens);
 			position.Add(0);
-			while(position[position.Count-1] < path[path.Count - 1].Count) {
+			Context.Entry e = null;
+			while (position[position.Count-1] < path[path.Count - 1].Count) {
 				List<Token> currentTokens = path[path.Count - 1];
 				int currentIndex = position[position.Count - 1];
 				Token token = currentTokens[currentIndex];
-				if (predicate(token)) { paths.Add(position.ToArray()); }
-				Context.Entry e = token.GetAsContextEntry();
+				if (predicate(token)) { paths.Add(new TokenPath { path = position.ToArray(), token = token, pathNode = e }); }
+				e = token.GetAsContextEntry();
 				bool incremented = false;
 				if(e != null) {
 					if (currentTokens != e.tokens) {

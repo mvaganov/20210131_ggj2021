@@ -141,7 +141,7 @@ namespace NonStandard.Data.Parse {
 			if(e != null && e.tokens == Current.tokens) { Increment(); } // skip past the opening bracket
 			FindInternalType(); // first, check if this has a more correct internal type defined
 			if (result == null && listData == null) {
-				AddError("need specific " + resultType + ", eg: \"" +resultType.GetSubClasses().Join("\", \"")+"\"");
+				AddError("need specific " + resultType + ", eg: \"" +resultType.GetSubClasses().JoinToString("\", \"")+"\"");
 				return false;
 			}
 			if (!SkipComments()) { return true; }
@@ -294,8 +294,9 @@ namespace NonStandard.Data.Parse {
 			}
 			string s = meta as string;
 			if (s != null) {
-				memberValue = token.ToString(s);
-				if (!CodeConvert.TryConvert(ref memberValue, memberType)) {
+				//memberValue = token.ToString(s);
+				CodeRules.op_ResolveToken(tok, token, scope, out memberValue, out Type memType);
+				if (!memberType.IsAssignableFrom(memberValue.GetType()) && !CodeConvert.TryConvert(ref memberValue, memberType)) {
 					AddError("unable to convert (" + memberValue + ") to type '" + memberType + "'");
 					return false;
 				}
@@ -358,9 +359,9 @@ namespace NonStandard.Data.Parse {
 		}
 		public override string ToString() {
 			StringBuilder sb = new StringBuilder();
-			sb.Append(fieldNames.Join(", "));
+			sb.Append(fieldNames.JoinToString(", "));
 			if (fieldNames.Length > 0 && propNames.Length > 0) { sb.Append(", "); }
-			sb.Append(propNames.Join(", "));
+			sb.Append(propNames.JoinToString(", "));
 			return sb.ToString();
 		}
 		public FieldInfo GetField(string name) {

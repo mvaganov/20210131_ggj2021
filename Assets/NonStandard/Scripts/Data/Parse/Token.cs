@@ -27,7 +27,10 @@ namespace NonStandard.Data.Parse {
 		public object Resolve(Tokenizer tok, object scope) {
 			if (index == -1 && length == -1) return meta;
 			if (meta == null) throw new NullReferenceException();
-			if (meta is string) return ToString((string)meta);
+			if (meta is string) {
+				string str = ToString((string)meta);
+				return str;
+			}
 			TokenSubstitution ss = meta as TokenSubstitution; if (ss != null) return ss.value;
 			Delim d = meta as Delim; if (d != null) return d.text;
 			Context.Entry pce = meta as Context.Entry; if (pce != null) return pce.Resolve(tok, scope);

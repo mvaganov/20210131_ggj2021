@@ -72,7 +72,7 @@ namespace NonStandard.Data {
 			Tokenizer tok=new Tokenizer();
 			string resolvedText = CodeConvert.Format(text, dict, tok);
 			if (tok.errors.Count > 0) {
-				Show.Error(tok.errors.Join(", "));
+				Show.Error(tok.errors.JoinToString(", "));
 			}
 			return resolvedText;
 		}

@@ -37,7 +37,7 @@ public static class IListExtension {
 		}
 		return default(T);
 	}
-	public static string Join<T>(this IList<T> source, string separator, Func<T, string> toString = null) {
+	public static string JoinToString<T>(this IList<T> source, string separator, Func<T, string> toString = null) {
 		string[] strings = new string[source.Count];
 		if (toString == null) { toString = o => o.ToString(); }
 		for (int i = 0; i < strings.Length; ++i) {
