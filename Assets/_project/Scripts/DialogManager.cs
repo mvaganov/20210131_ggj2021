@@ -18,12 +18,13 @@ public class DialogManager : MonoBehaviour
         Dictionary<string, object> data;
         Tokenizer tok = new Tokenizer();
         CodeConvert.TryParse(dialogData.text, out data, null, tok);
+        if (tok.errors.Count > 0) { Debug.LogError(tok.errors.JoinToString("\n")); }
         Debug.Log(tok.DebugPrint());
         Debug.Log(Show.Stringify(data));
         Dialog[] dialogs;
         CodeConvert.TryParse(dialogTemplate.text, out dialogs, data, tok);
+        if (tok.errors.Count > 0) { Debug.LogError(tok.errors.JoinToString("\n")); }
         Debug.Log(tok.DebugPrint());
-		if (tok.errors.Count > 0) { Debug.LogError(tok.errors.JoinToString("\n")); }
         Debug.Log(Show.Stringify(dialogs));
         // TODO test me
     }

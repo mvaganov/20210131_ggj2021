@@ -59,13 +59,32 @@ namespace NonStandard.Data.Parse {
 			rows.Clear();
 			Tokenize(context, 0);
 		}
-		public string DebugPrint(int depth = 0, string indent = "  ") { return DebugPrint(tokens, depth, indent); }
+		public string DebugPrint(int depth = 0, string indent = "  ") {
+			return DebugPrint(tokens, depth, indent);
+		}
 		public static string DebugPrint(IList<Token> tokens, int depth = 0, string indent = "  ") {
 			StringBuilder sb = new StringBuilder();
+			DebugPrint(tokens, depth, indent, sb);
+			return sb.ToString();
+		}
+		public static void DebugPrint(IList<Token> tokens, int depth = 0, string indent = "  ", StringBuilder sb = null, List<Token> path = null) {
+			if(path == null) { path = new List<Token>(); }
 			for(int i = 0; i < tokens.Count; ++i) {
 				Token t = tokens[i];
+				//int r;
+				//if (t.IsValid && (r = path.FindIndex(to=>to.index==t.index)) >= 0) {
+				//	continue;
+				//	string message = "/* recurse " + (path.Count - r) + " " +t+" "+t.index+ " */";
+				//	throw new Exception(message);
+				//	return;
+				//}
+				//path.Add(t);
 				Context.Entry e = t.GetAsContextEntry();
 				if (e != null) {
+					//if ((r = path.IndexOf(e.tokens)) >= 0) {
+					//	string message = "/* recurse " + (path.Count - r) + " */";
+					//	sb.Append(message);
+					//} else
 					if (e.tokens != tokens) {
 						Context.Entry prevEntry = i > 0 ? tokens[i - 1].GetAsContextEntry() : null;
 						if (prevEntry != null && prevEntry.tokens != tokens) {
@@ -73,8 +92,8 @@ namespace NonStandard.Data.Parse {
 						} else {
 							sb.Append("\n").Append(Show.Indent(depth + 1, indent));
 						}
-						sb.Append(DebugPrint(e.tokens, depth + 1)).
-							Append("\n").Append(Show.Indent(depth, indent));
+						DebugPrint(e.tokens, depth + 1, indent, sb, path);
+						sb.Append("\n").Append(Show.Indent(depth, indent));
 					} else {
 						if (i == 0) { sb.Append(e.beginDelim); }
 						else if (i == tokens.Count-1) { sb.Append(e.endDelim); }
@@ -84,7 +103,6 @@ namespace NonStandard.Data.Parse {
 					sb.Append("'").Append(tokens[i].GetAsSmallText()).Append("'");
 				}
 			}
-			return sb.ToString();
 		}
 		protected void Tokenize(Context a_context = null, int index = 0) {
 			if (string.IsNullOrEmpty(str)) return;
@@ -109,7 +127,7 @@ namespace NonStandard.Data.Parse {
 			}
 			FinishToken(index, ref tokenBegin); // add the last token that was still being processed
 			FinalTokenCleanup();
-			DebugPrint(-1);
+			//DebugPrint(-1);
 			ApplyOperators();
 		}
 
@@ -176,7 +194,34 @@ namespace NonStandard.Data.Parse {
 					if (e.context != CodeRules.CommentLine) { // this is an error, unless it's a comment
 						errors.Add(new ParseError(tokens[i], rows, "missing closing token"));
 					}
+					// close any unfinished contexts inside of this context too!
+					tokens = e.tokens;
+					i = 0;
 				}
+			}
+			// remove this code eventually TODO
+			List<Token> allTokens = new List<Token>(tokens);
+			int travelIndex = 0;
+			BreadthFirstSearch(allTokens, ref travelIndex);
+		}
+
+		protected void BreadthFirstSearch(List<Token> travelLog, ref int index) {
+			while(index < travelLog.Count) {
+				Token iter = travelLog[index];
+				Context.Entry e = iter.GetAsContextEntry();
+				if (e != null) {
+					for (int i = 0; i < e.tokens.Count; ++i) {
+						Token token = e.tokens[i];
+						int inTheList = token.IsValid ? travelLog.FindIndex(t=>t==token) : -1;
+						if (inTheList >= 0 && inTheList < index && travelLog[inTheList].IsValid) {
+							throw new Exception("recursion! " + token.index + " " + token);
+						}
+						if (inTheList < 0 && token.GetAsContextEntry() != e) {
+							travelLog.Add(token);
+						}
+					}
+				}
+				index++;
 			}
 		}
 
@@ -185,7 +230,7 @@ namespace NonStandard.Data.Parse {
 				int comp;
 				comp = b.path.Length.CompareTo(a.path.Length);
 				if (comp != 0) { return comp; }
-				Context.Entry e = null;
+				//Context.Entry e = null;
 				Token ta = a.token;//GetTokenAt(tokens, a, ref e);
 				Token tb = b.token;//GetTokenAt(tokens, b, ref e);
 				DelimOp da = ta.meta as DelimOp;
@@ -291,8 +336,17 @@ namespace NonStandard.Data.Parse {
 			entryToken.Invalidate();
 			entry.tokens[indexWhereItHappens] = entryToken;
 			entry.tokens = subTokens;
+			int oldStart = entry.tokenStart;
 			entry.tokenStart = 0;
 			entry.tokenCount = subTokens.Count;
+			// adjust subtoken lists along with this new list
+			for(int i = 0; i < subTokens.Count; ++i) {
+				Context.Entry e = subTokens[i].GetAsContextEntry();
+				if(e != null && e.tokenStart != 0) {
+					e.tokens = subTokens;
+					e.tokenStart -= oldStart;
+				}
+			}
 		}
 	}
 }

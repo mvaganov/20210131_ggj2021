@@ -296,7 +296,7 @@ namespace NonStandard.Data.Parse {
 			if (s != null) {
 				//memberValue = token.ToString(s);
 				CodeRules.op_ResolveToken(tok, token, scope, out memberValue, out Type memType);
-				if (!memberType.IsAssignableFrom(memberValue.GetType()) && !CodeConvert.TryConvert(ref memberValue, memberType)) {
+				if (memberType == null || memberValue == null || (!memberType.IsAssignableFrom(memberValue.GetType()) && !CodeConvert.TryConvert(ref memberValue, memberType))) {
 					AddError("unable to convert (" + memberValue + ") to type '" + memberType + "'");
 					return false;
 				}

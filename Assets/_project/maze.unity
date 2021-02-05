@@ -726,9 +726,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7bd8ba2fb0435214b9a3fe20c49f2374, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  values: name"the player"i-2 f3testing12"3"2.99
+  values: name"the player"i-2 f3testing12"3"2.991
   parseResults: "{\n  name : \"the player\",\n  i : -2,\n  f : 3,\n  testing : 12,\n 
-    3 : 2.99\n}"
+    3 : 2.991\n}"
 --- !u!4 &516913405 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 758763485, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
