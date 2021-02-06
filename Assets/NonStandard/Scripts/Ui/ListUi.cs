@@ -41,6 +41,9 @@ public class ListUi : MonoBehaviour {
 		li.item = item;
 		if (li.button != null && onButton != null) {
 			li.button.onClick.AddListener(onButton.Invoke);
+			//li.button.enabled = true;
+			//Image img = li.GetComponentInChildren<Image>();
+			//if (img != null) { img.enabled = true; }
 		}
 		newItem.transform.SetParent(transform);
 		Refresh();

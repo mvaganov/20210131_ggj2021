@@ -7,7 +7,7 @@ using System.Text;
 namespace NonStandard.Data.Parse {
 	class CodeRules {
 
-		public static Context
+		public static ParseRuleSet
 			String, Char, Number, Hexadecimal, Expression, SquareBrace, GenericArgs, CodeBody,
 			CodeInString, Sum, Difference, Product, Quotient, Modulus, Power, LogicalAnd, LogicalOr,
 			Assignment, Equal, LessThan, GreaterThan, LessThanOrEqual, GreaterThanOrEqual,
@@ -104,34 +104,34 @@ namespace NonStandard.Data.Parse {
 		public static Delim[] CommentBlockDelimiters = CombineDelims(_block_comment_delimiter);
 
 		static CodeRules() {
-			Default = new Context("default");
-			String = new Context("string");
-			Char = new Context("char");
-			Number = new Context("number");
-			Hexadecimal = new Context("0x");
-			Expression = new Context("()");
-			SquareBrace = new Context("[]");
-			GenericArgs = new Context("<>");
-			CodeBody = new Context("{}");
-			CodeInString = new Context("codeInString");
-			Sum = new Context("sum", CodeRules.None);
-			Difference = new Context("difference", CodeRules.None);
-			Product = new Context("product", CodeRules.None);
-			Quotient = new Context("quotient", CodeRules.None);
-			Modulus = new Context("modulus", CodeRules.None);
-			Power = new Context("power", CodeRules.None);
-			LogicalAnd = new Context("logical and", CodeRules.None);
-			LogicalOr = new Context("logical or", CodeRules.None);
-			Assignment = new Context("assignment", CodeRules.None);
-			Equal = new Context("equal", CodeRules.None);
-			LessThan = new Context("less than", CodeRules.None);
-			GreaterThan = new Context("greater than", CodeRules.None);
-			LessThanOrEqual = new Context("less than or equal", CodeRules.None);
-			GreaterThanOrEqual = new Context("greater than or equal", CodeRules.None);
-			NotEqual = new Context("not equal", CodeRules.None);
-			XmlCommentLine = new Context("///");
-			CommentLine = new Context("//");
-			CommentBlock = new Context("/**/");
+			Default = new ParseRuleSet("default");
+			String = new ParseRuleSet("string");
+			Char = new ParseRuleSet("char");
+			Number = new ParseRuleSet("number");
+			Hexadecimal = new ParseRuleSet("0x");
+			Expression = new ParseRuleSet("()");
+			SquareBrace = new ParseRuleSet("[]");
+			GenericArgs = new ParseRuleSet("<>");
+			CodeBody = new ParseRuleSet("{}");
+			CodeInString = new ParseRuleSet("codeInString");
+			Sum = new ParseRuleSet("sum", CodeRules.None);
+			Difference = new ParseRuleSet("difference", CodeRules.None);
+			Product = new ParseRuleSet("product", CodeRules.None);
+			Quotient = new ParseRuleSet("quotient", CodeRules.None);
+			Modulus = new ParseRuleSet("modulus", CodeRules.None);
+			Power = new ParseRuleSet("power", CodeRules.None);
+			LogicalAnd = new ParseRuleSet("logical and", CodeRules.None);
+			LogicalOr = new ParseRuleSet("logical or", CodeRules.None);
+			Assignment = new ParseRuleSet("assignment", CodeRules.None);
+			Equal = new ParseRuleSet("equal", CodeRules.None);
+			LessThan = new ParseRuleSet("less than", CodeRules.None);
+			GreaterThan = new ParseRuleSet("greater than", CodeRules.None);
+			LessThanOrEqual = new ParseRuleSet("less than or equal", CodeRules.None);
+			GreaterThanOrEqual = new ParseRuleSet("greater than or equal", CodeRules.None);
+			NotEqual = new ParseRuleSet("not equal", CodeRules.None);
+			XmlCommentLine = new ParseRuleSet("///");
+			CommentLine = new ParseRuleSet("//");
+			CommentBlock = new ParseRuleSet("/**/");
 
 			CodeInString.delimiters = CombineDelims(_string_code_body_delimiter);
 			CodeInString.whitespace = CodeRules.WhitespaceNone;
@@ -309,9 +309,9 @@ namespace NonStandard.Data.Parse {
 			return delims.ToArray();
 		}
 
-		public static Context.Entry opinit_Binary(List<Token> tokens, Tokenizer tok, int index, string contextName) {
+		public static ParseRuleSet.Entry opinit_Binary(List<Token> tokens, Tokenizer tok, int index, string contextName) {
 			Token t = tokens[index];
-			Context.Entry e = tokens[index].GetAsContextEntry();
+			ParseRuleSet.Entry e = tokens[index].GetAsContextEntry();
 			if (e != null) {
 				if (e.context.name != contextName) { throw new Exception(tok.AddError(t,
 					"expected context: "+contextName+", found "+e.context.name).ToString()); }
@@ -319,9 +319,9 @@ namespace NonStandard.Data.Parse {
 			}
 			if (index - 1 < 0) { tok.AddError(t, "missing left operand"); return null; }
 			if (index + 1 >= tokens.Count) { tok.AddError(t, "missing right operand"); return null; }
-			Context foundContext; Context.allContexts.TryGetValue(contextName, out foundContext);
+			ParseRuleSet foundContext; ParseRuleSet.allContexts.TryGetValue(contextName, out foundContext);
 			if (foundContext == null) { throw new Exception(tok.AddError(t, "context '" + contextName + "' does not exist").ToString()); }
-			Context.Entry parent = null; int pIndex;
+			ParseRuleSet.Entry parent = null; int pIndex;
 			for (pIndex = 0; pIndex < tokens.Count; ++pIndex) {
 				e = tokens[pIndex].GetAsContextEntry();
 				if(e != null && e.tokens == tokens) { parent = e; break; }
@@ -334,21 +334,21 @@ namespace NonStandard.Data.Parse {
 			tok.ExtractContextAsSubTokenList(e);
 			return e;
 		}
-		public static Context.Entry opinit_add(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "sum"); }
-		public static Context.Entry opinit_dif(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "difference"); }
-		public static Context.Entry opinit_mul(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "product"); }
-		public static Context.Entry opinit_div(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "quotient"); }
-		public static Context.Entry opinit_mod(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "modulus"); }
-		public static Context.Entry opinit_pow(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "power"); }
-		public static Context.Entry opinit_and(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "logical and"); }
-		public static Context.Entry opinit_or_(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "logical or"); }
-		public static Context.Entry opinit_asn(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "assign"); }
-		public static Context.Entry opinit_equ(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "equal"); }
-		public static Context.Entry opinit_neq(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "not equal"); }
-		public static Context.Entry opinit_lt_(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "less than"); }
-		public static Context.Entry opinit_gt_(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "greater than"); }
-		public static Context.Entry opinit_lte(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "less than or equal"); }
-		public static Context.Entry opinit_gte(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "greater than or equal"); }
+		public static ParseRuleSet.Entry opinit_add(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "sum"); }
+		public static ParseRuleSet.Entry opinit_dif(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "difference"); }
+		public static ParseRuleSet.Entry opinit_mul(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "product"); }
+		public static ParseRuleSet.Entry opinit_div(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "quotient"); }
+		public static ParseRuleSet.Entry opinit_mod(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "modulus"); }
+		public static ParseRuleSet.Entry opinit_pow(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "power"); }
+		public static ParseRuleSet.Entry opinit_and(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "logical and"); }
+		public static ParseRuleSet.Entry opinit_or_(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "logical or"); }
+		public static ParseRuleSet.Entry opinit_asn(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "assign"); }
+		public static ParseRuleSet.Entry opinit_equ(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "equal"); }
+		public static ParseRuleSet.Entry opinit_neq(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "not equal"); }
+		public static ParseRuleSet.Entry opinit_lt_(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "less than"); }
+		public static ParseRuleSet.Entry opinit_gt_(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "greater than"); }
+		public static ParseRuleSet.Entry opinit_lte(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "less than or equal"); }
+		public static ParseRuleSet.Entry opinit_gte(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "greater than or equal"); }
 
 		public static void op_ResolveToken(Tokenizer tok, Token token, object scope, out object value, out Type type) {
 			value = token.Resolve(tok, scope);
@@ -369,7 +369,7 @@ namespace NonStandard.Data.Parse {
 				}
 				return; 
 			}
-			Context.Entry e = token.GetAsContextEntry();
+			ParseRuleSet.Entry e = token.GetAsContextEntry();
 			if (e != null && e.IsText()) { return; } // data is explicitly meant to be a string, done.
 			switch (name) {
 			case "null": value = null; type = null; return;
@@ -446,7 +446,7 @@ namespace NonStandard.Data.Parse {
 				}
 			}
 		}
-		public static void op_BinaryArgs(Tokenizer tok, Context.Entry e, object scope, out object left, out object right, out Type lType, out Type rType) {
+		public static void op_BinaryArgs(Tokenizer tok, ParseRuleSet.Entry e, object scope, out object left, out object right, out Type lType, out Type rType) {
 			op_ResolveToken(tok, e.tokens[0], scope, out left, out lType);
 			op_ResolveToken(tok, e.tokens[2], scope, out right, out rType);
 			// upcast to double. all the math operations expect doubles only, for algorithm simplicity
@@ -457,8 +457,8 @@ namespace NonStandard.Data.Parse {
 				CodeConvert.TryConvert(ref right, typeof(double)); rType = typeof(double);
 			}
 		}
-		public static object op_asn(Tokenizer tok, Context.Entry e, object scope) { return "="; }
-		public static object op_mul(Tokenizer tok, Context.Entry e, object scope) {
+		public static object op_asn(Tokenizer tok, ParseRuleSet.Entry e, object scope) { return "="; }
+		public static object op_mul(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			do {
@@ -499,7 +499,7 @@ namespace NonStandard.Data.Parse {
 			tok.AddError(e.tokens[1], "unable to multiply " + lType + " and " + rType);
 			return e;
 		}
-		public static object op_add(Tokenizer tok, Context.Entry e, object scope) {
+		public static object op_add(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			if (lType == typeof(string) || rType == typeof(string)) { return left.ToString() + right.ToString(); }
@@ -511,7 +511,7 @@ namespace NonStandard.Data.Parse {
 			tok.AddError(e.tokens[1], "unable to add " + lType + " and " + rType + " : " + left + " + " + right);
 			return e;
 		}
-		public static object op_dif(Tokenizer tok, Context.Entry e, object scope) {
+		public static object op_dif(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			do {
@@ -525,7 +525,7 @@ namespace NonStandard.Data.Parse {
 			tok.AddError(e.tokens[1], "unable to subtract " + lType + " and " + rType + " : " + left + " - " + right);
 			return e;
 		}
-		public static object op_div(Tokenizer tok, Context.Entry e, object scope) {
+		public static object op_div(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			do {
@@ -611,7 +611,7 @@ namespace NonStandard.Data.Parse {
 			} while (index < format.Length);
 			return sb.ToString();
 		}
-		public static object op_mod(Tokenizer tok, Context.Entry e, object scope) {
+		public static object op_mod(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			do {
@@ -636,7 +636,7 @@ namespace NonStandard.Data.Parse {
 			tok.AddError(e.tokens[1], "unable to modulo " + lType + " and " + rType + " : " + left + " % " + right);
 			return e;
 		}
-		public static object op_pow(Tokenizer tok, Context.Entry e, object scope) {
+		public static object op_pow(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			do {
@@ -657,18 +657,18 @@ namespace NonStandard.Data.Parse {
 			double d = (double)obj;
 			return d != 0;
 		}
-		public static object op_and(Tokenizer tok, Context.Entry e, object scope) {
+		public static object op_and(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			return op_reduceToBoolean(left, lType) && op_reduceToBoolean(right, rType);
 		}
-		public static object op_or_(Tokenizer tok, Context.Entry e, object scope) {
+		public static object op_or_(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			return op_reduceToBoolean(left, lType) || op_reduceToBoolean(right, rType);
 		}
 		// spaceship operator
-		public static bool op_Compare(Tokenizer tok, Context.Entry e, object scope, out int compareValue) {
+		public static bool op_Compare(Tokenizer tok, ParseRuleSet.Entry e, object scope, out int compareValue) {
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			if (lType == rType) { return lType.TryCompare(left, right, out compareValue); }
@@ -676,27 +676,27 @@ namespace NonStandard.Data.Parse {
 			tok.AddError(e.tokens[1].index, "can't operate ("+lType+")"+left+" "+e.tokens[1]+" ("+rType+")"+right);
 			return false;
 		}
-		public static object op_equ(Tokenizer tok, Context.Entry e, object scope) {
+		public static object op_equ(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
 			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp == 0; }
 			return e;
 		}
-		public static object op_neq(Tokenizer tok, Context.Entry e, object scope) {
+		public static object op_neq(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
 			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp != 0; }
 			return e;
 		}
-		public static object op_lt_(Tokenizer tok, Context.Entry e, object scope) {
+		public static object op_lt_(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
 			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp < 0; }
 			return e;
 		}
-		public static object op_gt_(Tokenizer tok, Context.Entry e, object scope) {
+		public static object op_gt_(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
 			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp > 0; }
 			return e;
 		}
-		public static object op_lte(Tokenizer tok, Context.Entry e, object scope) {
+		public static object op_lte(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
 			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp <= 0; }
 			return e;
 		}
-		public static object op_gte(Tokenizer tok, Context.Entry e, object scope) {
+		public static object op_gte(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
 			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp >= 0; }
 			return e;
 		}

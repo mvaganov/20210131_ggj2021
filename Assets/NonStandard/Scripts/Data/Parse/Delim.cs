@@ -4,13 +4,13 @@ using System.Reflection;
 
 namespace NonStandard.Data.Parse {
 	public class DelimCtx : Delim {
-		public Context Context {
+		public ParseRuleSet Context {
 			get {
 				return foundContext != null ? foundContext :
-					Context.allContexts.TryGetValue(contextName, out foundContext) ? foundContext : null;
+					ParseRuleSet.allContexts.TryGetValue(contextName, out foundContext) ? foundContext : null;
 			}
 		}
-		private Context foundContext = null;
+		private ParseRuleSet foundContext = null;
 		public string contextName;
 		public bool isStart, isEnd;
 		public DelimCtx(string delim, string name = null, string desc = null, Func<string, int, ParseResult> parseRule = null,
@@ -21,13 +21,13 @@ namespace NonStandard.Data.Parse {
 	}
 	public class DelimOp : Delim {
 		public int order;
-		public Func<Tokenizer, List<Token>, int, Context.Entry> isSyntaxValid = null;
-		public Func<Tokenizer, Context.Entry, object, object> resolve = null;
+		public Func<Tokenizer, List<Token>, int, ParseRuleSet.Entry> isSyntaxValid = null;
+		public Func<Tokenizer, ParseRuleSet.Entry, object, object> resolve = null;
 		public DelimOp(string delim, string name = null, string desc = null,
 			Func<string, int, ParseResult> parseRule = null,
 			Func<string, int, bool> addReq = null, int order = 100,
-			Func<Tokenizer, List<Token>, int, Context.Entry> syntax = null,
-			Func<Tokenizer, Context.Entry, object, object> resolve = null)
+			Func<Tokenizer, List<Token>, int, ParseRuleSet.Entry> syntax = null,
+			Func<Tokenizer, ParseRuleSet.Entry, object, object> resolve = null)
 			: base(delim, name, desc, parseRule, addReq) {
 			this.order = order; isSyntaxValid = syntax; this.resolve = resolve;
 		}

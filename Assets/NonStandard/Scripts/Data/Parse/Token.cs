@@ -11,7 +11,7 @@ namespace NonStandard.Data.Parse {
 		public int GetEndIndex() { return index + length; }
 		public string ToString(string s) { return s.Substring(index, length); }
 		public override string ToString() {
-			Context.Entry pce = meta as Context.Entry;
+			ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry;
 			if (pce != null) {
 				Delim d = pce.sourceMeta as Delim;
 				if(d != null) { return d.ToString(); }
@@ -33,11 +33,11 @@ namespace NonStandard.Data.Parse {
 			}
 			TokenSubstitution ss = meta as TokenSubstitution; if (ss != null) return ss.value;
 			Delim d = meta as Delim; if (d != null) return d.text;
-			Context.Entry pce = meta as Context.Entry; if (pce != null) return pce.Resolve(tok, scope);
+			ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry; if (pce != null) return pce.Resolve(tok, scope);
 			throw new DecoderFallbackException();
 		}
 		public string GetAsSmallText() {
-			Context.Entry e = GetAsContextEntry();
+			ParseRuleSet.Entry e = GetAsContextEntry();
 			if (e != null) {
 				if (IsContextBeginning()) { return e.beginDelim.ToString(); }
 				if (IsContextEnding()) { return e.endDelim.ToString(); }
@@ -46,17 +46,17 @@ namespace NonStandard.Data.Parse {
 		}
 		public string GetAsBasicToken() { if (meta is string) { return ((string)meta).Substring(index, length); } return null; }
 		public Delim GetAsDelimiter() { return meta as Delim; }
-		public Context.Entry GetAsContextEntry() { return meta as Context.Entry; }
+		public ParseRuleSet.Entry GetAsContextEntry() { return meta as ParseRuleSet.Entry; }
 		public bool IsContextBeginning() {
-			Context.Entry ctx = GetAsContextEntry(); if (ctx != null) { return ctx.GetBeginToken() == this; }
+			ParseRuleSet.Entry ctx = GetAsContextEntry(); if (ctx != null) { return ctx.GetBeginToken() == this; }
 			return false;
 		}
 		public bool IsContextEnding() {
-			Context.Entry ctx = GetAsContextEntry(); if (ctx != null) { return ctx.GetEndToken() == this; }
+			ParseRuleSet.Entry ctx = GetAsContextEntry(); if (ctx != null) { return ctx.GetEndToken() == this; }
 			return false;
 		}
 		public bool IsContextBeginningOrEnding() {
-			Context.Entry ctx = GetAsContextEntry();
+			ParseRuleSet.Entry ctx = GetAsContextEntry();
 			if (ctx != null) { return ctx.GetEndToken() == this || ctx.GetBeginToken() == this; }
 			return false;
 		}

@@ -56,7 +56,7 @@ namespace NonStandard.Data.Parse {
 			return true;
 		}
 		protected bool SkipComments(bool incrementAtLeastOnce = false) {
-			Context.Entry e = incrementAtLeastOnce ? Context.Entry.None : null;
+			ParseRuleSet.Entry e = incrementAtLeastOnce ? ParseRuleSet.Entry.None : null;
 			do {
 				if (e != null && !Increment()) return false;
 				e = Current.Token.GetAsContextEntry();
@@ -137,7 +137,7 @@ namespace NonStandard.Data.Parse {
 
 		public bool TryParse() {
 			Token token = Current.Token;
-			Context.Entry e = token.GetAsContextEntry();
+			ParseRuleSet.Entry e = token.GetAsContextEntry();
 			if(e != null && e.tokens == Current.tokens) { Increment(); } // skip past the opening bracket
 			FindInternalType(); // first, check if this has a more correct internal type defined
 			if (result == null && listData == null) {
@@ -185,7 +185,7 @@ namespace NonStandard.Data.Parse {
 			memberToken = Current.Token;
 			if (SkipStructuredDelimiters(memberToken.GetAsDelimiter())) { memberToken.Invalidate(); return true; }
 			memberId = null;
-			Context.Entry e = memberToken.GetAsContextEntry();
+			ParseRuleSet.Entry e = memberToken.GetAsContextEntry();
 			if (e != null) {
 				if (dictionaryAdd == null) {
 					if (e.IsText()) {
@@ -265,7 +265,7 @@ namespace NonStandard.Data.Parse {
 			Token token = Current.Token;
 			object meta = token.meta;
 			if(SkipStructuredDelimiters(meta as Delim)) { return true; }
-			Context.Entry context = meta as Context.Entry;
+			ParseRuleSet.Entry context = meta as ParseRuleSet.Entry;
 			if (context != null) {
 				bool subContextUsingSameList = context.tokens == Current.tokens;
 				if (context.IsText()) {

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace NonStandard.Data.Parse {
-	public class Context {
-		public static Dictionary<string, Context> allContexts = new Dictionary<string, Context>();
+	public class ParseRuleSet {
+		public static Dictionary<string, ParseRuleSet> allContexts = new Dictionary<string, ParseRuleSet>();
 		public string name = "default";
 		public char[] whitespace = CodeRules.WhitespaceDefault;
 		public Delim[] delimiters = CodeRules.StandardDelimiters;
@@ -12,7 +12,7 @@ namespace NonStandard.Data.Parse {
 		/// data used to make delimiter searching very fast
 		/// </summary>
 		private char minDelim = char.MaxValue, maxDelim = char.MinValue; private int[] textLookup;
-		public Context(string name, Delim[] defaultDelimiters = null, char[] defaultWhitespace = null) {
+		public ParseRuleSet(string name, Delim[] defaultDelimiters = null, char[] defaultWhitespace = null) {
 			this.name = name;
 			allContexts[name] = this;
 			if (defaultDelimiters == null) {
@@ -64,12 +64,12 @@ namespace NonStandard.Data.Parse {
 			if (i < 0) return null;
 			return delimiters[i];
 		}
-		public Entry GetEntry(List<Token> tokens, int startTokenIndex, object meta, Context.Entry parent = null) {
+		public Entry GetEntry(List<Token> tokens, int startTokenIndex, object meta, ParseRuleSet.Entry parent = null) {
 			Entry e = new Entry { context = this, tokens = tokens, tokenStart = startTokenIndex, sourceMeta = meta, parent = parent };
 			return e;
 		}
 		public class Entry {
-			public Context context = null;
+			public ParseRuleSet context = null;
 			public Entry parent = null;
 			public List<Token> tokens;
 			public int tokenStart, tokenCount = -1;
@@ -112,7 +112,9 @@ namespace NonStandard.Data.Parse {
 			public string GetText() { return Unescape(); }
 			public object Resolve(Tokenizer tok, object scope, bool simplify = true) {
 				DelimOp op = sourceMeta as DelimOp;
-				if(op != null) { return op.resolve.Invoke(tok, this, scope); }
+				if(op != null) { 
+					return op.resolve.Invoke(tok, this, scope);
+				}
 				if (IsText()) { return Unescape(); }
 				return Resolve(tok, scope, tokens, simplify);
 			}

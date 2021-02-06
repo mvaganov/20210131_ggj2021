@@ -102,16 +102,17 @@ public class MazeLevel : MonoBehaviour
     public List<GameObject> CreateIdols(int index, int count) {
         List<GameObject> idols = new List<GameObject>();
         for(int i = 0; i < count; ++i) {
-            GameObject go = Instantiate(tokenPrefabs[i % tokenPrefabs.Count]);
-            Renderer r = go.GetComponent<Renderer>();
             Material mat = tokenMaterials[0];
+            GameObject go = Instantiate(tokenPrefabs[i % tokenPrefabs.Count]);
+            go.name = mat.name;
+            Renderer r = go.GetComponent<Renderer>();
             r.material = mat;
             idols.Add(go);
             InventoryItem ii = go.GetComponent<InventoryItem>();
             DictionaryKeeper dk = Global.Get<DictionaryKeeper>();
             ii.onAddToInventory += GoalCheck;
-            ii.onAddToInventory += inv=>dk.AddTo(mat.name + "_", 1);
-            ii.onRemoveFromInventory += inv => dk.AddTo(mat.name + "_", -1);
+            ii.onAddToInventory += inv=>dk.AddTo(mat.name, 1);
+            ii.onRemoveFromInventory += inv => dk.AddTo(mat.name, -1);
         }
         return idols;
     }

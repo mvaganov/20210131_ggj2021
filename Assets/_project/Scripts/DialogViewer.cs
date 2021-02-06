@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using NonStandard.Data.Parse;
+using System;
 
 public class DialogViewer : MonoBehaviour {
 	public Text title;
@@ -25,15 +26,15 @@ public class DialogViewer : MonoBehaviour {
 		if (!initialized) { Init(); }
 		ListItemUi li = null;
 		do {
-			Dialog.Text t = option as Dialog.Text;
-			if (t != null) {
-				li = listUi.AddItem(option, DialogManager.Instance.GetScriptScope().Format(t.text), null, prefab_textUi);
-				break;
-			}
 			Dialog.Choice c = option as Dialog.Choice;
 			if (c != null) {
 				li = listUi.AddItem(option, DialogManager.Instance.GetScriptScope().Format(c.text), () => Commander.Instance.ParseCommand(c.command), prefab_buttonUi);
 				currentChoices.Add(li);
+				break;
+			}
+			Dialog.Text t = option as Dialog.Text;
+			if (t != null) {
+				li = listUi.AddItem(option, DialogManager.Instance.GetScriptScope().Format(t.text), null, prefab_textUi);
 				break;
 			}
 			Dialog.Command cmd = option as Dialog.Command;
@@ -59,6 +60,17 @@ public class DialogViewer : MonoBehaviour {
 		}
 		return li;
 	}
+
+	internal void PopErrors(List<ParseError> errors) {
+		if (errors.Count > 0) {
+			for (int i = 0; i < errors.Count; ++i) {
+				ListItemUi li = AddDialogOption(new Dialog.Text { text = errors[i].ToString() }, true);
+				li.text.color = Color.red;
+			}
+			errors.Clear();
+		}
+	}
+
 	public void ShowCloseDialogButton() {
 		if (!initialized) { Init(); }
 		if (closeDialogButton != null) { Destroy(closeDialogButton.gameObject); }
@@ -121,6 +133,7 @@ public class DialogViewer : MonoBehaviour {
 				}
 			}
 		}
+		PopErrors(Commander.Tokenizer.errors);
 	}
 	public void SetDialog(string name) { DialogManager.ActiveDialog = this; SetDialog(name, UiPolicy.DisablePrev); }
 	public void StartDialog(string name) { DialogManager.ActiveDialog = this; SetDialog(name, UiPolicy.StartOver); }

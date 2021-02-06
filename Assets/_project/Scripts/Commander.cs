@@ -22,21 +22,33 @@ public class Commander {
 		tokenizer = new Tokenizer();
 	}
 	public void ParseCommand(string command) {
-		tokenizer.Tokenize(command);
-		string cmd = tokenizer.GetResolvedToken(0, GetScope()).ToString();
-		Action<Tokenizer> commandToExecute;
-		if (commandListing.TryGetValue(cmd, out commandToExecute)) {
-			commandToExecute.Invoke(tokenizer);
-		} else {
-			tokenizer.AddError("unknown command \'" + cmd + "\'");
-		}
-		if (tokenizer.errors.Count > 0) {
-			for (int i = 0; i < tokenizer.errors.Count; ++i) {
-				ListItemUi li = ActiveDialog.AddDialogOption(new Dialog.Text { text = tokenizer.errors[i].ToString() }, true);
-				li.text.color = Color.red;
+		Tokenizer cmdTok = new Tokenizer(); // don't use the global tokenizer, who knows where it's going
+		cmdTok.Tokenize(command);
+		bool moreCommands;
+		do {
+			moreCommands = false;
+			string cmd = cmdTok.GetResolvedToken(0, GetScope()).ToString();
+			ExecuteCommand(cmd, cmdTok);
+			for(int i = 0; i < cmdTok.TokenCount; ++i) {
+				Token t = cmdTok.GetToken(i);
+				Delim d = t.GetAsDelimiter();
+				if(d != null && d.text == ";") {
+					moreCommands = true;
+					cmdTok.PopTokens(i + 1);
+					break;
+				}
 			}
-			tokenizer.errors.Clear();
+		} while (moreCommands);
+	}
+	public void ExecuteCommand(string command, Tokenizer tok) {
+		Show.Log(command+": "+tok.DebugPrint());
+		Action<Tokenizer> commandToExecute;
+		if (commandListing.TryGetValue(command, out commandToExecute)) {
+			commandToExecute.Invoke(tok);
+		} else {
+			tok.AddError("unknown command \'" + command + "\'");
 		}
+		ActiveDialog.PopErrors(tok.errors);
 	}
 	private void InitializeCommands() {
 		commandListing = new Dictionary<string, Action<Tokenizer>>() {
@@ -45,9 +57,11 @@ public class Commander {
 			["continue"] = ContinueDialog,
 			["done"] = Done,
 			["hide"] = Hide,
-			["show"] = Show,
+			["show"] = _Show,
 			["++"] = Increment,
+			["--"] = Decrement,
 			["set"] = SetVariable,
+			["give"] = GiveInventory,
 			["exit"] = s => PlatformAdjust.Exit(),
 		};
 	}
@@ -56,15 +70,18 @@ public class Commander {
 	public void ContinueDialog(Tokenizer tok) { ActiveDialog.ContinueDialog(tok.GetStr(1)); }
 	public void Done(Tokenizer tok) { ActiveDialog.Done(); }
 	public void Hide(Tokenizer tok) { ActiveDialog.Hide(); }
-	public void Show(Tokenizer tok) { ActiveDialog.Show(); }
+	public void _Show(Tokenizer tok) { ActiveDialog.Show(); }
 	public void Increment(string name) {
-		if (ScopeDictionaryKeeper == null) {
-			tokenizer.AddError("can't add 1 to \"" + name + "\", missing variable scope");
-			return;
-		}
+		if (ScopeDictionaryKeeper == null) { tokenizer.AddError("can't add 1 to \"" + name + "\", missing variable scope"); return; }
 		ScopeDictionaryKeeper.AddTo(name, 1);
 	}
+	public void Decrement(string name) {
+		if (ScopeDictionaryKeeper == null) { tokenizer.AddError("can't add -1 to \"" + name + "\", missing variable scope"); return; }
+		ScopeDictionaryKeeper.AddTo(name, -1);
+	}
+	
 	public void Increment(Tokenizer tok) { Increment(tok.GetStr(1)); }
+	public void Decrement(Tokenizer tok) { Decrement(tok.GetStr(1)); }
 	public void SetVariable(Tokenizer tok) {
 		string key = tok.GetStr(1, Scope);
 		object value = tok.GetResolvedToken(2, Scope);
@@ -73,5 +90,9 @@ public class Commander {
 		if(vStr != null && float.TryParse(vStr, out f)) { value = f; }
 		ScopeDictionaryKeeper.Dictionary.Set(key, value);
 	}
-
+	public void GiveInventory(Tokenizer tok) {
+		string itemName = tok.GetStr(1, Scope);
+		Inventory inv = Global.Get<Inventory>();
+		inv.RemoveItem(itemName);
+	}
 }
