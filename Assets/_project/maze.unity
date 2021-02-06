@@ -726,9 +726,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7bd8ba2fb0435214b9a3fe20c49f2374, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  values: name"the player"i-2 f3testing12"3"2.991
+  values: name"the player"i-2 f3testing12"3"2.99blackGiven1
   parseResults: "{\n  name : \"the player\",\n  i : -2,\n  f : 3,\n  testing : 12,\n 
-    3 : 2.991\n}"
+    3 : 2.99,\n  blackGiven : 1\n}"
 --- !u!4 &516913405 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 758763485, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
@@ -746,8 +746,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d2658aad290d684aa5d7b678ea4e3ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dialogTemplate: {fileID: 4900000, guid: be6e0ac068aaed045a3939f6024a7daf, type: 3}
-  dialogData: {fileID: 4900000, guid: 93fd4e5650eb6944fb9ec01407e9ce79, type: 3}
+  root: {fileID: 4900000, guid: d56b50d3a0e4c5e40bd00aec99493b29, type: 3}
+  knownAssets:
+  - {fileID: 4900000, guid: be6e0ac068aaed045a3939f6024a7daf, type: 3}
+  - {fileID: 4900000, guid: 93fd4e5650eb6944fb9ec01407e9ce79, type: 3}
+  dict: {fileID: 516913404}
+  dialogs: []
+  dialogView: {fileID: 1202952846}
 --- !u!114 &516913410
 MonoBehaviour:
   m_ObjectHideFlags: 0

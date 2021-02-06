@@ -72,7 +72,7 @@ public class MazeLevel : MonoBehaviour
         });
         floorTiles.Sort((a, b) => a.goalScore.CompareTo(b.goalScore));
         //Debug.Log(below2 + " " + below3);
-        Debug.Log(floorTiles.JoinToString(", ", mt => mt.goalScore.ToString()));
+        //Debug.Log(floorTiles.JoinToString(", ", mt => mt.goalScore.ToString()));
         idols = CreateIdols(0, below2);
         for(int i = 0; i < below2; ++i) {
             PlaceObjectOverTile(idols[i].transform, floorTiles[i]);
@@ -84,9 +84,15 @@ public class MazeLevel : MonoBehaviour
 		}
         int len = Mathf.Min(below3, tokenMaterials.Count);
         for(int i = npcs.Count; i < len; ++i) {
+            Material mat = tokenMaterials[i];
             GameObject npc = Instantiate(prefab_npcPlayer.gameObject);
+            npc.name = mat.name;
             Interact3dItem i3d = npc.GetComponentInChildren<Interact3dItem>();
-            i3d.onInteract = () => Debug.Log("hi");
+            i3d.interactText = mat.name;
+            i3d.onInteract = () => {
+                DialogManager.Instance.Show();
+                DialogManager.Instance.StartDialog("dialog" + mat.name);
+            };
             npcs.Add(npc.GetComponent<CharacterMove>());
 		}
         for (int i = 0; i < npcs.Count; ++i) {

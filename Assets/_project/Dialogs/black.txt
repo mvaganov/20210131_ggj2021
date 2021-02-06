@@ -1,6 +1,6 @@
 ﻿color	black
 textA	"I hate them for what they did. The injustice! The betrayal! They will never be forgiven! I must destroy them!"
-textB	"I found the release I've been looking for! Look at how they suffer! ... they suffer. But where is the justice I was seeking?"
+textB	"Finally! Look at how they suffer! Vengance ... they suffer. Is this enough? ... Is this justice?"
 textC	"I've endured so much of my own bitterness. The pain I thought they caused is long past. Do I cling to my own pain?"
 textD	"I forgave them. I let them go, in my mind, in my heart. They were never my prisoners to set free. Losing this hatred I have only freed myself."
 textE	"We must set others free too, like you have. Be compassionate as they lose themselves, and be examples of what they can find after they have lost."
