@@ -1,0 +1,6 @@
+﻿color	white
+textA	"I have so much to fix! No, I cannot help you, can't you see I have my own troubles? Come back when I have more time, and less mess to clean up."
+textB	"Ah, yes. I feel calmer already. Everything is falling into place."
+textC	"Why is there still so much chaos? I'm improving, and there is still so much to fix! When will this end? Will I ever have peace?"
+textD	"I was trying so hard to define myself, and the world. It keeps changing around me: both the world and myself. I will never be perfect, and neither will anything else. Better is enough."
+textE	"We must set others free too, like you have. Be compassionate as they lose themselves, and be examples of what they can find after they have lost."

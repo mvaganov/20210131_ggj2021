@@ -1,4 +1,5 @@
 ﻿{n¤ dialog+color o¤[
+	{=Co¤ r¤ "{0}==\"{0}\""%(color) c¤ "set {0} 0;set {0}Given 0"%(color)} // initialize dialog variables for this sequence
 	{=Co¤ c¤ "set color "+color}
 	{=Co¤ r¤ color+"Given==0" c¤ "start dialog"+color+"A"}
 	{=Co¤ r¤ color+"Given==1" c¤ "start dialog"+color+"B"}

@@ -1,0 +1,6 @@
+﻿color	purple
+textA	"I've always wanted to be the most popular. Everyone should know me. Everyone should respect me! I deserve to be seen, more than anyone else."
+textB	"This is it! It's the authority I've needed all along! Watch me now, you will be amazed!"
+textC	"Really nothing has changed. They listen to my words but not to my heart. Do they really see me? Will they worship me with greater authority still? Who is this for? Who am I impressing?"
+textD	"The titles were useless, invisible illusions. How could I have a thing that isn't real? The real authority has always been just deciding to act, and following through. I don't need the words."
+textE	"We must set others free too, like you have. Be compassionate as they lose themselves, and be examples of what they can find after they have lost."

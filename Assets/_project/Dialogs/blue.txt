@@ -1,0 +1,6 @@
+﻿color	blue
+textA	"There is so much that confuses me. I must know the secrets!"
+textB	"Yes, I understand now! It's all making sense!"
+textC	"Now I know it, but I can't do it. Actually, some of this never made sense to begin with... And so what if I know the future, being right about what happens in 10 years is a lot like being wrong today. Now what?"
+textD	"Knowledge unused is knowledge wasted. I need to apply what I know. And appreciate the joy of discovery. Sell cleverness, and buy bewilderment."
+textE	"We must set others free too, like you have. Be compassionate as they lose themselves, and be examples of what they can find after they have lost."

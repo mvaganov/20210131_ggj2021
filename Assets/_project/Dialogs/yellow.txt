@@ -1,0 +1,6 @@
+﻿color	yellow
+textA	"I need more stuff. I will eventually have enough, once I get more!"
+textB	"Oh yeah! Look at all this stuff! It feels good to just look at, you know?"
+textC	"I need a bigger place. And I need to pay experts to handle that thing. Wow I need more stuff just to take care of my stuff..."
+textD	"I gave it all away. Yeah, I miss having it, but I don't miss keeping it. You're rich once you realize you have enough. More than that is waste and pain."
+textE	"We must set others free too, like you have. Be compassionate as they lose themselves, and be examples of what they can find after they have lost."

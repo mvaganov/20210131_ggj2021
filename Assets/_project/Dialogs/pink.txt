@@ -1,0 +1,6 @@
+﻿color	pink
+textA	"I adore them so much, they have to love me! They have to want me!"
+textB	"Yes! They love me! It's all I ever wanted!"
+textC	"... and now I want someone else... someone who is exciting me more. What's wrong with me? Where is this passion coming from?"
+textD	"I've lost them. Lost them both. All three. The whole group. They want me, and they can't stand me. What have I done? Could I have been happy if I just let them be?"
+textE	"We must set others free too, like you have. Be compassionate as they lose themselves, and be examples of what they can find after they have lost."

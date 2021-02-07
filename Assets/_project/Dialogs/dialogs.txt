@@ -1,1 +1,12 @@
 ﻿{=TemplatedDialog template="lostandfoundnpc" parameters="black"}
+{=TemplatedDialog template="lostandfoundnpc" parameters="blue"}
+{=TemplatedDialog template="lostandfoundnpc" parameters="brown"}
+{=TemplatedDialog template="lostandfoundnpc" parameters="clear"}
+{=TemplatedDialog template="lostandfoundnpc" parameters="cyan"}
+{=TemplatedDialog template="lostandfoundnpc" parameters="green"}
+{=TemplatedDialog template="lostandfoundnpc" parameters="magenta"}
+{=TemplatedDialog template="lostandfoundnpc" parameters="pink"}
+{=TemplatedDialog template="lostandfoundnpc" parameters="purple"}
+{=TemplatedDialog template="lostandfoundnpc" parameters="red"}
+{=TemplatedDialog template="lostandfoundnpc" parameters="white"}
+{=TemplatedDialog template="lostandfoundnpc" parameters="yellow"}

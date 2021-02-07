@@ -41,8 +41,7 @@ public class TemplatedDialog : Dialog {
 		CodeConvert.TryParse(dialogTemplate.text, out dialogs, data, tokenizer);
 		if (tokenizer.errors.Count > 0) { Debug.LogError(tokenizer.errors.JoinToString("\n")); }
 		//Debug.Log(tok.DebugPrint());
-		Debug.Log(Show.Stringify(dialogs));
-		// TODO test me
+		//Debug.Log(Show.Stringify(dialogs));
 		return dialogs;
 	}
 }
