@@ -62,6 +62,7 @@ public class Commander {
 			["--"] = Decrement,
 			["set"] = SetVariable,
 			["give"] = GiveInventory,
+			["claimplayer"] = ClaimPlayer,
 			["exit"] = s => PlatformAdjust.Exit(),
 		};
 	}
@@ -93,6 +94,13 @@ public class Commander {
 	public void GiveInventory(Tokenizer tok) {
 		string itemName = tok.GetStr(1, Scope);
 		Inventory inv = Global.Get<Inventory>();
-		inv.RemoveItem(itemName);
+		GameObject itemObj = inv.RemoveItem(itemName);
+		if(tok.TokenCount == 2) { UnityEngine.Object.Destroy(itemObj); }
+	}
+
+	public void ClaimPlayer(Tokenizer tok) {
+		Global.Get<Team>().AddMember(DialogManager.Instance.dialogSource);
+		Discovery d = DialogManager.Instance.dialogSource.GetComponentInChildren<Discovery>(true);
+		if(d != null) { d.gameObject.SetActive(true); }
 	}
 }

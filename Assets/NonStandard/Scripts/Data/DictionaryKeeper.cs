@@ -29,6 +29,7 @@ namespace NonStandard.Data {
 		void ShowChange() {
 			if (!validating) {
 				validating = true;
+				// TODO make this work better... current;y giving strings without quotes
 				Clock.setTimeout(() => { values = dict.Show(true); validating = false; }, 0);
 			}
 		}

@@ -9,6 +9,7 @@ public class DialogManager : MonoBehaviour
     public TextAsset root;
     public TextAsset[] knownAssets;
     public DictionaryKeeper dict;
+    public GameObject dialogSource;
 
     public List<Dialog> dialogs = new List<Dialog>();
     public DialogViewer dialogView;

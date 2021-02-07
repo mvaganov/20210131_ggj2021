@@ -35,7 +35,9 @@ public class Interact3dUi : MonoBehaviour
         UpdateItems();
     }
     public void Remove(Interact3dItem item) {
-        Destroy(item.interactUi.gameObject);
+        if (item.interactUi != null) {
+            Destroy(item.interactUi.gameObject);
+        }
 		if (items.Remove(item)) {
             item.onInteractHidden?.Invoke();
         }
@@ -49,6 +51,13 @@ public class Interact3dUi : MonoBehaviour
     public void UpdateItems() {
         for(int i = 0; i < items.Count; ++i) {
             Interact3dItem item = items[i];
+            if (item == null) { items.RemoveAt(i--); continue; }
+            if (item.interactUi == null) {
+                Remove(item);
+                --i;
+                Add(item);
+                continue;
+            }
             Vector3 p = cam.WorldToScreenPoint(item.transform.position + item.worldOffset);
             item.interactUi.position = p;
 		}

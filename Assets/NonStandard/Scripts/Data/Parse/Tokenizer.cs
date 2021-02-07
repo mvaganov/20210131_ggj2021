@@ -349,7 +349,16 @@ namespace NonStandard.Data.Parse {
 		internal void ExtractContextAsSubTokenList(ParseRuleSet.Entry entry) {
 			if(entry.tokenCount <= 0) { throw new Exception("what just happened?"); }
 			int indexWhereItHappens = entry.tokenStart;
-			List<Token> subTokens = entry.tokens.GetRange(entry.tokenStart, entry.tokenCount);
+			int limit = entry.tokenStart + entry.tokenCount;
+			if (entry.tokenStart < 0 || entry.tokenCount < 0 || limit > entry.tokens.Count) {
+				Show.Log("oh no! ");
+			}
+			List<Token> subTokens = null;
+			try {
+				subTokens = entry.tokens.GetRange(entry.tokenStart, entry.tokenCount);
+			} catch {
+				Show.Log("oh no! !!!!");
+			}
 			int index = subTokens.FindIndex(t => t.GetAsContextEntry() == entry);
 			entry.RemoveTokenRange(entry.tokenStart, entry.tokenCount - 1);
 			Token entryToken = subTokens[index];

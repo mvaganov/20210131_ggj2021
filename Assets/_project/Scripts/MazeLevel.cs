@@ -13,10 +13,16 @@ public class MazeLevel : MonoBehaviour
     public MazeTile prefab_mazeTile;
     public CharacterMove prefab_npcPlayer;
     Map2d map;
-    public float wallHeight = 4;
+    public float undiscoveredHeight = 0.0625f;
+    public float floorHeight = 0;
+    public float wallHeight = .5f;
+    public float discoveredTime = 30;
+    public float animationTime = .25f;
+    public Vector3 tileSize = Vector3.one * 4;
+    public Color undiscoveredWall = Color.black, undiscoveredFloor = Color.black;
+
     List<MazeTile> mazeTiles = new List<MazeTile>();
     public Discovery mainDiscoverer;
-    public List<CharacterMove> players = new List<CharacterMove>();
     public List<CharacterMove> npcs = new List<CharacterMove>();
     [System.Serializable] public class MazeGenArgs {
         public Vector2 size = new Vector2(21, 21), start = Vector2.one, step = Vector2.one, wall = Vector2.one;
@@ -50,18 +56,19 @@ public class MazeLevel : MonoBehaviour
             mazeTiles.Add(Instantiate(prefab_mazeTile.gameObject).GetComponent<MazeTile>());
 		}
         int index = 0;
-        Vector3 off = new Vector3(map.Width/-2f * mainDiscoverer.tileSize.x, 0, map.Height/-2f * mainDiscoverer.tileSize.z);
+        Vector3 off = new Vector3(map.Width/-2f * tileSize.x, 0, map.Height/-2f * tileSize.z);
         Transform selfT = transform;
         List<MazeTile> floorTiles = new List<MazeTile>();
         int below2 = 0, below3 = 0;
         map.GetSize().ForEach(c => {
             MazeTile mt = mazeTiles[index++];
+            mt.maze = this;
             mt.coord = c;
             Transform t = mt.transform;
             t.SetParent(selfT);
-            t.localPosition = mt.CalcLocalPosition(mainDiscoverer);
+            t.localPosition = mt.CalcLocalPosition();
             mt.kind = map[c] == '#' ? MazeTile.Kind.Wall : MazeTile.Kind.Floor;
-            mt.SetDiscovered(false, mainDiscoverer);
+            mt.SetDiscovered(false, mainDiscoverer, this);
             if(mt.kind == MazeTile.Kind.Floor) {
                 floorTiles.Add(mt);
                 mt.goalScore = TileScorer(mt, map);
@@ -77,19 +84,19 @@ public class MazeLevel : MonoBehaviour
         for(int i = 0; i < below2; ++i) {
             PlaceObjectOverTile(idols[i].transform, floorTiles[i]);
         }
-        PlaceObjectOverTile(players[0].transform, floorTiles[floorTiles.Count-1]);
-        Vector3 pos = players[0].transform.position;
-        for (int i = 1; i < players.Count; ++i) {
-            players[i].transform.position = pos;
-		}
         int len = Mathf.Min(below3, tokenMaterials.Count);
         for(int i = npcs.Count; i < len; ++i) {
             Material mat = tokenMaterials[i];
             GameObject npc = Instantiate(prefab_npcPlayer.gameObject);
-            npc.name = mat.name;
+            npc.name = prefab_npcPlayer.name +i;
             Interact3dItem i3d = npc.GetComponentInChildren<Interact3dItem>();
+            Discovery d = npc.GetComponentInChildren<Discovery>(true);
+            d.discoveredFloor = Color.Lerp(d.discoveredFloor, mat.color, 0.5f);
+            d.discoveredWall = Color.Lerp(d.discoveredWall, mat.color, 0.5f);
+            d.maze = this;
             i3d.interactText = mat.name;
             i3d.onInteract = () => {
+                DialogManager.Instance.dialogSource = npc;
                 DialogManager.Instance.Show();
                 DialogManager.Instance.StartDialog("dialog" + mat.name);
             };
@@ -97,6 +104,12 @@ public class MazeLevel : MonoBehaviour
 		}
         for (int i = 0; i < npcs.Count; ++i) {
             PlaceObjectOverTile(npcs[i].transform, floorTiles[below2+i]);
+        }
+        Team team = Global.Get<Team>();
+        PlaceObjectOverTile(team.members[0].transform, floorTiles[floorTiles.Count - 1]);
+        Vector3 pos = team.members[0].transform.position;
+        for (int i = 1; i < team.members.Count; ++i) {
+            team.members[i].transform.position = pos;
         }
     }
     public List<GameObject> CreateIdols(int index, int count) {
@@ -117,7 +130,7 @@ public class MazeLevel : MonoBehaviour
         return idols;
     }
     public void PlaceObjectOverTile(Transform t, MazeTile mt) {
-        Vector3 p = mt.CalcVisibilityTarget(mainDiscoverer)+Vector3.up*mainDiscoverer.tileSize.y;
+        Vector3 p = mt.CalcVisibilityTarget()+Vector3.up*tileSize.y;
         t.position = p;
     }
     float TileScorer(MazeTile mt, Map2d map) {

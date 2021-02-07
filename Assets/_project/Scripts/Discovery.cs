@@ -1,19 +1,30 @@
-﻿using System.Collections;
+﻿using NonStandard;
+using NonStandard.Character;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Discovery : MonoBehaviour
 {
-    public Color undiscoveredWall = Color.black, undiscoveredFloor = Color.black,
-    discoveredWall = Color.white, discoveredFloor = Color.gray;
-	public float undiscoveredHeight = -1;
-    public float floorHeight = 0;
-    public float wallHeight = 4;
-    public float discoveredTime = 30;
-    public float animationTime = 1;
-    public Vector3 tileSize = Vector3.one*4;
+    public Color discoveredWall = Color.white, discoveredFloor = Color.gray;
+    public MazeLevel maze;
 
     List<MazeTile> pending = new List<MazeTile>();
+    private static int playerLayer = -1;
+	private void Start() {
+		if(maze == null) { maze = FindObjectOfType<MazeLevel>(); }
+        CharacterMove cm = transform.parent.GetComponent<CharacterMove>();
+        if (cm != null) {
+            cm.callbacks.collisionStart.AddListener(v => Blink());
+		}
+        if(playerLayer == -1) { LayerMask.NameToLayer("player"); }
+	}
+
+    public void Blink() {
+        gameObject.SetActive(false);
+        Clock.setTimeout(() => gameObject.SetActive(true), 0);
+	}
+
 	private void OnTriggerEnter(Collider other) {
         MazeTile mt = other.GetComponent<MazeTile>();
 		if (mt) {
@@ -26,17 +37,20 @@ public class Discovery : MonoBehaviour
 	}
     private bool VisTest(MazeTile mt) {
         Vector3 p = transform.parent.position;
-        Vector3 t = mt.CalcVisibilityTarget(this);
+        Vector3 t = mt.CalcVisibilityTarget();
+        Vector2 c = Random.insideUnitCircle;
+        t.x += c.x * maze.tileSize.x / 2;
+        t.z += c.y * maze.tileSize.z / 2;
         Vector3 delta = t - p;
         float dist = delta.magnitude;
-        if(dist < 5) {
-            mt.SetDiscovered(true, this);
+        if(dist < maze.tileSize.x) {
+            mt.SetDiscovered(true, this, maze);
             return true;
         }
         Ray r = new Ray(p, delta/dist);
-        Physics.Raycast(r, out RaycastHit rh);
+        Physics.Raycast(r, out RaycastHit rh, ~playerLayer);
         if (rh.transform == mt.transform) {
-            mt.SetDiscovered(true, this);
+            mt.SetDiscovered(true, this, maze);
             return true;
         }
         return false;

@@ -9,6 +9,7 @@ public class Interact3dItem : MonoBehaviour
 	public string interactText = "interact";
 	public RectTransform interactUi;
 	public Vector3 worldOffset;
+	// TODO always on option, which keeps the ui floating always, instead of vanishing when out of range
 	public Action onInteract;
 	public Action onInteractVisible;
 	public Action onInteractHidden;

@@ -19,7 +19,7 @@ namespace NonStandard.Data.Parse {
 		public static Delim[] _expression_delimiter = new Delim[] { new DelimCtx("(", ctx: "()", s: true), new DelimCtx(")", ctx: "()", e: true) };
 		public static Delim[] _code_body_delimiter = new Delim[] { new DelimCtx("{", ctx: "{}", s: true), new DelimCtx("}", ctx: "{}", e: true) };
 		public static Delim[] _string_code_body_delimiter = new Delim[] {
-			new DelimCtx("\"", ctx: "codeInString", s: true, e: true), 
+			//new DelimCtx("\"", ctx: "codeInString", s: true, e: true), 
 			new Delim("{{",parseRule:(str,i)=>new ParseResult(2,"{")),
 			new Delim("}}",parseRule:(str,i)=>new ParseResult(2,"}")),
 			new DelimCtx("{", ctx: "{}", s: true), 

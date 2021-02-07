@@ -61,6 +61,7 @@ public class ListUi : MonoBehaviour {
 		}
 		return -1;
 	}
+	public ListItemUi GetItemUi(int index) { return transform.GetChild(index).GetComponent<ListItemUi>(); }
 	public ListItemUi GetListItemUi(object item) {
 		int i = IndexOf(item);
 		if (i < 0) { return null; }

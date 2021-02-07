@@ -19,18 +19,17 @@ public class Inventory : MonoBehaviour {
 			pickupParticle.Emit(ep, 10);
 		}
 		if(items == null) { items = new List<GameObject>(); }
+		if (inventoryUi != null) { ListItemUi result = inventoryUi.GetListItemUi(itemObject); if (result != null) return result; }
 		items.Add(itemObject);
 		itemObject.SetActive(false);
 		itemObject.transform.SetParent(transform);
-		if (inventoryUi == null) { return null; }
 		InventoryItem item = itemObject.GetComponent<InventoryItem>();
 		string name = item != null ? item.itemName : null;
-		if(string.IsNullOrEmpty(name)) { name = itemObject.name; }
+		if (string.IsNullOrEmpty(name)) { name = itemObject.name; }
 		item.onAddToInventory?.Invoke(this);
+		if (inventoryUi == null) { return null; }
 		return inventoryUi.AddItem(itemObject, name, () => {
 			RemoveItem(itemObject);
-			inventoryUi.RemoveItem(itemObject);
-			item.onRemoveFromInventory?.Invoke(this);
 		});
 	}
 	public GameObject FindItem(string name) {
@@ -45,12 +44,15 @@ public class Inventory : MonoBehaviour {
 		}
 		return go;
 	}
-	public void RemoveItem(GameObject item) {
-		if (proxyFor != null && proxyFor != this) { proxyFor.RemoveItem(item); return; }
-		if (items != null) { items.Remove(item); }
-		item.SetActive(true);
-		item.transform.SetParent(null);
-		Rigidbody rb = item.GetComponent<Rigidbody>();
-		if(rb != null) { rb.velocity = Vector3.zero; rb.angularVelocity = Vector3.zero; }
+	public void RemoveItem(GameObject itemObject) {
+		if (proxyFor != null && proxyFor != this) { proxyFor.RemoveItem(itemObject); return; }
+		if (items != null) { items.Remove(itemObject); }
+		itemObject.SetActive(true);
+		itemObject.transform.SetParent(null);
+		Rigidbody rb = itemObject.GetComponent<Rigidbody>();
+		if (rb != null) { rb.velocity = Vector3.zero; rb.angularVelocity = Vector3.zero; }
+		inventoryUi.RemoveItem(itemObject);
+		InventoryItem item = itemObject.GetComponent<InventoryItem>();
+		item.onRemoveFromInventory?.Invoke(this);
 	}
 }

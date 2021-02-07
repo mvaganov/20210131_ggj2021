@@ -9,44 +9,46 @@ public class MazeTile : MonoBehaviour
 	public Coord coord;
 	public bool _discovered = false;
 	public float goalScore;
+	public MazeLevel maze;
 	public bool discovered => _discovered;
 	Transform t;
-	public Vector3 CalcLocalPosition(Discovery d) {
+	public Vector3 CalcLocalPosition() {
 		float h = 0;
 		if(_discovered == false) {
-			h = d.undiscoveredHeight;
+			h = maze.undiscoveredHeight;
 		} else switch (kind) { 
-		case Kind.Floor: h = d.floorHeight; break;
-		case Kind.Wall: h = d.wallHeight; break;
+		case Kind.Floor: h = maze.floorHeight; break;
+		case Kind.Wall: h = maze.wallHeight; break;
 		}
-		return new Vector3(coord.X * d.tileSize.x, h* d.tileSize.y, coord.Y * d.tileSize.z);
+		return new Vector3(coord.X * maze.tileSize.x, h* maze.tileSize.y, coord.Y * maze.tileSize.z);
 	}
-	public Vector3 CalcVisibilityTarget(Discovery d) {
-		return CalcLocalPosition(d) + Vector3.up * (d.tileSize.y / 2) + t.parent.position;
+	public Vector3 CalcVisibilityTarget() {
+		return CalcLocalPosition() + Vector3.up * (maze.tileSize.y / 2) + t.parent.position;
 	}
-	public Color CalcColor(Discovery d) {
+	public Color CalcColor() {
 		switch (kind) {
-		case Kind.Floor: return _discovered?d.discoveredFloor:d.undiscoveredFloor;
-		case Kind.Wall: return _discovered ? d.discoveredWall : d.undiscoveredWall;
+		case Kind.Floor: return _discovered ? d.discoveredFloor : maze.undiscoveredFloor;
+		case Kind.Wall: return _discovered ? d.discoveredWall : maze.undiscoveredWall;
 		}
 		return Color.magenta;
 	}
-	public void SetDiscovered(bool discovered, Discovery d) {
+	public void SetDiscovered(bool discovered, Discovery d, MazeLevel maze) {
+		this.maze = maze;
+		this.d = d;
 		_discovered = discovered;
 		t = transform;
-		DoAnimate(d);
+		DoAnimate();
 	}
 
-	public void DoAnimate(Discovery d) {
+	public void DoAnimate() {
 		Clock.unsetTimeout(Animate);
-		this.d = d;
 		r = GetComponent<Renderer>();
 		started = Clock.Now;
 		startPos = t.localPosition;
-		endPos = CalcLocalPosition(d);
+		endPos = CalcLocalPosition();
 		startColor = r.material.color;
-		endColor = CalcColor(d);
-		duration = (long)(d.animationTime * 1000);
+		endColor = CalcColor();
+		duration = (long)(maze.animationTime * 1000);
 		Animate();
 	}
 	Discovery d;
