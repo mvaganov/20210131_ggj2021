@@ -181,7 +181,7 @@ MonoBehaviour:
   mazeSrc: {fileID: 0}
   prefab_mazeTile: {fileID: -5931052392744636466, guid: e2a461f9603cfdc459e262289b8be075, type: 3}
   prefab_npcPlayer: {fileID: 1382904000734240831, guid: d92253a4827106f4c9280537975fa319, type: 3}
-  undiscoveredHeight: -0.0625
+  undiscoveredHeight: 0
   floorHeight: 0
   wallHeight: 0.5
   discoveredTime: 30
@@ -199,17 +199,16 @@ MonoBehaviour:
     seed: -1
     erosion: 0
   tokenPrefabs:
-  - {fileID: 8662607675382835380, guid: 1c70c2e8761905b42b57b614a29cf68c, type: 3}
-  - {fileID: 4329290394837093538, guid: dcc76338df3cdb74f8dc783c4d307cd0, type: 3}
   - {fileID: 8561600735737634937, guid: 756c41e538379a6419afb8dabddd768b, type: 3}
+  - {fileID: 4329290394837093538, guid: dcc76338df3cdb74f8dc783c4d307cd0, type: 3}
   - {fileID: 5309041540611214799, guid: 7be80e6b15ee3b54bb7bb58e6aefe4cc, type: 3}
-  - {fileID: 5717847679441773686, guid: 154dbc0cbe490b044909fa294117db56, type: 3}
+  - {fileID: 8662607675382835380, guid: 1c70c2e8761905b42b57b614a29cf68c, type: 3}
   - {fileID: 1401028737293335288, guid: ebdffdcb2d3487c4db3d5041b1349a39, type: 3}
   tokenMaterials:
   - {fileID: 2100000, guid: 1392fcb3d83a6614bbe6a1bcae20a80a, type: 2}
   - {fileID: 2100000, guid: cde7191fe84c3a24988afa14ed19df3a, type: 2}
   - {fileID: 2100000, guid: db6c6120c750c0b4f9b59558adfe34c6, type: 2}
-  - {fileID: 2100000, guid: 51ac102ca61c9d74291be784d845a5ae, type: 2}
+  - {fileID: 2100000, guid: fc149dee6cf8c554dbb8a6d49aa5d415, type: 2}
   - {fileID: 2100000, guid: aeb74a6df3df0dd4a8f56fcbacf4adb0, type: 2}
   - {fileID: 2100000, guid: 9e43cfd6793756f4cbcbe055c54f5479, type: 2}
   - {fileID: 2100000, guid: 0298f6cb93c82f649a581b90e4edaf2b, type: 2}
@@ -217,7 +216,7 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 7b1a4c11ee224df4aa4764e3ef9abc93, type: 2}
   - {fileID: 2100000, guid: 381b5f86e2414b3418c21eb2647e433b, type: 2}
   - {fileID: 2100000, guid: e7a04bb2f84caae478dd432bbf216109, type: 2}
-  - {fileID: 2100000, guid: fc149dee6cf8c554dbb8a6d49aa5d415, type: 2}
+  - {fileID: 2100000, guid: 51ac102ca61c9d74291be784d845a5ae, type: 2}
   idols: []
 --- !u!1001 &516913402
 PrefabInstance:
@@ -321,6 +320,15 @@ PrefabInstance:
     - target: {fileID: 491015130, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_SizeDelta.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 516913404, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
+      propertyPath: values
+      value: name"the player"
+      objectReference: {fileID: 0}
+    - target: {fileID: 516913404, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
+      propertyPath: parseResults
+      value: "{\n  name : \"the player\",\n  i : -2,\n  f : 3,\n  testing : 1,\n 
+        3 : 2,\n  blackGiven : 0,\n  black : 5\n}"
       objectReference: {fileID: 0}
     - target: {fileID: 516913406, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: knownAssets.Array.size

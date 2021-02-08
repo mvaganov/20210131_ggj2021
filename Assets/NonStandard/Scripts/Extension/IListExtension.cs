@@ -19,7 +19,14 @@ public static class IListExtension {
 		}
 		return ~lower;
 	}
-
+	public static void ForEach<T>(this IList<T> source, Action<T> action) { ForEach(source, action, 0, source.Count); }
+	public static void ForEach<T>(this IList<T> source, Action<T> action, int index, int length) {
+		for(int i = 0; i < length; ++i) { action.Invoke(source[index + i]); }
+	}
+	public static void SetEach<T>(this IList<T> source, Func<int,T> action) { SetEach(source, action, 0, source.Count); }
+	public static void SetEach<T>(this IList<T> source, Func<int,T> action, int index, int length) {
+		for (int i = 0; i < length; ++i) { source[i] = action.Invoke(index + i); }
+	}
 	public static T[] GetRange<T>(this IList<T> source, int index, int length) {
 		T[] list = new T[length];
 		for (int i = 0; i < length; ++i) { list[i] = source[index + i]; }

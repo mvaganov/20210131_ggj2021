@@ -14,7 +14,7 @@ public class Commander {
 	public Tokenizer GetTokenizer() { return tokenizer; }
 	public static Tokenizer Tokenizer { get { return Instance.GetTokenizer(); } }
 	public static DictionaryKeeper ScopeDictionaryKeeper { get { return DialogManager.Instance.GetScriptScope(); } }
-	public static object Scope { get { return ScopeDictionaryKeeper.Dictionary; } }
+	public static SensitiveHashTable_stringobject Scope { get { return ScopeDictionaryKeeper.Dictionary; } }
 	public object GetScope() { return Scope; }
 	DialogViewer ActiveDialog { get { return DialogManager.ActiveDialog; } }
 	private Commander() {
@@ -41,7 +41,7 @@ public class Commander {
 		} while (moreCommands);
 	}
 	public void ExecuteCommand(string command, Tokenizer tok) {
-		Show.Log(command+": "+tok.DebugPrint());
+		//Show.Log(command+": "+tok.DebugPrint());
 		Action<Tokenizer> commandToExecute;
 		if (commandListing.TryGetValue(command, out commandToExecute)) {
 			commandToExecute.Invoke(tok);
@@ -58,6 +58,7 @@ public class Commander {
 			["done"] = Done,
 			["hide"] = Hide,
 			["show"] = _Show,
+			["assertnum"] = AssertNum,
 			["++"] = Increment,
 			["--"] = Decrement,
 			["set"] = SetVariable,
@@ -95,7 +96,12 @@ public class Commander {
 		string itemName = tok.GetStr(1, Scope);
 		Inventory inv = Global.Get<Inventory>();
 		GameObject itemObj = inv.RemoveItem(itemName);
-		if(tok.TokenCount == 2) { UnityEngine.Object.Destroy(itemObj); }
+		if (itemObj != null) {
+			if (tok.TokenCount == 2 || tok.GetToken(2).ToString() == ";") { UnityEngine.Object.Destroy(itemObj); } else {
+				Token recieptiant = tok.GetToken(2);
+				Show.Log("TODO give "+itemObj+" to "+recieptiant);
+			}
+		}
 	}
 
 	public void ClaimPlayer(Tokenizer tok) {
@@ -103,4 +109,11 @@ public class Commander {
 		Discovery d = DialogManager.Instance.dialogSource.GetComponentInChildren<Discovery>(true);
 		if(d != null) { d.gameObject.SetActive(true); }
 	}
+	public void AssertNum(Tokenizer tok) {
+		string itemName = tok.GetStr(1, Scope);
+		if (Scope.ContainsKey(itemName)) return;
+		object itemValue = tok.GetResolvedToken(2, Scope);
+		Scope.Set(itemName, itemValue);
+	}
+
 }

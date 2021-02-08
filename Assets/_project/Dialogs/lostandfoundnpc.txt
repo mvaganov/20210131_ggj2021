@@ -1,5 +1,5 @@
 ﻿{n¤ dialog+color o¤[
-	{=Co¤ r¤ "{0}==\"{0}\""%(color) c¤ "set {0} 0;set {0}Given 0"%(color)} // initialize dialog variables for this sequence
+	{=Co¤ c¤ "assertnum {0} 0;assertnum {0}Given 0"%(color)}
 	{=Co¤ c¤ "set color "+color}
 	{=Co¤ r¤ color+"Given==0" c¤ "start dialog"+color+"A"}
 	{=Co¤ r¤ color+"Given==1" c¤ "start dialog"+color+"B"}
@@ -7,8 +7,8 @@
 	{=Co¤ r¤ color+"Given==3" c¤ "start dialog"+color+"D"}
 	{=Co¤ r¤ color+"Given==4" c¤ "start dialog"+color+"E"}
 ]}
-{n¤ "dialog"+color+"A" o¤[{=T¤ t¤ textA}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ color+">=1" c¤ "give {0};--{0};++{0}Given;continue dialog{0}"%(color) t¤ "try to help"}]}
-{n¤ "dialog"+color+"B" o¤[{=T¤ t¤ textB}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ color+">=1" c¤ "give {0};--{0};++{0}Given;continue dialog{0}"%(color) t¤ "observe the situation"}]}
-{n¤ "dialog"+color+"C" o¤[{=T¤ t¤ textC}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ color+">=1" c¤ "give {0};--{0};++{0}Given;continue dialog{0}"%(color) t¤ "witness their loss"}]}
-{n¤ "dialog"+color+"D" o¤[{=T¤ t¤ textD}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ color+">=1" c¤ "give {0};--{0};++{0}Given;continue dialog{0}"%(color) t¤ "show compassion"}]}
-{n¤ "dialog"+color+"E" o¤[{=T¤ t¤ textE}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ color+">=1" c¤ "give {0};--{0};++{0}Given; claimplayer; done"%(color) t¤ "\"Join me.\""}]}
+{n¤ "dialog"+color+"A" o¤[{=T¤ t¤ textA}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ color+">=1" c¤ "give {0};++{0}Given;continue dialog{0}"%(color) t¤ "try to help"}]}
+{n¤ "dialog"+color+"B" o¤[{=T¤ t¤ textB}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ color+">=1" c¤ "give {0};++{0}Given;continue dialog{0}"%(color) t¤ "observe the situation"}]}
+{n¤ "dialog"+color+"C" o¤[{=T¤ t¤ textC}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ color+">=1" c¤ "give {0};++{0}Given;continue dialog{0}"%(color) t¤ "witness their loss"}]}
+{n¤ "dialog"+color+"D" o¤[{=T¤ t¤ textD}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ color+">=1" c¤ "give {0};++{0}Given;continue dialog{0}"%(color) t¤ "show compassion"}]}
+{n¤ "dialog"+color+"E" o¤[{=T¤ t¤ textE}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ color+">=1" c¤ "give {0};++{0}Given; claimplayer; done"%(color) t¤ "\"Join me.\""}]}

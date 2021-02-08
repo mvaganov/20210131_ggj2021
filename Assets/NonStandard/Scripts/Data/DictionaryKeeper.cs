@@ -45,16 +45,16 @@ namespace NonStandard.Data {
 			dict.onChange += (k, a, b) => { ShowChange(); };
 #endif
 			dict.FunctionAssignIgnore();
-			string[] mainStats = new string[] { "str", "con", "dex", "int", "wis", "cha" };
-			int[] scores = { 8, 8, 18, 12, 9, 14 };
-			for(int i = 0; i < mainStats.Length; ++i) {
-				dict[mainStats[i]] = scores[i];
-			}
-			for (int i = 0; i < mainStats.Length; ++i) {
-				string s = mainStats[i];
-				dict.Set("_"+s, ()=>CalcStatModifier(s));
-			}
-			AddTo("cha", 4);
+			//string[] mainStats = new string[] { "str", "con", "dex", "int", "wis", "cha" };
+			//int[] scores = { 8, 8, 18, 12, 9, 14 };
+			//for(int i = 0; i < mainStats.Length; ++i) {
+			//	dict[mainStats[i]] = scores[i];
+			//}
+			//for (int i = 0; i < mainStats.Length; ++i) {
+			//	string s = mainStats[i];
+			//	dict.Set("_"+s, ()=>CalcStatModifier(s));
+			//}
+			//AddTo("cha", 4);
 		}
 		public float NumValue(string fieldName) {
 			object val;
@@ -63,6 +63,7 @@ namespace NonStandard.Data {
 			return (float)val;
 		}
 		public void AddTo(string fieldName, float bonus) {
+			//Show.Log(fieldName + " " + bonus + " " + Show.GetStack(6));
 			dict[fieldName] = NumValue(fieldName) + bonus;
 		}
 		private int CalcStatModifier(string s) {

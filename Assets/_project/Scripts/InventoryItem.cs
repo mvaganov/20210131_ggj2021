@@ -24,6 +24,6 @@ public class InventoryItem : MonoBehaviour {
 		if (_pickupCollider == null) return;
 		CollisionTrigger trigger = _pickupCollider.GetComponent<CollisionTrigger>();
 		trigger.enabled = false;
-		NonStandard.Clock.setTimeout(() => trigger.enabled = true, 500);
+		NonStandard.Clock.setTimeout(() => { if (trigger != null) trigger.enabled = true; }, 500);
 	}
 }
