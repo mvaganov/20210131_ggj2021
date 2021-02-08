@@ -218,6 +218,27 @@ MonoBehaviour:
   - {fileID: 2100000, guid: e7a04bb2f84caae478dd432bbf216109, type: 2}
   - {fileID: 2100000, guid: 51ac102ca61c9d74291be784d845a5ae, type: 2}
   idols: []
+--- !u!1 &415154506 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1037285241940550, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
+  m_PrefabInstance: {fileID: 516913402}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &415154514
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 415154506}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c170263af72d0c419d673e1e883bd67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactText: switch
+  interactUi: {fileID: 0}
+  worldOffset: {x: 0, y: 1, z: 0}
+  alwaysOn: 0
 --- !u!1001 &516913402
 PrefabInstance:
   m_ObjectHideFlags: 0

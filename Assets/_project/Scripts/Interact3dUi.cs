@@ -13,24 +13,26 @@ public class Interact3dUi : MonoBehaviour
         public Interact3dUi ui;
         private void OnTriggerEnter(Collider other) {
             Interact3dItem item = other.GetComponentInChildren<Interact3dItem>();
-			if (item) { ui.Add(item); }
+			if (item && item.enabled) { ui.Add(item); }
         }
         private void OnTriggerExit(Collider other) {
             Interact3dItem item = other.GetComponentInChildren<Interact3dItem>();
-            if (item) { ui.Remove(item); }
+            if (item && !item.alwaysOn) { ui.Remove(item); }
         }
     }
-    public void Add(Interact3dItem item) {
+    public void EnsureUi(Interact3dItem item) {
         if (item.interactUi == null) {
-            RectTransform iui = Instantiate(prefab_interactButton).GetComponent<RectTransform>();
-            item.interactUi = iui;
-            iui.SetParent(uiArea);
-            item.Text = item.interactText;
+            item.interactUi = Instantiate(prefab_interactButton).GetComponent<RectTransform>();
+            item.interactUi.SetParent(uiArea);
             item.onInteractVisible?.Invoke();
             if (item.onInteract != null) {
                 item.OnButton.AddListener(item.onInteract.Invoke);
             }
         }
+        item.Text = item.interactText;
+    }
+    public void Add(Interact3dItem item) {
+        EnsureUi(item);
         items.Add(item);
         UpdateItems();
     }

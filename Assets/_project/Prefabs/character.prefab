@@ -57,8 +57,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c1e6438ed56ed24da08a9c9b24d5127, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  discoveredWall: {r: 0.7529412, g: 0.7529412, b: 0.7529412, a: 1}
-  discoveredFloor: {r: 0.2509804, g: 0.2509804, b: 0.2509804, a: 1}
+  discoveredWall: {r: 1, g: 1, b: 1, a: 1}
+  discoveredFloor: {r: 0, g: 0, b: 0, a: 1}
   maze: {fileID: 0}
 --- !u!1 &1345119069021353541
 GameObject:
@@ -234,6 +234,7 @@ MonoBehaviour:
   interactText: talk
   interactUi: {fileID: 0}
   worldOffset: {x: 0, y: 1, z: 0}
+  alwaysOn: 0
 --- !u!114 &17123235132430364
 MonoBehaviour:
   m_ObjectHideFlags: 0
