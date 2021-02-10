@@ -49,6 +49,7 @@ public class Discovery : MonoBehaviour
         Vector2 c = Random.insideUnitCircle;
         t.x += c.x * maze.tileSize.x / 2;
         t.z += c.y * maze.tileSize.z / 2;
+        t.y -= 0.0625f;
         Vector3 delta = t - p;
         float dist = delta.magnitude;
         if(dist < maze.tileSize.x) {
@@ -57,7 +58,7 @@ public class Discovery : MonoBehaviour
         }
         if(dist > sc.radius + maze.tileSize.x) { Blink(); return true; } // remove from list without resolving visibility
         Ray r = new Ray(p, delta/dist);
-        Physics.Raycast(r, out RaycastHit rh, ~playerLayer);
+        bool blocked = Physics.Raycast(r, out RaycastHit rh, ~playerLayer);
         if (i >= 0 && wires != null) {
             while (wires.Count <= i) {
                 wires.Add(Lines.MakeWire().Line(Vector3.zero));

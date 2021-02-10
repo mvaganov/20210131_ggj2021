@@ -16,15 +16,22 @@ public class Team : MonoBehaviour {
 		string name = teamMember != null ? teamMember.name : null;
 		if(string.IsNullOrEmpty(name)) { name = memberObject.name; }
 		teamMember.onJoinTeam?.Invoke(this);
-		// TODO swap out the onInteract behavior from this object's interact3dItem to be the same as the ui item script
+
+		Interact3dItem i3i = teamMember.GetComponent<Interact3dItem>();
+		void ActivateTeamMember() {
+			CharacterControlManager ccm = Global.Get<CharacterControlManager>();
+			ccm.SetCharacter(memberObject);
+			i3i.showing = false;
+		}
+		if (i3i != null) {
+			i3i.OnInteract = ActivateTeamMember;
+			i3i.Text = "switch";
+			i3i.alwaysOn = true;
+		}
 		Inventory inv = memberObject.GetComponentInChildren<Inventory>();
 		if (inv != null) { inv.proxyFor = Global.Get<Inventory>(); }
 		if (inventoryUi == null) { return null; }
-		return inventoryUi.AddItem(memberObject, name, () => {
-			CharacterControlManager ccm = Global.Get<CharacterControlManager>();
-			ccm.SetCharacter(memberObject);
-			//RemoveMember(memberObject);
-		});
+		return inventoryUi.AddItem(memberObject, name, ActivateTeamMember);
 	}
 	public GameObject FindItem(string name) {
 		if (members == null) return null;

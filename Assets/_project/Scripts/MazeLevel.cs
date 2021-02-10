@@ -42,8 +42,8 @@ public class MazeLevel : MonoBehaviour {
 		if (advancementColor == null) {
             int[] counts = new int[tokenMaterials.Count];
             counts.SetEach(i => tokenPrefabs.Count);
-            NumberSequence.GenerateAdvancementOrder(counts, out advancementColor, out advancementShape);
-            //Show.Log(advancementColor.JoinToString(", ") + "     " + advancementShape.JoinToString(", "));
+            NumberSequence.GenerateAdvancementOrder2(counts, out advancementColor, out advancementShape);
+            //Show.Log(advancementColor.JoinToString(" ", i=>i.ToString("X")) + "\n" + advancementShape.JoinToString(" "));
         }
         if (mazeSrc == null) {
             int seed = mazeGenerationArguments.seed;
@@ -100,8 +100,8 @@ public class MazeLevel : MonoBehaviour {
             d.discoveredFloor = Color.Lerp(d.discoveredFloor, mat.color, 0.5f);
             d.discoveredWall = Color.Lerp(d.discoveredWall, mat.color, 0.5f);
             d.maze = this;
-            i3d.interactText = mat.name;
-            i3d.onInteract = () => {
+            i3d.Text = mat.name;
+            i3d.OnInteract = () => {
                 DialogManager.Instance.dialogSource = npc;
                 DialogManager.Instance.Show();
                 DialogManager.Instance.StartDialog("dialog" + mat.name);

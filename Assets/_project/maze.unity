@@ -235,10 +235,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c170263af72d0c419d673e1e883bd67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  interactText: switch
-  interactUi: {fileID: 0}
+  _text: interact
+  _interactUi: {fileID: 0}
   worldOffset: {x: 0, y: 1, z: 0}
-  alwaysOn: 0
+  _showing: 1
+  alwaysOn: 1
 --- !u!1001 &516913402
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -306,6 +307,10 @@ PrefabInstance:
       propertyPath: m_SizeDelta.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 108220261, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
+      propertyPath: m_Radius
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 330274666, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -344,12 +349,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 516913404, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: values
-      value: name"the player"
+      value: 'name"the player"
+
+        blue: 5'
       objectReference: {fileID: 0}
     - target: {fileID: 516913404, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: parseResults
-      value: "{\n  name : \"the player\",\n  i : -2,\n  f : 3,\n  testing : 1,\n 
-        3 : 2,\n  blackGiven : 0,\n  black : 5\n}"
+      value: "{\n  name : \"the player\",\n  blue : 5\n}"
       objectReference: {fileID: 0}
     - target: {fileID: 516913406, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: knownAssets.Array.size

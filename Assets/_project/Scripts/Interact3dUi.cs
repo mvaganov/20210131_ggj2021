@@ -13,7 +13,7 @@ public class Interact3dUi : MonoBehaviour
         public Interact3dUi ui;
         private void OnTriggerEnter(Collider other) {
             Interact3dItem item = other.GetComponentInChildren<Interact3dItem>();
-			if (item && item.enabled) { ui.Add(item); }
+			if (item) { ui.Add(item); }
         }
         private void OnTriggerExit(Collider other) {
             Interact3dItem item = other.GetComponentInChildren<Interact3dItem>();
@@ -25,11 +25,7 @@ public class Interact3dUi : MonoBehaviour
             item.interactUi = Instantiate(prefab_interactButton).GetComponent<RectTransform>();
             item.interactUi.SetParent(uiArea);
             item.onInteractVisible?.Invoke();
-            if (item.onInteract != null) {
-                item.OnButton.AddListener(item.onInteract.Invoke);
-            }
         }
-        item.Text = item.interactText;
     }
     public void Add(Interact3dItem item) {
         EnsureUi(item);
@@ -60,9 +56,14 @@ public class Interact3dUi : MonoBehaviour
                 Add(item);
                 continue;
             }
-            Vector3 p = cam.WorldToScreenPoint(item.transform.position + item.worldOffset);
-            item.interactUi.position = p;
-		}
+            if (item.showing) {
+                item.interactUi.gameObject.SetActive(true);
+                Vector3 p = cam.WorldToScreenPoint(item.transform.position + item.worldOffset);
+                item.interactUi.position = p;
+            } else {
+                item.interactUi.gameObject.SetActive(false);
+            }
+        }
 	}
     Vector3 cPos;
     Quaternion cDir;

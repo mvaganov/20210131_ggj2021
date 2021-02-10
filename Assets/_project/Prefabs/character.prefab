@@ -231,9 +231,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c170263af72d0c419d673e1e883bd67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  interactText: talk
-  interactUi: {fileID: 0}
+  _text: interact
+  _interactUi: {fileID: 0}
   worldOffset: {x: 0, y: 1, z: 0}
+  _showing: 1
   alwaysOn: 0
 --- !u!114 &17123235132430364
 MonoBehaviour:
