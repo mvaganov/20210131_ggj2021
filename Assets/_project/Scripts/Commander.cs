@@ -108,6 +108,7 @@ public class Commander {
 		Global.Get<Team>().AddMember(DialogManager.Instance.dialogSource);
 		Discovery d = DialogManager.Instance.dialogSource.GetComponentInChildren<Discovery>(true);
 		if(d != null) { d.gameObject.SetActive(true); }
+		Global.Get<ConditionCheck>().DoActivateTest();
 	}
 	public void AssertNum(Tokenizer tok) {
 		string itemName = tok.GetStr(1, Scope);

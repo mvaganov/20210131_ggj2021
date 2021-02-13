@@ -90,10 +90,11 @@ namespace NonStandard.Character {
 			[HideInInspector] public Vector3 lastVelocity;
 			[HideInInspector] public Vector3 lastOppositionDirection;
 
-			[Tooltip("Set this to enable click-to-move")]
+			[Tooltip("Set this to enable movement based on how a camera is looking")]
 			public Transform orientationTransform;
 
 			Vector3 ConvertIntentionToRealDirection(Vector3 intention, Transform playerTransform, out float speed) {
+				speed = intention.magnitude;
 				if (orientationTransform) {
 					Vector3 originalIntention = intention;
 					intention = orientationTransform.TransformDirection(intention);
@@ -102,11 +103,13 @@ namespace NonStandard.Character {
 						intention = Quaternion.AngleAxis(-45, Vector3.right) * originalIntention;
 						intention = orientationTransform.TransformDirection(intention);
 						intention = Vector3.ProjectOnPlane(intention, Vector3.up);
+					} else {
+						intention.Normalize();
+						intention *= speed;
 					}
 				} else {
 					intention = playerTransform.transform.TransformDirection(intention);
 				}
-				speed = intention.magnitude;
 				intention /= speed;
 				return intention;
 			}

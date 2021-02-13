@@ -3,11 +3,13 @@
 using System.Collections;
 using System.Text;
 using UnityEngine;
+using Object = UnityEngine.Object;
 #if UNITY_EDITOR
 using UnityEditor;
 using System.Linq;
 #endif
 #endif
+using System;
 
 /* // example code:
 NonStandard.Clock.setTimeout (() => {
@@ -255,15 +257,40 @@ namespace NonStandard
 		public ScheduledTask SetTimeout(System.Action action, long delayMilliseconds) {
 			return SetTimeout((object)action, delayMilliseconds);
 		}
+		public ScheduledTask ScheduleTimeout(System.Action action, long delayMilliseconds) {
+			return ScheduleTimeout((object)action, delayMilliseconds);
+		}
 		/// <summary>as the JavaScript function</summary>
 		/// <param name="action">Action. an object to trigger, expected to be a delegate or System.Action</param>
 		/// <param name="delayMilliseconds">Delay milliseconds.</param>
 		public ScheduledTask SetTimeout(object action, long delayMilliseconds) {
 			long soon = nowTicks + delayMilliseconds;// * System.TimeSpan.TicksPerMillisecond;
+			return ScheduleTimeout(action, soon);
+		}
+		public ScheduledTask ScheduleTimeout(object action, long soon) {
 			ScheduledTask todo = new ScheduledTask(soon, action);
 			queue.Insert(BestIndexFor(soon, queue), todo);
 			LinkedToMainThreadCheck();
 			return todo;
+		}
+		public static void Lerp(Action<float> action, long durationMs = 1000, float calculations = 10, float start = 0, float end = 1) {
+			Instance.DoLerp(action, durationMs, calculations, start, end);
+		}
+		public void DoLerp(Action<float> action, long durationMs = 1000, float calculations = 10, float start = 0, float end = 1) {
+			long started = nowTicks;
+			float iterations = 0;
+			void DoIt() {
+				float delta = end - start;
+				float p = (delta * iterations) / calculations + start;
+				action.Invoke(p);
+				long delay = (long)(durationMs / calculations);
+				if (iterations < calculations) {
+					long nextTime = (long)(durationMs * (iterations + 1) / calculations) + started;
+					ScheduleTimeout(DoIt, nextTime);//nowTicks + delay);
+				}
+				++iterations;
+			}
+			DoIt();
 		}
 
 		public List<ScheduledTask> UnsetTimeout(object action) {

@@ -53,9 +53,9 @@ public class ListUi : MonoBehaviour {
 		Transform t = transform;
 		for (int i = 0; i < t.childCount; ++i) {
 			Transform child = t.GetChild(i);
+			ListItemUi liui = child.GetComponent<ListItemUi>();
 			if (child != prefab_item.transform && (item == null ||
-				child.GetComponent<ListItemUi>().item == item ||
-				(child.GetComponent<ListItemUi>().item == null && child.name == item as string))) {
+				liui.item == item || (liui.item == null && child.name == item as string))) {
 				return i;
 			}
 		}

@@ -12,6 +12,8 @@ public class Interact3dItem : MonoBehaviour
 	public Vector3 worldOffset;
 	[SerializeField] private bool _showing = true;
 	public bool alwaysOn = false;
+	public float size = 1;
+	public float fontCoefficient = 1;
 	public Action onInteractVisible;
 	public Action onInteractHidden;
 	public bool showing {
@@ -43,15 +45,16 @@ public class Interact3dItem : MonoBehaviour
 			showing = _showing;
 		}
 	}
+	public TMPro.TMP_Text TmpText {
+		get {
+			return interactUi.GetComponentInChildren<TMPro.TMP_Text>();
+		}
+	}
 	public string Text {
 		get { return _text; }
 		set {
 			_text = value;
-			if (interactUi != null) { interactUi.GetComponentInChildren<Text>().text = value; }
+			if (interactUi != null) { TmpText.text = value; }
 		}
 	}
-	//public Button.ButtonClickedEvent OnButton {
-	//	get { return interactUi.GetComponentInChildren<Button>().onClick; }
-	//	set { interactUi.GetComponentInChildren<Button>().onClick= value; }
-	//}
 }

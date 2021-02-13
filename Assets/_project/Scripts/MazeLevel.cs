@@ -2,12 +2,14 @@
 using NonStandard;
 using NonStandard.Character;
 using NonStandard.Data;
+using NonStandard.Data.Parse;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-
 public class MazeLevel : MonoBehaviour {
     public TextAsset mazeSrc;
+    public TextAsset resourceNamesText;
+    public TextAsset npcNamesText;
     public MazeTile prefab_mazeTile;
     public CharacterMove prefab_npcPlayer;
     Map2d map;
@@ -22,6 +24,8 @@ public class MazeLevel : MonoBehaviour {
     List<MazeTile> mazeTiles = new List<MazeTile>();
     public Discovery mainDiscoverer;
     public List<CharacterMove> npcs = new List<CharacterMove>();
+    private Dictionary<string, string[]> resourceNames;
+    private Dictionary<string, string> npcNames;
     [System.Serializable] public class MazeGenArgs {
         public Vector2 size = new Vector2(21, 21), start = Vector2.one, step = Vector2.one, wall = Vector2.one;
         public int seed = -1, erosion = 0;
@@ -32,7 +36,16 @@ public class MazeLevel : MonoBehaviour {
     public List<GameObject> idols;
     // Start is called before the first frame update
     void Start() {
+        Tokenizer tokenizer = new Tokenizer();
+        CodeConvert.TryParse(resourceNamesText.text, out resourceNames, null, tokenizer);
+        CodeConvert.TryParse(npcNamesText.text, out npcNames, null, tokenizer);
         Generate();
+        ConditionCheck cc = Global.Get<ConditionCheck>();
+        cc.condition = () => npcs.Count == Global.Get<Team>().members.Count;
+        cc.action = () => {
+            DialogManager.Instance.StartDialog("win message");
+            DialogManager.Instance.Show();
+        };
     }
     public char GetTileSrc(Coord c) { return map[c].letter; }
     public MazeTile GetTile(Coord c) { return mazeTiles[c.Y*map.Width+c.X]; }
@@ -86,7 +99,7 @@ public class MazeLevel : MonoBehaviour {
         floorTiles.Sort((a, b) => a.goalScore.CompareTo(b.goalScore));
         //Debug.Log(below2 + " " + below3);
         //Debug.Log(floorTiles.JoinToString(", ", mt => mt.goalScore.ToString()));
-        idols = CreateIdols(0, below2);
+        idols = CreateIdols(below2);
         for (int i = 0; i < below2; ++i) {
             PlaceObjectOverTile(idols[i].transform, floorTiles[i]);
         }
@@ -94,17 +107,30 @@ public class MazeLevel : MonoBehaviour {
         for (int i = npcs.Count; i < len; ++i) {
             Material mat = tokenMaterials[i];
             GameObject npc = Instantiate(prefab_npcPlayer.gameObject);
+            ParticleSystem ps = npc.GetComponentInChildren<ParticleSystem>();
+            if(ps != null) {
+                ps.name = mat.name;
+                ParticleSystem.MainModule m = ps.main;
+                m.startColor = mat.color;
+			}
             npc.name = prefab_npcPlayer.name + i;
+            string foundName;
+            if(npcNames.TryGetValue(mat.name, out foundName)) {
+                npc.name = foundName;
+            }
             Interact3dItem i3d = npc.GetComponentInChildren<Interact3dItem>();
             Discovery d = npc.GetComponentInChildren<Discovery>(true);
             d.discoveredFloor = Color.Lerp(d.discoveredFloor, mat.color, 0.5f);
             d.discoveredWall = Color.Lerp(d.discoveredWall, mat.color, 0.5f);
             d.maze = this;
-            i3d.Text = mat.name;
+            i3d.Text = npc.name;
+            i3d.size = 1.75f;
+            i3d.fontCoefficient = .7f;
             i3d.OnInteract = () => {
                 DialogManager.Instance.dialogSource = npc;
                 DialogManager.Instance.Show();
                 DialogManager.Instance.StartDialog("dialog" + mat.name);
+                ps.Stop();
             };
             npcs.Add(npc.GetComponent<CharacterMove>());
         }
@@ -118,11 +144,12 @@ public class MazeLevel : MonoBehaviour {
             team.members[i].transform.position = pos;
         }
     }
-    public List<GameObject> CreateIdols(int index, int count) {
+    public List<GameObject> CreateIdols(int count) {
         List<GameObject> idols = new List<GameObject>();
         for (int i = 0; i < count; ++i) {
             Material mat = tokenMaterials[advancementColor[advancementindex]];
-            GameObject go = Instantiate(tokenPrefabs[advancementShape[advancementindex]]);
+            GameObject originalItem = tokenPrefabs[advancementShape[advancementindex]];
+            GameObject go = Instantiate(originalItem);
             ++advancementindex;
             if(advancementindex >= advancementShape.Length) { advancementindex = 0; }
             go.name = mat.name;
@@ -133,6 +160,35 @@ public class MazeLevel : MonoBehaviour {
             DictionaryKeeper dk = Global.Get<DictionaryKeeper>();
             ii.onAddToInventory += GoalCheck;
             ii.onAddToInventory += inv => dk.AddTo(mat.name, 1);
+            string floatyTextString = mat.name;
+            string[] floatyTextOptions = null;
+            if(resourceNames == null || (resourceNames.TryGetValue(mat.name, out floatyTextOptions) && floatyTextOptions != null)) {
+                floatyTextString = floatyTextOptions[advancementShape[advancementindex]];
+                ii.itemName = floatyTextString;
+			}
+            ii.onAddToInventory += inv => {
+                FloatyText ft = FloatyTextManager.Create(go.transform.position + (Vector3.up * tileSize.y * wallHeight), floatyTextString);
+                Clock.Lerp(p => {
+                    if (ft != null) {
+                        TMPro.TMP_Text tt = ft.TmpText;
+                        if (tt != null) {
+                            tt.faceColor = Color.Lerp(mat.color, Color.clear, p);
+                            tt.outlineColor = Color.Lerp(Color.white, Color.clear, p);
+                        }
+                        ft.transform.rotation = ft.cam.transform.rotation;
+                    }
+                    //Show.Log(p);
+                }, 3000, 60);
+                // find which NPC wants this, and make them light up
+                ParticleSystem ps = null;
+                CharacterMove npc = npcs.Find(n=> {
+                    ps = n.GetComponentInChildren<ParticleSystem>();
+                    if (ps.name == mat.name) return true;
+                    ps = null;
+                    return false;
+                });
+                if(npc != null) { ps.Play(); }
+            };
             ii.onRemoveFromInventory += inv => dk.AddTo(mat.name, -1);
         }
         return idols;

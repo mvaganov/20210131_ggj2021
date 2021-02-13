@@ -1,7 +1,5 @@
 ﻿using NonStandard;
 using NonStandard.Character;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class CharacterControlManager : MonoBehaviour
@@ -12,7 +10,7 @@ public class CharacterControlManager : MonoBehaviour
 
 	public void SetCharacter(GameObject obj) {
 		if (moveProxy != null) {
-			Debug.Log("Swithing from " + moveProxy.target);
+			//Debug.Log("Switching from " + moveProxy.target);
 			Interact3dItem i3i = moveProxy.target.GetComponent<Interact3dItem>();
 			if(i3i != null) i3i.showing = true;
 		}

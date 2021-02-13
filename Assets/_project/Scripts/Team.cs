@@ -3,7 +3,6 @@ using NonStandard.Character;
 using System.Collections.Generic;
 using UnityEngine;
 
-// TODO make single base class for Team and Inventory...
 public class Team : MonoBehaviour {
 	public List<GameObject> members;
 	public ListUi inventoryUi;

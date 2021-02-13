@@ -17,10 +17,14 @@ namespace NonStandard.Data {
 
 		bool validating = false;
 		void OnValidate() {
-			List<ParseError> errors = new List<ParseError>();
-			CodeConvert.TryFill(values, ref dict, errors);
-			if (errors.Count > 0) {
-				parseResults = string.Join("\n", errors.ConvertAll(e => e.ToString()).ToArray());
+			Tokenizer tok = new Tokenizer();
+			if (Application.isPlaying) {
+				CodeConvert.TryFill(values, ref dict, null, tok);
+			} else {
+				CodeConvert.TryParse(values, out dict, null, tok);
+			}
+			if (tok.errors.Count > 0) {
+				parseResults = tok.errors.JoinToString("\n");
 			} else {
 				//parseResults = dict.Show(true);
 				parseResults = Show.Stringify(dict, true);

@@ -24,6 +24,8 @@ public class Interact3dUi : MonoBehaviour
         if (item.interactUi == null) {
             item.interactUi = Instantiate(prefab_interactButton).GetComponent<RectTransform>();
             item.interactUi.SetParent(uiArea);
+            item.interactUi.transform.localScale = prefab_interactButton.transform.localScale * item.size;
+            item.TmpText.fontSize = item.TmpText.fontSize * item.fontCoefficient;
             item.onInteractVisible?.Invoke();
         }
     }

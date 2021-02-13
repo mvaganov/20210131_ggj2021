@@ -35,7 +35,8 @@ public class Inventory : MonoBehaviour {
 	public GameObject FindItem(string name) {
 		if (items == null) return null;
 		// TODO wildcard search
-		return items.Find(i => i.name == name);
+		GameObject found = items.Find(i => i.name == name);
+		return found;
 	}
 	public GameObject RemoveItem(string name) {
 		GameObject go = FindItem(name);
