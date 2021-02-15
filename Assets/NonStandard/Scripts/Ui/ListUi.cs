@@ -45,7 +45,7 @@ public class ListUi : MonoBehaviour {
 			//Image img = li.GetComponentInChildren<Image>();
 			//if (img != null) { img.enabled = true; }
 		}
-		newItem.transform.SetParent(transform);
+		newItem.transform.SetParent(transform, false);
 		Refresh();
 		return li;
 	}
