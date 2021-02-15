@@ -24,6 +24,13 @@ namespace NonStandard.Data.Parse {
 			public Token Token { get { return tokens[tokenIndex]; } }
 		}
 		protected List<ParseState> state = new List<ParseState>();
+		public int[] GetCurrentTokenIndex() {
+			int[] index = new int[state.Count];
+			for(int i = 0; i < state.Count; ++i) {
+				index[i] = state[i].tokenIndex;
+			}
+			return index;
+		}
 		protected Tokenizer tok;
 		// for parsing a list
 		protected List<object> listData;
@@ -38,7 +45,7 @@ namespace NonStandard.Data.Parse {
 		protected KeyValuePair<Type, Type> dictionaryTypes;
 		protected MethodInfo dictionaryAdd;
 
-		protected ParseState Current { get { return state[state.Count - 1]; } }
+		internal ParseState Current { get { return state[state.Count - 1]; } }
 		protected void AddParseState(List<Token> tokenList, int index = 0) {
 			state.Add(new ParseState { tokens = tokenList, tokenIndex = index });
 		}
@@ -124,21 +131,26 @@ namespace NonStandard.Data.Parse {
 					memberType = null;
 					SkipComments(true);
 					string typeName = memberValue.ToString();
-					Type t = SetResultType(typeName);
-					//Show.Log("internal type " + typeName + " (" + typeName + ")");
-					if (t == null) { AddError("unknown type " + typeName); }
-					return t;
+					//Show.Log("looking for member type "+typeName);
+					try {
+						Type t = SetResultType(typeName);
+						//Show.Log("internal type " + typeName + " (" + typeName + ")");
+						if (t == null) { AddError("unknown type " + typeName); }
+						return t;
+					}catch(Exception e) {
+						Show.Error(typeName + " failed to evaluate to a type:" + e);
+						return null;
+					}
 				} else {
 					AddError("unexpected beginning token " + d.text);
 				}
 			}
 			return null;
 		}
-
 		public bool TryParse() {
 			Token token = Current.Token;
 			ParseRuleSet.Entry e = token.GetAsContextEntry();
-			if(e != null && e.tokens == Current.tokens) { Increment(); } // skip past the opening bracket
+			if (e != null && e.tokens == Current.tokens) { Increment(); } // skip past the opening bracket
 			FindInternalType(); // first, check if this has a more correct internal type defined
 			if (result == null && listData == null) {
 				AddError("need specific " + resultType + ", eg: \"" +resultType.GetSubClasses().JoinToString("\", \"")+"\"");
@@ -171,13 +183,21 @@ namespace NonStandard.Data.Parse {
 		protected void FinalParseDataCompile() {
 			if (listData != null) {
 				if (resultType.IsArray) {
-					Array a = Array.CreateInstance(memberType, listData.Count);
-					for (int i = 0; i < listData.Count; ++i) { a.SetValue(listData[i], i); }
-					result = a;
+					try {
+						Array a = Array.CreateInstance(memberType, listData.Count);
+						for (int i = 0; i < listData.Count; ++i) { a.SetValue(listData[i], i); }
+						result = a;
+					} catch (Exception e) {
+						Show.Error("array creation:" + e);
+					}
 				} else {
-					result = resultType.GetNewInstance();
-					IList ilist = result as IList;
-					for (int i = 0; i < listData.Count; ++i) { ilist.Add(listData[i]); }
+					try {
+						result = resultType.GetNewInstance();
+						IList ilist = result as IList;
+						for (int i = 0; i < listData.Count; ++i) { ilist.Add(listData[i]); }
+					} catch (Exception e) {
+						Show.Error("List creation:" + e);
+					}
 				}
 			}
 		}
@@ -240,18 +260,30 @@ namespace NonStandard.Data.Parse {
 		}
 		protected void AssignValueToMember() {
 			if (dictionaryAdd != null) {
+				try {
 				switch(AssignDictionaryMember(dictionaryTypes, dictionaryAdd, result, memberId, memberValue)) {
 				case 1: AddError("unable to convert key \"" + memberId + "\" (" + memberId.GetType() + 
 					") to " + dictionaryTypes.Key); break;
 				case 2: AddError("unable to convert \"" + memberId + "\" value (" + memberValue.GetType() + 
 					") \"" + memberValue + "\" to type " + memberType); break;
 				}
+				} catch(Exception e) {
+					Show.Error(memberId+" dictionaryAdd:" + e);
+				}
 			} else {
 				if (field != null) {
-					//Show.Log("setting " + result + "." + field.Name + " = " + memberValue);
-					field.SetValue(result, memberValue);
+					try {
+						//Show.Log("setting " + result + "." + field.Name + " = " + memberValue);
+						field.SetValue(result, memberValue);
+					}catch(Exception e) {
+						Show.Error(field.Name + " field.SetValue:" + e);
+					}
 				} else if (prop != null) {
-					prop.SetValue(result, memberValue, null);
+					try {
+						prop.SetValue(result, memberValue, null);
+					} catch (Exception e) {
+						Show.Error(prop.Name + " field.SetValue:" + e);
+					}
 				} else {
 					throw new Exception("huh? how did we get here?");
 				}

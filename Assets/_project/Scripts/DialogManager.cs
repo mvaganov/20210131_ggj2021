@@ -9,6 +9,7 @@ public class DialogManager : MonoBehaviour
     public TextAsset root;
     public TextAsset[] knownAssets;
     public DictionaryKeeper dict;
+    [Tooltip("what game object should be considered as initiating the dialog")]
     public GameObject dialogSource;
 
     public List<Dialog> dialogs = new List<Dialog>();
@@ -30,21 +31,41 @@ public class DialogManager : MonoBehaviour
         if (dialogView == null) { dialogView = FindObjectOfType<DialogViewer>(); }
         if(dict == null) { dict = GetComponentInChildren<DictionaryKeeper>(); }
         Dialog[] d;
-        CodeConvert.TryParse(root.text, out d, dict.Dictionary, Commander.Tokenizer);
-        dialogs.AddRange(d);
-        ResolveTemplatedDialogs(dialogs);
+        //NonStandard.Show.Log(knownAssets.JoinToString(", ", ta => ta.name));
+        //NonStandard.Show.Log(root.name+":" + root.text.Length);
+        Tokenizer tokenizer = new Tokenizer();
+        try {
+            CodeConvert.TryParse(root.text, out d, dict.Dictionary, tokenizer);
+            tokenizer.ShowErrorTo(NonStandard.Show.Error);
+            if (d == null) return;
+            //NonStandard.Show.Log("dialogs: [" + NonStandard.Show.Stringify(d, false)+"]");
+            dialogs.AddRange(d);
+            ResolveTemplatedDialogs(dialogs);
+        } catch(System.Exception e) {
+            NonStandard.Show.Log("~~~#@Start "+e);
+		}
+        //NonStandard.Show.Log("finished initializing " + this);
     }
     public static void ResolveTemplatedDialogs(List<Dialog> dialogs) {
         int counter = 0;
         for (int i = 0; i < dialogs.Count; ++i) {
-            if(++counter > 100000) { throw new System.Exception("too many dialogs..."); }
+            //NonStandard.Show.Log("checking " + i + " " + dialogs.Count);
+            if (++counter > 100000) { throw new System.Exception("too many dialogs..."); }
             TemplatedDialog td = dialogs[i] as TemplatedDialog;
 			if (td != null) {
+                //NonStandard.Show.Log("resolving " + i + " " + dialogs.Count);
                 Dialog[] d = td.Generate();
+                //NonStandard.Show.Log("resolved " + i + " " + dialogs.Count);
                 dialogs.RemoveAt(i);
+                //NonStandard.Show.Log("removed " + i + " " + dialogs.Count);
+                if (d != null) {
+                    dialogs.AddRange(d);
+                } else {
+                    NonStandard.Show.Error("could not generate from " + NonStandard.Show.Stringify(td, false));
+				}
+                //NonStandard.Show.Log("replaced " + i + " "+dialogs.Count);
                 --i;
-                dialogs.AddRange(d);
-			}
+            }
         }
     }
     public void SetDialog(string name) { ActiveDialog.SetDialog(name); }

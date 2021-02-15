@@ -1,6 +1,6 @@
 ﻿color	green
-textA	"I'm so sick, and weak, and ugly... I need exercise! My body could be so much better!"
-textB	"Yes! *flex* Look at these gains! You should all do what I'm doing because clearly I'm winning at this!"
-textC	"Oof. That is a bit too swollen now. I may have overdid it there."
-textD	"Overdoing it is unhealthy. I need to find a middle way, a less toxic way."
-textE	"We must set others free too, like you have. Be compassionate as they lose themselves, and be examples of what they can find after they have lost."
+textA	"I used to be so much more healthy than now. Time to get in shape! Watch me!"
+textB	"I'm so sick, and weak, and ugly... I need more exercise! My body could be so much better!"
+textC	"Yes! *flex* Look at these gains! You should all do what I'm doing because --witness this body!"
+textD	"Oof. That is a bit too swollen now. I may have overdid it there."
+textE	"I think overdoing it like that was unhealthy. Maybe even toxic. My body is my temple. I can worship it like an idol, or use it to live."

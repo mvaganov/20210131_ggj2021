@@ -5,6 +5,7 @@ public class FloatyText : MonoBehaviour
     private TMPro.TMP_Text tmpText;
     public float duration = 3;
     public float speed = 1;
+    public bool fade = true;
     public Camera _cam;
     public Camera cam {
         get {
@@ -31,6 +32,19 @@ public class FloatyText : MonoBehaviour
         transform.rotation = cam.transform.rotation;
         Rigidbody rb = GetComponent<Rigidbody>();
         rb.velocity = Vector3.up * speed;
-        NonStandard.Clock.setTimeout(() => Destroy(gameObject), (long)(duration * 1000));
+        long timing = (long)(duration * 1000);
+        NonStandard.Clock.setTimeout(() => Destroy(gameObject), timing);
+        if (fade) {
+            TMPro.TMP_Text tt = TmpText;
+            Color originalFace = tt.faceColor, originalOutline = tt.outlineColor;
+            NonStandard.Clock.Lerp(p => {
+                if (tt != null) {
+                    tt.faceColor = Color.Lerp(originalFace, Color.clear, p);
+                    tt.outlineColor = Color.Lerp(originalOutline, Color.clear, p);
+                    transform.rotation = cam.transform.rotation;
+                }
+                //Show.Log(p);
+            }, timing, 100);
+        }
     }
 }

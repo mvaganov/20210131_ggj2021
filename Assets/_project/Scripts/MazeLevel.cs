@@ -41,11 +41,15 @@ public class MazeLevel : MonoBehaviour {
         CodeConvert.TryParse(npcNamesText.text, out npcNames, null, tokenizer);
         Generate();
         ConditionCheck cc = Global.Get<ConditionCheck>();
-        cc.condition = () => npcs.Count == Global.Get<Team>().members.Count;
+        cc.condition = () => {
+            //Show.Log("checking victory " + Global.Get<Team>().members.Count + " / " + (npcs.Count + 1));
+            return Global.Get<Team>().members.Count >= npcs.Count+1;
+        };
         cc.action = () => {
             DialogManager.Instance.StartDialog("win message");
             DialogManager.Instance.Show();
         };
+        //Show.Log("finished initializing " + this);
     }
     public char GetTileSrc(Coord c) { return map[c].letter; }
     public MazeTile GetTile(Coord c) { return mazeTiles[c.Y*map.Width+c.X]; }
@@ -138,6 +142,7 @@ public class MazeLevel : MonoBehaviour {
             PlaceObjectOverTile(npcs[i].transform, floorTiles[below2 + i]);
         }
         Team team = Global.Get<Team>();
+        team.AddMember(mainDiscoverer.transform.parent.gameObject);
         PlaceObjectOverTile(team.members[0].transform, floorTiles[floorTiles.Count - 1]);
         Vector3 pos = team.members[0].transform.position;
         for (int i = 1; i < team.members.Count; ++i) {
@@ -150,8 +155,6 @@ public class MazeLevel : MonoBehaviour {
             Material mat = tokenMaterials[advancementColor[advancementindex]];
             GameObject originalItem = tokenPrefabs[advancementShape[advancementindex]];
             GameObject go = Instantiate(originalItem);
-            ++advancementindex;
-            if(advancementindex >= advancementShape.Length) { advancementindex = 0; }
             go.name = mat.name;
             Renderer r = go.GetComponent<Renderer>();
             r.material = mat;
@@ -168,17 +171,7 @@ public class MazeLevel : MonoBehaviour {
 			}
             ii.onAddToInventory += inv => {
                 FloatyText ft = FloatyTextManager.Create(go.transform.position + (Vector3.up * tileSize.y * wallHeight), floatyTextString);
-                Clock.Lerp(p => {
-                    if (ft != null) {
-                        TMPro.TMP_Text tt = ft.TmpText;
-                        if (tt != null) {
-                            tt.faceColor = Color.Lerp(mat.color, Color.clear, p);
-                            tt.outlineColor = Color.Lerp(Color.white, Color.clear, p);
-                        }
-                        ft.transform.rotation = ft.cam.transform.rotation;
-                    }
-                    //Show.Log(p);
-                }, 3000, 60);
+                ft.TmpText.faceColor = mat.color;
                 // find which NPC wants this, and make them light up
                 ParticleSystem ps = null;
                 CharacterMove npc = npcs.Find(n=> {
@@ -189,7 +182,12 @@ public class MazeLevel : MonoBehaviour {
                 });
                 if(npc != null) { ps.Play(); }
             };
-            ii.onRemoveFromInventory += inv => dk.AddTo(mat.name, -1);
+            ii.onRemoveFromInventory += inv => {
+                //Show.Log("losing " + mat.name);
+                dk.AddTo(mat.name, -1);
+            };
+            ++advancementindex;
+            if (advancementindex >= advancementShape.Length) { advancementindex = 0; }
         }
         return idols;
     }
@@ -237,6 +235,7 @@ public class MazeLevel : MonoBehaviour {
         if(activeIdols == 0) {
             mazeGenerationArguments.size += new Vector2(2, 2);
             Clock.setTimeout(()=>Generate(), 2000);
-		}
+		} 
+        //else { Show.Log(activeIdols + " active idols left"); }
 	}
 }

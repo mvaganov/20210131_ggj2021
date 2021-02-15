@@ -21,12 +21,16 @@ public class Inventory : MonoBehaviour {
 		if(items == null) { items = new List<GameObject>(); }
 		if (inventoryUi != null) { ListItemUi result = inventoryUi.GetListItemUi(itemObject); if (result != null) return result; }
 		items.Add(itemObject);
-		itemObject.SetActive(false);
-		itemObject.transform.SetParent(transform);
 		InventoryItem item = itemObject.GetComponent<InventoryItem>();
+		itemObject.SetActive(false);
+		item.onAddToInventory?.Invoke(this);
+		Vector3 playerLoc = Global.Get<CharacterControlManager>().localPlayerInterfaceObject.transform.position;
+		Vector3 localPosition = itemObject.transform.position - playerLoc;
+		itemObject.transform.SetParent(transform);
+		itemObject.transform.localPosition = localPosition;
+		//Show.Log("POS IN" + localPosition);
 		string name = item != null ? item.itemName : null;
 		if (string.IsNullOrEmpty(name)) { name = itemObject.name; }
-		item.onAddToInventory?.Invoke(this);
 		if (inventoryUi == null) { return null; }
 		return inventoryUi.AddItem(itemObject, name, () => {
 			RemoveItem(itemObject);
@@ -49,7 +53,11 @@ public class Inventory : MonoBehaviour {
 		if (proxyFor != null && proxyFor != this) { proxyFor.RemoveItem(itemObject); return; }
 		if (items != null) { items.Remove(itemObject); }
 		itemObject.SetActive(true);
+		Vector3 localPos = itemObject.transform.localPosition;
+		//Show.Log("POS out " + localPos);
+		Vector3 playerLoc = Global.Get<CharacterControlManager>().localPlayerInterfaceObject.transform.position;
 		itemObject.transform.SetParent(null);
+		itemObject.transform.position = playerLoc + localPos;
 		Rigidbody rb = itemObject.GetComponent<Rigidbody>();
 		if (rb != null) { rb.velocity = Vector3.zero; rb.angularVelocity = Vector3.zero; }
 		inventoryUi.RemoveItem(itemObject);

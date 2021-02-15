@@ -24,21 +24,26 @@ public class Commander {
 	public void ParseCommand(string command) {
 		Tokenizer cmdTok = new Tokenizer(); // don't use the global tokenizer, who knows where it's going
 		cmdTok.Tokenize(command);
-		bool moreCommands;
+		//Show.Log("~~~@#tokenized");
+		int iter = 0;
 		do {
-			moreCommands = false;
 			string cmd = cmdTok.GetResolvedToken(0, GetScope()).ToString();
+			//Show.Log(iter+" ~~~@& "+cmd);
 			ExecuteCommand(cmd, cmdTok);
-			for(int i = 0; i < cmdTok.TokenCount; ++i) {
-				Token t = cmdTok.GetToken(i);
-				Delim d = t.GetAsDelimiter();
-				if(d != null && d.text == ";") {
-					moreCommands = true;
-					cmdTok.PopTokens(i + 1);
-					break;
-				}
+			//Show.Log(iter + " ~~~@executed");
+			++iter;
+		} while (RemoveFirstCommand(cmdTok));
+	}
+	public bool RemoveFirstCommand(Tokenizer cmdTok) {
+		for (int i = 0; i < cmdTok.TokenCount; ++i) {
+			Token t = cmdTok.GetToken(i);
+			Delim d = t.GetAsDelimiter();
+			if (d != null && d.text == ";") {
+				cmdTok.PopTokens(i + 1);
+				return true;
 			}
-		} while (moreCommands);
+		}
+		return false;
 	}
 	public void ExecuteCommand(string command, Tokenizer tok) {
 		//Show.Log(command+": "+tok.DebugPrint());
@@ -97,7 +102,10 @@ public class Commander {
 		Inventory inv = Global.Get<Inventory>();
 		GameObject itemObj = inv.RemoveItem(itemName);
 		if (itemObj != null) {
-			if (tok.TokenCount == 2 || tok.GetToken(2).ToString() == ";") { UnityEngine.Object.Destroy(itemObj); } else {
+			if (tok.TokenCount == 2 || tok.GetToken(2).ToString() == ";") {
+				UnityEngine.Object.Destroy(itemObj);
+				//Show.Log("giving to nobody... destroying");
+			} else {
 				Token recieptiant = tok.GetToken(2);
 				Show.Log("TODO give "+itemObj+" to "+recieptiant);
 			}
@@ -107,13 +115,17 @@ public class Commander {
 	public void ClaimPlayer(Tokenizer tok) {
 		Global.Get<Team>().AddMember(DialogManager.Instance.dialogSource);
 		Discovery d = DialogManager.Instance.dialogSource.GetComponentInChildren<Discovery>(true);
-		if(d != null) { d.gameObject.SetActive(true); }
+		if (d != null) { d.gameObject.SetActive(true); }
 		Global.Get<ConditionCheck>().DoActivateTest();
 	}
 	public void AssertNum(Tokenizer tok) {
 		string itemName = tok.GetStr(1, Scope);
-		if (Scope.ContainsKey(itemName)) return;
+		//Show.Log("!!!!%^ asserting " + itemName);
+		if (itemName != null && Scope != null && Scope.ContainsKey(itemName)) return;
+		//Show.Log("!!!!%^ getting value ");
+		//Show.Log("!!!!%^ checking "+tok.tokens[2]+" in "+Scope);
 		object itemValue = tok.GetResolvedToken(2, Scope);
+		//Show.Log("!!!!%^ value is " + itemValue);
 		Scope.Set(itemName, itemValue);
 	}
 

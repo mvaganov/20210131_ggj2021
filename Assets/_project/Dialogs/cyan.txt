@@ -1,6 +1,6 @@
 ﻿color	cyan
-textA	"There are so many memes out there... I must see them. What am I missing out on?"
-textB	"Haha! So funny. Hah, that one is good too..."
-textC	"Most of those memes were garbage. How long did I spend doing that? Oh no."
-textD	"Why did I let myself waste so much time? I could have been actually productive with my time instead."
-textE	"We must set others free too, like you have. Be compassionate as they lose themselves, and be examples of what they can find after they have lost."
+textA	"So a skeleton walks into a bar. He sits down, and tells the bartender \"Gimmie a long island, and a mop.\""
+textB	"There are so many jokes. So many memes out there... I must see them. What am I missing out on?"
+textC	"Haha! So funny. Hah, that one is good too..."
+textD	"Most of those memes were garbage. I don't remember half those jokes. How long did I spend doing that? Oh no..."
+textE	"Why did I let myself waste so much time? Searching for a laugh? I could have been actually productive with my time instead. Who cares about the laugh, I should have lived."

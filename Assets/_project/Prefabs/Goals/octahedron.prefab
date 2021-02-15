@@ -13,8 +13,8 @@ GameObject:
   - component: {fileID: 5309041540611214789}
   - component: {fileID: 5309041540611214794}
   - component: {fileID: 5309041540611214795}
-  - component: {fileID: 5309041540611214792}
   - component: {fileID: 5309041540611214793}
+  - component: {fileID: -2470337478596403048}
   m_Layer: 0
   m_Name: octahedron
   m_TagString: Untagged
@@ -72,7 +72,6 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -97,7 +96,6 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!54 &5309041540611214795
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -114,18 +112,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &5309041540611214792
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5309041540611214799}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 26a75a19f4f417f4a8f751e8711a7f0c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &5309041540611214793
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -140,3 +126,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemName: 
   _pickupCollider: {fileID: 0}
+--- !u!114 &-2470337478596403048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5309041540611214799}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: afd705a825ed2f2449b9e4af1d7ebfac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  boundary: {fileID: 0}
+  homePoint: {x: 0, y: 0, z: 0}
+  bindOnStart: 1

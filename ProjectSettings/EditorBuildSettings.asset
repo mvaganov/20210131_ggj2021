@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/_project/maze.unity
-    guid: 879848a619a780a4da6470db7466dfef
+    path: Assets/_project/Scenes/SampleScene.unity
+    guid: cd22bdf05061785429ac02ee94fb1eab
+  - enabled: 1
+    path: Assets/_project/Scenes/maze.unity
+    guid: c731386730f50634ea71dbd85378922b
   m_configObjects: {}

@@ -95,7 +95,6 @@ namespace NonStandard.Data {
 				if ((_val == null && value != null) || (_val != null && !_val.Equals(value))) {
 					if (dependents != null) dependents.ForEach(dep => dep.needsRecalculation = true);
 					if (onChange != null) onChange.Invoke(_val, value);
-					if (parent.onChange != null) parent.onChange.Invoke(_key, _val, value);
 					_val = value;
 				}
 			}
@@ -146,6 +145,9 @@ namespace NonStandard.Data {
 		public void SetHashFunction(Func<KEY, int> hFunc, int bucketCount) {
 			this.hFunc = hFunc;
 			if (bucketCount <= 0) { buckets = null; return; }
+			SetBucketCount(bucketCount);
+		}
+		private void SetBucketCount(int bucketCount) {
 			List<List<KV>> oldbuckets = buckets;
 			buckets = new List<List<KV>>(bucketCount);
 			for (int i = 0; i < bucketCount; ++i) { buckets.Add(null); }
@@ -163,7 +165,11 @@ namespace NonStandard.Data {
 			} while (index < list.Count && list[index].hash == kvp.hash);
 			return ~index;
 		}
+		private void EnsureBuckets() {
+			if (buckets == null || buckets.Count == 0) { SetBucketCount(defaultBuckets); }
+		}
 		public void FindEntry(KV kvp, out List<KV> bucket, out int bestIndexInBucket) {
+			EnsureBuckets();
 			int whichBucket = kvp.hash % buckets.Count;
 			bucket = buckets[whichBucket];
 			if (bucket == null) { buckets[whichBucket] = bucket = new List<KV>(); }
@@ -173,19 +179,26 @@ namespace NonStandard.Data {
 		}
 		public bool Set(KEY key, VAL val) { return Set(Kv(key, val)); }
 		public bool Set(KV kvp) {
-			if (buckets == null) { BucketCount = defaultBuckets; }
+			EnsureBuckets();
 			List<KV> bucket; int bestIndexInBucket;
 			FindEntry(kvp, out bucket, out bestIndexInBucket);
 			if (bestIndexInBucket < 0) {
 				bucket.Insert(~bestIndexInBucket, kvp);
 				orderedPairs.Add(kvp);
+				if (onChange != null) onChange.Invoke(kvp._key, default(VAL), kvp._val);
 			} else {
-				bucket[bestIndexInBucket].val = kvp.val;
+				if (onChange != null) {
+					VAL old = bucket[bestIndexInBucket].val;
+					bucket[bestIndexInBucket].val = kvp.val;
+					onChange.Invoke(kvp._key, old, kvp._val);
+				} else {
+					bucket[bestIndexInBucket].val = kvp.val;
+				}
 			}
 			return bestIndexInBucket < 0;
 		}
 		public bool Set(KEY key, Func<VAL> valFunc) {
-			if (buckets == null) { BucketCount = defaultBuckets; }
+			EnsureBuckets();
 			List<KV> bucket; int bestIndexInBucket;
 			KV kvp = Kv(key);
 			FindEntry(kvp, out bucket, out bestIndexInBucket);
@@ -199,7 +212,7 @@ namespace NonStandard.Data {
 		}
 		public bool TryGet(KEY key, out KV entry) {
 			entry = Kv(key);
-			if (buckets == null) return false;
+			if (buckets == null || buckets.Count == 0) return false;
 			List<KV> bucket; int bestIndexInBucket;
 			FindEntry(entry, out bucket, out bestIndexInBucket);
 			if (bestIndexInBucket >= 0) {
@@ -228,6 +241,12 @@ namespace NonStandard.Data {
 			}
 			return sb.ToString();
 		}
+		/// <summary>
+		/// calls any change listeners to mark initialization
+		/// </summary>
+		public void Start() {
+			if (onChange != null) { onChange.Invoke(default(KEY), default(VAL), default(VAL)); }
+		}
 		public string Show(bool showCalcualted) {
 			StringBuilder sb = new StringBuilder();
 			bool printed = false;
@@ -248,7 +267,8 @@ namespace NonStandard.Data {
 		public void Add(KEY key, VAL value) { Set(key, value); }
 		public bool ContainsKey(KEY key) {
 			List<KV> bucket;  int bestIndexInBucket;
-			FindEntry(Kv(key), out bucket, out bestIndexInBucket);
+			KV kv = Kv(key);
+			FindEntry(kv, out bucket, out bestIndexInBucket);
 			return bestIndexInBucket >= 0;
 		}
 		public bool Remove(KEY key) {

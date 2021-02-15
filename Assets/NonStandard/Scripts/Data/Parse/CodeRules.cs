@@ -404,16 +404,36 @@ namespace NonStandard.Data.Parse {
 				} else {
 					// how to generically interface with a non standard dictionary
 					MethodInfo mi = scopeType.GetMethod("ContainsKey", new Type[] { dType.Key });
-					bool hasIt = (bool)mi.Invoke(scope, new object[]{ name });
+					//Show.Log("~~~#$G ");
+					bool hasIt = false;
+					if (mi == null) {
+						Show.Error("couldn't find ContainsKey, how about:" + scopeType.GetMethods().JoinToString(", ", m => m.Name));
+					} else {
+						//Show.Log("~~~#$params: " + mi.GetParameters().JoinToString(", ", p => p.ParameterType.Name));
+						//Show.Log("~~~#$return: " + mi.ReturnType.Name+ " " + mi.DeclaringType + "."+mi.Name);
+						try {
+							hasIt = (bool)mi.Invoke(scope, new object[] { name });
+							//Show.Log("~~~#$W COULD seek " + name);
+						} catch (Exception) {
+							//Show.Log("~~~#$X couldn't find "+name+" in "+scopeType);
+							hasIt = false;
+						}
+					}
+					//Show.Log("~~~#$H ");
 					if (hasIt) {
 						mi = scopeType.GetMethod("Get", new Type[] { dType.Key });
-						value = mi.Invoke(scope, new object[] { name });
+						if (mi == null) {
+							Show.Error("couldn't find Get, how about:" + scopeType.GetMethods().JoinToString(", ", m => m.Name));
+							value = null;
+						} else {
+							value = mi.Invoke(scope, new object[] { name });
+						}
 					}
 				}
 				type = (value != null) ? value.GetType() : null;
 				return;
 			}
-			if (name[0] == (Parser.Wildcard) || name[name.Length - 1] == (Parser.Wildcard)) {
+			if (name.Length > 0 && (name[0] == Parser.Wildcard || name[name.Length - 1] == Parser.Wildcard)) {
 				FieldInfo[] fields = scopeType.GetFields();
 				string[] names = Array.ConvertAll(fields, f => f.Name);
 				int index = Parser.FindIndexWithWildcard(names, name, false);

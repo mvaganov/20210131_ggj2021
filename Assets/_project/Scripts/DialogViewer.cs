@@ -39,6 +39,7 @@ public class DialogViewer : MonoBehaviour {
 			}
 			Dialog.Command cmd = option as Dialog.Command;
 			if(cmd != null) {
+				//NonStandard.Show.Log("executing command "+cmd.command);
 				Commander.Instance.ParseCommand(cmd.command);
 				break;
 			}
@@ -128,8 +129,12 @@ public class DialogViewer : MonoBehaviour {
 		if (dialog.options != null) {
 			for (int i = 0; i < dialog.options.Length; ++i) {
 				Dialog.DialogOption opt = dialog.options[i];
+				//NonStandard.Show.Log("checking opt " + NonStandard.Show.Stringify(opt, false));
 				if (opt.Available(Commander.Tokenizer, Commander.Instance.GetScope())) {
 					AddDialogOption(opt, isScrolledAllTheWayDown);
+					//NonStandard.Show.Log("added" + NonStandard.Show.Stringify(opt, false));
+				} else {
+					//NonStandard.Show.Log("ignored" + NonStandard.Show.Stringify(opt, false));
 				}
 			}
 		}

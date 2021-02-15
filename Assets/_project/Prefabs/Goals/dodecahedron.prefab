@@ -13,8 +13,8 @@ GameObject:
   - component: {fileID: 4329290394837093544}
   - component: {fileID: 4329290394837093543}
   - component: {fileID: 4329290394837093542}
-  - component: {fileID: 4329290394837093541}
   - component: {fileID: 4329290394837093540}
+  - component: {fileID: 3522102783695287243}
   m_Layer: 0
   m_Name: dodecahedron
   m_TagString: Untagged
@@ -72,7 +72,6 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -97,7 +96,6 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!54 &4329290394837093542
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -114,18 +112,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &4329290394837093541
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4329290394837093538}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 26a75a19f4f417f4a8f751e8711a7f0c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &4329290394837093540
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -140,3 +126,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemName: 
   _pickupCollider: {fileID: 0}
+--- !u!114 &3522102783695287243
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4329290394837093538}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: afd705a825ed2f2449b9e4af1d7ebfac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  boundary: {fileID: 0}
+  homePoint: {x: 0, y: 0, z: 0}
+  bindOnStart: 1

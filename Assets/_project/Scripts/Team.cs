@@ -5,16 +5,29 @@ using UnityEngine;
 
 public class Team : MonoBehaviour {
 	public List<GameObject> members;
-	public ListUi inventoryUi;
+	public ListUi rosterUi;
 
 	public ListItemUi AddMember(GameObject memberObject) {
+		//Show.Log("adding member " + memberObject);
 		if (members == null) { members = new List<GameObject>(); }
-		if (inventoryUi != null) { ListItemUi result = inventoryUi.GetListItemUi(memberObject); if (result != null) return result; }
-		members.Add(memberObject);
+		// make sure this character adds to the communal inventory! (assuming there is one)
+		Inventory inv = memberObject.GetComponentInChildren<Inventory>();
+		if (inv != null) { inv.proxyFor = Global.Get<Inventory>(); }
 		TeamMember teamMember = memberObject.GetComponent<TeamMember>();
+		// add them to the roster
+		if (members.IndexOf(memberObject) < 0) {
+			members.Add(memberObject);
+			teamMember.onJoinTeam?.Invoke(this);
+		}
+		if (rosterUi != null) {
+			ListItemUi result = rosterUi.GetListItemUi(memberObject);
+			if (result != null) {
+				//Show.Log("already ui");
+				return result;
+			}
+		}
 		string name = teamMember != null ? teamMember.name : null;
 		if(string.IsNullOrEmpty(name)) { name = memberObject.name; }
-		teamMember.onJoinTeam?.Invoke(this);
 
 		Interact3dItem i3i = teamMember.GetComponent<Interact3dItem>();
 		void ActivateTeamMember() {
@@ -27,10 +40,11 @@ public class Team : MonoBehaviour {
 			i3i.Text = "switch";
 			i3i.alwaysOn = true;
 		}
-		Inventory inv = memberObject.GetComponentInChildren<Inventory>();
-		if (inv != null) { inv.proxyFor = Global.Get<Inventory>(); }
-		if (inventoryUi == null) { return null; }
-		return inventoryUi.AddItem(memberObject, name, ActivateTeamMember);
+		if (rosterUi == null) {
+			Show.Log("missing roster UI");
+			return null;
+		}
+		return rosterUi.AddItem(memberObject, name, ActivateTeamMember);
 	}
 	public GameObject FindItem(string name) {
 		if (members == null) return null;
@@ -46,7 +60,7 @@ public class Team : MonoBehaviour {
 	}
 	public void RemoveMember(GameObject memberObject) {
 		if (members != null) { members.Remove(memberObject); }
-		inventoryUi.RemoveItem(memberObject);
+		rosterUi.RemoveItem(memberObject);
 		TeamMember teamMember = memberObject.GetComponent<TeamMember>();
 		teamMember?.onLeaveTeam?.Invoke(this);
 	}

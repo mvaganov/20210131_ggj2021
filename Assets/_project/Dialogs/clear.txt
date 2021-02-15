@@ -1,6 +1,6 @@
 ﻿color	clear
-textA	"I'm almost done, so very close to my goal! I just need to try it again, maybe a few more times! Once I finish this, I will be complete!"
-textB	"Yes! Yes... Ok, that goal wasn't exactly the end goal. This next one though..."
-textC	"What am I doing? Who all of this for? Is it for me? Me from the past? Me from the future?"
-textD	"All of that effort was worthless. Like running in a hamster wheel. I was trapped in a maze, locking myself in someone else's world. Now that I've given up that world, I can finally build onto my own life."
-textE	"We must set others free too, like you have. Be compassionate as they lose themselves, and be examples of what they can find after they have lost."
+textA	"I'm almost done, so very close to my goal! I just need to try it a few more times! Once I finish this, I will be complete!"
+textB	"Ok, that didn't turn out exactly how I wanted. The next time though! I'm almost there, almost done!"
+textC	"Yes! Yes... Ok, that goal wasn't exactly the end goal. This next one though..."
+textD	"What am I doing? Who all of this for? Is this for me? Me from the past? Me in the future?"
+textE	"All of that effort was worthless. Like running in a hamster wheel. I was trapped in a maze, locking myself in someone else's world. Now that I've given up that world, I can finally build onto my own life."

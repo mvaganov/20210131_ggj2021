@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NonStandard;
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -14,6 +15,7 @@ public class InventoryItem : MonoBehaviour {
 	}
 
 	void _OnTrigger(GameObject other) {
+		if (other == Global.Instance().gameObject) return;
 		Inventory inv = other.GetComponent<Inventory>();
 		if(inv != null) {
 			inv.AddItem(gameObject);

@@ -34,14 +34,28 @@ namespace NonStandard
 		public bool repeat = false;
 		[Tooltip("attempt to deactivate instead of activate")]
 		public bool deactivate = false;
+		[Tooltip("make sure this event happens, even if this timer object is destroyed")]
+		public bool relentlessTimer = false;
 
 		private void DoTimer() {
 			if (repeat) {
 				Clock.setTimeout(DoTimer, (long)(seconds * 1000));
 			}
-			Clock.ScheduledTask todo = Clock.setTimeout(whatToActivate.Data, (long)(seconds * 1000));
+			Clock.ScheduledTask todo;
+			if (relentlessTimer) {
+				todo = Clock.setTimeout(whatToActivate.Data, (long)(seconds * 1000));
+			} else {
+				Timer self = this;
+				todo = Clock.setTimeout(()=> {
+					if (self == null) return;
+					ActivateAnything.DoActivate(whatToActivate.Data, this, null, !deactivate);
+				}, (long)(seconds * 1000));
+			}
 			todo.who = this;
 			todo.activate = !deactivate;
+		}
+		public void DoActivateTrigger() {
+			ActivateAnything.DoActivate(whatToActivate.Data, this, null, !deactivate);
 		}
 		private void Awake() { MainClock.Instance(); }
 		void Start() { if (whatToActivate.Data != null) { DoTimer(); } }
@@ -89,6 +103,7 @@ namespace NonStandard
 		void OnApplicationPause(bool paused) { clock.OnApplicationPause(paused); }
 		void OnDisable() { clock.OnDisable(); }
 		void OnEnable() { clock.OnEnable(); }
+		private void OnDestroy() { clock.Release(); }
 		private void OnApplicationQuit() { clock.OnApplicationQuit(); }
 #if UNITY_EDITOR
 		public void OnValidate() { if (clock == null) { clock = Clock.Instance; } clock.OnValidate(); }
@@ -190,6 +205,7 @@ namespace NonStandard
 			MainClock.Instance();
 #endif
 		}
+		public void Release() { s_instance = null; queue.Clear(); queueRealtime.Clear(); SyncToRealtime(); }
 
 		public static Clock Instance { get { return (s_instance != null) ? s_instance : (s_instance = new Clock()); } }
 

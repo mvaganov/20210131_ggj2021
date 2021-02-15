@@ -1,6 +1,6 @@
 ﻿color	red
-textA	"I want to be the very best, so that none can challenge me!"
-textB	"Yeah! Don't even try it! I will end you!"
-textC	"The things I had to do to win... some of it was wrong."
-textD	"The winners are not always right, some times they're just the only ones left. I should have helped keep it going instead of ending it. A candle that lights another loses nothing."
-textE	"We must set others free too, like you have. Be compassionate as they lose themselves, and be examples of what they can find after they have lost."
+textA	"I want to be the very best. So mighty that none can challenge me!"
+textB	"Oh yeah! Watch me win. All I do is win win win win win..."
+textC	"Yeah! Don't even try it! I will end you!"
+textD	"The things I had to do to win... some of it was wrong."
+textE	"The winners are not always right, some times they're just the only ones left. I should have helped keep it going instead of ending it. A candle that lights another loses nothing."

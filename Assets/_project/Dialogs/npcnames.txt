@@ -1,12 +1,12 @@
 ﻿black avenger
 blue intellectual
 brown epicurean
-clear "good\nworker"
-cyan "funny\nperson"
-green "in shape"
-magenta calculating
+clear servant
+cyan entertainer
+green athlete
+magenta pretender
 pink sweetheart
-purple "sort of\na big deal"
-red "greatest\nof all time"
-white mediator
-yellow prosperous
+purple politician
+red challenger
+white ascetic
+yellow capitalist

@@ -1,6 +1,6 @@
 ﻿color	brown
 textA	"I bet that tastes so good, I gotta have it!"
 textB	"Mmm, yes, nom nom nom."
-textC	"Uhhhhgg... I have eaten so much I am fat now and feel sick."
-textD	"Eat to live or live to eat?"
-textE	"We must set others free too, like you have. Be compassionate as they lose themselves, and be examples of what they can find after they have lost."
+textC	"Oh yeah, cruchy, fatty, salty, sweet! Gotta have it!..."
+textD	"Uhhhhgg... so much eating. It all tastes the same now. My favorites are the same old thing. Will food ever be as good again?"
+textE	"And now what... I got sick, the flavor lost it's charm. Live to eat? Or eat to live."

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 
 namespace NonStandard {
 	public static class GetSubClassesExtension {
@@ -41,7 +42,13 @@ namespace NonStandard {
 			return false;
 		}
 		public static Type[] GetSubClasses(this Type type) {
-			Type[] allLocalTypes = Assembly.GetAssembly(type).GetTypes();
+			Type[] allLocalTypes;
+			try {
+				allLocalTypes = type.Assembly.GetTypes();
+			}catch(Exception e) {
+				Show.Error("unable to get assembly subclasses of "+type+":"+e);
+				return Type.EmptyTypes;
+			}
 			List<Type> subTypes = new List<Type>();
 			for (int i = 0; i < allLocalTypes.Length; ++i) {
 				Type t = allLocalTypes[i];

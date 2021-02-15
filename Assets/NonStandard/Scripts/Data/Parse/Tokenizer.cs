@@ -29,6 +29,7 @@ namespace NonStandard.Data.Parse {
 		/// <param name="scope"></param>
 		/// <returns></returns>
 		public string GetStr(int i, object scope = null) {
+			if (i >= tokens.Count) return null;
 			object o = GetResolvedToken(i, scope);
 			return o != null ? o.ToString() : null; }
 		public Token PopToken() {
@@ -67,7 +68,11 @@ namespace NonStandard.Data.Parse {
 		}
 		public ParseError AddError(Token token, string message) { return AddError(token.index, message); }
 		public void AddError(ParseError error) { errors.Add(error); }
-		public override string ToString() { return errors.JoinToString(", "); }
+		public string ErrorString() { return errors.JoinToString("\n"); }
+		public bool ShowErrorTo(Action<string> show) {
+			if (errors.Count == 0) return false;
+			show.Invoke(ErrorString()); return true;
+		}
 		public void Tokenize(string str, ParseRuleSet context = null) {
 			this.str = str;
 			errors.Clear();

@@ -1,12 +1,16 @@
 ﻿using NonStandard.Data.Parse;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace NonStandard.Data {
 
 	[System.Serializable, UnambiguousStringify]
 	public class SensitiveHashTable_stringobject : BurlyHashTable<string, object> { }
+	[System.Serializable]
+	public class StringEvent : UnityEvent<string> { }
 	public class DictionaryKeeper : MonoBehaviour {
+		public StringEvent stringListener;
 		protected SensitiveHashTable_stringobject dict = new SensitiveHashTable_stringobject();
 		public SensitiveHashTable_stringobject Dictionary { get { return dict; } }
 #if UNITY_EDITOR
@@ -27,8 +31,14 @@ namespace NonStandard.Data {
 				parseResults = tok.errors.JoinToString("\n");
 			} else {
 				//parseResults = dict.Show(true);
-				parseResults = Show.Stringify(dict, true);
+				string newResults = Show.Stringify(dict, true);
+				if(parseResults != newResults) { parseResults = newResults; }
 			}
+		}
+		public void GiveInventoryTo(TMPro.TMP_Text textElement) {
+			string outText = Show.Stringify(dict, true);
+			Debug.Log(outText);
+			textElement.text = outText;
 		}
 		void ShowChange() {
 			if (!validating) {
@@ -48,6 +58,11 @@ namespace NonStandard.Data {
 			#if UNITY_EDITOR
 			dict.onChange += (k, a, b) => { ShowChange(); };
 #endif
+			dict.onChange += (k, a, b) => {
+				string s = Show.Stringify(dict, true);
+				//Debug.Log(s);
+				stringListener.Invoke(s);
+			};
 			dict.FunctionAssignIgnore();
 			//string[] mainStats = new string[] { "str", "con", "dex", "int", "wis", "cha" };
 			//int[] scores = { 8, 8, 18, 12, 9, 14 };
@@ -59,6 +74,7 @@ namespace NonStandard.Data {
 			//	dict.Set("_"+s, ()=>CalcStatModifier(s));
 			//}
 			//AddTo("cha", 4);
+			dict.Start();
 		}
 		public float NumValue(string fieldName) {
 			object val;

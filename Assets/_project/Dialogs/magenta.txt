@@ -1,6 +1,6 @@
 ﻿color	magenta
-textA	"I need everyone to owe me favors, how else can I protect myself from them?"
-textB	"Haha! Excellent! No one will cross me now!"
-textC	"No one was honest with me. They just lied, and smiled, and I never saw it coming. I didn't know till it was too late. No one did. We were all just looking out for ourselves."
-textD	"We should have been honest about what wasn't working. And we should have worked on things that didn't seem to benefit us specifically. Society thrives when old men plant trees whose shade they'll never sit in."
-textE	"We must set others free too, like you have. Be compassionate as they lose themselves, and be examples of what they can find after they have lost."
+textA	"Everyone should smile when the see me. Everyone should respect me! I deserve it, more than anyone else."
+textB	""
+textC	""
+textD	"They listen to my words but not to my heart. Do they really see me? Will they worship me with greater authority still? Who is this for? Who am I impressing?"
+textE	""

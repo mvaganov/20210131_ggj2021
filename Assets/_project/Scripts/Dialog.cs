@@ -30,16 +30,20 @@ public class TemplatedDialog : Dialog {
 	public string template, parameters;
 	public Dialog[] Generate() {
 		Dictionary<string, object> data;
-		Tokenizer tokenizer = Commander.Instance.GetTokenizer();
+		Tokenizer tokenizer = new Tokenizer();
 		TextAsset dialogData = DialogManager.Instance.GetAsset(parameters),
 			dialogTemplate = DialogManager.Instance.GetAsset(template);
+		if (dialogData == null || dialogTemplate == null) {
+			Show.Error("failed to find components of templated script " + template + "<" + parameters + ">");
+			return null;
+		}
 		CodeConvert.TryParse(dialogData.text, out data, null, tokenizer);
-		if (tokenizer.errors.Count > 0) { Debug.LogError(tokenizer.errors.JoinToString("\n")); }
+		if (tokenizer.ShowErrorTo(Show.Error)) { return null; }
 		//Debug.Log(tok.DebugPrint());
 		//Debug.Log(Show.Stringify(data));
 		Dialog[] dialogs;
 		CodeConvert.TryParse(dialogTemplate.text, out dialogs, data, tokenizer);
-		if (tokenizer.errors.Count > 0) { Debug.LogError(tokenizer.errors.JoinToString("\n")); }
+		if (tokenizer.ShowErrorTo(Show.Error)) { return null; }
 		//Debug.Log(tok.DebugPrint());
 		//Debug.Log(Show.Stringify(dialogs));
 		return dialogs;

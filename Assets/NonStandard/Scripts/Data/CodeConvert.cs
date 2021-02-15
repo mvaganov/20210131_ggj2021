@@ -18,18 +18,26 @@ namespace NonStandard.Data {
 			return result;
 		}
 		public static bool TryParseType(Type type, string text, ref object data, object scope, Tokenizer tokenizer = null) {
-			if(tokenizer == null) { tokenizer = new Tokenizer(); }
-			tokenizer.Tokenize(text);
+			try {
+				if (tokenizer == null) { tokenizer = new Tokenizer(); }
+				tokenizer.Tokenize(text);
+			}catch(Exception e) {
+				Show.Error("Tokenize:" + e + "\n" + tokenizer.DebugPrint());
+				return false;
+			}
 			//if(tokenizer.errors.Count > 0) { Show.Error(tokenizer.errors.JoinToString("\n")); }
 			//Show.Log(Show.GetStack(4));
 			//Show.Log(tokenizer.DebugPrint(-1));
 			return TryParseTokens(type, tokenizer.tokens, ref data, scope, tokenizer);
 		}
 		public static bool TryParseTokens(Type type, List<Token> tokens, ref object data, object scope, Tokenizer tokenizer) {
+			bool result = false;
 			Parser p = new Parser();
 			p.Init(type, tokens, data, tokenizer, scope);
-			bool result = p.TryParse();
-			data = p.result;
+			try {
+				result = p.TryParse();
+				data = p.result;
+			}catch(Exception e) { Show.Error("TryParseTokens:"+e+"\n"+p.GetCurrentTokenIndex().JoinToString(", ")+"\n"+tokenizer.DebugPrint()); }
 			return result;
 		}
 
