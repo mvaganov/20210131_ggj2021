@@ -384,7 +384,6 @@ namespace NonStandard.Data.Parse {
 					(name[0]==(Parser.Wildcard) || name[name.Length-1]==(Parser.Wildcard))) {
 					MethodInfo getKey = null;
 					IEnumerator en = (IEnumerator)scopeType.GetMethod("GetEnumerator", Type.EmptyTypes).Invoke(scope,new object[] { });
-					//foreach(var kvp in dict) {
 					while(en.MoveNext()) {
 						object kvp = en.Current;
 						if (getKey == null) {
@@ -404,7 +403,6 @@ namespace NonStandard.Data.Parse {
 				} else {
 					// how to generically interface with a non standard dictionary
 					MethodInfo mi = scopeType.GetMethod("ContainsKey", new Type[] { dType.Key });
-					//Show.Log("~~~#$G ");
 					bool hasIt = false;
 					if (mi == null) {
 						Show.Error("couldn't find ContainsKey, how about:" + scopeType.GetMethods().JoinToString(", ", m => m.Name));
@@ -419,7 +417,6 @@ namespace NonStandard.Data.Parse {
 							hasIt = false;
 						}
 					}
-					//Show.Log("~~~#$H ");
 					if (hasIt) {
 						mi = scopeType.GetMethod("Get", new Type[] { dType.Key });
 						if (mi == null) {
