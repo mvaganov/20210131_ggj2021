@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 4329290394837093543}
   - component: {fileID: 4329290394837093542}
   - component: {fileID: 4329290394837093540}
-  - component: {fileID: 3522102783695287243}
+  - component: {fileID: -7686308186452358369}
   m_Layer: 0
   m_Name: dodecahedron
   m_TagString: Untagged
@@ -126,7 +126,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemName: 
   _pickupCollider: {fileID: 0}
---- !u!114 &3522102783695287243
+--- !u!114 &-7686308186452358369
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -135,9 +135,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 4329290394837093538}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: afd705a825ed2f2449b9e4af1d7ebfac, type: 3}
+  m_Script: {fileID: 11500000, guid: 347a01521cfaa3c4e8125fe409d3b99f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boundary: {fileID: 0}
+  binders: []
   homePoint: {x: 0, y: 0, z: 0}
   bindOnStart: 1

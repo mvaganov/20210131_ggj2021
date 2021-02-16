@@ -1,5 +1,7 @@
 ﻿using NonStandard;
 using NonStandard.Character;
+using NonStandard.GameUi;
+using NonStandard.Ui;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,6 +16,7 @@ public class Team : MonoBehaviour {
 		Inventory inv = memberObject.GetComponentInChildren<Inventory>();
 		if (inv != null) { inv.proxyFor = Global.Get<Inventory>(); }
 		TeamMember teamMember = memberObject.GetComponent<TeamMember>();
+		if(teamMember == null) { teamMember = memberObject.AddComponent<TeamMember>(); }
 		// add them to the roster
 		if (members.IndexOf(memberObject) < 0) {
 			members.Add(memberObject);

@@ -1,65 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &834278383
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 834278384}
-  - component: {fileID: 834278386}
-  - component: {fileID: 834278385}
-  m_Layer: 0
-  m_Name: discovery sphere
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &834278384
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 834278383}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 4}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 1349205996543500079}
-  m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!135 &834278386
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 834278383}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 1
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 5
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &834278385
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 834278383}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6c1e6438ed56ed24da08a9c9b24d5127, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  discoveredWall: {r: 1, g: 1, b: 1, a: 1}
-  discoveredFloor: {r: 0, g: 0, b: 0, a: 1}
-  maze: {fileID: 0}
 --- !u!1 &1345119069021353541
 GameObject:
   m_ObjectHideFlags: 0
@@ -74,8 +14,7 @@ GameObject:
   - component: {fileID: 1382904000734240831}
   - component: {fileID: 1344744285134660862}
   - component: {fileID: 1345119069021353540}
-  - component: {fileID: 17123235132430364}
-  - component: {fileID: -5859050885583897958}
+  - component: {fileID: 2777020805269124855}
   m_Layer: 8
   m_Name: character
   m_TagString: Player
@@ -95,7 +34,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1348902639552876431}
-  - {fileID: 834278384}
   - {fileID: 4122173517353804161}
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -166,7 +104,7 @@ MonoBehaviour:
     orientationTransform: {fileID: 0}
   jump:
     minJumpHeight: 0.25
-    maxJumpHeight: 0.5
+    maxJumpHeight: 1.5
     fullJumpPressDuration: 0.5
     maxJumps: 1
     PressJump: 0
@@ -208,6 +146,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   inventoryUi: {fileID: 0}
   proxyFor: {fileID: 0}
+  autoPickup: 0
 --- !u!114 &1345119069021353540
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -227,7 +166,7 @@ MonoBehaviour:
   alwaysOn: 0
   size: 1
   fontCoefficient: 1
---- !u!114 &17123235132430364
+--- !u!114 &2777020805269124855
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -236,22 +175,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1345119069021353541}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f22c8d8229ba004d90899263ff3cfe2, type: 3}
+  m_Script: {fileID: 11500000, guid: 347a01521cfaa3c4e8125fe409d3b99f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &-5859050885583897958
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1345119069021353541}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: afd705a825ed2f2449b9e4af1d7ebfac, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  boundary: {fileID: 0}
+  binders: []
   homePoint: {x: 0, y: 0, z: 0}
   bindOnStart: 1
 --- !u!1 &1345606606223651937
@@ -723,7 +650,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1349205996543500079}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!198 &3210549581378817889
 ParticleSystem:

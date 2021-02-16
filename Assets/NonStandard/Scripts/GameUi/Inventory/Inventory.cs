@@ -1,4 +1,5 @@
 ﻿using NonStandard;
+using NonStandard.Ui;
 using System.Collections.Generic;
 using UnityEngine;
 using static UnityEngine.ParticleSystem;
@@ -7,6 +8,7 @@ public class Inventory : MonoBehaviour {
 	List<GameObject> items;
 	public ListUi inventoryUi;
 	public Inventory proxyFor;
+	public bool autoPickup = true;
 	private static ParticleSystem pickupParticle;
 
 	public ListItemUi AddItem(GameObject itemObject) {

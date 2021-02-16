@@ -8,7 +8,18 @@ using System.Text;
 using UnityEngine;
 #endif
 namespace NonStandard {
+#if UNITY_2017_1_OR_NEWER
+	public class Show : MonoBehaviour {
+		public GameObject showText;
+		void Awake() {
+			TMPro.TMP_Text tmpText = showText.GetComponent<TMPro.TMP_Text>();
+			if (tmpText != null) { AddListener(s => tmpText.text += s + "\n"); }
+			UnityEngine.UI.Text txt = showText.GetComponent<UnityEngine.UI.Text>();
+			if(txt != null) { AddListener(s => txt.text += s + "\n"); }
+		}
+#else
 	public class Show {
+#endif
 		public static Action<string> onLog;
 		public static Action<string> onError;
 		public static Action<string> onWarning;

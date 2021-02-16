@@ -3,6 +3,7 @@ using NonStandard;
 using NonStandard.Character;
 using NonStandard.Data;
 using NonStandard.Data.Parse;
+using NonStandard.GameUi;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,6 +13,7 @@ public class MazeLevel : MonoBehaviour {
     public TextAsset npcNamesText;
     public MazeTile prefab_mazeTile;
     public CharacterMove prefab_npcPlayer;
+    public Discovery prefab_discovery;
     Map2d map;
     public float undiscoveredHeight = 0.0625f;
     public float floorHeight = 0;
@@ -22,7 +24,7 @@ public class MazeLevel : MonoBehaviour {
     public Color undiscoveredWall = Color.black, undiscoveredFloor = Color.black;
 
     List<MazeTile> mazeTiles = new List<MazeTile>();
-    public Discovery mainDiscoverer;
+    public GameObject firstPlayer;
     public List<CharacterMove> npcs = new List<CharacterMove>();
     private Dictionary<string, string[]> resourceNames;
     private Dictionary<string, string> npcNames;
@@ -50,6 +52,19 @@ public class MazeLevel : MonoBehaviour {
             DialogManager.Instance.Show();
         };
         //Show.Log("finished initializing " + this);
+        Team team = Global.Get<Team>();
+        team.AddMember(firstPlayer);
+        EnsureExplorer(firstPlayer);
+    }
+    public Discovery EnsureExplorer(GameObject go) {
+        Discovery d = go.GetComponentInChildren<Discovery>();
+        if (d == null) {
+            d = Instantiate(prefab_discovery.gameObject).GetComponent<Discovery>();
+            Transform t = d.transform;
+            t.SetParent(go.transform);
+            t.localPosition = Vector3.zero;
+        }
+        return d;
     }
     public char GetTileSrc(Coord c) { return map[c].letter; }
     public MazeTile GetTile(Coord c) { return mazeTiles[c.Y*map.Width+c.X]; }
@@ -91,7 +106,7 @@ public class MazeLevel : MonoBehaviour {
             t.SetParent(selfT);
             t.localPosition = mt.CalcLocalPosition();
             mt.kind = map[c] == '#' ? MazeTile.Kind.Wall : MazeTile.Kind.Floor;
-            mt.SetDiscovered(false, mainDiscoverer, this);
+            mt.SetDiscovered(false, null, this);
             if (mt.kind == MazeTile.Kind.Floor) {
                 floorTiles.Add(mt);
                 mt.goalScore = TileScorer(mt, map);
@@ -123,10 +138,6 @@ public class MazeLevel : MonoBehaviour {
                 npc.name = foundName;
             }
             Interact3dItem i3d = npc.GetComponentInChildren<Interact3dItem>();
-            Discovery d = npc.GetComponentInChildren<Discovery>(true);
-            d.discoveredFloor = Color.Lerp(d.discoveredFloor, mat.color, 0.5f);
-            d.discoveredWall = Color.Lerp(d.discoveredWall, mat.color, 0.5f);
-            d.maze = this;
             i3d.Text = npc.name;
             i3d.size = 1.75f;
             i3d.fontCoefficient = .7f;
@@ -142,7 +153,7 @@ public class MazeLevel : MonoBehaviour {
             PlaceObjectOverTile(npcs[i].transform, floorTiles[below2 + i]);
         }
         Team team = Global.Get<Team>();
-        team.AddMember(mainDiscoverer.transform.parent.gameObject);
+        team.AddMember(firstPlayer);
         PlaceObjectOverTile(team.members[0].transform, floorTiles[floorTiles.Count - 1]);
         Vector3 pos = team.members[0].transform.position;
         for (int i = 1; i < team.members.Count; ++i) {

@@ -17,7 +17,7 @@ public class InventoryItem : MonoBehaviour {
 	void _OnTrigger(GameObject other) {
 		if (other == Global.Instance().gameObject) return;
 		Inventory inv = other.GetComponent<Inventory>();
-		if(inv != null) {
+		if(inv != null && inv.autoPickup) {
 			inv.AddItem(gameObject);
 		}
 	}

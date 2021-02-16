@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using NonStandard.Data.Parse;
 using System;
+using NonStandard.Ui;
 
 public class DialogViewer : MonoBehaviour {
 	public Text title;

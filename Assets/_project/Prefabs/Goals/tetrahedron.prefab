@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 1401028737293335291}
   - component: {fileID: 1401028737293335290}
   - component: {fileID: 1401028737293335295}
-  - component: {fileID: -8565527914478369141}
+  - component: {fileID: -2525507548330130063}
   m_Layer: 0
   m_Name: tetrahedron
   m_TagString: Untagged
@@ -126,7 +126,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemName: 
   _pickupCollider: {fileID: 0}
---- !u!114 &-8565527914478369141
+--- !u!114 &-2525507548330130063
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -135,9 +135,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1401028737293335288}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: afd705a825ed2f2449b9e4af1d7ebfac, type: 3}
+  m_Script: {fileID: 11500000, guid: 347a01521cfaa3c4e8125fe409d3b99f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boundary: {fileID: 0}
+  binders: []
   homePoint: {x: 0, y: 0, z: 0}
   bindOnStart: 1

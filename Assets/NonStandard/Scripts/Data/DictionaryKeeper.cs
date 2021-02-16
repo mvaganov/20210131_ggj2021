@@ -7,10 +7,7 @@ namespace NonStandard.Data {
 
 	[System.Serializable, UnambiguousStringify]
 	public class SensitiveHashTable_stringobject : BurlyHashTable<string, object> { }
-	[System.Serializable]
-	public class StringEvent : UnityEvent<string> { }
 	public class DictionaryKeeper : MonoBehaviour {
-		public StringEvent stringListener;
 		protected SensitiveHashTable_stringobject dict = new SensitiveHashTable_stringobject();
 		public SensitiveHashTable_stringobject Dictionary { get { return dict; } }
 #if UNITY_EDITOR
@@ -18,6 +15,8 @@ namespace NonStandard.Data {
 		public string values;
 		[TextArea(1, 10)]
 		public string parseResults;
+		[System.Serializable] public class StringEvent : UnityEvent<string> { }
+		public StringEvent stringListener;
 
 		bool validating = false;
 		void OnValidate() {

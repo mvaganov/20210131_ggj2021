@@ -5,8 +5,9 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+// TODO pull out lost-and-found specific code into variant subclass used by game that adds to Commander.commandListing
 public class Commander {
-	Dictionary<string, Action<Tokenizer>> commandListing;
+	Dictionary<string, Action<Tokenizer>> commandListing = null;
 	Tokenizer tokenizer;
 
 	private static Commander _instance;
@@ -56,6 +57,7 @@ public class Commander {
 		ActiveDialog.PopErrors(tok.errors);
 	}
 	private void InitializeCommands() {
+		if (commandListing != null) return; 
 		commandListing = new Dictionary<string, Action<Tokenizer>>() {
 			["dialog"] = SetDialog,
 			["start"] = StartDialog,
@@ -67,8 +69,8 @@ public class Commander {
 			["++"] = Increment,
 			["--"] = Decrement,
 			["set"] = SetVariable,
-			["give"] = GiveInventory,
-			["claimplayer"] = ClaimPlayer,
+			["give"] = GiveInventory, // TODO lost and found game
+			["claimplayer"] = ClaimPlayer, // TODO lost and found game
 			["exit"] = s => PlatformAdjust.Exit(),
 		};
 	}
@@ -113,10 +115,18 @@ public class Commander {
 	}
 
 	public void ClaimPlayer(Tokenizer tok) {
-		Global.Get<Team>().AddMember(DialogManager.Instance.dialogSource);
-		Discovery d = DialogManager.Instance.dialogSource.GetComponentInChildren<Discovery>(true);
-		if (d != null) { d.gameObject.SetActive(true); }
+		GameObject npc = DialogManager.Instance.dialogSource;
+		Global.Get<Team>().AddMember(npc);
+		MazeLevel ml = Global.Get<MazeLevel>();
+		Discovery d = ml.EnsureExplorer(npc);
+		ParticleSystem ps = npc.GetComponentInChildren<ParticleSystem>();
+		Color color = ps.main.startColor.color;
+		d.discoveredFloor = Color.Lerp(d.discoveredFloor, color, 0.5f);
+		d.discoveredWall = Color.Lerp(d.discoveredWall, color, 0.5f);
+		d.maze = ml;
 		Global.Get<ConditionCheck>().DoActivateTest();
+		Inventory inv = npc.GetComponentInChildren<Inventory>();
+		inv.autoPickup = true;
 	}
 	public void AssertNum(Tokenizer tok) {
 		string itemName = tok.GetStr(1, Scope);
