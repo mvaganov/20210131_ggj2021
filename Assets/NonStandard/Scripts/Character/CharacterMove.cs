@@ -79,6 +79,7 @@ namespace NonStandard.Character {
 
 			public bool canMoveInAir;
 			public bool lookForwardMoving;
+			public bool maintainSpeedAgainstWall;
 			[HideInInspector] public bool isStableOnGround;
 			[HideInInspector] public float strafeRightMovement;
 			[HideInInspector] public float moveForwardMovement;
@@ -117,7 +118,10 @@ namespace NonStandard.Character {
 				if (oppositionDirection != Vector3.zero) {
 					float opposition = -Vector3.Dot(moveDirection, oppositionDirection);
 					if (opposition > 0) {
+						float s = speed;
+						if (maintainSpeedAgainstWall) { s = moveVelocity.magnitude; }
 						moveVelocity += opposition * oppositionDirection;
+						if (maintainSpeedAgainstWall) { moveVelocity.Normalize(); moveVelocity *= s; }
 					}
 				}
 				return moveVelocity;

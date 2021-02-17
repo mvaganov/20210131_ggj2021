@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 1390092828270637013}
   - component: {fileID: 1326929688332339777}
   - component: {fileID: 1382904000734240831}
-  - component: {fileID: 1344744285134660862}
   - component: {fileID: 1345119069021353540}
   - component: {fileID: 2777020805269124855}
+  - component: {fileID: 8374091285262765857}
   m_Layer: 8
   m_Name: character
   m_TagString: Player
@@ -92,6 +92,7 @@ MonoBehaviour:
       arrived: 0
     canMoveInAir: 1
     lookForwardMoving: 1
+    maintainSpeedAgainstWall: 1
     isStableOnGround: 0
     strafeRightMovement: 0
     moveForwardMovement: 0
@@ -132,21 +133,6 @@ MonoBehaviour:
     arrived:
       m_PersistentCalls:
         m_Calls: []
---- !u!114 &1344744285134660862
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1345119069021353541}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 66eb4f2adb00aaa42aeed0766022ffb2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  inventoryUi: {fileID: 0}
-  proxyFor: {fileID: 0}
-  autoPickup: 0
 --- !u!114 &1345119069021353540
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -181,6 +167,20 @@ MonoBehaviour:
   binders: []
   homePoint: {x: 0, y: 0, z: 0}
   bindOnStart: 1
+--- !u!114 &8374091285262765857
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1345119069021353541}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 312c27f7bb909ce428d62936dff87980, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inventory: {fileID: 0}
+  autoPickup: 0
 --- !u!1 &1345606606223651937
 GameObject:
   m_ObjectHideFlags: 0
@@ -620,6 +620,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   whereToGo: {fileID: 0}
+  worldPositionStays: 0
 --- !u!1 &2224737061939126122
 GameObject:
   m_ObjectHideFlags: 0

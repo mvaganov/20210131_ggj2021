@@ -37,7 +37,7 @@ namespace NonStandard.Character {
 			set { if (target != null) target.MoveForwardMovement = value; }
 		}
 		public void SetAutoMovePosition(Vector3 position, System.Action whatToDoWhenTargetIsReached = null) {
-			if (target != null) target.SetAutoMovePosition(position, whatToDoWhenTargetIsReached);
+			if (target != null) { target.SetAutoMovePosition(position, whatToDoWhenTargetIsReached); }
 		}
 		public void DisableAutoMove() { if (target != null) target.DisableAutoMove(); }
 		public float GetJumpProgress() { return target != null ? target.GetJumpProgress() : 0; }

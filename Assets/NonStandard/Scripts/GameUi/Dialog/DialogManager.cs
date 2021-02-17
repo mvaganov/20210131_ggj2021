@@ -9,7 +9,7 @@ namespace NonStandard.GameUi.Dialog {
         public TextAsset[] knownAssets;
         public DictionaryKeeper dict;
         [Tooltip("what game object should be considered as initiating the dialog")]
-        public GameObject dialogSource;
+        public GameObject dialogWithWho;
 
         public List<Dialog> dialogs = new List<Dialog>();
         public DialogViewer dialogView;

@@ -6,8 +6,9 @@ namespace NonStandard.Character {
 	public KeyCode key = KeyCode.Mouse0;
 	public Camera _camera;
 	public LayerMask validToMove = -1;
+	public QueryTriggerInteraction moveToTrigger = QueryTriggerInteraction.Ignore;
 
-#if UNITY_EDITOR
+	#if UNITY_EDITOR
 	/// called when created by Unity Editor
 	void Reset() {
 		if (characterToMove == null) { characterToMove = transform.GetComponentInParent<CharacterMoveProxy>(); }
@@ -16,7 +17,7 @@ namespace NonStandard.Character {
 		if (_camera == null) { _camera = Camera.main; }
 		if (_camera == null) { _camera = FindObjectOfType<Camera>(); ; }
 	}
-#endif
+	#endif
 	private void Start() { }
 
 	void Update()
@@ -25,7 +26,7 @@ namespace NonStandard.Character {
 		{
 			Ray ray = _camera.ScreenPointToRay(Input.mousePosition);
 			RaycastHit rh;
-			Physics.Raycast(ray, out rh, float.PositiveInfinity, validToMove);
+			Physics.Raycast(ray, out rh, float.PositiveInfinity, validToMove, moveToTrigger);
 			if(rh.collider != null) {
 				characterToMove.SetAutoMovePosition(rh.point, ()=> { characterToMove.DisableAutoMove(); });
 			}

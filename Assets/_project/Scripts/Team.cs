@@ -14,8 +14,6 @@ public class Team : MonoBehaviour {
 		//Show.Log("adding member " + memberObject);
 		if (members == null) { members = new List<GameObject>(); }
 		// make sure this character adds to the communal inventory! (assuming there is one)
-		Inventory inv = memberObject.GetComponentInChildren<Inventory>();
-		if (inv != null) { inv.proxyFor = Global.Get<Inventory>(); }
 		TeamMember teamMember = memberObject.GetComponent<TeamMember>();
 		if(teamMember == null) { teamMember = memberObject.AddComponent<TeamMember>(); }
 		// add them to the roster

@@ -10,11 +10,11 @@ using UnityEngine;
 namespace NonStandard {
 #if UNITY_2017_1_OR_NEWER
 	public class Show : MonoBehaviour {
-		public GameObject showText;
+		public GameObject routeOutputTo;
 		void Awake() {
-			TMPro.TMP_Text tmpText = showText.GetComponent<TMPro.TMP_Text>();
+			TMPro.TMP_Text tmpText = routeOutputTo.GetComponent<TMPro.TMP_Text>();
 			if (tmpText != null) { AddListener(s => tmpText.text += s + "\n"); }
-			UnityEngine.UI.Text txt = showText.GetComponent<UnityEngine.UI.Text>();
+			UnityEngine.UI.Text txt = routeOutputTo.GetComponent<UnityEngine.UI.Text>();
 			if(txt != null) { AddListener(s => txt.text += s + "\n"); }
 		}
 #else

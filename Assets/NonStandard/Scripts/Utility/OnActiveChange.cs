@@ -1,8 +1,10 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
 
-public class OnActiveChange : MonoBehaviour {
-	public UnityEvent onEnable, onDisable;
-	void OnEnable() { onEnable.Invoke(); }
-	void OnDisable() { onDisable.Invoke(); }
+namespace NonStandard.Utility {
+	public class OnActiveChange : MonoBehaviour {
+		public UnityEvent onEnable, onDisable;
+		void OnEnable() { onEnable.Invoke(); }
+		void OnDisable() { onDisable.Invoke(); }
+	}
 }

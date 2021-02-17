@@ -8,22 +8,11 @@ namespace NonStandard.GameUi.Inventory {
 	public class Inventory : MonoBehaviour {
 		List<GameObject> items;
 		public ListUi inventoryUi;
-		public Inventory proxyFor;
-		public bool autoPickup = true;
-		private static ParticleSystem pickupParticle;
 
 		private void Awake() {
-			Global.Get<InventoryManager>();
+			Global.Get<InventoryManager>().Register(this);
 		}
 		public ListItemUi AddItem(GameObject itemObject) {
-			if (proxyFor != null && proxyFor != this) { return proxyFor.AddItem(itemObject); }
-			if (pickupParticle == null) { pickupParticle = Global.Get<ParticleSystems>().Get("circdir"); }
-			if (pickupParticle != null) {
-				pickupParticle.transform.position = itemObject.transform.position;
-				pickupParticle.transform.LookAt(transform);
-				EmitParams ep = new EmitParams() { startColor = itemObject.GetComponent<Renderer>().material.color };
-				pickupParticle.Emit(ep, 10);
-			}
 			if (items == null) { items = new List<GameObject>(); }
 			if (inventoryUi != null) { ListItemUi result = inventoryUi.GetListItemUi(itemObject); if (result != null) return result; }
 			items.Add(itemObject);
@@ -56,7 +45,6 @@ namespace NonStandard.GameUi.Inventory {
 			return go;
 		}
 		public void RemoveItem(GameObject itemObject) {
-			if (proxyFor != null && proxyFor != this) { proxyFor.RemoveItem(itemObject); return; }
 			if (items != null) { items.Remove(itemObject); }
 			itemObject.SetActive(true);
 			Vector3 localPos = itemObject.transform.localPosition;

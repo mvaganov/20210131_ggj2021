@@ -28,6 +28,7 @@ public class MazeLevel : MonoBehaviour {
 
     List<MazeTile> mazeTiles = new List<MazeTile>();
     public GameObject firstPlayer;
+    public DictionaryKeeper mainDictionaryKeeper;
     public List<CharacterMove> npcs = new List<CharacterMove>();
     private Dictionary<string, string[]> resourceNames;
     private Dictionary<string, string> npcNames;
@@ -41,7 +42,7 @@ public class MazeLevel : MonoBehaviour {
     public List<GameObject> idols;
     // Start is called before the first frame update
     public void Awake() {
-        Commander.Instance.SetScope(Global.Get<DictionaryKeeper>().Dictionary);
+        Commander.Instance.SetScope(mainDictionaryKeeper.Dictionary);
         Commander.Instance.AddCommand("claimplayer", ClaimPlayer);
     }
     void Start() {
@@ -151,7 +152,7 @@ public class MazeLevel : MonoBehaviour {
             i3d.size = 1.75f;
             i3d.fontCoefficient = .7f;
             i3d.OnInteract = () => {
-                DialogManager.Instance.dialogSource = npc;
+                DialogManager.Instance.dialogWithWho = npc;
                 DialogManager.Instance.Show();
                 Tokenizer tok = new Tokenizer();
                 DialogManager.Instance.StartDialog(npc, tok, "dialog" + mat.name);
@@ -167,8 +168,14 @@ public class MazeLevel : MonoBehaviour {
         team.AddMember(firstPlayer);
         PlaceObjectOverTile(team.members[0].transform, floorTiles[floorTiles.Count - 1]);
         Vector3 pos = team.members[0].transform.position;
-        for (int i = 1; i < team.members.Count; ++i) {
+        for (int i = 0; i < team.members.Count; ++i) {
             team.members[i].transform.position = pos;
+            CharacterMove cm = team.members[i].GetComponent<CharacterMove>();
+            if (cm != null) {
+                cm.SetAutoMovePosition(pos);
+                cm.MoveForwardMovement = 0;
+                cm.StrafeRightMovement = 0;
+            }
         }
     }
     public List<GameObject> CreateIdols(int count) {
@@ -182,9 +189,8 @@ public class MazeLevel : MonoBehaviour {
             r.material = mat;
             idols.Add(go);
             InventoryItem ii = go.GetComponent<InventoryItem>();
-            DictionaryKeeper dk = Global.Get<DictionaryKeeper>();
             ii.onAddToInventory += GoalCheck;
-            ii.onAddToInventory += inv => dk.AddTo(mat.name, 1);
+            ii.onAddToInventory += inv => mainDictionaryKeeper.AddTo(mat.name, 1);
             string floatyTextString = mat.name;
             string[] floatyTextOptions = null;
             if(resourceNames == null || (resourceNames.TryGetValue(mat.name, out floatyTextOptions) && floatyTextOptions != null)) {
@@ -206,7 +212,7 @@ public class MazeLevel : MonoBehaviour {
             };
             ii.onRemoveFromInventory += inv => {
                 //Show.Log("losing " + mat.name);
-                dk.AddTo(mat.name, -1);
+                mainDictionaryKeeper.AddTo(mat.name, -1);
             };
             ++advancementindex;
             if (advancementindex >= advancementShape.Length) { advancementindex = 0; }
@@ -261,7 +267,7 @@ public class MazeLevel : MonoBehaviour {
         //else { Show.Log(activeIdols + " active idols left"); }
 	}
     public void ClaimPlayer(object src, Tokenizer tok) {
-        GameObject npc = DialogManager.Instance.dialogSource;
+        GameObject npc = DialogManager.Instance.dialogWithWho;
         Global.Get<Team>().AddMember(npc);
         MazeLevel ml = Global.Get<MazeLevel>();
         Discovery d = ml.EnsureExplorer(npc);
@@ -271,7 +277,8 @@ public class MazeLevel : MonoBehaviour {
         d.discoveredWall = Color.Lerp(d.discoveredWall, color, 0.5f);
         d.maze = ml;
         Global.Get<ConditionCheck>().DoActivateTest();
-        Inventory inv = npc.GetComponentInChildren<Inventory>();
+        InventoryCollector inv = npc.GetComponentInChildren<InventoryCollector>();
+        inv.inventory = InventoryManager.main;
         inv.autoPickup = true;
     }
 

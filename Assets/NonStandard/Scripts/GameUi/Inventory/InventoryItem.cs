@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NonStandard.Utility;
+using System;
 using UnityEngine;
 
 namespace NonStandard.GameUi.Inventory {
@@ -15,8 +16,8 @@ namespace NonStandard.GameUi.Inventory {
 
 		void _OnTrigger(GameObject other) {
 			if (other == Global.Instance().gameObject) return;
-			Inventory inv = other.GetComponent<Inventory>();
-			if (inv != null && inv.autoPickup) {
+			InventoryCollector inv = other.GetComponent<InventoryCollector>();
+			if (inv != null && inv.autoPickup && inv.inventory) {
 				inv.AddItem(gameObject);
 			}
 		}
