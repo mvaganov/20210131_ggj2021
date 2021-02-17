@@ -9,13 +9,13 @@ namespace NonStandard.Data {
 	public class DictionaryKeeper : MonoBehaviour {
 		protected SensitiveHashTable_stringobject dict = new SensitiveHashTable_stringobject();
 		public SensitiveHashTable_stringobject Dictionary { get { return dict; } }
+		[System.Serializable] public class StringEvent : UnityEvent<string> { }
+		public StringEvent stringListener;
 #if UNITY_EDITOR
 		[TextArea(3, 10)]
 		public string values;
 		[TextArea(1, 10)]
 		public string parseResults;
-		[System.Serializable] public class StringEvent : UnityEvent<string> { }
-		public StringEvent stringListener;
 
 		bool validating = false;
 		void OnValidate() {
