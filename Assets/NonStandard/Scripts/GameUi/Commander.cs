@@ -1,142 +1,66 @@
-﻿using NonStandard;
-using NonStandard.Data;
+﻿using NonStandard.Data;
 using NonStandard.Data.Parse;
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
-// TODO pull out lost-and-found specific code into variant subclass used by game that adds to Commander.commandListing
-public class Commander {
-	Dictionary<string, Action<Tokenizer>> commandListing = null;
-	Tokenizer tokenizer;
+namespace NonStandard.GameUi {
+	public class Commander {
+		Dictionary<string, Action<object, Tokenizer>> commandListing = null;
+		public Action<List<ParseError>> onErrors;
+		private static Commander _instance;
+		public static Commander Instance { get { return (_instance != null) ? _instance : _instance = new Commander(); } }
 
-	private static Commander _instance;
-	public static Commander Instance { get { return (_instance != null) ? _instance : _instance = new Commander(); } }
-	public Tokenizer GetTokenizer() { return tokenizer; }
-	public static Tokenizer Tokenizer { get { return Instance.GetTokenizer(); } }
-	public static DictionaryKeeper ScopeDictionaryKeeper { get { return DialogManager.Instance.GetScriptScope(); } }
-	public static SensitiveHashTable_stringobject Scope { get { return ScopeDictionaryKeeper.Dictionary; } }
-	public object GetScope() { return Scope; }
-	DialogViewer ActiveDialog { get { return DialogManager.ActiveDialog; } }
-	private Commander() {
-		InitializeCommands();
-		tokenizer = new Tokenizer();
-	}
-	public void ParseCommand(string command) {
-		Tokenizer cmdTok = new Tokenizer(); // don't use the global tokenizer, who knows where it's going
-		cmdTok.Tokenize(command);
-		//Show.Log("~~~@#tokenized");
-		int iter = 0;
-		do {
-			string cmd = cmdTok.GetResolvedToken(0, GetScope()).ToString();
-			//Show.Log(iter+" ~~~@& "+cmd);
-			ExecuteCommand(cmd, cmdTok);
-			//Show.Log(iter + " ~~~@executed");
-			++iter;
-		} while (RemoveFirstCommand(cmdTok));
-	}
-	public bool RemoveFirstCommand(Tokenizer cmdTok) {
-		for (int i = 0; i < cmdTok.TokenCount; ++i) {
-			Token t = cmdTok.GetToken(i);
-			Delim d = t.GetAsDelimiter();
-			if (d != null && d.text == ";") {
-				cmdTok.PopTokens(i + 1);
-				return true;
+		public object _scope;
+		public void SetScope(object scope) { _scope = scope; }
+		public object GetScope() { return _scope; }
+		private Commander() { InitializeCommands(); }
+		public void ParseCommand(object source, string command) {
+			Tokenizer cmdTok = new Tokenizer();
+			cmdTok.Tokenize(command);
+			int iter = 0;
+			do {
+				string cmd = cmdTok.GetResolvedToken(0, GetScope()).ToString();
+				ExecuteCommand(source, cmd, cmdTok);
+				++iter;
+			} while (RemoveFirstCommand(cmdTok));
+		}
+		public bool RemoveFirstCommand(Tokenizer cmdTok) {
+			for (int i = 0; i < cmdTok.TokenCount; ++i) {
+				Token t = cmdTok.GetToken(i);
+				Delim d = t.GetAsDelimiter();
+				if (d != null && d.text == ";") {
+					cmdTok.PopTokens(i + 1);
+					return true;
+				}
 			}
+			return false;
 		}
-		return false;
-	}
-	public void ExecuteCommand(string command, Tokenizer tok) {
-		//Show.Log(command+": "+tok.DebugPrint());
-		Action<Tokenizer> commandToExecute;
-		if (commandListing.TryGetValue(command, out commandToExecute)) {
-			commandToExecute.Invoke(tok);
-		} else {
-			tok.AddError("unknown command \'" + command + "\'");
-		}
-		ActiveDialog.PopErrors(tok.errors);
-	}
-	private void InitializeCommands() {
-		if (commandListing != null) return; 
-		commandListing = new Dictionary<string, Action<Tokenizer>>() {
-			["dialog"] = SetDialog,
-			["start"] = StartDialog,
-			["continue"] = ContinueDialog,
-			["done"] = Done,
-			["hide"] = Hide,
-			["show"] = _Show,
-			["assertnum"] = AssertNum,
-			["++"] = Increment,
-			["--"] = Decrement,
-			["set"] = SetVariable,
-			["give"] = GiveInventory, // TODO lost and found game
-			["claimplayer"] = ClaimPlayer, // TODO lost and found game
-			["exit"] = s => PlatformAdjust.Exit(),
-		};
-	}
-	public void SetDialog(Tokenizer tok) { ActiveDialog.SetDialog(tok.GetStr(1)); }
-	public void StartDialog(Tokenizer tok) { ActiveDialog.StartDialog(tok.GetStr(1)); }
-	public void ContinueDialog(Tokenizer tok) { ActiveDialog.ContinueDialog(tok.GetStr(1)); }
-	public void Done(Tokenizer tok) { ActiveDialog.Done(); }
-	public void Hide(Tokenizer tok) { ActiveDialog.Hide(); }
-	public void _Show(Tokenizer tok) { ActiveDialog.Show(); }
-	public void Increment(string name) {
-		if (ScopeDictionaryKeeper == null) { tokenizer.AddError("can't add 1 to \"" + name + "\", missing variable scope"); return; }
-		ScopeDictionaryKeeper.AddTo(name, 1);
-	}
-	public void Decrement(string name) {
-		if (ScopeDictionaryKeeper == null) { tokenizer.AddError("can't add -1 to \"" + name + "\", missing variable scope"); return; }
-		ScopeDictionaryKeeper.AddTo(name, -1);
-	}
-	
-	public void Increment(Tokenizer tok) { Increment(tok.GetStr(1)); }
-	public void Decrement(Tokenizer tok) { Decrement(tok.GetStr(1)); }
-	public void SetVariable(Tokenizer tok) {
-		string key = tok.GetStr(1, Scope);
-		object value = tok.GetResolvedToken(2, Scope);
-		string vStr = value as string;
-		float f;
-		if(vStr != null && float.TryParse(vStr, out f)) { value = f; }
-		ScopeDictionaryKeeper.Dictionary.Set(key, value);
-	}
-	public void GiveInventory(Tokenizer tok) {
-		string itemName = tok.GetStr(1, Scope);
-		Inventory inv = Global.Get<Inventory>();
-		GameObject itemObj = inv.RemoveItem(itemName);
-		if (itemObj != null) {
-			if (tok.TokenCount == 2 || tok.GetToken(2).ToString() == ";") {
-				UnityEngine.Object.Destroy(itemObj);
-				//Show.Log("giving to nobody... destroying");
+		public void ExecuteCommand(object source, string command, Tokenizer tok) {
+			//Show.Log(command+": "+tok.DebugPrint());
+			Action<object,Tokenizer> commandToExecute;
+			if (commandListing.TryGetValue(command, out commandToExecute)) {
+				commandToExecute.Invoke(source, tok);
 			} else {
-				Token recieptiant = tok.GetToken(2);
-				Show.Log("TODO give "+itemObj+" to "+recieptiant);
+				tok.AddError("unknown command \'" + command + "\'");
+			}
+			if (tok.errors.Count > 0 && onErrors != null) {
+				onErrors.Invoke(tok.errors);
+				tok.errors.Clear();
 			}
 		}
+		public void AddCommands(Dictionary<string, Action<object, Tokenizer>> commands) {
+			foreach(KeyValuePair<string, Action<object, Tokenizer>> kvp in commands) {
+				AddCommand(kvp.Key, kvp.Value);
+			}
+		}
+		public void AddCommand(string command, Action<object, Tokenizer> commandAction) {
+			commandListing[command] = commandAction;
+		}
+		private void InitializeCommands() {
+			if (commandListing != null) return; 
+			commandListing = new Dictionary<string, Action<object,Tokenizer>>() {
+				["exit"] = (s,t) => PlatformAdjust.Exit(),
+			};
+		}
 	}
-
-	public void ClaimPlayer(Tokenizer tok) {
-		GameObject npc = DialogManager.Instance.dialogSource;
-		Global.Get<Team>().AddMember(npc);
-		MazeLevel ml = Global.Get<MazeLevel>();
-		Discovery d = ml.EnsureExplorer(npc);
-		ParticleSystem ps = npc.GetComponentInChildren<ParticleSystem>();
-		Color color = ps.main.startColor.color;
-		d.discoveredFloor = Color.Lerp(d.discoveredFloor, color, 0.5f);
-		d.discoveredWall = Color.Lerp(d.discoveredWall, color, 0.5f);
-		d.maze = ml;
-		Global.Get<ConditionCheck>().DoActivateTest();
-		Inventory inv = npc.GetComponentInChildren<Inventory>();
-		inv.autoPickup = true;
-	}
-	public void AssertNum(Tokenizer tok) {
-		string itemName = tok.GetStr(1, Scope);
-		//Show.Log("!!!!%^ asserting " + itemName);
-		if (itemName != null && Scope != null && Scope.ContainsKey(itemName)) return;
-		//Show.Log("!!!!%^ getting value ");
-		//Show.Log("!!!!%^ checking "+tok.tokens[2]+" in "+Scope);
-		object itemValue = tok.GetResolvedToken(2, Scope);
-		//Show.Log("!!!!%^ value is " + itemValue);
-		Scope.Set(itemName, itemValue);
-	}
-
 }

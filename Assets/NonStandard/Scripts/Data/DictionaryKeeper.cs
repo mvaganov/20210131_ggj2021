@@ -1,5 +1,4 @@
 ﻿using NonStandard.Data.Parse;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -11,7 +10,7 @@ namespace NonStandard.Data {
 		protected SensitiveHashTable_stringobject dict = new SensitiveHashTable_stringobject();
 		public SensitiveHashTable_stringobject Dictionary { get { return dict; } }
 #if UNITY_EDITOR
-		[TextArea(3,10)]
+		[TextArea(3, 10)]
 		public string values;
 		[TextArea(1, 10)]
 		public string parseResults;
@@ -31,7 +30,7 @@ namespace NonStandard.Data {
 			} else {
 				//parseResults = dict.Show(true);
 				string newResults = Show.Stringify(dict, true);
-				if(parseResults != newResults) { parseResults = newResults; }
+				if (parseResults != newResults) { parseResults = newResults; }
 			}
 		}
 		public void GiveInventoryTo(TMPro.TMP_Text textElement) {
@@ -51,10 +50,12 @@ namespace NonStandard.Data {
 #endif
 		[System.Serializable] public class KVP { public string key; public float value; }
 
-		void Awake() { }
+		void Awake() {
+			Global.Get<DictionaryKeeperManager>().Register(this);
+		}
 
 		void Start() {
-			#if UNITY_EDITOR
+#if UNITY_EDITOR
 			dict.onChange += (k, a, b) => { ShowChange(); };
 #endif
 			dict.onChange += (k, a, b) => {
@@ -77,7 +78,7 @@ namespace NonStandard.Data {
 		}
 		public float NumValue(string fieldName) {
 			object val;
-			if(!dict.TryGetValue(fieldName, out val)) return 0;
+			if (!dict.TryGetValue(fieldName, out val)) return 0;
 			CodeConvert.TryConvert(ref val, typeof(float));
 			return (float)val;
 		}
@@ -90,7 +91,7 @@ namespace NonStandard.Data {
 		}
 
 		public string Format(string text) {
-			Tokenizer tok=new Tokenizer();
+			Tokenizer tok = new Tokenizer();
 			string resolvedText = CodeConvert.Format(text, dict, tok);
 			if (tok.errors.Count > 0) {
 				Show.Error(tok.errors.JoinToString(", "));

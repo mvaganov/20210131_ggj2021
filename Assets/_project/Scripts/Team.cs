@@ -1,6 +1,7 @@
 ﻿using NonStandard;
 using NonStandard.Character;
 using NonStandard.GameUi;
+using NonStandard.GameUi.Inventory;
 using NonStandard.Ui;
 using System.Collections.Generic;
 using UnityEngine;

@@ -4,6 +4,9 @@ using NonStandard.Character;
 using NonStandard.Data;
 using NonStandard.Data.Parse;
 using NonStandard.GameUi;
+using NonStandard.GameUi.Dialog;
+using NonStandard.GameUi.Inventory;
+using NonStandard.GameUi.Particles;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -37,6 +40,10 @@ public class MazeLevel : MonoBehaviour {
     public List<Material> tokenMaterials = new List<Material>();
     public List<GameObject> idols;
     // Start is called before the first frame update
+    public void Awake() {
+        Commander.Instance.SetScope(Global.Get<DictionaryKeeper>().Dictionary);
+        Commander.Instance.AddCommand("claimplayer", ClaimPlayer);
+    }
     void Start() {
         Tokenizer tokenizer = new Tokenizer();
         CodeConvert.TryParse(resourceNamesText.text, out resourceNames, null, tokenizer);
@@ -48,7 +55,9 @@ public class MazeLevel : MonoBehaviour {
             return Global.Get<Team>().members.Count >= npcs.Count+1;
         };
         cc.action = () => {
-            DialogManager.Instance.StartDialog("win message");
+            Tokenizer tok = new Tokenizer();
+            DialogManager.Instance.StartDialog(this, tok, "win message");
+            tok.ShowErrorTo(DialogManager.ActiveDialog.ShowError);
             DialogManager.Instance.Show();
         };
         //Show.Log("finished initializing " + this);
@@ -144,7 +153,9 @@ public class MazeLevel : MonoBehaviour {
             i3d.OnInteract = () => {
                 DialogManager.Instance.dialogSource = npc;
                 DialogManager.Instance.Show();
-                DialogManager.Instance.StartDialog("dialog" + mat.name);
+                Tokenizer tok = new Tokenizer();
+                DialogManager.Instance.StartDialog(npc, tok, "dialog" + mat.name);
+                tok.ShowErrorTo(DialogManager.ActiveDialog.ShowError);
                 ps.Stop();
             };
             npcs.Add(npc.GetComponent<CharacterMove>());
@@ -249,4 +260,19 @@ public class MazeLevel : MonoBehaviour {
 		} 
         //else { Show.Log(activeIdols + " active idols left"); }
 	}
+    public void ClaimPlayer(object src, Tokenizer tok) {
+        GameObject npc = DialogManager.Instance.dialogSource;
+        Global.Get<Team>().AddMember(npc);
+        MazeLevel ml = Global.Get<MazeLevel>();
+        Discovery d = ml.EnsureExplorer(npc);
+        ParticleSystem ps = npc.GetComponentInChildren<ParticleSystem>();
+        Color color = ps.main.startColor.color;
+        d.discoveredFloor = Color.Lerp(d.discoveredFloor, color, 0.5f);
+        d.discoveredWall = Color.Lerp(d.discoveredWall, color, 0.5f);
+        d.maze = ml;
+        Global.Get<ConditionCheck>().DoActivateTest();
+        Inventory inv = npc.GetComponentInChildren<Inventory>();
+        inv.autoPickup = true;
+    }
+
 }
