@@ -20,6 +20,8 @@ public class CharacterControlManager : MonoBehaviour
 		moveProxy.target = cm;
 		if (cm != null) { cm.move.orientationTransform = cam.transform; }
 		Transform t = localPlayerInterfaceObject.transform;
+		Interact3dUi.TriggerArea ta = t.GetComponent<Interact3dUi.TriggerArea>();
+		ta.Blink();
 		t.SetParent(obj.transform);
 		t.localPosition = Vector3.zero;
 		t.localRotation = Quaternion.identity;

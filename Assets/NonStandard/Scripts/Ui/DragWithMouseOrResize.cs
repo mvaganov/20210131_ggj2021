@@ -58,7 +58,7 @@ namespace NonStandard.Ui {
 			AddPointerEvent(EventTriggerType.PointerDown, PointerDown);
 			AddPointerEvent(EventTriggerType.BeginDrag, BeginDrag);
 			AddPointerEvent(EventTriggerType.Drag, OnDrag);
-			AddPointerEvent(EventTriggerType.EndDrag, EndDrag);
+			//AddPointerEvent(EventTriggerType.EndDrag, OnEndDrag);
 			AddPointerEvent(EventTriggerType.PointerUp, PointerUp);
 			//AddPointerEvent(EventTriggerType.Move, CursorChangeOnMove);
 			AddPointerEvent(EventTriggerType.PointerEnter, PointerEnter);
@@ -113,11 +113,13 @@ namespace NonStandard.Ui {
 			} else {
 				ResizeRect(data.delta, heldDir);
 			}
+			beingDragged = gameObject;
 		}
 
-		public virtual void EndDrag(BaseEventData data) { }
+		//public override void OnEndDrag(BaseEventData data) { base.OnEndDrag(data); }
 
-		public virtual void PointerUp(BaseEventData data) {
+		public override void PointerUp(BaseEventData data) {
+			base.PointerUp(data);
 			pointerDown = false;
 			heldDir = Direction.None;
 			//if (!disableReize) {

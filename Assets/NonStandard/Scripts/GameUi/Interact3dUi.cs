@@ -6,6 +6,7 @@ namespace NonStandard.GameUi {
         public RectTransform prefab_interactButton;
         protected List<Interact3dItem> items = new List<Interact3dItem>();
         public RectTransform uiArea;
+        [ContextMenuItem("blink","Blink")]
         public Collider triggerArea;
         public Camera cam;
         public class TriggerArea : MonoBehaviour {
@@ -17,6 +18,11 @@ namespace NonStandard.GameUi {
             private void OnTriggerExit(Collider other) {
                 Interact3dItem item = other.GetComponentInChildren<Interact3dItem>();
                 if (item && !item.alwaysOn) { ui.Remove(item); }
+            }
+            public void Blink() {
+                ui.Clear();
+                ui.triggerArea.enabled = false;
+                Clock.setTimeout(() => ui.triggerArea.enabled = true, 16);
             }
         }
         public void EnsureUi(Interact3dItem item) {
@@ -30,10 +36,16 @@ namespace NonStandard.GameUi {
         }
         public void Add(Interact3dItem item) {
             EnsureUi(item);
-            items.Add(item);
+            if (!items.Contains(item)) { items.Add(item); }
             UpdateItems();
         }
+        public void Clear() {
+            for(int i = items.Count-1; i >= 0; --i) {
+                Remove(items[i]);
+			}
+		}
         public void Remove(Interact3dItem item) {
+            if (item.alwaysOn) return;
             if (item.interactUi != null) {
                 Destroy(item.interactUi.gameObject);
             }

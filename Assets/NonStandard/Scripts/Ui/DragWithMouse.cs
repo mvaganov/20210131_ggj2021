@@ -6,16 +6,22 @@ namespace NonStandard.Ui {
 	public class DragWithMouse : MonoBehaviour {
 		protected RectTransform rt;
 		public bool disableDrag;
-
+		public static GameObject beingDragged = null;
 		protected virtual void Awake() {
 			rt = GetComponent<RectTransform>();
 			AddPointerEvent(EventTriggerType.Drag, OnDrag);
+			AddPointerEvent(EventTriggerType.PointerUp, PointerUp);
 		}
 
 		public void AddPointerEvent(EventTriggerType type, UnityAction<BaseEventData> pointerEvent) {
 			PointerTrigger.AddEvent(gameObject, type, pointerEvent);
 		}
-
+		public virtual void PointerUp(BaseEventData data) {
+			if (beingDragged == gameObject) {
+				Debug.Log("released " + this);
+				beingDragged = null;
+			}
+		}
 		public virtual void OnDrag(BaseEventData basedata) {
 			if (disableDrag) return;
 			PointerEventData data = basedata as PointerEventData;
@@ -24,6 +30,7 @@ namespace NonStandard.Ui {
 				RectTransform parentRt = rt.parent.GetComponent<RectTransform>();
 				KeepInBounds(parentRt.rect);
 			}
+			beingDragged = gameObject;
 		}
 
 		public void KeepInBounds(Rect p) {

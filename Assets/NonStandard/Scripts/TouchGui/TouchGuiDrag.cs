@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using NonStandard.Ui;
+using UnityEngine;
 
 namespace NonStandard.TouchGui {
 	public class TouchGuiDrag : TouchColliderSensitive {
@@ -25,11 +26,15 @@ namespace NonStandard.TouchGui {
 			UnityEngine.EventSystems.PointerEventData pd = data as UnityEngine.EventSystems.PointerEventData;
 			Hold(pd.position);
 			//Debug.Log("drag");
+			DragWithMouse.beingDragged = gameObject;
 		}
 		public override void PointerUp(UnityEngine.EventSystems.BaseEventData data) {
 			UnityEngine.EventSystems.PointerEventData pd = data as UnityEngine.EventSystems.PointerEventData;
 			Release(pd.position, null);
 			//Debug.Log("release");
+			if(DragWithMouse.beingDragged == gameObject) {
+				DragWithMouse.beingDragged = null;
+			}
 		}
 
 		public override bool PressDown(TouchCollider tc) { return PressDown(tc.touch.position); }

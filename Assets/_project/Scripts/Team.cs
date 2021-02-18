@@ -1,14 +1,27 @@
 ﻿using NonStandard;
-using NonStandard.Character;
 using NonStandard.GameUi;
-using NonStandard.GameUi.Inventory;
 using NonStandard.Ui;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Team : MonoBehaviour {
 	public List<GameObject> members;
 	public ListUi rosterUi;
+	public Button prev, next;
+	private int currentIndex = 0;
+
+	public void Next() { if (++currentIndex >= members.Count) { currentIndex = 0; } ActivateTeamMember(members[currentIndex]); }
+	public void Prev() { if (--currentIndex < 0) { currentIndex = members.Count-1; } ActivateTeamMember(members[currentIndex]); }
+	public void Start() {
+		prev.onClick.AddListener(Prev);
+		next.onClick.AddListener(Next);
+		if(members == null || members.Count < 1) {
+			prev.gameObject.SetActive(false);
+			next.gameObject.SetActive(false);
+		}
+	}
 
 	public ListItemUi AddMember(GameObject memberObject) {
 		//Show.Log("adding member " + memberObject);
@@ -21,6 +34,10 @@ public class Team : MonoBehaviour {
 			members.Add(memberObject);
 			teamMember.onJoinTeam?.Invoke(this);
 		}
+		if(members.Count > 1) {
+			prev.gameObject.SetActive(true);
+			next.gameObject.SetActive(true);
+		}
 		if (rosterUi != null) {
 			ListItemUi result = rosterUi.GetListItemUi(memberObject);
 			if (result != null) {
@@ -32,13 +49,14 @@ public class Team : MonoBehaviour {
 		if(string.IsNullOrEmpty(name)) { name = memberObject.name; }
 
 		Interact3dItem i3i = teamMember.GetComponent<Interact3dItem>();
-		void ActivateTeamMember() {
-			CharacterControlManager ccm = Global.Get<CharacterControlManager>();
-			ccm.SetCharacter(memberObject);
-			i3i.showing = false;
-		}
+		//void ActivateTeamMember() {
+		//	CharacterControlManager ccm = Global.Get<CharacterControlManager>();
+		//	ccm.SetCharacter(memberObject);
+		//	i3i.showing = false;
+		//}
+		Action activateMember = () => ActivateTeamMember(memberObject);
 		if (i3i != null) {
-			i3i.OnInteract = ActivateTeamMember;
+			i3i.OnInteract = activateMember;
 			i3i.Text = "switch";
 			i3i.alwaysOn = true;
 		}
@@ -46,24 +64,40 @@ public class Team : MonoBehaviour {
 			Show.Log("missing roster UI");
 			return null;
 		}
-		return rosterUi.AddItem(memberObject, name, ActivateTeamMember);
+		return rosterUi.AddItem(memberObject, name, activateMember);
 	}
-	public GameObject FindItem(string name) {
-		if (members == null) return null;
+	public void ActivateTeamMember(GameObject memberObject) {
+		CharacterControlManager ccm = Global.Get<CharacterControlManager>();
+		Interact3dItem i3i = ccm.moveProxy.GetComponent<Interact3dItem>();
+		if (i3i != null) { i3i.showing = true; }
+		ccm.SetCharacter(memberObject);
+		i3i = memberObject.GetComponent<Interact3dItem>();
+		if (i3i != null) { i3i.showing = false; }
+	}
+	public int FindItemIndex(string name) {
+		if (members == null) return -1;
 		// TODO wildcard search
-		return members.Find(i => i.name == name);
+		return members.FindIndex(i => i.name == name);
 	}
 	public GameObject RemoveMember(string name) {
-		GameObject go = FindItem(name);
-		if(go != null) {
-			RemoveMember(go);
+		int index = FindItemIndex(name);
+		GameObject go = null;
+		if (index >= 0) {
+			go = members[index];
+			RemoveMemberAt(index);
 		}
 		return go;
 	}
-	public void RemoveMember(GameObject memberObject) {
-		if (members != null) { members.Remove(memberObject); }
-		rosterUi.RemoveItem(memberObject);
-		TeamMember teamMember = memberObject.GetComponent<TeamMember>();
+	public void RemoveMemberAt(int index) {
+		GameObject go = members[index];
+		if (members != null) { members.RemoveAt(index); }
+		rosterUi.RemoveItem(go);
+		TeamMember teamMember = go.GetComponent<TeamMember>();
 		teamMember?.onLeaveTeam?.Invoke(this);
+		if (index == currentIndex) {
+			Prev();
+		} else if (index > currentIndex) {
+			--currentIndex;
+		}
 	}
 }
