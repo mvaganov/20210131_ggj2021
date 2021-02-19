@@ -26,10 +26,10 @@ namespace NonStandard.Ui {
 		DownLeft = Down | Left, DownRight = Down | Right,
 		DownLeftBack = Down | Left | Back, DownRightBack = Down | Right | Back,
 		DownLeftForward = Down | Left | Forward, DownRightForward = Down | Right | Forward,
-		Horizontal = Left | Right, Vertical = Down | Up, Transverse = Back | Forward,
+		Horizontal = Left | Right, Vertical = Down | Up, Profile = Back | Forward,
 		HorizontalDown = ~Up & All, HorizontalUp = ~Down & All,
 		VerticalLeft = ~Right & All, VerticalRight = ~Left & All,
-		TransverseForward = ~Forward & All, TransverseBack = ~Back & All,
+		ProfileForward = ~Forward & All, ProfileBack = ~Back & All,
 		All = Down | Up | Left | Right | Back | Forward
 	};
 
