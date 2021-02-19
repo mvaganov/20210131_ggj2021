@@ -97,17 +97,15 @@ namespace NonStandard.Character {
 			Vector3 ConvertIntentionToRealDirection(Vector3 intention, Transform playerTransform, out float speed) {
 				speed = intention.magnitude;
 				if (orientationTransform) {
-					Vector3 originalIntention = intention;
 					intention = orientationTransform.TransformDirection(intention);
-					intention = Vector3.ProjectOnPlane(intention, Vector3.up);
-					if(intention == Vector3.zero) {
-						intention = Quaternion.AngleAxis(-45, Vector3.right) * originalIntention;
-						intention = orientationTransform.TransformDirection(intention);
-						intention = Vector3.ProjectOnPlane(intention, Vector3.up);
-					} else {
-						intention.Normalize();
-						intention *= speed;
-					}
+					Vector3 lookForward = orientationTransform.forward;
+					Vector3 lookRight = orientationTransform.right;
+					Vector3 groundNormal = Vector3.up;
+					Vector3 groundForward = Vector3.ProjectOnPlane(lookForward, groundNormal);
+					if (groundForward == Vector3.zero) { groundForward = orientationTransform.up; }
+					else { groundForward.Normalize(); }
+					float a = Vector3.SignedAngle(groundForward, lookForward, lookRight);
+					intention = Quaternion.AngleAxis(-a, lookRight) * intention;
 				} else {
 					intention = playerTransform.transform.TransformDirection(intention);
 				}

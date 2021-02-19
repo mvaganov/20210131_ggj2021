@@ -117,7 +117,7 @@ namespace NonStandard.Ui {
 			if(rotation.Rotating || rotation.Angle != 0) { AddRotator(); }
 		}
 
-		public void SetCursor(object source, Direction uiDirection) {
+		public void SetCursor(object source, Direction2D uiDirection) {
 			SetCursor(source, TranslateCursor(uiDirection));
 		}
 
@@ -141,26 +141,26 @@ namespace NonStandard.Ui {
 			}
 		}
 
-		public void SetCursor(Direction uiDirection) { SetCursor(TranslateCursor(uiDirection)); }
+		public void SetCursor(Direction2D uiDirection) { SetCursor(TranslateCursor(uiDirection)); }
 
-		public CursorType TranslateCursor(Direction uiDirection) {
+		public CursorType TranslateCursor(Direction2D uiDirection) {
 			switch (uiDirection) {
-			case Direction.All: return CursorType.Move;
-			case Direction.Bottom: return CursorType.Vertical;
-			case Direction.BottomLeft: return CursorType.Diagonal2;
-			case Direction.BottomRight: return CursorType.Diagonal;
-			case Direction.Horizontal: return CursorType.Horizontal;
-			case Direction.HorizontalBottom: return CursorType.Vertical;
-			case Direction.HorizontalTop: return CursorType.Vertical;
-			case Direction.Left: return CursorType.Horizontal;
-			case Direction.None: return CursorType.No;
-			case Direction.Right: return CursorType.Horizontal;
-			case Direction.Top: return CursorType.Vertical;
-			case Direction.TopLeft: return CursorType.Diagonal;
-			case Direction.TopRight: return CursorType.Diagonal2;
-			case Direction.Vertical: return CursorType.Vertical;
-			case Direction.VerticalLeft: return CursorType.Horizontal;
-			case Direction.VerticalRight: return CursorType.Horizontal;
+			case Direction2D.All: return CursorType.Move;
+			case Direction2D.Bottom: return CursorType.Vertical;
+			case Direction2D.BottomLeft: return CursorType.Diagonal2;
+			case Direction2D.BottomRight: return CursorType.Diagonal;
+			case Direction2D.Horizontal: return CursorType.Horizontal;
+			case Direction2D.HorizontalBottom: return CursorType.Vertical;
+			case Direction2D.HorizontalTop: return CursorType.Vertical;
+			case Direction2D.Left: return CursorType.Horizontal;
+			case Direction2D.None: return CursorType.No;
+			case Direction2D.Right: return CursorType.Horizontal;
+			case Direction2D.Top: return CursorType.Vertical;
+			case Direction2D.TopLeft: return CursorType.Diagonal;
+			case Direction2D.TopRight: return CursorType.Diagonal2;
+			case Direction2D.Vertical: return CursorType.Vertical;
+			case Direction2D.VerticalLeft: return CursorType.Horizontal;
+			case Direction2D.VerticalRight: return CursorType.Horizontal;
 			}
 			return CursorType.Cursor;
 		}

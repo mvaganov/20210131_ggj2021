@@ -1,4 +1,8 @@
-﻿using UnityEngine;
+﻿using NonStandard.Data;
+using NonStandard.Ui;
+using System;
+using System.Text;
+using UnityEngine;
 
 namespace NonStandard.Character {
 	public class CharacterCamera : MonoBehaviour
@@ -56,17 +60,27 @@ namespace NonStandard.Character {
 		public void Awake() { t = transform; }
 
 		public void Start() {
-			targetRotation = transform.rotation;
+			RecalculateDistance();
+			RecalculateRotation();
+		}
+
+		public bool RecalculateDistance() {
+			float oldDist = targetDistance;
 			if (target != null) {
 				Vector3 delta = t.position - target.position;
 				targetDistance = delta.magnitude;
 			}
+			return oldDist != targetDistance;
+		}
+		public bool RecalculateRotation() {
+			float oldP = pitch, oldY = yaw;
+			targetRotation = t.rotation;
 			Vector3 right = Vector3.Cross(t.forward, Vector3.up);
+			if(right == Vector3.zero) { right = -t.right; }
 			Vector3 straightForward = Vector3.Cross(Vector3.up, right).normalized;
-			pitch = Vector3.Angle(straightForward, t.forward);
-			yaw = Vector3.Angle(Vector3.forward, straightForward);
-			if (Vector3.Dot(straightForward, Vector3.right) < 0) { yaw *= -1; }
-			if (Vector3.Dot(Vector3.up, t.forward) > 0) { pitch *= -1; }
+			pitch = Vector3.SignedAngle(straightForward, t.forward, -right);
+			yaw = Vector3.SignedAngle(Vector3.forward, straightForward, Vector3.up);
+			return oldP != pitch || oldY != yaw;
 		}
 
 		public void Update() {
@@ -75,8 +89,7 @@ namespace NonStandard.Character {
 				rotV = verticalRotateInput * anglePerSecondMultiplier * Time.unscaledDeltaTime,
 				zoom = zoomInput * Time.unscaledDeltaTime;
 			targetDistance += zoom;
-			if (rotH != 0 || rotV != 0)
-			{
+			if (rotH != 0 || rotV != 0) {
 				targetRotation = Quaternion.identity;
 				yaw += rotH;
 				pitch -= rotV;
@@ -105,8 +118,48 @@ namespace NonStandard.Character {
 		public void LateUpdate() {
 			t.rotation = targetRotation;
 			if(target != null) {
-				t.position = target.position - (targetRotation * Vector3.forward) * distanceBecauseOfObstacle;
+				t.position = target.position - (t.rotation * Vector3.forward) * distanceBecauseOfObstacle;
 			}
+		}
+
+		public void SetLerpSpeed(float durationSeconds) { duration = (long)(durationSeconds*1000); }
+		private long started, end, duration = 250;
+		private float distStart, distEnd;
+		private Quaternion rotStart, rotEnd;
+		private bool lerping = false;
+		public void LerpDirection(string dir) {
+			CodeConvert.TryConvertEnumWildcard(typeof(Direction3D), dir, out object v);
+			if (v != null) { LerpDirection((Direction3D)v); }
+		}
+		public void LerpDirection(Direction3D dir) { LerpDirection(dir.GetVector3()); }
+		public void LerpDirection(Vector3 direction) {
+			rotStart = t.rotation;
+			rotEnd = Quaternion.LookRotation(direction);
+			started = Clock.NowRealtime;
+			end = Clock.NowRealtime + duration;
+			if(!lerping) LerpToTarget();
+		}
+		public void LerpDistance(float distance) {
+			distStart = distanceBecauseOfObstacle;
+			distEnd = distance;
+			if (!lerping) LerpToTarget();
+		}
+		public void LerpToTarget() {
+			lerping = true;
+			long now = Clock.NowRealtime;
+			if (now >= end) {
+				t.rotation = rotEnd;
+				RecalculateRotation();
+				targetDistance = distEnd;
+				lerping = false;
+				return;
+			}
+			long passed = now - started;
+			float p = (float)passed / duration;
+			t.rotation = Quaternion.Lerp(rotStart, rotEnd, p);
+			targetDistance = (distEnd - distStart) * p + distStart;
+			RecalculateRotation();
+			Clock.setTimeout(LerpToTarget, 20);
 		}
 	}
 }

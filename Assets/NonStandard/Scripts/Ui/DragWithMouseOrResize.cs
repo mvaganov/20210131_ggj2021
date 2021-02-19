@@ -12,19 +12,19 @@ namespace NonStandard.Ui {
 		public Vector2 minimumSize = new Vector2(-1, -1);
 		[Tooltip("if negative values, calculate a minimum size based on child elements")]
 		private Vector2 startSize;
-		private Direction mouseCursorState = Direction.None;
-		private Direction heldDir = Direction.None;
+		private Direction2D mouseCursorState = Direction2D.None;
+		private Direction2D heldDir = Direction2D.None;
 
-		public static void ResizeRect(RectTransform rectTransform, Vector2 move, Direction dir) {
+		public static void ResizeRect(RectTransform rectTransform, Vector2 move, Direction2D dir) {
 			Vector2 min = rectTransform.offsetMin, max = rectTransform.offsetMax;
-			if ((dir & Direction.Bottom) != 0) { min.y += move.y; }
-			if ((dir & Direction.Left) != 0) { min.x += move.x; }
-			if ((dir & Direction.Top) != 0) { max.y += move.y; }
-			if ((dir & Direction.Right) != 0) { max.x += move.x; }
+			if ((dir & Direction2D.Bottom) != 0) { min.y += move.y; }
+			if ((dir & Direction2D.Left) != 0) { min.x += move.x; }
+			if ((dir & Direction2D.Top) != 0) { max.y += move.y; }
+			if ((dir & Direction2D.Right) != 0) { max.x += move.x; }
 			rectTransform.offsetMin = min; rectTransform.offsetMax = max;
 		}
 
-		public void ResizeRect(Vector2 move, Direction dir) {
+		public void ResizeRect(Vector2 move, Direction2D dir) {
 			ResizeRect(rt, move, dir);
 			Rect size = rt.rect;
 			if (size.width < minimumSize.x || size.height < minimumSize.y) {
@@ -32,7 +32,7 @@ namespace NonStandard.Ui {
 			}
 		}
 
-		public static Direction CalculateEdgeDirection(Vector2 p, Vector2 min, Vector2 max, float edgeRadius) {
+		public static Direction2D CalculateEdgeDirection(Vector2 p, Vector2 min, Vector2 max, float edgeRadius) {
 			float h = max.y - min.y, w = max.x - min.x;
 			float top_ = Mathf.Abs(p.y - min.y);
 			float left = Mathf.Abs(p.x - min.x);
@@ -46,11 +46,11 @@ namespace NonStandard.Ui {
 				if (righ == m) { righ = edgeRadius + 1; }
 			}
 			int result = 0;
-			if (top_ < edgeRadius) result |= (int)Direction.Top;
-			if (left < edgeRadius) result |= (int)Direction.Left;
-			if (bott < edgeRadius) result |= (int)Direction.Bottom;
-			if (righ < edgeRadius) result |= (int)Direction.Right;
-			return (Direction)result;
+			if (top_ < edgeRadius) result |= (int)Direction2D.Top;
+			if (left < edgeRadius) result |= (int)Direction2D.Left;
+			if (bott < edgeRadius) result |= (int)Direction2D.Bottom;
+			if (righ < edgeRadius) result |= (int)Direction2D.Right;
+			return (Direction2D)result;
 		}
 
 		protected override void Awake() {
@@ -91,14 +91,14 @@ namespace NonStandard.Ui {
 
 		public virtual void PointerDown(BaseEventData data) {
 			pointerDown = true;
-			if (heldDir == Direction.None) {
+			if (heldDir == Direction2D.None) {
 				heldDir = mouseCursorState;
 			}
 		}
 
 		public virtual void BeginDrag(BaseEventData data) {
 			OnDrag(data);
-			if (dynamicMouseCursor && heldDir == Direction.None) {
+			if (dynamicMouseCursor && heldDir == Direction2D.None) {
 				MouseCursor mc = MouseCursor.Instance;
 				if (mc != null) { mc.SetCursor(this, MouseCursor.CursorType.Move); }
 			}
@@ -108,7 +108,7 @@ namespace NonStandard.Ui {
 			if (disableDrag) return;
 			//isDragging = true;
 			PointerEventData data = basedata as PointerEventData;
-			if (heldDir == Direction.None) {
+			if (heldDir == Direction2D.None) {
 				rt.localPosition += (Vector3)data.delta;
 			} else {
 				ResizeRect(data.delta, heldDir);
@@ -121,14 +121,14 @@ namespace NonStandard.Ui {
 		public override void PointerUp(BaseEventData data) {
 			base.PointerUp(data);
 			pointerDown = false;
-			heldDir = Direction.None;
+			heldDir = Direction2D.None;
 			//if (!disableReize) {
 			CursorChangeOnMove(null);
 			//}
 		}
 
 		public void FixedUpdate() {
-			if (!disableReize && !pointerDown && heldDir == Direction.None && resizeEdgeRadius != 0 && 
+			if (!disableReize && !pointerDown && heldDir == Direction2D.None && resizeEdgeRadius != 0 && 
 				Inputs.AppInput.MousePositionDelta != Vector3.zero) {
 				CursorChangeOnMove(null);
 			}
@@ -144,8 +144,8 @@ namespace NonStandard.Ui {
 				MouseCursor mc = MouseCursor.Instance;
 				if (mc != null) { mc.UnsetCursor(this); }
 			}
-			if (heldDir == Direction.None) {
-				mouseCursorState = Direction.None;
+			if (heldDir == Direction2D.None) {
+				mouseCursorState = Direction2D.None;
 				enabled = false;
 			}
 		}
@@ -158,7 +158,7 @@ namespace NonStandard.Ui {
 			Vector2 mousePosition = Input.mousePosition; // data.position;
 			mouseCursorState = CalculateEdgeDirection(mousePosition, min, max, resizeEdgeRadius);
 			if (!dynamicMouseCursor || mc == null) return;
-			if (mouseCursorState != Direction.None) {
+			if (mouseCursorState != Direction2D.None) {
 				mc.SetCursor(this, mouseCursorState);
 			} else {
 				mc.SetCursor(this, MouseCursor.CursorType.Cursor);

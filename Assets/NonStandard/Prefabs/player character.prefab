@@ -3614,8 +3614,8 @@ MonoBehaviour:
   target: {fileID: 4848937376790680}
   clipAgainstWalls: 0
   targetDistance: 10
-  maxVerticalAngle: 100
-  minVerticalAngle: -100
+  maxVerticalAngle: 90
+  minVerticalAngle: -90
   inputMultiplier: {x: 1, y: 1}
   horizontalRotateInput: 0
   verticalRotateInput: 0
