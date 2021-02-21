@@ -38,7 +38,7 @@ namespace NonStandard.Ui {
 			newItem.SetActive(true);
 			ListItemUi li = newItem.GetComponent<ListItemUi>();
 			li.name = text;
-			li.text.text = text;
+			li.Text = text;
 			li.item = item;
 			if (li.button != null && onButton != null) {
 				li.button.onClick.AddListener(onButton.Invoke);

@@ -57,6 +57,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c1e6438ed56ed24da08a9c9b24d5127, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  discoveredWall: {r: 0.7529412, g: 0.7529412, b: 0.7529412, a: 1}
-  discoveredFloor: {r: 0.2509804, g: 0.2509804, b: 0.2509804, a: 1}
+  discoveredWall: {r: 1, g: 1, b: 1, a: 1}
+  discoveredFloor: {r: 0.25, g: 0.25, b: 0.25, a: 1}
+  discoveredRamp: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   maze: {fileID: 0}

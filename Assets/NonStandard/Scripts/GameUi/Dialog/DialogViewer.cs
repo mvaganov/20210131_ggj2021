@@ -8,6 +8,7 @@ namespace NonStandard.GameUi.Dialog {
 	public class DialogViewer : MonoBehaviour {
 		public Text title;
 		public ScrollRect scrollRect;
+		public Button closeButton;
 
 		ListUi listUi;
 		ListItemUi prefab_buttonUi, prefab_textUi;
@@ -49,7 +50,7 @@ namespace NonStandard.GameUi.Dialog {
 			if (li != null) {
 				Dialog.Text txt = option as Dialog.Text;
 				if (txt != null) {
-					li.text.alignment = txt.anchorText;
+					li.TextAlignment = txt.anchorText;
 				}
 			}
 			if (scrollAllTheWayDown && !goingToScrollAllTheWayDown) {
@@ -69,7 +70,7 @@ namespace NonStandard.GameUi.Dialog {
 		}
 		public void ShowError(string errorMessage) {
 			ListItemUi li = AddDialogOption(new Dialog.Text { text = errorMessage }, true);
-			li.text.color = Color.red;
+			li.TextColor = Color.red;
 		}
 
 		public void ShowCloseDialogButton() {
@@ -151,7 +152,10 @@ namespace NonStandard.GameUi.Dialog {
 			DialogManager.ActiveDialog = this; SetDialog(src, tok, name, UiPolicy.Continue);
 		}
 		public void Done() { DeactivateDialogChoices(); ShowCloseDialogButton(); }
-		public void Hide() { gameObject.SetActive(false); }
+		public void Hide() {
+			closeButton.OnPointerClick(new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current));
+			//gameObject.SetActive(false);
+		}
 		public void Show() { DialogManager.ActiveDialog = this; gameObject.SetActive(true); }
 
 	}

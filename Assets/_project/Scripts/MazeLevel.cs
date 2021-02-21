@@ -24,10 +24,16 @@ public class MazeLevel : MonoBehaviour {
     public float discoveredTime = 30;
     public float animationTime = .25f;
     public Vector3 tileSize = Vector3.one * 4;
-    public Color undiscoveredWall = Color.black, undiscoveredFloor = Color.black;
+    public Vector3 undiscoveredTileSize = Vector3.one;
+    public float rampHeight = 1;
+    public float rampAngle = 23;
+    public float rampScale = 1.5f;
+    public Color undiscoveredWall = Color.clear, undiscoveredFloor = Color.clear, undiscoveredRamp = Color.clear;
+    public int stage = -1;
 
     List<MazeTile> mazeTiles = new List<MazeTile>();
     public GameObject firstPlayer;
+    public GameObject nextLevelButton;
     public DictionaryKeeper mainDictionaryKeeper;
     public List<CharacterMove> npcs = new List<CharacterMove>();
     private Dictionary<string, string[]> resourceNames;
@@ -81,7 +87,9 @@ public class MazeLevel : MonoBehaviour {
     int advancementindex = 0;
     int[] advancementColor, advancementShape;
     public void Generate() {
-		if (advancementColor == null) {
+        ++stage;
+        nextLevelButton.SetActive(false);
+        if (advancementColor == null) {
             int[] counts = new int[tokenMaterials.Count];
             counts.SetEach(i => tokenPrefabs.Count);
             NumberSequence.GenerateAdvancementOrder2(counts, out advancementColor, out advancementShape);
@@ -95,6 +103,52 @@ public class MazeLevel : MonoBehaviour {
             MazeGenerator mg = new MazeGenerator(seed);
             char[,] map = mg.Generate(mazeGenerationArguments.size, mazeGenerationArguments.start, mazeGenerationArguments.step, mazeGenerationArguments.wall);
             mg.Erode(map, mazeGenerationArguments.erosion);
+            // generate ramps
+            Coord size = map.GetSize();
+            List<Coord>[] ramp = new List<Coord>[4];
+            for(int r = 0; r < ramp.Length; ++r) { ramp[r] = new List<Coord>(); }
+            const int W = 0, N = 1, E = 2, S = 3;
+            size.ForEach(c => {
+                if (c.row == 0 || c.row == size.row - 1 || c.col == 0 || c.col == size.col - 1) return;
+                char letter = map.At(c);
+                char n = map.At(c + Coord.Up), s = map.At(c + Coord.Down), e = map.At(c + Coord.Right), w = map.At(c + Coord.Left);
+                bool createAtDeadEnds = true;
+                bool createAtPeninsula = true;
+                if (n == s && e != w) {
+					if (letter == e && w == n) {
+						if (letter == ' ' && createAtDeadEnds) { ramp[W].Add(c); }
+						if (letter == '#' && createAtPeninsula) { ramp[E].Add(c); }
+					}
+					if (letter == w && e == n) {
+						if (letter == ' ' && createAtDeadEnds) { ramp[E].Add(c); }
+						if (letter == '#' && createAtPeninsula) { ramp[W].Add(c); }
+					}
+				}
+                if(e == w && n != s) {
+                    if (letter == n && s == w) {
+                        if (letter == ' ' && createAtDeadEnds) { ramp[S].Add(c); }
+                        if (letter == '#' && createAtPeninsula) { ramp[N].Add(c); }
+                    }
+                    if (letter == s && n == e) {
+                        if (letter == ' ' && createAtDeadEnds) { ramp[N].Add(c); }
+                        if (letter == '#' && createAtPeninsula) { ramp[S].Add(c); }
+                    }
+                }
+            });
+            //ramp[W].ForEach(c => { map.SetAt(c, 'w'); });
+            //ramp[N].ForEach(c => { map.SetAt(c, 'n'); });
+            //ramp[E].ForEach(c => { map.SetAt(c, 'e'); });
+            //ramp[S].ForEach(c => { map.SetAt(c, 's'); });
+            int totalRamps = ramp.Sum(r=>r.Count);
+            for(int i = 0; i < totalRamps && i < stage; ++i) {
+                int[] r = ramp.GetFlattenedIndex(UnityEngine.Random.Range(0, totalRamps));
+                //Debug.Log(r.JoinToString(", "));
+                Coord loc = ramp[r[0]][r[1]];
+                ramp[r[0]].RemoveAt(r[1]);
+                char ch = "wnes"[r[0]];
+                map.SetAt(loc, ch);
+                --totalRamps;
+            }
             this.map = new Map2d(map);
         } else {
             map.LoadFromString(mazeSrc.text);
@@ -115,7 +169,16 @@ public class MazeLevel : MonoBehaviour {
             Transform t = mt.transform;
             t.SetParent(selfT);
             t.localPosition = mt.CalcLocalPosition();
-            mt.kind = map[c] == '#' ? MazeTile.Kind.Wall : MazeTile.Kind.Floor;
+            MazeTile.Kind k = MazeTile.Kind.None;
+			switch (map[c]) {
+            case ' ': k = MazeTile.Kind.Floor; break;
+            case '#': k = MazeTile.Kind.Wall; break;
+            case 'w': k = MazeTile.Kind.RampWest; break;
+            case 'n': k = MazeTile.Kind.RampNorth; break;
+            case 's': k = MazeTile.Kind.RampSouth; break;
+            case 'e': k = MazeTile.Kind.RampEast; break;
+            }
+            mt.kind = k;
             mt.SetDiscovered(false, null, this);
             if (mt.kind == MazeTile.Kind.Floor) {
                 floorTiles.Add(mt);
@@ -229,7 +292,7 @@ public class MazeLevel : MonoBehaviour {
 		Coord min = -Coord.One, max = Coord.One;
 		Coord.ForEachInclusive(min, max, off => {
 			Coord c = mt.coord + off;
-			if (c.IsWithin(msize) && map[c].letter != '#') { ++neighborFloor; }
+			if (c.IsWithin(msize) && map[c].letter == ' ') { ++neighborFloor; }
 		});
 		int maxDist = (msize.row + msize.col) / 2;
         float distFromCenter = Mathf.Abs((msize.row - 1) / 2f - mt.coord.row) + Mathf.Abs((msize.col - 1) / 2f - mt.coord.col);
@@ -252,7 +315,7 @@ public class MazeLevel : MonoBehaviour {
         return count;
 	}
     public int CountDiscoveredNeighborWalls(Coord coord) {
-        return CountTileNeighbors(coord, _cardinalDirs, c => GetTile(c).discovered && map[c] == '#');
+        return CountTileNeighbors(coord, _cardinalDirs, c => GetTile(c).discovered && map[c] != ' ');
 	}
     public void GoalCheck(Inventory inv) {
         if (idols == null) return;
@@ -262,7 +325,8 @@ public class MazeLevel : MonoBehaviour {
 		}
         if(activeIdols == 0) {
             mazeGenerationArguments.size += new Vector2(2, 2);
-            Clock.setTimeout(()=>Generate(), 2000);
+            //Clock.setTimeout(()=>Generate(), 2000);
+            nextLevelButton.SetActive(true);
 		} 
         //else { Show.Log(activeIdols + " active idols left"); }
 	}

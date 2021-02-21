@@ -30,6 +30,7 @@ namespace NonStandard.Character {
 		public struct AutoMove {
 			public Vector3 targetPosition;
 			public System.Action whatToDoWhenTargetIsReached;
+			public float closeEnough;
 			public bool enabled;
 			public bool jumpAtObstacle;
 			public bool arrived;
@@ -50,22 +51,24 @@ namespace NonStandard.Character {
 					delta = Vector3.ProjectOnPlane(delta, upNormal);
 				}
 				float dist = delta.magnitude;
-				if (dist <= Time.deltaTime * speed) {
+				if (dist <= closeEnough || dist <= closeEnough+Time.deltaTime * speed) {
 					arrived = true;
+					if(whatToDoWhenTargetIsReached != null) { whatToDoWhenTargetIsReached.Invoke(); }
 					return Vector3.zero;
 				}
 				return delta / dist; // normalized vector indicating direciton
 			}
-			public void SetAutoMovePosition(Vector3 position) {
+			public void SetAutoMovePosition(Vector3 position, float closeEnough) {
 				targetPosition = position;
+				this.closeEnough = closeEnough;
 				enabled = true;
 				arrived = false;
 			}
 			public void DisableAutoMove() { enabled = false; }
 		}
-
-		public void SetAutoMovePosition(Vector3 position, System.Action whatToDoWhenTargetIsReached = null) {
-			move.automaticMovement.SetAutoMovePosition(position);
+		public bool IsAutoMoving() { return move.automaticMovement.enabled; }
+		public void SetAutoMovePosition(Vector3 position, System.Action whatToDoWhenTargetIsReached = null, float closeEnough = 0) {
+			move.automaticMovement.SetAutoMovePosition(position, closeEnough);
 			move.automaticMovement.whatToDoWhenTargetIsReached = whatToDoWhenTargetIsReached;
 		}
 		public void DisableAutoMove() { move.automaticMovement.DisableAutoMove(); }
@@ -163,7 +166,7 @@ namespace NonStandard.Character {
 				lastVelocity = moveVelocity;
 				if(oppositionDirection == Vector3.zero && lastOppositionDirection != Vector3.zero)
 				{
-					cm.callbacks.collisionStopped.Invoke(); // done colliding
+					cm.callbacks.wallCollisionStopped.Invoke(); // done colliding
 					lastOppositionDirection = Vector3.zero;
 				}
 				oppositionDirection = Vector3.zero;
@@ -207,7 +210,7 @@ namespace NonStandard.Character {
 				}
 				if(wallCollisions != -1) {
 					if (lastOppositionDirection != oppositionDirection) {
-						cm.callbacks.collisionStart.Invoke(oppositionDirection);
+						cm.callbacks.wallCollisionStart.Invoke(oppositionDirection);
 					}
 					lastOppositionDirection = oppositionDirection;
 				}
@@ -378,9 +381,9 @@ namespace NonStandard.Character {
 			[Tooltip("when player starts to fall")]
 			public UnityEvent fall;
 			[Tooltip("when player collides with a wall, passes the wall's normal")]
-			public UnityEvent_Vector3 collisionStart;
+			public UnityEvent_Vector3 wallCollisionStart;
 			[Tooltip("when player is no longer colliding with a wall")]
-			public UnityEvent collisionStopped;
+			public UnityEvent wallCollisionStopped;
 			[Tooltip("when auto-moving player reaches their goal, passes absolute location of the goal")]
 			public UnityEvent_Vector3 arrived;
 		}

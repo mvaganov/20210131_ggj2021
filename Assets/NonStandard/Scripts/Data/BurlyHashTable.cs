@@ -110,12 +110,12 @@ namespace NonStandard.Data {
 					sb.Append(" /*");
 					if (showDependencies) {
 						sb.Append(" relies on: ");
-						reliesOn.Join(sb, ", ", r=>r.key.ToString());
+						reliesOn.JoinToString(sb, ", ", r=>r.key.ToString());
 						//for(int i = 0; i < reliesOn.Count; ++i) { if(i>0) sb.Append(", "); sb.Append(reliesOn[i].key); }
 					}
 					if (showDependents) {
 						sb.Append(" dependents: ");
-						dependents.Join(sb, ", ", d => d.key.ToString());
+						dependents.JoinToString(sb, ", ", d => d.key.ToString());
 						//for (int i = 0; i < dependents.Count; ++i) { if (i > 0) sb.Append(", "); sb.Append(dependents[i].key); }
 					}
 					sb.Append(" */");

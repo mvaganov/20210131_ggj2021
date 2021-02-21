@@ -7,7 +7,7 @@ using static NonStandard.Lines;
 
 public class Discovery : MonoBehaviour
 {
-    public Color discoveredWall = Color.white, discoveredFloor = Color.gray;
+    public Color discoveredWall = new Color(.75f, .75f, .75f), discoveredFloor = new Color(.25f,.25f,.25f), discoveredRamp = new Color(.5f,.5f,.5f);
     public MazeLevel maze;
 
     List<MazeTile> pending = new List<MazeTile>();
@@ -17,13 +17,14 @@ public class Discovery : MonoBehaviour
 		if(maze == null) { maze = FindObjectOfType<MazeLevel>(); }
         CharacterMove cm = transform.parent.GetComponent<CharacterMove>();
         sc = GetComponent<SphereCollider>();
-        if (cm != null) {
-            cm.callbacks.collisionStart.AddListener(v => Blink());
-		}
-        if(playerLayer == -1) { LayerMask.NameToLayer("player"); }
+        cm.callbacks.jumped.AddListener(v => Blink());
+        //cm.callbacks.stand.AddListener(v => Blink());
+        cm.callbacks.fall.AddListener(() => Blink());
+        if (playerLayer == -1) { LayerMask.NameToLayer("player"); }
 	}
 
     public void Blink() {
+        //Debug.Log("blink");
         gameObject.SetActive(false);
         pending.Clear();
         Clock.setTimeout(() => gameObject.SetActive(true), 0);
@@ -44,8 +45,8 @@ public class Discovery : MonoBehaviour
             int neighborsWhoAreUp = maze.CountDiscoveredNeighborWalls(mt.coord);
             if (neighborsWhoAreUp >= 2) { mt.SetDiscovered(true, this, maze); return true; }
         }
-        Vector3 p = transform.parent.position;
-        Vector3 t = mt.CalcVisibilityTarget();
+        Vector3 p = transform.position;
+        Vector3 t = mt.transform.position;//CalcVisibilityTarget();
         Vector2 c = Random.insideUnitCircle;
         t.x += c.x * maze.tileSize.x / 2;
         t.z += c.y * maze.tileSize.z / 2;
@@ -58,17 +59,17 @@ public class Discovery : MonoBehaviour
         }
         if(dist > sc.radius + maze.tileSize.x) { Blink(); return true; } // remove from list without resolving visibility
         Ray r = new Ray(p, delta/dist);
-        bool blocked = Physics.Raycast(r, out RaycastHit rh, ~playerLayer);
-        if (i >= 0 && wires != null) {
-            while (wires.Count <= i) {
-                wires.Add(Lines.MakeWire().Line(Vector3.zero));
-            }
-            wires[i].Line(p, t, discoveredWall);
+        bool blocked = Physics.Raycast(r, out RaycastHit rh);
+        if (wires != null && i >= 0) {
+            while (wires.Count <= i) { wires.Add(Lines.MakeWire().Line(Vector3.zero)); }
         }
         //Lines.Mak
         if (rh.transform == mt.transform) {
+            if(wires != null && i >= 0) wires[i].Line(p, t, Color.green);
             mt.SetDiscovered(true, this, maze);
             return true;
+        } else {
+            if (wires != null && i >= 0) wires[i].Line(p, rh.point, Color.red);
         }
         return false;
     }

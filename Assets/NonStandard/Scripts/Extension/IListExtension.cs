@@ -44,6 +44,30 @@ public static class IListExtension {
 		}
 		return default(T);
 	}
+	public static int Sum<T>(this IList<T> list, Func<T,int> valueFunction) {
+		int sum = 0; for(int i = 0; i < list.Count; ++i) { sum += valueFunction(list[i]); } return sum;
+	}
+	public static float Sum<T>(this IList<T> list, Func<T, float> valueFunction) {
+		float sum = 0; for (int i = 0; i < list.Count; ++i) { sum += valueFunction(list[i]); } return sum;
+	}
+	public static int[] GetFlattenedIndex<T>(this IList<IList<T>> list, int index) {
+		int[] path = new int[2] { -1, -1 };
+		int original = index;
+		if (index >= 0) {
+			for (int i = 0; i < list.Count; ++i) {
+				if (index < list[i].Count) { path[0] = i; path[1] = index; break; }
+				index -= list[i].Count;
+			}
+		}
+		if(path[0] < 0 || path[1] < 0) {
+			throw new Exception("could not convert "+original+" into index from "+list.Count+" lists totalling "+
+				list.Sum(l=>l.Count)+" elements");
+		}
+		return path;
+	}
+	public static T GetFromFlattened<T>(this IList<IList<T>> list, int[] index) {
+		return list[index[0]][index[1]];
+	}
 	public static string JoinToString<T>(this IList<T> source, string separator, Func<T, string> toString = null) {
 		string[] strings = new string[source.Count];
 		if (toString == null) { toString = o => o.ToString(); }
@@ -52,7 +76,7 @@ public static class IListExtension {
 		}
 		return string.Join(separator, strings);
 	}
-	public static void Join<T>(this IList<T> source, StringBuilder sb, string separator, 
+	public static void JoinToString<T>(this IList<T> source, StringBuilder sb, string separator, 
 		Func<T, string> toString = null) {
 		if (toString == null) { toString = o => o.ToString(); }
 		bool somethingPrinted = false;

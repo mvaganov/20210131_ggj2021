@@ -1,4 +1,5 @@
-﻿using NonStandard.Ui;
+﻿using NonStandard.GameUi;
+using NonStandard.Ui;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -10,8 +11,10 @@ namespace NonStandard.Character {
 		public Camera _camera;
 		public LayerMask validToMove = -1;
 		public QueryTriggerInteraction moveToTrigger = QueryTriggerInteraction.Ignore;
+		public Interact3dItem prefab_waypoint;
+		public Interact3dItem prefab_middleWaypoint;
 
-		#if UNITY_EDITOR
+#if UNITY_EDITOR
 		/// called when created by Unity Editor
 		void Reset() {
 			if (characterToMove == null) { characterToMove = transform.GetComponentInParent<CharacterMoveProxy>(); }
@@ -20,19 +23,47 @@ namespace NonStandard.Character {
 			if (_camera == null) { _camera = Camera.main; }
 			if (_camera == null) { _camera = FindObjectOfType<Camera>(); ; }
 		}
-		#endif
-		private void Start() { }
+#endif
+		private void Awake() {
+			if (prefab_middleWaypoint == null) {
+				prefab_middleWaypoint = Instantiate(prefab_waypoint);
+				prefab_middleWaypoint.Text = "cancel";
+				prefab_middleWaypoint.name = prefab_waypoint.name + " cancel";
+				if (prefab_waypoint.transform.parent != prefab_middleWaypoint.transform.parent) {
+					prefab_middleWaypoint.transform.SetParent(prefab_waypoint.transform.parent);
+				}
+			}
+		}
 
-		void Update() {
+		CharacterMove currentChar = null;
+		ClickToMoveFollower follower;
+
+		private void Update() {
 			if (Input.GetKey(key)) {
+				//Debug.Log("click");
 				if (!IsMouseOverUi()) {
+					//Debug.Log("on map");
 					Ray ray = _camera.ScreenPointToRay(Input.mousePosition);
 					RaycastHit rh;
 					Physics.Raycast(ray, out rh, float.PositiveInfinity, validToMove, moveToTrigger);
 					if (rh.collider != null) {
-						characterToMove.SetAutoMovePosition(rh.point, () => { characterToMove.DisableAutoMove(); });
+						currentChar = characterToMove.target;
+						if (follower == null || currentChar != follower.mover) {// calcDoneForMe) {
+							follower = currentChar.GetComponent<ClickToMoveFollower>();
+							if (follower == null) {
+								follower = currentChar.gameObject.AddComponent<ClickToMoveFollower>();
+								follower.clickToMoveUi = this;
+								follower.mover = currentChar;
+								follower.Init();
+							}
+						}
+						//Debug.Log("hit");
+						follower.SetCurrentTarget(rh.point, rh.normal);
 					}
 				}
+			}
+			if (prefab_waypoint != null && Input.GetKeyUp(key)) {
+				follower.ShowCurrentWaypoint();
 			}
 		}
 		private bool IsMouseOverUi() {
@@ -46,7 +77,7 @@ namespace NonStandard.Character {
 				ClickToMovePassthrough c2mpt = raycastResult[i].gameObject.GetComponent<ClickToMovePassthrough>();
 				if (c2mpt) { raycastResult.RemoveAt(i--); }
 			}
-			//if(raycastResult.Count > 0) {
+			//if (raycastResult.Count > 0) {
 			//	Debug.Log(raycastResult.JoinToString(", ", r => r.gameObject.name));
 			//}
 			return raycastResult.Count > 0;

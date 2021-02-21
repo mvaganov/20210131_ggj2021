@@ -18,7 +18,7 @@ namespace NonStandard.Ui {
 		}
 		public virtual void PointerUp(BaseEventData data) {
 			if (beingDragged == gameObject) {
-				Debug.Log("released " + this);
+				//Debug.Log("released " + this);
 				beingDragged = null;
 			}
 		}

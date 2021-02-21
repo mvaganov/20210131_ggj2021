@@ -21,8 +21,8 @@ namespace NonStandard.Character
 				character.callbacks.stand.AddListener(callbacks.stand.Invoke);
 				character.callbacks.jumped.AddListener(callbacks.jumped.Invoke);
 				character.callbacks.fall.AddListener(callbacks.fall.Invoke);
-				character.callbacks.collisionStart.AddListener(callbacks.collisionStart.Invoke);
-				character.callbacks.collisionStopped.AddListener(callbacks.collisionStopped.Invoke);
+				character.callbacks.wallCollisionStart.AddListener(callbacks.wallCollisionStart.Invoke);
+				character.callbacks.wallCollisionStopped.AddListener(callbacks.wallCollisionStopped.Invoke);
 				character.callbacks.arrived.AddListener(callbacks.arrived.Invoke);
 			}
 		}

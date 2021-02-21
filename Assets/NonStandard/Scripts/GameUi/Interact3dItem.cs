@@ -14,6 +14,8 @@ namespace NonStandard.GameUi {
 		public float fontCoefficient = 1;
 		public Action onInteractVisible;
 		public Action onInteractHidden;
+		public void Start() { if (alwaysOn) { Interact3dUi.Instance.Add(this); } }
+		private void OnDestroy() { if (_interactUi) { Destroy(_interactUi.gameObject); } }
 		public bool showing {
 			get { return _showing; }
 			set {
@@ -25,16 +27,19 @@ namespace NonStandard.GameUi {
 			get { return _onInteract; }
 			set {
 				_onInteract = value;
-				if (interactUi != null) {
-					Button b = interactUi.GetComponentInChildren<Button>();
+				if (screenUi != null) {
+					Button b = screenUi.GetComponentInChildren<Button>();
 					if (b != null) {
+						if(b.onClick == null) { b.onClick = new Button.ButtonClickedEvent(); }
 						b.onClick.RemoveAllListeners();
-						b.onClick.AddListener(_onInteract.Invoke);
+						if (_onInteract != null) {
+							b.onClick.AddListener(_onInteract.Invoke);
+						}
 					}
 				}
 			}
 		}
-		public RectTransform interactUi {
+		public RectTransform screenUi {
 			get { return _interactUi; }
 			set {
 				_interactUi = value;
@@ -47,25 +52,12 @@ namespace NonStandard.GameUi {
 			get { return _text; }
 			set {
 				_text = value;
-				if (interactUi != null) {
-					TMPro.TMP_Text tmp = interactUi.GetComponentInChildren<TMPro.TMP_Text>();
-					if (tmp != null) { tmp.text = value; return; }
-					Text txt = interactUi.GetComponentInChildren<Text>();
-					txt.text = value;
-				}
+				if (screenUi != null) { UiText.SetText(screenUi.gameObject, value); }
 			}
 		}
 		public float fontSize {
-			get {
-				TMPro.TMP_Text tmp = interactUi.GetComponentInChildren<TMPro.TMP_Text>();
-				if (tmp != null) { return tmp.fontSize; }
-				return interactUi.GetComponentInChildren<Text>().fontSize;
-			}
-			set {
-				TMPro.TMP_Text tmp = interactUi.GetComponentInChildren<TMPro.TMP_Text>();
-				if (tmp != null) { tmp.fontSize = value; return; }
-				interactUi.GetComponentInChildren<Text>().fontSize = (int)value;
-			}
+			get { return UiText.GetFontSize(screenUi.gameObject); }
+			set { UiText.SetFontSize(screenUi.gameObject, value); }
 		}
 	}
 }

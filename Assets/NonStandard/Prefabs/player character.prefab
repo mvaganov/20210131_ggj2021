@@ -148,7 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c86d8c19cbeb1945bb21adb8a26e87e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  text: {fileID: 1066608422}
+  _text: {fileID: 0}
   button: {fileID: 16104804}
 --- !u!114 &16104806
 MonoBehaviour:
@@ -268,6 +268,56 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_HorizontalFit: 0
   m_VerticalFit: 2
+--- !u!1 &234466085
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 234466086}
+  - component: {fileID: 234466087}
+  m_Layer: 0
+  m_Name: waypoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &234466086
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 234466085}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4591834187444804}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &234466087
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 234466085}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c170263af72d0c419d673e1e883bd67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _text: waypoint
+  _interactUi: {fileID: 0}
+  worldOffset: {x: 0, y: 0, z: 0}
+  _showing: 1
+  alwaysOn: 1
+  size: 1
+  fontCoefficient: 1
 --- !u!1 &253954732
 GameObject:
   m_ObjectHideFlags: 0
@@ -542,7 +592,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1875188103}
   m_HandleRect: {fileID: 1875188102}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -1348,7 +1398,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.00004987046, y: 0.0002350761}
+  m_AnchoredPosition: {x: 0.000030517578, y: 0.000038146973}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &863121878
@@ -1735,7 +1785,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -34.495, y: -116}
+  m_AnchoredPosition: {x: 30, y: -88.843}
   m_SizeDelta: {x: 455.59, y: 285.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1202952842
@@ -1789,6 +1839,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   title: {fileID: 0}
   scrollRect: {fileID: 0}
+  closeButton: {fileID: 617782994}
 --- !u!114 &1202952845
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1954,7 +2005,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c86d8c19cbeb1945bb21adb8a26e87e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  text: {fileID: 67981575}
+  _text: {fileID: 0}
   button: {fileID: 1220199112}
 --- !u!114 &1220199110
 MonoBehaviour:
@@ -2560,7 +2611,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1585056158}
   m_HandleRect: {fileID: 1585056157}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -3000,7 +3051,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000028921291, y: 0.000037606806}
+  m_AnchoredPosition: {x: 0.000091552734, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &2110826547
@@ -3410,6 +3461,7 @@ MonoBehaviour:
     maxStableAngle: 60
     automaticMovement:
       targetPosition: {x: 0, y: 0, z: 0}
+      closeEnough: 0
       enabled: 0
       jumpAtObstacle: 0
       arrived: 0
@@ -3447,10 +3499,10 @@ MonoBehaviour:
     fall:
       m_PersistentCalls:
         m_Calls: []
-    collisionStart:
+    wallCollisionStart:
       m_PersistentCalls:
         m_Calls: []
-    collisionStopped:
+    wallCollisionStopped:
       m_PersistentCalls:
         m_Calls: []
     arrived:
@@ -5639,7 +5691,6 @@ GameObject:
   - component: {fileID: 114427438296991374}
   - component: {fileID: 114087168626643078}
   - component: {fileID: 1402800217}
-  - component: {fileID: 7201796699469158938}
   - component: {fileID: 1848120938323894431}
   m_Layer: 0
   m_Name: player input
@@ -5660,6 +5711,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 753607335}
+  - {fileID: 234466086}
   m_Father: {fileID: 4550302886921004}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -5682,6 +5734,11 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   moveToTrigger: 1
+  prefab_waypoint: {fileID: 234466087}
+  prefab_middleWaypoint: {fileID: 0}
+  manhattanDistance: 0
+  currentWaypoint: {fileID: 0}
+  waypoints: []
 --- !u!114 &114427438296991374
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6109,25 +6166,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 114967211894144060}
---- !u!114 &7201796699469158938
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1888769986504204}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7be7f486be486684f8af159712ddde6e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  characterToMove: {fileID: 1402800217}
-  key: 323
-  _camera: {fileID: 20710112917179096}
-  validToMove:
-    serializedVersion: 2
-    m_Bits: 1
-  moveToTrigger: 1
 --- !u!135 &1848120938323894431
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -6425,6 +6463,7 @@ GameObject:
   - component: {fileID: 3498377658502092784}
   - component: {fileID: 3129086181612188262}
   - component: {fileID: 7139758430533553779}
+  - component: {fileID: 1407657625}
   m_Layer: 5
   m_Name: Viewport
   m_TagString: Untagged
@@ -6502,6 +6541,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_ShowMaskGraphic: 0
+--- !u!114 &1407657625
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1501521194873084225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b1830d9cb91b6240800dc5d0f4d5ea2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1750490773288172915
 GameObject:
   m_ObjectHideFlags: 0
@@ -6638,6 +6689,7 @@ MonoBehaviour:
   uiToggleClose: {fileID: 617782994}
   hideThisWhenUiVisible: 1
   triggerOnStart: 1
+  alternateText: 
 --- !u!1 &2227598696905146167
 GameObject:
   m_ObjectHideFlags: 0
@@ -7259,6 +7311,9 @@ MonoBehaviour:
   uiToggleClose: {fileID: 0}
   hideThisWhenUiVisible: 0
   triggerOnStart: 0
+  alternateText: 'joystick
+
+    move'
 --- !u!1 &5294538944241911012
 GameObject:
   m_ObjectHideFlags: 0
@@ -7597,6 +7652,7 @@ MonoBehaviour:
   uiToggleClose: {fileID: 1432256559}
   hideThisWhenUiVisible: 1
   triggerOnStart: 1
+  alternateText: 
 --- !u!1 &5952365132053608480
 GameObject:
   m_ObjectHideFlags: 0
@@ -7917,6 +7973,7 @@ GameObject:
   - component: {fileID: 4173426765243704323}
   - component: {fileID: 1156230707676633803}
   - component: {fileID: 1125343173227195691}
+  - component: {fileID: 1120369200}
   m_Layer: 5
   m_Name: debug text
   m_TagString: Untagged
@@ -8013,3 +8070,15 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1120369200
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7694306660544622319}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b1830d9cb91b6240800dc5d0f4d5ea2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

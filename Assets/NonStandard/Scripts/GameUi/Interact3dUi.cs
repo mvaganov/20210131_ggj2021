@@ -9,6 +9,10 @@ namespace NonStandard.GameUi {
         [ContextMenuItem("blink","Blink")]
         public Collider triggerArea;
         public Camera cam;
+        private static Interact3dUi _instance;
+        public static Interact3dUi Instance {
+            get { return _instance ? _instance : _instance = FindObjectOfType<Interact3dUi>(); }
+        }
         public class TriggerArea : MonoBehaviour {
             public Interact3dUi ui;
             private void OnTriggerEnter(Collider other) {
@@ -26,10 +30,10 @@ namespace NonStandard.GameUi {
             }
         }
         public void EnsureUi(Interact3dItem item) {
-            if (item.interactUi == null) {
-                item.interactUi = Instantiate(prefab_interactButton).GetComponent<RectTransform>();
-                item.interactUi.SetParent(uiArea);
-                item.interactUi.transform.localScale = prefab_interactButton.transform.localScale * item.size;
+            if (item.screenUi == null) {
+                item.screenUi = Instantiate(prefab_interactButton).GetComponent<RectTransform>();
+                item.screenUi.SetParent(uiArea);
+                item.screenUi.transform.localScale = prefab_interactButton.transform.localScale * item.size;
                 item.fontSize = item.fontSize * item.fontCoefficient;
                 item.onInteractVisible?.Invoke();
             }
@@ -46,8 +50,8 @@ namespace NonStandard.GameUi {
 		}
         public void Remove(Interact3dItem item) {
             if (item.alwaysOn) return;
-            if (item.interactUi != null) {
-                Destroy(item.interactUi.gameObject);
+            if (item.screenUi != null) {
+                Destroy(item.screenUi.gameObject);
             }
             if (items.Remove(item)) {
                 item.onInteractHidden?.Invoke();
@@ -59,23 +63,26 @@ namespace NonStandard.GameUi {
             ta.ui = this;
             if(cam == null) { cam = Camera.main; }
         }
+        public bool UpdateItem(Interact3dItem item) {
+            if (item.screenUi == null) {
+                Remove(item);
+                Add(item);
+                return false;
+            }
+            if (item.showing) {
+                item.screenUi.gameObject.SetActive(true);
+                Vector3 screenP = cam.WorldToScreenPoint(item.transform.position + item.worldOffset);
+                item.screenUi.position = screenP;
+            } else {
+                item.screenUi.gameObject.SetActive(false);
+            }
+            return true;
+        }
         public void UpdateItems() {
             for (int i = 0; i < items.Count; ++i) {
                 Interact3dItem item = items[i];
                 if (item == null) { items.RemoveAt(i--); continue; }
-                if (item.interactUi == null) {
-                    Remove(item);
-                    --i;
-                    Add(item);
-                    continue;
-                }
-                if (item.showing) {
-                    item.interactUi.gameObject.SetActive(true);
-                    Vector3 p = cam.WorldToScreenPoint(item.transform.position + item.worldOffset);
-                    item.interactUi.position = p;
-                } else {
-                    item.interactUi.gameObject.SetActive(false);
-                }
+				if (!UpdateItem(item)) { --i; }
             }
         }
         Vector3 cPos;
