@@ -159,7 +159,7 @@ namespace NonStandard.Character {
 			t.rotation = Quaternion.Lerp(rotStart, rotEnd, p);
 			targetDistance = (distEnd - distStart) * p + distStart;
 			RecalculateRotation();
-			Clock.setTimeout(LerpToTarget, 20);
+			Clock.setTimeoutRealtime(LerpToTarget, 20);
 		}
 	}
 }

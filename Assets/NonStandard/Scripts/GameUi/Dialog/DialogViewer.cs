@@ -3,12 +3,14 @@ using UnityEngine;
 using UnityEngine.UI;
 using NonStandard.Data.Parse;
 using NonStandard.Ui;
+using UnityEngine.Events;
 
 namespace NonStandard.GameUi.Dialog {
 	public class DialogViewer : MonoBehaviour {
 		public Text title;
 		public ScrollRect scrollRect;
 		public Button closeButton;
+		public UnityEvent onDialog;
 
 		ListUi listUi;
 		ListItemUi prefab_buttonUi, prefab_textUi;
@@ -141,6 +143,7 @@ namespace NonStandard.GameUi.Dialog {
 				}
 			}
 			ShowErrors(tok.errors);
+			onDialog?.Invoke();
 		}
 		public void SetDialog(object src, Tokenizer tok, string name) {
 			DialogManager.ActiveDialog = this; SetDialog(src, tok, name, UiPolicy.DisablePrev);

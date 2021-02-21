@@ -9,7 +9,7 @@ using UnityEngine.UI;
 public class Team : MonoBehaviour {
 	public List<GameObject> members;
 	public ListUi rosterUi;
-	public Button prev, next;
+	public Button prev, next, team;
 	private int currentIndex = 0;
 
 	public void Next() { if (++currentIndex >= members.Count) { currentIndex = 0; } ActivateTeamMember(members[currentIndex]); }
@@ -18,8 +18,8 @@ public class Team : MonoBehaviour {
 		prev.onClick.AddListener(Prev);
 		next.onClick.AddListener(Next);
 		if(members == null || members.Count < 1) {
-			prev.gameObject.SetActive(false);
-			next.gameObject.SetActive(false);
+			prev?.gameObject.SetActive(false);
+			next?.gameObject.SetActive(false);
 		}
 	}
 
@@ -35,8 +35,9 @@ public class Team : MonoBehaviour {
 			teamMember.onJoinTeam?.Invoke(this);
 		}
 		if(members.Count > 1) {
-			prev.gameObject.SetActive(true);
-			next.gameObject.SetActive(true);
+			prev?.gameObject.SetActive(true);
+			next?.gameObject.SetActive(true);
+			team?.gameObject.SetActive(true);
 		}
 		if (rosterUi != null) {
 			ListItemUi result = rosterUi.GetListItemUi(memberObject);

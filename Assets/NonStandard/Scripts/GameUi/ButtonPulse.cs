@@ -9,19 +9,25 @@ public class ButtonPulse : MonoBehaviour
     float timer;
     int colorIndex;
     Button b;
+    public void ToggleEnabled() {
+        enabled = !enabled;
+		if (!enabled) { SetButtonColor(pulseColor[0]); }
+    }
 	private void Start() {
         b = GetComponent<Button>();
         pulseColor.Insert(0, b.colors.normalColor);
 	}
-	void Update()
-    {
-        timer += Time.deltaTime;
+    public void SetButtonColor(Color c) {
+        ColorBlock cb = b.colors;
+        cb.normalColor = c;
+        b.colors = cb;
+    }
+    void Update() {
+        timer += Time.unscaledDeltaTime;
         float p = 1;
         if(timer < pulseRate) { p = timer / pulseRate; }
         Color s = pulseColor[colorIndex], e = pulseColor[(colorIndex + 1) % pulseColor.Count];
-        ColorBlock cb = b.colors;
-        cb.normalColor = Color.Lerp(s, e, p);
-        b.colors = cb;
+        SetButtonColor(Color.Lerp(s, e, p));
         if(p >= 1) {
             ++colorIndex;
             if (colorIndex >= pulseColor.Count) { colorIndex = 0; }

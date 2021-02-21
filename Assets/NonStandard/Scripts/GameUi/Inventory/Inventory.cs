@@ -1,14 +1,15 @@
 ﻿using NonStandard.GameUi.Particles;
 using NonStandard.Ui;
+using NonStandard.Utility;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEngine.ParticleSystem;
 
 namespace NonStandard.GameUi.Inventory {
 	public class Inventory : MonoBehaviour {
 		List<GameObject> items;
 		public ListUi inventoryUi;
-
+		public UnityEvent_GameObject onAddItem;
+		public UnityEvent_GameObject onRemoveItem;
 		private void Awake() {
 			Global.Get<InventoryManager>().Register(this);
 		}
@@ -26,6 +27,7 @@ namespace NonStandard.GameUi.Inventory {
 			//Show.Log("POS IN" + localPosition);
 			string name = item != null ? item.itemName : null;
 			if (string.IsNullOrEmpty(name)) { name = itemObject.name; }
+			onAddItem.Invoke(itemObject);
 			if (inventoryUi == null) { return null; }
 			return inventoryUi.AddItem(itemObject, name, () => {
 				RemoveItem(itemObject);
@@ -41,6 +43,7 @@ namespace NonStandard.GameUi.Inventory {
 			GameObject go = FindItem(name);
 			if (go != null) {
 				RemoveItem(go);
+				onRemoveItem.Invoke(go);
 			}
 			return go;
 		}

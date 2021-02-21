@@ -63,7 +63,7 @@ namespace NonStandard.Character {
 				}
 			}
 			if (prefab_waypoint != null && Input.GetKeyUp(key)) {
-				follower.ShowCurrentWaypoint();
+				if (follower != null) { follower.ShowCurrentWaypoint(); }
 			}
 		}
 		private bool IsMouseOverUi() {
