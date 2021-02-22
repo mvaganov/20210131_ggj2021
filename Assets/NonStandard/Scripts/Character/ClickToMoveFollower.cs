@@ -8,7 +8,7 @@ using static NonStandard.Lines;
 
 public class ClickToMoveFollower : MonoBehaviour {
 	public List<Interact3dItem> waypoints = new List<Interact3dItem>();
-	public Interact3dItem currentWaypoint; // TODO just use the last element in waypoints...
+	public Interact3dItem currentWaypoint;
 	internal Wire line;
 	Vector3 targetPosition;
 	Vector3[] positionSample = new Vector3[10];
@@ -18,16 +18,28 @@ public class ClickToMoveFollower : MonoBehaviour {
 	float characterHeight = 0, characterRadius = 0;
 
 	private void Start() {
-		Init();
+		Init(gameObject);
 	}
-	public void Init() {
+	public void Init(GameObject go) {
+		if(mover != null) { return; }
+		mover = GetComponent<CharacterMove>();
 		CapsuleCollider cap = mover.GetComponent<CapsuleCollider>();
 		characterHeight = cap.height / 2;
 		characterRadius = cap.radius;
 		if (line == null) { line = Lines.MakeWire(); }
 		line.Line(Vector3.zero);
 	}
-
+	public void UpdateLine() {
+		List<Vector3> points = new List<Vector3>();
+		points.Add(mover.transform.position);
+		for(int i = 0; i < waypoints.Count; ++i) {
+			points.Add(waypoints[i].transform.position);
+		}
+		if(waypoints.Count == 0 || (waypoints[waypoints.Count-1].transform.position != currentWaypoint.transform.position)) {
+			points.Add(targetPosition);
+		}
+		line.Line(points, Color.red, Lines.End.Arrow);
+	}
 	float ManhattanDistance(Vector3 a, Vector3 b) {
 		return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y) + Mathf.Abs(a.z - b.z);
 	}
@@ -52,7 +64,7 @@ public class ClickToMoveFollower : MonoBehaviour {
 	}
 	void NotifyEndPointReached() {
 		mover.DisableAutoMove();
-		line.Line(Vector3.zero, Vector3.zero);
+		//line.Line(Vector3.zero, Vector3.zero);
 		if (waypoints.Count > 0) {
 			Interact3dItem wpObj = waypoints[0];
 			waypoints.RemoveAt(0);
@@ -78,9 +90,9 @@ public class ClickToMoveFollower : MonoBehaviour {
 		samplesGroupsRead = 0;
 		if (waypoints.Count == 0) {
 			mover.SetAutoMovePosition(targetPosition, NotifyEndPointReached, 0);
-			line.Arrow(mover.transform.position, targetPosition, Color.red);
+			//line.Arrow(mover.transform.position, targetPosition, Color.red);
 		} else {
-			line.Arrow(waypoints[waypoints.Count - 1].transform.position, targetPosition, Color.red);
+			//line.Arrow(waypoints[waypoints.Count - 1].transform.position, targetPosition, Color.red);
 		}
 		if (currentWaypoint != null) {
 			currentWaypoint.transform.position = targetPosition;
@@ -95,8 +107,8 @@ public class ClickToMoveFollower : MonoBehaviour {
 			currentWaypoint.OnInteract = AddWaypoint;
 			//Debug.Log("waypoint made " + targetPosition);
 		}
-		bool showIt = waypoints.Count == 0 ||
-			waypoints[waypoints.Count - 1].transform.position != currentWaypoint.transform.position;
+		bool showIt = mover.IsAutoMoving() && (waypoints.Count == 0 ||
+			waypoints[waypoints.Count - 1].transform.position != currentWaypoint.transform.position);
 		if (showIt) {
 			currentWaypoint.showing = true;
 			currentWaypoint.transform.position = targetPosition;

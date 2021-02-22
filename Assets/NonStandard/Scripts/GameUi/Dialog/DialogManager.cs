@@ -13,6 +13,7 @@ namespace NonStandard.GameUi.Dialog {
 
         public List<Dialog> dialogs = new List<Dialog>();
         public DialogViewer dialogView;
+
         public DictionaryKeeper GetScriptScope() { return dict; }
         public static DictionaryKeeper ScopeDictionaryKeeper { get { return DialogManager.Instance.GetScriptScope(); } }
         public static object Scope { get { return ScopeDictionaryKeeper.Dictionary; } }

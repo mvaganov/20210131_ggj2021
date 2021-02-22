@@ -337,13 +337,13 @@ public class MazeLevel : MonoBehaviour {
         Discovery d = ml.EnsureExplorer(npc);
         ParticleSystem ps = npc.GetComponentInChildren<ParticleSystem>();
         Color color = ps.main.startColor.color;
-        d.discoveredFloor = Color.Lerp(d.discoveredFloor, color, 0.5f);
-        d.discoveredWall = Color.Lerp(d.discoveredWall, color, 0.5f);
+        d.discoveredFloor = Color.Lerp(d.discoveredFloor, color, 0.25f);
+        d.discoveredWall = Color.Lerp(d.discoveredWall, color, 0.25f);
+        d.discoveredRamp = Color.Lerp(d.discoveredRamp, color, 0.25f);
         d.maze = ml;
         Global.Get<ConditionCheck>().DoActivateTest();
         InventoryCollector inv = npc.GetComponentInChildren<InventoryCollector>();
         inv.inventory = InventoryManager.main;
         inv.autoPickup = true;
     }
-
 }

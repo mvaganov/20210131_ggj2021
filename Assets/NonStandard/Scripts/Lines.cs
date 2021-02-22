@@ -194,22 +194,23 @@ namespace NonStandard {
 				}
 			}
 
-			private static bool SameArrayOfVectors(Vector3[] a, Vector3[] b) {
+			private static bool SameArrayOfVectors(IList<Vector3> a, IList<Vector3> b) {
 				if (ReferenceEquals(a, b)) { return true; }
-				if (a == null || b == null || a.Length != b.Length) { return false; }
-				for (int i = 0; i < a.Length; ++i) { if (a[i] != b[i]) return false; }
+				if (a == null || b == null || a.Count != b.Count) { return false; }
+				for (int i = 0; i < a.Count; ++i) { if (a[i] != b[i]) return false; }
 				return true;
 			}
-			private bool IsLine(Vector3[] points, float startSize, float endSize, End lineEnds) {
+			private bool IsLine(IList<Vector3> points, float startSize, float endSize, End lineEnds) {
 				return kind == Kind.Line && SameArrayOfVectors(_points, points)
 					&& EQ(startSize - _startSize) && EQ(endSize - _endSize) && _lineEnds == lineEnds;
 			}
-			private void SetLine(Vector3[] points, float startSize, float endSize, End lineEnds) {
+			private void SetLine(IList<Vector3> points, float startSize, float endSize, End lineEnds) {
 				kind = Kind.Line;
 				if (points != null) {
-					_points = new Vector3[points.Length]; Array.Copy(points, _points, points.Length);
+					_points = new Vector3[points.Count];
+					for(int i = 0; i < _points.Length; ++i) { _points[i] = points[i]; }
 				}
-				_points = null;
+				//_points = null; // commented this out. was it here for a reason?
 				_startSize = startSize; _endSize = endSize; _lineEnds = lineEnds;
 			}
 			private bool IsArc(Vector3 start, Vector3 normal, Vector3 center, float angle, float startSize, float endSize, End lineEnds, int pointCount) {
@@ -313,7 +314,7 @@ namespace NonStandard {
 			public Wire Line(Vector3 vector, Color color = default, float startSize = LINE_SIZE, float endSize = SAME_AS_START_SIZE) {
 				return Line(new Vector3[] { Vector3.zero, vector }, color, End.Normal, startSize, endSize);
 			}
-			public Wire Line(Vector3[] points, Color color = default, End lineEnds = default, float startSize = LINE_SIZE, float endSize = SAME_AS_START_SIZE) {
+			public Wire Line(IList<Vector3> points, Color color = default, End lineEnds = default, float startSize = LINE_SIZE, float endSize = SAME_AS_START_SIZE) {
 				if (!IsLine(points, startSize, endSize, lineEnds)) {
 					SetLine(points, startSize, endSize, lineEnds);
 					if (!lr) { lr = MakeLineRenderer(gameObject); }
@@ -531,11 +532,11 @@ namespace NonStandard {
 			LineRenderer lr = MakeLineRenderer(ref go);
 			return MakeLine(lr, points, color, startSize, endSize, lineEnds);
 		}
-		public static LineRenderer MakeLine(LineRenderer lr, Vector3[] points, Color color, float startSize, float endSize, End lineEnds) {
+		public static LineRenderer MakeLine(LineRenderer lr, IList<Vector3> points, Color color, float startSize, float endSize, End lineEnds) {
 			if (EQ2(endSize, SAME_AS_START_SIZE)) { endSize = startSize; }
 			if (points == null) { lr = Make(lr, null, 0, color, startSize, endSize); return lr; }
 			if (lineEnds == End.Arrow || lineEnds == End.ArrowBothEnds) {
-				Keyframe[] keyframes = CalculateArrowKeyframes(points, points.Length, out var line, startSize, endSize);
+				Keyframe[] keyframes = CalculateArrowKeyframes(points, points.Count, out var line, startSize, endSize);
 				lr = MakeArrow(lr, line, line.Length, color, startSize, endSize);
 				lr.widthCurve = new AnimationCurve(keyframes);
 				if (lineEnds == End.ArrowBothEnds) {
@@ -546,7 +547,7 @@ namespace NonStandard {
 					ReverseLineInternal(ref lr);
 				}
 			} else {
-				lr = Make(lr, points, points.Length, color, startSize, endSize);
+				lr = Make(lr, points, points.Count, color, startSize, endSize);
 				FlattenKeyFrame(lr);
 			}
 			if (lr.loop && lineEnds != End.Normal) { lr.loop = false; }

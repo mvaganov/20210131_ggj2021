@@ -13,6 +13,7 @@ namespace NonStandard.Character {
 		public QueryTriggerInteraction moveToTrigger = QueryTriggerInteraction.Ignore;
 		public Interact3dItem prefab_waypoint;
 		public Interact3dItem prefab_middleWaypoint;
+		public int mouseSetMove = 1, mouseSetUi = 0;
 
 #if UNITY_EDITOR
 		/// called when created by Unity Editor
@@ -41,7 +42,7 @@ namespace NonStandard.Character {
 		private void Update() {
 			if (Input.GetKey(key)) {
 				//Debug.Log("click");
-				if (!IsMouseOverUi()) {
+				if (!UiClick.IsMouseOverUi()) {
 					//Debug.Log("on map");
 					Ray ray = _camera.ScreenPointToRay(Input.mousePosition);
 					RaycastHit rh;
@@ -53,34 +54,21 @@ namespace NonStandard.Character {
 							if (follower == null) {
 								follower = currentChar.gameObject.AddComponent<ClickToMoveFollower>();
 								follower.clickToMoveUi = this;
-								follower.mover = currentChar;
-								follower.Init();
+								follower.Init(currentChar.gameObject);
 							}
 						}
 						//Debug.Log("hit");
 						follower.SetCurrentTarget(rh.point, rh.normal);
+						follower.UpdateLine();
 					}
+					MouseCursor.Instance.currentSet = mouseSetMove;
+				} else {
+					MouseCursor.Instance.currentSet = mouseSetUi;
 				}
 			}
 			if (prefab_waypoint != null && Input.GetKeyUp(key)) {
 				if (follower != null) { follower.ShowCurrentWaypoint(); }
 			}
-		}
-		private bool IsMouseOverUi() {
-			if (DragWithMouse.beingDragged != null) { return true; }
-			if (!EventSystem.current.IsPointerOverGameObject()) return false;
-			PointerEventData pointerEventData = new PointerEventData(EventSystem.current);
-			pointerEventData.position = Input.mousePosition;
-			List<RaycastResult> raycastResult = new List<RaycastResult>();
-			EventSystem.current.RaycastAll(pointerEventData, raycastResult);
-			for(int i = 0; i < raycastResult.Count; ++i) {
-				ClickToMovePassthrough c2mpt = raycastResult[i].gameObject.GetComponent<ClickToMovePassthrough>();
-				if (c2mpt) { raycastResult.RemoveAt(i--); }
-			}
-			//if (raycastResult.Count > 0) {
-			//	Debug.Log(raycastResult.JoinToString(", ", r => r.gameObject.name));
-			//}
-			return raycastResult.Count > 0;
 		}
 	}
 }

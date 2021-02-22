@@ -8,8 +8,9 @@ namespace NonStandard.Ui {
 
 		public CursorType currentCursor = CursorType.Cursor;
 
-		[ContextMenuItem("Add Cursor Assets", "AddCursors")]
-		public int currentSet;
+		[SerializeField, ContextMenuItem("Add Cursor Assets", "AddCursors")]
+		private int _currentSet;
+		public int currentSet { get { return _currentSet; } set { SetCursorSet(value); } }
 		private static MouseCursor _instance;
 
 		public enum CursorType {
@@ -101,7 +102,13 @@ namespace NonStandard.Ui {
 
 		public Cursor GetCurrentGetCursorData() { return cursors[currentSet].cursors[(int)currentCursor]; }
 
-		public void SetCursorSet(int cursorSetIndex) { currentSet = cursorSetIndex; }
+		public void SetCursorSet(int cursorSetIndex) {
+			if (currentSet != cursorSetIndex) {
+				_currentSet = cursorSetIndex;
+				//Debug.Log("setting cursorset to " + _currentSet);
+				SetCursor(currentCursor);
+			}
+		}
 
 		public void SetCursor(CursorType type) {
 			currentCursor = type;

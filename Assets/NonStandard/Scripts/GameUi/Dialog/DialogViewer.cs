@@ -156,7 +156,7 @@ namespace NonStandard.GameUi.Dialog {
 		}
 		public void Done() { DeactivateDialogChoices(); ShowCloseDialogButton(); }
 		public void Hide() {
-			closeButton.OnPointerClick(new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current));
+			UiClick.Click(closeButton);
 			//gameObject.SetActive(false);
 		}
 		public void Show() { DialogManager.ActiveDialog = this; gameObject.SetActive(true); }
