@@ -1,6 +1,7 @@
 ﻿using NonStandard.Data;
 using NonStandard.Ui;
 using System;
+using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
@@ -8,16 +9,25 @@ namespace NonStandard.Character {
 	public class CharacterCamera : MonoBehaviour
 	{
 		[Tooltip("which transform to follow with the camera")]
-		public Transform target;
+		public Transform _target;
 		[Tooltip("if false, camera can pass through walls")]
 		public bool clipAgainstWalls = true;
 
+		/// <summary>how the camera should be rotated, calculated in Update, to keep LateUpdate as light as possible</summary>
+		private Quaternion targetRotation;
 		/// <summary>how far the camera wants to be from the target</summary>
 		public float targetDistance = 10;
 		/// <summary>calculate how far to clip the camera in the Update, to keep LateUpdate as light as possible
 		private float distanceBecauseOfObstacle;
-		/// <summary>how the camera should be rotated, calculated in Update, to keep LateUpdate as light as possible</summary>
-		private Quaternion targetRotation;
+		/// <summary>
+		/// user-defined rotation
+		/// </summary>
+		private Quaternion userRotation;
+		/// <summary>
+		/// user-defined zoom
+		/// </summary>
+		private float userDistance;
+		private Transform userTarget;
 		/// <summary>for fast access to transform</summary>
 		private Transform t;
 
@@ -26,6 +36,8 @@ namespace NonStandard.Character {
 
 		public float maxVerticalAngle = 100, minVerticalAngle = -100;
 		public Vector2 inputMultiplier = Vector2.one;
+
+		public Transform target { get { return _target; } set { _target = userTarget = value; } }
 
 		/// publicly accessible variables that can be modified by external scripts or UI
 		[HideInInspector] public float horizontalRotateInput, verticalRotateInput, zoomInput;
@@ -62,6 +74,15 @@ namespace NonStandard.Character {
 		public void Start() {
 			RecalculateDistance();
 			RecalculateRotation();
+			userTarget = target;
+			userRotation = t.rotation;
+			userDistance = targetDistance;
+			targetView.target = userTarget;
+			targetView.rotation = userRotation;
+			targetView.distance = userDistance;
+			for (int i = 0; i < knownCameraViews.Count; ++i) {
+				knownCameraViews[i].ResolveLookRotation();
+			}
 		}
 
 		public bool RecalculateDistance() {
@@ -89,6 +110,7 @@ namespace NonStandard.Character {
 				rotV = verticalRotateInput * anglePerSecondMultiplier * Time.unscaledDeltaTime,
 				zoom = zoomInput * Time.unscaledDeltaTime;
 			targetDistance += zoom;
+			if (zoom != 0) { userDistance = targetDistance; }
 			if (rotH != 0 || rotV != 0) {
 				targetRotation = Quaternion.identity;
 				yaw += rotH;
@@ -99,6 +121,7 @@ namespace NonStandard.Character {
 				if (pitch >= 180) { pitch -= 360; }
 				pitch = Mathf.Clamp(pitch, minVerticalAngle, maxVerticalAngle);
 				targetRotation *= Quaternion.Euler(pitch, yaw, 0);
+				userRotation = targetRotation;
 			}
 			if (targetDistance < 0) { targetDistance = 0; }
 			if (target != null) {
@@ -122,44 +145,157 @@ namespace NonStandard.Character {
 			}
 		}
 
-		public void SetLerpSpeed(float durationSeconds) { duration = (long)(durationSeconds*1000); }
-		private long started, end, duration = 250;
-		private float distStart, distEnd;
-		private Quaternion rotStart, rotEnd;
+		[System.Serializable] public class CameraView {
+			public string name;
+			[HideInInspector] public Quaternion rotation;
+			[SerializeField] public Vector3 _Rotation;
+			/// <summary>
+			/// if target is null, use this
+			/// </summary>
+			public Vector3 position;
+			public Transform target;
+			public float distance;
+			public bool useTransformPositionChanges;
+			public bool ignoreLookRotationChanges;
+			public bool rotationIsLocal;
+			public bool positionLocalToLastTransform;
+			public void ResolveLookRotation() {
+				if(rotation.x==0&&rotation.y==0&&rotation.z==0&&rotation.w==0) {
+					rotation = Quaternion.Euler(_Rotation);
+				}
+				//Debug.Log(Show.Stringify(this));
+			}
+		}
+		public List<CameraView> knownCameraViews = new List<CameraView>();
+
+		public void ToggleView(string viewName) {
+			if(currentViewname != defaultViewName) {
+				LerpView(defaultViewName);
+			} else {
+				LerpView(viewName);
+			}
+		}
+		private string defaultViewName = "user";
+		private string currentViewname = "user";
+		public string CurrentViewName { get { return currentViewname; } }
+		public void SetLerpSpeed(float durationSeconds) { lerpDurationMs = (long)(durationSeconds*1000); }
+		private long started, end;
+		public long lerpDurationMs = 250;
+		private float distStart;
+		private Quaternion rotStart;
 		private bool lerping = false;
-		public void LerpDirection(string dir) {
-			CodeConvert.TryConvertEnumWildcard(typeof(Direction3D), dir, out object v);
-			if (v != null) { LerpDirection((Direction3D)v); }
+		private Vector3 startPosition;
+		private CameraView targetView = new CameraView();
+		public void LerpView(string viewName) {
+			currentViewname = viewName;
+			string n = viewName.ToLower();
+			switch (n) {
+			case "user":
+				LerpRotation(userRotation);
+				LerpDistance(userDistance);
+				LerpTarget(userTarget);
+				return;
+			default:
+				for(int i = 0; i < knownCameraViews.Count; ++i) {
+					if (knownCameraViews[i].name.ToLower().Equals(n)) {
+						//Debug.Log("doing " + n + " "+Show.Stringify(knownCameraViews[i]));
+						LerpTo(knownCameraViews[i]);
+						return;
+					}
+				}
+				break;
+			}
+			CodeConvert.TryConvertEnumWildcard(typeof(Direction3D), viewName, out object v);
+			if (v != null) {
+				LerpDirection((Direction3D)v); return;
+			}
+			Debug.LogWarning($"unkown view name \"{viewName}\"");
 		}
 		public void LerpDirection(Direction3D dir) { LerpDirection(dir.GetVector3()); }
-		public void LerpDirection(Vector3 direction) {
-			rotStart = t.rotation;
-			rotEnd = Quaternion.LookRotation(direction);
-			started = Clock.NowRealtime;
-			end = Clock.NowRealtime + duration;
-			if(!lerping) LerpToTarget();
+		public void LerpDirection(Vector3 direction) { LerpRotation(Quaternion.LookRotation(direction)); }
+		public void LerpRotation(Quaternion direction) {
+			targetView.rotation = direction;
+			DoLerpToTarget();
 		}
 		public void LerpDistance(float distance) {
-			distStart = distanceBecauseOfObstacle;
-			distEnd = distance;
-			if (!lerping) LerpToTarget();
+			targetView.distance = distance;
+			DoLerpToTarget();
 		}
-		public void LerpToTarget() {
+		public void LerpTarget(Transform target) {
+			targetView.target = target;
+			DoLerpToTarget();
+		}
+		public void LerpTo(CameraView view) {
+			targetView.name = view.name;
+			targetView.useTransformPositionChanges = view.useTransformPositionChanges;
+			targetView.ignoreLookRotationChanges = view.ignoreLookRotationChanges;
+			targetView.rotationIsLocal = view.rotationIsLocal;
+			targetView.positionLocalToLastTransform = view.positionLocalToLastTransform;
+			if (view.useTransformPositionChanges) { targetView.target = view.target; }
+			targetView.distance = view.distance;
+			if (!view.ignoreLookRotationChanges) { targetView.rotation = view.rotation; }
+			DoLerpToTarget();
+		}
+		public void DoLerpToTarget() {
+			if (lerping) return;
+			lerping = true;
+			rotStart = t.rotation;
+			startPosition = t.position;
+			distStart = distanceBecauseOfObstacle;
+			if (targetView.positionLocalToLastTransform && _target != null) {
+				Quaternion q = !targetView.ignoreLookRotationChanges ? targetView.rotation : t.rotation;
+				targetView.position = _target.position - (q * Vector3.forward) * targetView.distance;
+				Debug.Log("did the thing");
+			}
+			//if (targetView.target != null) {
+				_target = null;
+			//}
+			started = Clock.NowRealtime;
+			end = Clock.NowRealtime + lerpDurationMs;
+			Clock.setTimeoutRealtime(LerpToTarget, 0);
+		}
+		private void LerpToTarget() {
 			lerping = true;
 			long now = Clock.NowRealtime;
-			if (now >= end) {
-				t.rotation = rotEnd;
-				RecalculateRotation();
-				targetDistance = distEnd;
-				lerping = false;
-				return;
-			}
 			long passed = now - started;
-			float p = (float)passed / duration;
-			t.rotation = Quaternion.Lerp(rotStart, rotEnd, p);
-			targetDistance = (distEnd - distStart) * p + distStart;
+			float p = (float)passed / lerpDurationMs;
+			if (now >= end) { p = 1; }
+			if (!targetView.ignoreLookRotationChanges) {
+				if (targetView.rotationIsLocal) {
+					Quaternion startQ = targetView.rotationIsLocal ? targetView.target.rotation : Quaternion.identity;
+					Quaternion.Lerp(rotStart, targetView.rotation * startQ, p);
+				} else {
+					t.rotation = Quaternion.Lerp(rotStart, targetView.rotation, p);
+				}
+			}
+			targetDistance = (targetView.distance - distStart) * p + distStart;
+			if (targetView.useTransformPositionChanges) {
+				if (targetView.target != null) {
+					Quaternion rot = targetView.rotation * (targetView.rotationIsLocal ? targetView.target.rotation : Quaternion.identity);
+					Vector3 targ = targetView.target.position;
+					Vector3 dir = rot * Vector3.forward;
+					RaycastHit hitInfo;
+					if (clipAgainstWalls && Physics.Raycast(targ, -dir, out hitInfo, targetView.distance)) {
+						distanceBecauseOfObstacle = hitInfo.distance;
+					} else {
+						distanceBecauseOfObstacle = targetView.distance;
+					}
+					Vector3 finalP = targ - dir * distanceBecauseOfObstacle;
+					//Debug.Log(targetView.distance+"  "+distanceBecauseOfObstacle+"  "+targ+" "+targetView.target);
+					t.position = Vector3.Lerp(startPosition, finalP, p);
+					//Debug.Log("# "+p+" "+finalP);
+				} else {
+					t.position = Vector3.Lerp(startPosition, targetView.position, p);
+					//Debug.Log("!" + p + " " + targetView.position);
+				}
+			}
 			RecalculateRotation();
-			Clock.setTimeoutRealtime(LerpToTarget, 20);
+			if (p < 1) { Clock.setTimeoutRealtime(LerpToTarget, 20); } else {
+				if (targetView.useTransformPositionChanges) {
+					_target = targetView.target;
+				}
+				lerping = false;
+			}
 		}
 	}
 }
