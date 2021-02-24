@@ -29,6 +29,7 @@ public class MazeLevel : MonoBehaviour {
     public float rampAngle = 23;
     public float rampScale = 1.5f;
     public Color undiscoveredWall = Color.clear, undiscoveredFloor = Color.clear, undiscoveredRamp = Color.clear;
+    public bool testingPickups = false;
     public int stage = -1;
 
     List<MazeTile> mazeTiles = new List<MazeTile>();
@@ -161,7 +162,7 @@ public class MazeLevel : MonoBehaviour {
         Vector3 off = new Vector3(map.Width / -2f * tileSize.x, 0, map.Height / -2f * tileSize.z);
         Transform selfT = transform;
         List<MazeTile> floorTiles = new List<MazeTile>();
-        int below2 = 0, below3 = 0;
+        int below2 = 0, below3 = 0, below4 = 0;
         map.GetSize().ForEach(c => {
             MazeTile mt = GetTile(c);//mazeTiles[index++];
             mt.maze = this;
@@ -183,7 +184,7 @@ public class MazeLevel : MonoBehaviour {
             if (mt.kind == MazeTile.Kind.Floor) {
                 floorTiles.Add(mt);
                 mt.goalScore = TileScorer(mt, map);
-                if (mt.goalScore < 2) { ++below2; } else if (mt.goalScore < 3) { ++below3; }
+                if (mt.goalScore < 2) { ++below2; } else if (mt.goalScore < 3) { ++below3; } else if (mt.goalScore < 4) { ++below4; }
             } else {
                 mt.goalScore = float.PositiveInfinity;
             }
@@ -224,6 +225,16 @@ public class MazeLevel : MonoBehaviour {
             };
             npcs.Add(npc.GetComponent<CharacterMove>());
         }
+        if (testingPickups) {
+            int start = below2 + npcs.Count;
+            int limit = below2 + below3 + below4;
+            int ii = idols.Count;
+            idols.AddRange(CreateIdols(limit-start));
+            for (int i = start; i < limit; ++i) {
+                PlaceObjectOverTile(idols[ii++].transform, floorTiles[i]);
+            }
+        }
+
         for (int i = 0; i < npcs.Count; ++i) {
             PlaceObjectOverTile(npcs[i].transform, floorTiles[below2 + i]);
         }

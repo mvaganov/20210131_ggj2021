@@ -80,6 +80,7 @@ namespace NonStandard.Character {
 			public float maxStableAngle;
 			public AutoMove automaticMovement;
 
+			public bool disabled;
 			public bool canMoveInAir;
 			public bool lookForwardMoving;
 			public bool maintainSpeedAgainstWall;
@@ -234,8 +235,8 @@ namespace NonStandard.Character {
 				jump.PressJump = Jump;
 				lastJump = Jump;
 			}
-			move.FixedUpdate(this);
-			jump.FixedUpdate(this);
+			if (!move.disabled) { move.FixedUpdate(this); }
+			if (!jump.disabled) { jump.FixedUpdate(this); }
 			if (!move.isStableOnGround && !jump.impulseActive && move.groundNormal != Vector3.zero) {
 				move.groundNormal = Vector3.zero;
 				callbacks.fall.Invoke();
@@ -284,6 +285,7 @@ namespace NonStandard.Character {
 			/// to modify inputHeld, set PressJump to a positive value.
 			private bool inputHeld;
 			private bool peaked;
+			public bool disabled = false;
 			public bool Peaked { get { return peaked; } }
 
 			[Tooltip("if false, double jumps won't 'restart' a jump, just add jump velocity")]

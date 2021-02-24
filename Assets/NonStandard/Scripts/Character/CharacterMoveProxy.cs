@@ -4,16 +4,26 @@ using UnityEngine;
 
 namespace NonStandard.Character {
 	public class CharacterMoveProxy : MonoBehaviour {
-		public CharacterMove target;
+		[SerializeField] protected CharacterMove target;
 		public Transform MoveTransform {
 			get { return target != null ? target.transform : null; }
 			set {
-				target = value.GetComponent<CharacterMove>();
-				if(target != null) {
-					transform.parent = MoveTransform;
-					transform.localPosition = Vector3.zero;
-					transform.localRotation = Quaternion.identity;
-				}
+				Debug.Log("!@## " + Show.GetStack(10));
+				Target = value.GetComponent<CharacterMove>();
+				//if(target != null) {
+				//	transform.parent = MoveTransform;
+				//	transform.localPosition = Vector3.zero;
+				//	transform.localRotation = Quaternion.identity;
+				//}
+			}
+		}
+		public CharacterMove Target {
+			get { return target; }
+			set {
+				target = value;
+				transform.parent = MoveTransform;
+				transform.localPosition = Vector3.zero;
+				transform.localRotation = Quaternion.identity;
 			}
 		}
 		public float Jump {

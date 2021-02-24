@@ -36,10 +36,34 @@ namespace NonStandard.Character {
 			}
 		}
 
-		CharacterMove currentChar = null;
-		ClickToMoveFollower follower;
+		public List<ClickToMoveFollower> selection = new List<ClickToMoveFollower>();
+		public void SetSelection(CharacterMove characterMove) {
+			selection.ForEach(f => f.ShowPath(false));
+			selection.Clear();
+			if (characterMove != null) {
+				selection.Add(Follower(characterMove));
+			}
+			selection.ForEach(f => f.ShowPath(true));
+		}
+		public ClickToMoveFollower Follower(CharacterMove currentChar) {
+			ClickToMoveFollower follower = currentChar.GetComponent<ClickToMoveFollower>();
+			if (follower == null) {
+				follower = currentChar.gameObject.AddComponent<ClickToMoveFollower>();
+				follower.clickToMoveUi = this;
+				follower.Init(currentChar.gameObject);
+			}
+			return follower;
+		}
+
+		private void ClickFor(ClickToMoveFollower follower, RaycastHit rh) {
+			follower.SetCurrentTarget(rh.point, rh.normal);
+			follower.UpdateLine();
+		}
 
 		private void Update() {
+			if (selection.Count == 0 && characterToMove.Target != null) {
+				SetSelection(characterToMove.Target);
+			}
 			if (Input.GetKey(key)) {
 				//Debug.Log("click");
 				if (!UiClick.IsMouseOverUi()) {
@@ -48,18 +72,15 @@ namespace NonStandard.Character {
 					RaycastHit rh;
 					Physics.Raycast(ray, out rh, float.PositiveInfinity, validToMove, moveToTrigger);
 					if (rh.collider != null) {
-						currentChar = characterToMove.target;
-						if (follower == null || currentChar != follower.mover) {// calcDoneForMe) {
-							follower = currentChar.GetComponent<ClickToMoveFollower>();
-							if (follower == null) {
-								follower = currentChar.gameObject.AddComponent<ClickToMoveFollower>();
-								follower.clickToMoveUi = this;
-								follower.Init(currentChar.gameObject);
+						if (selection.Count > 0) {
+							for (int i = 0; i < selection.Count; ++i) {
+								if (selection[i] == null) {
+									selection.RemoveAt(i--);
+									continue;
+								}
+								ClickFor(selection[i], rh);
 							}
 						}
-						//Debug.Log("hit");
-						follower.SetCurrentTarget(rh.point, rh.normal);
-						follower.UpdateLine();
 					}
 					MouseCursor.Instance.currentSet = mouseSetMove;
 				} else {
@@ -67,7 +88,12 @@ namespace NonStandard.Character {
 				}
 			}
 			if (prefab_waypoint != null && Input.GetKeyUp(key)) {
-				if (follower != null) { follower.ShowCurrentWaypoint(); }
+				//if (follower != null) { follower.ShowCurrentWaypoint(); }
+				if (selection.Count > 0) {
+					for (int i = 0; i < selection.Count; ++i) {
+						selection[i].ShowCurrentWaypoint();
+					}
+				}
 			}
 		}
 	}

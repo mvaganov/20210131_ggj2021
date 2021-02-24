@@ -37,7 +37,11 @@ namespace NonStandard.Character {
 		public float maxVerticalAngle = 100, minVerticalAngle = -100;
 		public Vector2 inputMultiplier = Vector2.one;
 
-		public Transform target { get { return _target; } set { _target = userTarget = value; } }
+		public Transform target { get { return _target; } 
+			set {
+				Debug.Log("target! "+Show.GetStack(10));
+				_target = userTarget = value; 
+			} }
 
 		/// publicly accessible variables that can be modified by external scripts or UI
 		[HideInInspector] public float horizontalRotateInput, verticalRotateInput, zoomInput;
@@ -80,9 +84,9 @@ namespace NonStandard.Character {
 			targetView.target = userTarget;
 			targetView.rotation = userRotation;
 			targetView.distance = userDistance;
-			for (int i = 0; i < knownCameraViews.Count; ++i) {
-				knownCameraViews[i].ResolveLookRotation();
-			}
+			//for (int i = 0; i < knownCameraViews.Count; ++i) {
+			//	knownCameraViews[i].ResolveLookRotation();
+			//}
 		}
 
 		public bool RecalculateDistance() {
@@ -109,8 +113,14 @@ namespace NonStandard.Character {
 			float rotH = horizontalRotateInput * anglePerSecondMultiplier * Time.unscaledDeltaTime,
 				rotV = verticalRotateInput * anglePerSecondMultiplier * Time.unscaledDeltaTime,
 				zoom = zoomInput * Time.unscaledDeltaTime;
-			targetDistance += zoom;
-			if (zoom != 0) { userDistance = targetDistance; }
+			targetDistance -= zoom;
+			if (zoom != 0) {
+				userDistance = targetDistance;
+				if (targetDistance < 0) { targetDistance = 0; }
+				if (target == null && targetDistance > 0) {
+					t.position += t.forward * zoom;
+				}
+			}
 			if (rotH != 0 || rotV != 0) {
 				targetRotation = Quaternion.identity;
 				yaw += rotH;
@@ -123,7 +133,6 @@ namespace NonStandard.Character {
 				targetRotation *= Quaternion.Euler(pitch, yaw, 0);
 				userRotation = targetRotation;
 			}
-			if (targetDistance < 0) { targetDistance = 0; }
 			if (target != null) {
 				RaycastHit hitInfo;
 				bool usuallyHitsTriggers = Physics.queriesHitTriggers;
@@ -144,7 +153,6 @@ namespace NonStandard.Character {
 				t.position = target.position - (t.rotation * Vector3.forward) * distanceBecauseOfObstacle;
 			}
 		}
-
 		[System.Serializable] public class CameraView {
 			public string name;
 			[HideInInspector] public Quaternion rotation;
@@ -159,7 +167,7 @@ namespace NonStandard.Character {
 			public bool ignoreLookRotationChanges;
 			public bool rotationIsLocal;
 			public bool positionLocalToLastTransform;
-			public void ResolveLookRotation() {
+			public void ResolveLookRotationIfNeeded() {
 				if(rotation.x==0&&rotation.y==0&&rotation.z==0&&rotation.w==0) {
 					rotation = Quaternion.Euler(_Rotation);
 				}
@@ -215,15 +223,15 @@ namespace NonStandard.Character {
 		public void LerpDirection(Vector3 direction) { LerpRotation(Quaternion.LookRotation(direction)); }
 		public void LerpRotation(Quaternion direction) {
 			targetView.rotation = direction;
-			DoLerpToTarget();
+			StartLerpToTarget();
 		}
 		public void LerpDistance(float distance) {
 			targetView.distance = distance;
-			DoLerpToTarget();
+			StartLerpToTarget();
 		}
 		public void LerpTarget(Transform target) {
 			targetView.target = target;
-			DoLerpToTarget();
+			StartLerpToTarget();
 		}
 		public void LerpTo(CameraView view) {
 			targetView.name = view.name;
@@ -233,10 +241,13 @@ namespace NonStandard.Character {
 			targetView.positionLocalToLastTransform = view.positionLocalToLastTransform;
 			if (view.useTransformPositionChanges) { targetView.target = view.target; }
 			targetView.distance = view.distance;
-			if (!view.ignoreLookRotationChanges) { targetView.rotation = view.rotation; }
-			DoLerpToTarget();
+			if (!view.ignoreLookRotationChanges) {
+				view.ResolveLookRotationIfNeeded();
+				targetView.rotation = view.rotation;
+			}
+			StartLerpToTarget();
 		}
-		public void DoLerpToTarget() {
+		public void StartLerpToTarget() {
 			if (lerping) return;
 			lerping = true;
 			rotStart = t.rotation;
@@ -261,6 +272,7 @@ namespace NonStandard.Character {
 			float p = (float)passed / lerpDurationMs;
 			if (now >= end) { p = 1; }
 			if (!targetView.ignoreLookRotationChanges) {
+				targetView.ResolveLookRotationIfNeeded();
 				if (targetView.rotationIsLocal) {
 					Quaternion startQ = targetView.rotationIsLocal ? targetView.target.rotation : Quaternion.identity;
 					Quaternion.Lerp(rotStart, targetView.rotation * startQ, p);

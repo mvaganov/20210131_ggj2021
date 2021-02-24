@@ -8,17 +8,22 @@ public class CharacterControlManager : MonoBehaviour
 	public CharacterCamera cam;
 	public CharacterMoveProxy moveProxy;
 	public GameObject localPlayerInterfaceObject;
+	public ClickToMove clickToMove;
+	public FourthPersonController fourthPersonControl;
 
 	public void SetCharacter(GameObject obj) {
 		if (moveProxy != null) {
 			//Debug.Log("Switching from " + moveProxy.target);
-			Interact3dItem i3i = moveProxy.target.GetComponent<Interact3dItem>();
+			Interact3dItem i3i = moveProxy.Target.GetComponent<Interact3dItem>();
 			if(i3i != null) i3i.showing = true;
 		}
 		CharacterMove cm = obj.GetComponent<CharacterMove>();
-		cam.target = cm != null && cm.head != null ? cm.head : obj.transform;
-		moveProxy.target = cm;
+		if (moveProxy.Target != fourthPersonControl.GetMover()) {
+			cam.target = cm != null && cm.head != null ? cm.head : obj.transform;
+			moveProxy.Target = cm;
+		}
 		if (cm != null) { cm.move.orientationTransform = cam.transform; }
+		clickToMove.SetSelection(cm);
 		Transform t = localPlayerInterfaceObject.transform;
 		Interact3dUi.TriggerArea ta = t.GetComponent<Interact3dUi.TriggerArea>();
 		ta.Blink();
@@ -33,6 +38,6 @@ public class CharacterControlManager : MonoBehaviour
 	}
 
 	void Start() {
-		Global.Get<Team>().AddMember(moveProxy.target.gameObject);
+		Global.Get<Team>().AddMember(moveProxy.Target.gameObject);
 	}
 }

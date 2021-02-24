@@ -24,10 +24,19 @@ public class ClickToMoveFollower : MonoBehaviour {
 		if(mover != null) { return; }
 		mover = GetComponent<CharacterMove>();
 		CapsuleCollider cap = mover.GetComponent<CapsuleCollider>();
-		characterHeight = cap.height / 2;
-		characterRadius = cap.radius;
+		if (cap != null) {
+			characterHeight = cap.height / 2;
+			characterRadius = cap.radius;
+		} else {
+			characterHeight = characterRadius = 0;
+		}
 		if (line == null) { line = Lines.MakeWire(); }
 		line.Line(Vector3.zero);
+	}
+	public void HidePath() { ShowPath(false); }
+	public void ShowPath(bool show=true) {
+		line.gameObject.SetActive(show);
+		waypoints.ForEach(w => w.gameObject.SetActive(show));			
 	}
 	public void UpdateLine() {
 		List<Vector3> points = new List<Vector3>();
