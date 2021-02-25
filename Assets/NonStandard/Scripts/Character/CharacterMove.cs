@@ -84,6 +84,7 @@ namespace NonStandard.Character {
 			public bool canMoveInAir;
 			public bool lookForwardMoving;
 			public bool maintainSpeedAgainstWall;
+			public bool systemMovement;
 			[HideInInspector] public bool isStableOnGround;
 			[HideInInspector] public float strafeRightMovement;
 			[HideInInspector] public float moveForwardMovement;
@@ -163,7 +164,11 @@ namespace NonStandard.Character {
 					cm.transform.rotation = Quaternion.LookRotation(moveDirection, Vector3.up);
 					if(cm.head != null) { cm.head.localRotation = Quaternion.identity; } // turn head straight while walking
 				}
-				cm.rb.velocity = moveVelocity;
+				if (!systemMovement) {
+					cm.rb.velocity = moveVelocity;
+				} else {
+					cm.transform.position += moveVelocity * Time.unscaledDeltaTime;
+				}
 				lastVelocity = moveVelocity;
 				if(oppositionDirection == Vector3.zero && lastOppositionDirection != Vector3.zero)
 				{
@@ -172,7 +177,6 @@ namespace NonStandard.Character {
 				}
 				oppositionDirection = Vector3.zero;
 			}
-
 			public void FixedUpdate(CharacterMove c) {
 				if (isStableOnGround || canMoveInAir) {
 					ApplyMoveFromInput(c);
@@ -229,7 +233,9 @@ namespace NonStandard.Character {
 		public float GetJumpProgress() {
 			return move.isStableOnGround ? 1 : (1 - ((float)jump.jumpsSoFar / jump.maxJumps));
 		}
-
+		private void Update() {
+			if (move.systemMovement && !move.disabled && Time.timeScale ==0) { move.FixedUpdate(this); }
+		}
 		void FixedUpdate() {
 			if (Jump != lastJump) {
 				jump.PressJump = Jump;
