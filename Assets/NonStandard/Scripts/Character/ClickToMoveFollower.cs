@@ -52,11 +52,11 @@ public class ClickToMoveFollower : MonoBehaviour {
 	float ManhattanDistance(Vector3 a, Vector3 b) {
 		return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y) + Mathf.Abs(a.z - b.z);
 	}
-	public float manhattanDistance;
+	//public float manhattanDistance;
 	public bool IsStuck(Vector3 currentPosition) {
 		positionSample[sampleIndex] = currentPosition;
 		if (++sampleIndex >= positionSample.Length) { sampleIndex = 0; ++samplesGroupsRead; }
-		manhattanDistance = 0;
+		float manhattanDistance = 0;
 		for (int i = 0; i < positionSample.Length; ++i) {
 			manhattanDistance += ManhattanDistance(currentPosition, positionSample[i]);
 		}

@@ -1,4 +1,5 @@
 ﻿using NonStandard.Character;
+using NonStandard.GameUi;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,6 +12,7 @@ public class FourthPersonController : MonoBehaviour
     public CharacterCamera.CameraView view;
     public CharacterMove previous;
     private CharacterMove self;
+    public Interact3dUi i3dui;
     public CharacterMove GetMover() { return self; }
     public GameObject visibleObjects;
     Bounds visibleBounds;
@@ -121,7 +123,9 @@ public class FourthPersonController : MonoBehaviour
             transform.position = (previous.head ? previous.head:previous.transform).position;
             characterMoveProxy.Target = self;
             _camera.LerpTo(view);
-            clickToMove.SetSelection(previous);
+            clickToMove.SetFollower(previous);
+            i3dui.triggerArea.transform.SetParent(previous.transform);
+            i3dui.triggerArea.transform.localPosition = Vector3.zero;
         }
     }
 }

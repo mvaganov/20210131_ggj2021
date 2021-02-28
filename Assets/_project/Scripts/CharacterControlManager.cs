@@ -23,7 +23,7 @@ public class CharacterControlManager : MonoBehaviour
 			moveProxy.Target = cm;
 		}
 		if (cm != null) { cm.move.orientationTransform = cam.transform; }
-		clickToMove.SetSelection(cm);
+		clickToMove.SetFollower(cm);
 		Transform t = localPlayerInterfaceObject.transform;
 		Interact3dUi.TriggerArea ta = t.GetComponent<Interact3dUi.TriggerArea>();
 		ta.Blink();

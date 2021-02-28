@@ -1,6 +1,7 @@
 ﻿using NonStandard.Utility;
 using System;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace NonStandard.GameUi.Inventory {
 	public class InventoryItem : MonoBehaviour {
@@ -8,6 +9,7 @@ namespace NonStandard.GameUi.Inventory {
 		public Collider _pickupCollider;
 		public Action<Inventory> onAddToInventory;
 		public Action<Inventory> onRemoveFromInventory;
+		public UnityEvent addToInventoryEvent;
 		public void Start() {
 			if (_pickupCollider == null) { _pickupCollider = GetComponent<Collider>(); }
 			CollisionTrigger trigger = _pickupCollider.gameObject.AddComponent<CollisionTrigger>();

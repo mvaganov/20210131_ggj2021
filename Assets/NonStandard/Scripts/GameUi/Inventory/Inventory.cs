@@ -10,6 +10,7 @@ namespace NonStandard.GameUi.Inventory {
 		public ListUi inventoryUi;
 		public UnityEvent_GameObject onAddItem;
 		public UnityEvent_GameObject onRemoveItem;
+		public List<GameObject> GetItems() { return items; }
 		private void Awake() {
 			Global.Get<InventoryManager>().Register(this);
 		}
@@ -20,6 +21,7 @@ namespace NonStandard.GameUi.Inventory {
 			InventoryItem item = itemObject.GetComponent<InventoryItem>();
 			itemObject.SetActive(false);
 			item.onAddToInventory?.Invoke(this);
+			item.addToInventoryEvent?.Invoke();
 			Vector3 playerLoc = Global.Get<CharacterControlManager>().localPlayerInterfaceObject.transform.position;
 			Vector3 localPosition = itemObject.transform.position - playerLoc;
 			itemObject.transform.SetParent(transform);

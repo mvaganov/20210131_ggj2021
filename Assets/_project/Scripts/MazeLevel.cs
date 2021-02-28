@@ -1,27 +1,15 @@
 ﻿using MazeGeneration;
 using NonStandard;
-using NonStandard.Character;
-using NonStandard.Data;
-using NonStandard.Data.Parse;
-using NonStandard.GameUi;
-using NonStandard.GameUi.Dialog;
-using NonStandard.GameUi.Inventory;
-using NonStandard.GameUi.Particles;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 public class MazeLevel : MonoBehaviour {
     public TextAsset mazeSrc;
-    public TextAsset resourceNamesText;
-    public TextAsset npcNamesText;
-    public MazeTile prefab_mazeTile;
-    public CharacterMove prefab_npcPlayer;
-    public Discovery prefab_discovery;
-    Map2d map;
+	public MazeTile prefab_mazeTile;
+	Map2d map;
     public float undiscoveredHeight = 0.0625f;
     public float floorHeight = 0;
     public float wallHeight = .5f;
-    public float discoveredTime = 30;
     public float animationTime = .25f;
     public Vector3 tileSize = Vector3.one * 4;
     public Vector3 undiscoveredTileSize = Vector3.one;
@@ -29,79 +17,27 @@ public class MazeLevel : MonoBehaviour {
     public float rampAngle = 23;
     public float rampScale = 1.5f;
     public Color undiscoveredWall = Color.clear, undiscoveredFloor = Color.clear, undiscoveredRamp = Color.clear;
-    public bool testingPickups = false;
     public int stage = -1;
 
-    List<MazeTile> mazeTiles = new List<MazeTile>();
-    public GameObject firstPlayer;
-    public GameObject nextLevelButton;
-    public DictionaryKeeper mainDictionaryKeeper;
-    public List<CharacterMove> npcs = new List<CharacterMove>();
-    private Dictionary<string, string[]> resourceNames;
-    private Dictionary<string, string> npcNames;
+	List<MazeTile> mazeTiles = new List<MazeTile>();
+    public List<MazeTile> floorTiles;
+    public int[] floorTileNeighborHistogram = new int[0];
+
     [System.Serializable] public class MazeGenArgs {
         public Vector2 size = new Vector2(21, 21), start = Vector2.one, step = Vector2.one, wall = Vector2.one;
         public int seed = -1, erosion = 0;
     }
     public MazeGenArgs mazeGenerationArguments = new MazeGenArgs();
-    public List<GameObject> tokenPrefabs = new List<GameObject>();
-    public List<Material> tokenMaterials = new List<Material>();
-    public List<GameObject> idols;
     // Start is called before the first frame update
-    public void Awake() {
-        Commander.Instance.SetScope(mainDictionaryKeeper.Dictionary);
-        Commander.Instance.AddCommand("claimplayer", ClaimPlayer);
-    }
-    void Start() {
-        Tokenizer tokenizer = new Tokenizer();
-        CodeConvert.TryParse(resourceNamesText.text, out resourceNames, null, tokenizer);
-        CodeConvert.TryParse(npcNamesText.text, out npcNames, null, tokenizer);
-        Generate();
-        ConditionCheck cc = Global.Get<ConditionCheck>();
-        cc.condition = () => {
-            //Show.Log("checking victory " + Global.Get<Team>().members.Count + " / " + (npcs.Count + 1));
-            return Global.Get<Team>().members.Count >= npcs.Count+1;
-        };
-        cc.action = () => {
-            Tokenizer tok = new Tokenizer();
-            DialogManager.Instance.StartDialog(this, tok, "win message");
-            tok.ShowErrorTo(DialogManager.ActiveDialog.ShowError);
-            DialogManager.Instance.Show();
-        };
-        //Show.Log("finished initializing " + this);
-        Team team = Global.Get<Team>();
-        team.AddMember(firstPlayer);
-        EnsureExplorer(firstPlayer);
-    }
-    public Discovery EnsureExplorer(GameObject go) {
-        Discovery d = go.GetComponentInChildren<Discovery>();
-        if (d == null) {
-            d = Instantiate(prefab_discovery.gameObject).GetComponent<Discovery>();
-            Transform t = d.transform;
-            t.SetParent(go.transform);
-            t.localPosition = Vector3.zero;
-        }
-        return d;
-    }
     public char GetTileSrc(Coord c) { return map[c].letter; }
     public MazeTile GetTile(Coord c) { return mazeTiles[c.Y*map.Width+c.X]; }
-    int advancementindex = 0;
-    int[] advancementColor, advancementShape;
-    public void Generate() {
-        ++stage;
-        nextLevelButton.SetActive(false);
-        if (advancementColor == null) {
-            int[] counts = new int[tokenMaterials.Count];
-            counts.SetEach(i => tokenPrefabs.Count);
-            NumberSequence.GenerateAdvancementOrder2(counts, out advancementColor, out advancementShape);
-            //Show.Log(advancementColor.JoinToString(" ", i=>i.ToString("X")) + "\n" + advancementShape.JoinToString(" "));
-        }
+    public void Generate(NonStandard.Data.Random random) {
         if (mazeSrc == null) {
             int seed = mazeGenerationArguments.seed;
             if (seed < 0) {
                 seed = (int)Clock.NowRealTicks;
             }
-            MazeGenerator mg = new MazeGenerator(seed);
+            MazeGenerator mg = new MazeGenerator(random.Next);
             char[,] map = mg.Generate(mazeGenerationArguments.size, mazeGenerationArguments.start, mazeGenerationArguments.step, mazeGenerationArguments.wall);
             mg.Erode(map, mazeGenerationArguments.erosion);
             // generate ramps
@@ -161,8 +97,8 @@ public class MazeLevel : MonoBehaviour {
         //int index = 0;
         Vector3 off = new Vector3(map.Width / -2f * tileSize.x, 0, map.Height / -2f * tileSize.z);
         Transform selfT = transform;
-        List<MazeTile> floorTiles = new List<MazeTile>();
-        int below2 = 0, below3 = 0, below4 = 0;
+        floorTiles = new List<MazeTile>();
+        floorTileNeighborHistogram.SetEach(0);
         map.GetSize().ForEach(c => {
             MazeTile mt = GetTile(c);//mazeTiles[index++];
             mt.maze = this;
@@ -184,114 +120,14 @@ public class MazeLevel : MonoBehaviour {
             if (mt.kind == MazeTile.Kind.Floor) {
                 floorTiles.Add(mt);
                 mt.goalScore = TileScorer(mt, map);
-                if (mt.goalScore < 2) { ++below2; } else if (mt.goalScore < 3) { ++below3; } else if (mt.goalScore < 4) { ++below4; }
+                int index = (int)mt.goalScore;
+                if(index >= floorTileNeighborHistogram.Length) { Array.Resize(ref floorTileNeighborHistogram, index + 1); }
+                ++floorTileNeighborHistogram[index];
             } else {
                 mt.goalScore = float.PositiveInfinity;
             }
         });
         floorTiles.Sort((a, b) => a.goalScore.CompareTo(b.goalScore));
-        //Debug.Log(below2 + " " + below3);
-        //Debug.Log(floorTiles.JoinToString(", ", mt => mt.goalScore.ToString()));
-        idols = CreateIdols(below2);
-        for (int i = 0; i < below2; ++i) {
-            PlaceObjectOverTile(idols[i].transform, floorTiles[i]);
-        }
-        int len = Mathf.Min(below3, tokenMaterials.Count);
-        for (int i = npcs.Count; i < len; ++i) {
-            Material mat = tokenMaterials[i];
-            GameObject npc = Instantiate(prefab_npcPlayer.gameObject);
-            ParticleSystem ps = npc.GetComponentInChildren<ParticleSystem>();
-            if(ps != null) {
-                ps.name = mat.name;
-                ParticleSystem.MainModule m = ps.main;
-                m.startColor = mat.color;
-			}
-            npc.name = prefab_npcPlayer.name + i;
-            string foundName;
-            if(npcNames.TryGetValue(mat.name, out foundName)) {
-                npc.name = foundName;
-            }
-            Interact3dItem i3d = npc.GetComponentInChildren<Interact3dItem>();
-            i3d.Text = npc.name;
-            i3d.size = 1.75f;
-            i3d.fontCoefficient = .7f;
-            i3d.OnInteract = () => {
-                DialogManager.Instance.dialogWithWho = npc;
-                DialogManager.Instance.Show();
-                Tokenizer tok = new Tokenizer();
-                DialogManager.Instance.StartDialog(npc, tok, "dialog" + mat.name);
-                tok.ShowErrorTo(DialogManager.ActiveDialog.ShowError);
-                ps.Stop();
-            };
-            npcs.Add(npc.GetComponent<CharacterMove>());
-        }
-        if (testingPickups) {
-            int start = below2 + npcs.Count;
-            int limit = below2 + below3 + below4;
-            int ii = idols.Count;
-            idols.AddRange(CreateIdols(limit-start));
-            for (int i = start; i < limit; ++i) {
-                PlaceObjectOverTile(idols[ii++].transform, floorTiles[i]);
-            }
-        }
-
-        for (int i = 0; i < npcs.Count; ++i) {
-            PlaceObjectOverTile(npcs[i].transform, floorTiles[below2 + i]);
-        }
-        Team team = Global.Get<Team>();
-        team.AddMember(firstPlayer);
-        PlaceObjectOverTile(team.members[0].transform, floorTiles[floorTiles.Count - 1]);
-        Vector3 pos = team.members[0].transform.position;
-        for (int i = 0; i < team.members.Count; ++i) {
-            team.members[i].transform.position = pos;
-            CharacterMove cm = team.members[i].GetComponent<CharacterMove>();
-            if (cm != null) {
-                cm.SetAutoMovePosition(pos);
-                cm.MoveForwardMovement = 0;
-                cm.StrafeRightMovement = 0;
-            }
-        }
-    }
-    public List<GameObject> CreateIdols(int count) {
-        List<GameObject> idols = new List<GameObject>();
-        for (int i = 0; i < count; ++i) {
-            Material mat = tokenMaterials[advancementColor[advancementindex]];
-            GameObject originalItem = tokenPrefabs[advancementShape[advancementindex]];
-            GameObject go = Instantiate(originalItem);
-            go.name = mat.name;
-            Renderer r = go.GetComponent<Renderer>();
-            r.material = mat;
-            idols.Add(go);
-            InventoryItem ii = go.GetComponent<InventoryItem>();
-            ii.onAddToInventory += GoalCheck;
-            ii.onAddToInventory += inv => mainDictionaryKeeper.AddTo(mat.name, 1);
-            string floatyTextString = mat.name;
-            string[] floatyTextOptions = null;
-            if(resourceNames == null || (resourceNames.TryGetValue(mat.name, out floatyTextOptions) && floatyTextOptions != null)) {
-                floatyTextString = floatyTextOptions[advancementShape[advancementindex]];
-                ii.itemName = floatyTextString;
-			}
-            ii.onAddToInventory += inv => {
-                FloatyText ft = FloatyTextManager.Create(go.transform.position + (Vector3.up * tileSize.y * wallHeight), floatyTextString);
-                ft.TmpText.faceColor = mat.color;
-                // find which NPC wants this, and make them light up
-                ParticleSystem ps = null;
-                CharacterMove npc = npcs.Find(n=> {
-                    ps = n.GetComponentInChildren<ParticleSystem>();
-                    if (ps.name == mat.name) return true;
-                    ps = null;
-                    return false;
-                });
-                if(npc != null) { ps.Play(); }
-            };
-            ii.onRemoveFromInventory += inv => {
-                //Show.Log("losing " + mat.name);
-                mainDictionaryKeeper.AddTo(mat.name, -1);
-            };
-            ++advancementindex;
-            if (advancementindex >= advancementShape.Length) { advancementindex = 0; }
-        }
-        return idols;
     }
     public void PlaceObjectOverTile(Transform t, MazeTile mt) {
         Vector3 p = mt.CalcVisibilityTarget() + Vector3.up * tileSize.y;
@@ -328,33 +164,4 @@ public class MazeLevel : MonoBehaviour {
     public int CountDiscoveredNeighborWalls(Coord coord) {
         return CountTileNeighbors(coord, _cardinalDirs, c => GetTile(c).discovered && map[c] != ' ');
 	}
-    public void GoalCheck(Inventory inv) {
-        if (idols == null) return;
-        int activeIdols = 0;
-        for(int i = 0; i < idols.Count; ++i) {
-            if (idols[i] != null && idols[i].activeInHierarchy) ++activeIdols;
-		}
-        if(activeIdols == 0) {
-            mazeGenerationArguments.size += new Vector2(2, 2);
-            //Clock.setTimeout(()=>Generate(), 2000);
-            nextLevelButton.SetActive(true);
-		} 
-        //else { Show.Log(activeIdols + " active idols left"); }
-	}
-    public void ClaimPlayer(object src, Tokenizer tok) {
-        GameObject npc = DialogManager.Instance.dialogWithWho;
-        Global.Get<Team>().AddMember(npc);
-        MazeLevel ml = Global.Get<MazeLevel>();
-        Discovery d = ml.EnsureExplorer(npc);
-        ParticleSystem ps = npc.GetComponentInChildren<ParticleSystem>();
-        Color color = ps.main.startColor.color;
-        d.discoveredFloor = Color.Lerp(d.discoveredFloor, color, 0.25f);
-        d.discoveredWall = Color.Lerp(d.discoveredWall, color, 0.25f);
-        d.discoveredRamp = Color.Lerp(d.discoveredRamp, color, 0.25f);
-        d.maze = ml;
-        Global.Get<ConditionCheck>().DoActivateTest();
-        InventoryCollector inv = npc.GetComponentInChildren<InventoryCollector>();
-        inv.inventory = InventoryManager.main;
-        inv.autoPickup = true;
-    }
 }

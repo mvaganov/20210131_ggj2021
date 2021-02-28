@@ -23,6 +23,7 @@ public static class IListExtension {
 	public static void ForEach<T>(this IList<T> source, Action<T> action, int index, int length) {
 		for(int i = 0; i < length; ++i) { action.Invoke(source[index + i]); }
 	}
+	public static void SetEach<T>(this IList<T> source, T value) { for(int i = 0; i < source.Count; ++i) { source[i] = value; } }
 	public static void SetEach<T>(this IList<T> source, Func<int,T> action) { SetEach(source, action, 0, source.Count); }
 	public static void SetEach<T>(this IList<T> source, Func<int,T> action, int index, int length) {
 		for (int i = 0; i < length; ++i) { source[i] = action.Invoke(index + i); }
@@ -33,16 +34,17 @@ public static class IListExtension {
 		return list;
 	}
 	public static int FindIndex<T>(this IList<T> list, Func<T, bool> predicate) {
-		for(int i = 0; i < list.Count; ++i) {
-			if (predicate(list[i])) return i;
-		}
+		for(int i = 0; i < list.Count; ++i) { if (predicate(list[i])) return i; }
 		return -1;
 	}
 	public static T Find<T>(this IList<T> list, Func<T, bool> predicate) {
-		for (int i = 0; i < list.Count; ++i) {
-			if (predicate(list[i])) return list[i];
-		}
+		for (int i = 0; i < list.Count; ++i) { if (predicate(list[i])) return list[i]; }
 		return default(T);
+	}
+	public static int CountEach<T>(this IList<T> list, Func<T, bool> predicate) {
+		int count = 0;
+		for (int i = 0; i < list.Count; ++i) { if (predicate(list[i])) ++count; }
+		return count;
 	}
 	public static int Sum<T>(this IList<T> list, Func<T,int> valueFunction) {
 		int sum = 0; for(int i = 0; i < list.Count; ++i) { sum += valueFunction(list[i]); } return sum;

@@ -15,6 +15,8 @@ GameObject:
   - component: {fileID: 8561600735737634939}
   - component: {fileID: 8561600735737634928}
   - component: {fileID: 39552513395893804}
+  - component: {fileID: -5253052072878628835}
+  - component: {fileID: 4550935282869908665}
   m_Layer: 0
   m_Name: icosahedron
   m_TagString: Untagged
@@ -126,6 +128,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemName: 
   _pickupCollider: {fileID: 0}
+  addToInventoryEvent:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: -5253052072878628835}
+        m_MethodName: set_enabled
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &39552513395893804
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -141,3 +157,33 @@ MonoBehaviour:
   binders: []
   homePoint: {x: 0, y: 0, z: 0}
   bindOnStart: 1
+--- !u!114 &-5253052072878628835
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8561600735737634937}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5c1cd909d770894fa818da7acd4dee3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  prefab_marker: {fileID: 7185728073186119280, guid: 515974a11a7bea2418375003ea164056,
+    type: 3}
+  marker: {fileID: 0}
+  disableAfterFirstTouchdown: 0
+  copyColor: 1
+--- !u!114 &4550935282869908665
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8561600735737634937}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1371284843b8885479f37ec1d88abcec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  id: 

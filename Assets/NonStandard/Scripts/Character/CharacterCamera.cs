@@ -39,9 +39,10 @@ namespace NonStandard.Character {
 
 		public Transform target { get { return _target; } 
 			set {
-				Debug.Log("target! "+Show.GetStack(10));
+				//Debug.Log("target! "+Show.GetStack(10));
 				_target = userTarget = value; 
-			} }
+			}
+		}
 
 		/// publicly accessible variables that can be modified by external scripts or UI
 		[HideInInspector] public float horizontalRotateInput, verticalRotateInput, zoomInput;

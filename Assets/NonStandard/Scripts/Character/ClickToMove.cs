@@ -13,8 +13,8 @@ namespace NonStandard.Character {
 		public QueryTriggerInteraction moveToTrigger = QueryTriggerInteraction.Ignore;
 		public Interact3dItem prefab_waypoint;
 		public Interact3dItem prefab_middleWaypoint;
-		public int mouseSetMove = 1, mouseSetUi = 0;
-
+		public int mouseSet_move = 1, mouseSet_ui = 0;
+		private ClickToMoveFollower follower;
 #if UNITY_EDITOR
 		/// called when created by Unity Editor
 		void Reset() {
@@ -22,7 +22,7 @@ namespace NonStandard.Character {
 			if (characterToMove == null) { characterToMove = FindObjectOfType<CharacterMoveProxy>(); }
 			if (_camera == null) { _camera = GetComponent<Camera>(); }
 			if (_camera == null) { _camera = Camera.main; }
-			if (_camera == null) { _camera = FindObjectOfType<Camera>(); ; }
+			if (_camera == null) { _camera = FindObjectOfType<Camera>(); }
 		}
 #endif
 		private void Awake() {
@@ -35,16 +35,6 @@ namespace NonStandard.Character {
 				}
 			}
 		}
-
-		public List<ClickToMoveFollower> selection = new List<ClickToMoveFollower>();
-		public void SetSelection(CharacterMove characterMove) {
-			selection.ForEach(f => f.ShowPath(false));
-			selection.Clear();
-			if (characterMove != null) {
-				selection.Add(Follower(characterMove));
-			}
-			selection.ForEach(f => f.ShowPath(true));
-		}
 		public ClickToMoveFollower Follower(CharacterMove currentChar) {
 			ClickToMoveFollower follower = currentChar.GetComponent<ClickToMoveFollower>();
 			if (follower == null) {
@@ -55,15 +45,18 @@ namespace NonStandard.Character {
 			return follower;
 		}
 
-		private void ClickFor(ClickToMoveFollower follower, RaycastHit rh) {
+		public void ClickFor(ClickToMoveFollower follower, RaycastHit rh) {
 			follower.SetCurrentTarget(rh.point, rh.normal);
 			follower.UpdateLine();
 		}
 
+		public void SetFollower(CharacterMove target) { follower = Follower(target); }
+
 		private void Update() {
-			if (selection.Count == 0 && characterToMove.Target != null) {
-				SetSelection(characterToMove.Target);
+			if (follower == null && characterToMove.Target != null) {
+				SetFollower(characterToMove.Target);
 			}
+			if (follower == null) return;
 			if (Input.GetKey(key)) {
 				//Debug.Log("click");
 				if (!UiClick.IsMouseOverUi()) {
@@ -72,28 +65,15 @@ namespace NonStandard.Character {
 					RaycastHit rh;
 					Physics.Raycast(ray, out rh, float.PositiveInfinity, validToMove, moveToTrigger);
 					if (rh.collider != null) {
-						if (selection.Count > 0) {
-							for (int i = 0; i < selection.Count; ++i) {
-								if (selection[i] == null) {
-									selection.RemoveAt(i--);
-									continue;
-								}
-								ClickFor(selection[i], rh);
-							}
-						}
+						ClickFor(follower, rh);
 					}
-					MouseCursor.Instance.currentSet = mouseSetMove;
+					MouseCursor.Instance.currentSet = mouseSet_move;
 				} else {
-					MouseCursor.Instance.currentSet = mouseSetUi;
+					MouseCursor.Instance.currentSet = mouseSet_ui;
 				}
 			}
 			if (prefab_waypoint != null && Input.GetKeyUp(key)) {
-				//if (follower != null) { follower.ShowCurrentWaypoint(); }
-				if (selection.Count > 0) {
-					for (int i = 0; i < selection.Count; ++i) {
-						selection[i].ShowCurrentWaypoint();
-					}
-				}
+				follower.ShowCurrentWaypoint();
 			}
 		}
 	}

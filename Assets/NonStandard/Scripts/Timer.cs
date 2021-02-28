@@ -38,17 +38,20 @@ namespace NonStandard
 		public bool relentlessTimer = false;
 
 		private void DoTimer() {
+			Timer self = this;
 			if (repeat) {
-				Clock.setTimeout(DoTimer, (long)(seconds * 1000));
+				Clock.setTimeout(() => {
+					if (self == null) return; DoTimer();
+				}, (long)(seconds * 1000));
 			}
 			Clock.ScheduledTask todo;
 			if (relentlessTimer) {
 				todo = Clock.setTimeout(whatToActivate.Data, (long)(seconds * 1000));
 			} else {
-				Timer self = this;
+				object whatToDo = whatToActivate.Data;
 				todo = Clock.setTimeout(()=> {
 					if (self == null) return;
-					ActivateAnything.DoActivate(whatToActivate.Data, this, null, !deactivate);
+					ActivateAnything.DoActivate(whatToDo, this, null, !deactivate);
 				}, (long)(seconds * 1000));
 			}
 			todo.who = this;
@@ -436,7 +439,7 @@ namespace NonStandard
 			if (queueRealtime.Count > 0) {
 				thingsDone = DoWhatIsNeededNow(queueRealtime, nowForReals, deadline);
 			}
-			if (queue.Count > 0 && !IsPaused) {
+			if (!IsPaused) {
 				if (alternativeTicks == 0) {
 					now_t = nowForReals;
 #if UNITY_2017_1_OR_NEWER
@@ -458,13 +461,9 @@ namespace NonStandard
 					thingsDone += DoWhatIsNeededNow(queue, now_t, deadline);
 				}
 			}
-#if !UNITY_2017_1_OR_NEWER
 			__lastUpdate = NowRealTicks;
-#endif
 		}
-#if !UNITY_2017_1_OR_NEWER
 		private long __lastUpdate = 0;
-#endif
 
 		int DoWhatIsNeededNow(List<ScheduledTask> a_queue, long now_t, long deadline) {
 			bool tryToDoMore;

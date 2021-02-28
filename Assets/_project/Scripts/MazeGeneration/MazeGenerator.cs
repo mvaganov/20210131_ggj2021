@@ -7,24 +7,24 @@ namespace MazeGeneration {
 		const char Filled = '#', Walkable = ' ';
 		public enum ShowOption { None = 0, EachStep = 1, PauseOnShow = 2, EachStepPause = 3, Final = 4, FinalPause = 6 }
 		public ShowOption showOption = ShowOption.Final;
-		public static void WriteMaze(int width, int height, int startx, int starty,
-			int stepx, int stepy, int wallx, int wally, int seed, string filename, int erosion = 0, ShowOption option = ShowOption.None) {
-			WriteMaze(new Coord(width, height), new Coord(startx, starty),
-				new Coord(stepx, stepy), new Coord(wallx, wally), seed, filename, erosion, option);
-		}
-		public static void WriteMaze(Coord size, Coord start, Coord step, Coord wall, int seed, string filename, int erosion = 0,
-			ShowOption option = ShowOption.None) {
-			string maze = CreateMaze(size, start, step, wall, seed, erosion, option);
-			System.IO.File.WriteAllText(filename, maze);
-		}
-		public static string CreateMaze(Coord size, Coord start, Coord step, Coord wall, int seed, int erosion = 0, ShowOption option = ShowOption.None) {
-			MazeGenerator mg = new MazeGenerator(seed);
-			mg.showOption = option;
-			char[,] map = mg.Generate(size, start, step, wall);
-			mg.Erode(map, erosion);
-			if ((mg.showOption & ShowOption.Final) != 0) mg.Show(map);
-			return ToString(map);
-		}
+		//public static void WriteMaze(int width, int height, int startx, int starty,
+		//	int stepx, int stepy, int wallx, int wally, int seed, string filename, int erosion = 0, ShowOption option = ShowOption.None) {
+		//	WriteMaze(new Coord(width, height), new Coord(startx, starty),
+		//		new Coord(stepx, stepy), new Coord(wallx, wally), seed, filename, erosion, option);
+		//}
+		//public static void WriteMaze(Coord size, Coord start, Coord step, Coord wall, int seed, string filename, int erosion = 0,
+		//	ShowOption option = ShowOption.None) {
+		//	string maze = CreateMaze(size, start, step, wall, seed, erosion, option);
+		//	System.IO.File.WriteAllText(filename, maze);
+		//}
+		//public static string CreateMaze(Coord size, Coord start, Coord step, Coord wall, int seed, int erosion = 0, ShowOption option = ShowOption.None) {
+		//	MazeGenerator mg = new MazeGenerator(seed);
+		//	mg.showOption = option;
+		//	char[,] map = mg.Generate(size, start, step, wall);
+		//	mg.Erode(map, erosion);
+		//	if ((mg.showOption & ShowOption.Final) != 0) mg.Show(map);
+		//	return ToString(map);
+		//}
 		public static string ToString(char[,] map) {
 			StringBuilder sb = new StringBuilder();
 			Coord size = map.GetSize(), cursor;
@@ -36,9 +36,9 @@ namespace MazeGeneration {
 			}
 			return sb.ToString();
 		}
-		Random random;
-		public MazeGenerator(int seed) {
-			random = new Random(seed);
+		public Func<int> random;
+		public MazeGenerator(Func<int>  nextInt) {
+			random = nextInt;
 		}
 		public char[,] Generate(Coord size, Coord start, Coord step, Coord wall) {
 			char[,] map = new char[size.row, size.col];
@@ -66,14 +66,14 @@ namespace MazeGeneration {
 			}
 		}
 		bool MazeWalkOneStep(char[,] map, List<Coord> possibleIntersections, Coord stepSize, Coord wallSize) {
-			int intersectionToTry = random.Next(possibleIntersections.Count);
+			int intersectionToTry = random.Invoke() % possibleIntersections.Count;
 			Coord position = possibleIntersections[intersectionToTry];
 			List<Coord> possibleNextSteps = PossibleNextSteps(position, stepSize, wallSize, map);
 			if (possibleNextSteps.Count == 0) {
 				possibleIntersections.RemoveAt(intersectionToTry);
 				return false;
 			}
-			int whichStepToTake = random.Next(possibleNextSteps.Count);
+			int whichStepToTake = random.Invoke() % possibleNextSteps.Count;
 			Coord dir = possibleNextSteps[whichStepToTake];
 			position += dir * stepSize;
 			Coord mapSize = map.GetSize();
