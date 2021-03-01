@@ -1,6 +1,7 @@
 ﻿using NonStandard.GameUi.Particles;
 using NonStandard.Ui;
 using NonStandard.Utility;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -62,6 +63,16 @@ namespace NonStandard.GameUi.Inventory {
 			inventoryUi.RemoveItem(itemObject);
 			InventoryItem item = itemObject.GetComponent<InventoryItem>();
 			item.onRemoveFromInventory?.Invoke(this);
+		}
+
+		public void RemoveAllItems() {
+			if (items == null) return;
+			for(int i = items.Count-1; i >= 0; --i) {
+				GameObject go = items[i];
+				RemoveItem(go);
+				Destroy(go);
+			}
+			items.Clear();
 		}
 	}
 }

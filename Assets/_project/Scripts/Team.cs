@@ -101,4 +101,10 @@ public class Team : MonoBehaviour {
 			--currentIndex;
 		}
 	}
+
+	internal void Clear() {
+		members.Clear();
+		prev?.gameObject.SetActive(false);
+		next?.gameObject.SetActive(false);
+	}
 }

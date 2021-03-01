@@ -32,6 +32,8 @@ public class MazeLevel : MonoBehaviour {
     public char GetTileSrc(Coord c) { return map[c].letter; }
     public MazeTile GetTile(Coord c) { return mazeTiles[c.Y*map.Width+c.X]; }
     public void Generate(NonStandard.Data.Random random) {
+        int width = ((stage + 2) * 2) + 1;
+        mazeGenerationArguments.size = new Vector2(width, width);
         if (mazeSrc == null) {
             int seed = mazeGenerationArguments.seed;
             if (seed < 0) {
@@ -78,7 +80,7 @@ public class MazeLevel : MonoBehaviour {
             //ramp[S].ForEach(c => { map.SetAt(c, 's'); });
             int totalRamps = ramp.Sum(r=>r.Count);
             for(int i = 0; i < totalRamps && i < stage; ++i) {
-                int[] r = ramp.GetFlattenedIndex(UnityEngine.Random.Range(0, totalRamps));
+                int[] r = ramp.GetNestedIndex(random.Next(totalRamps));
                 //Debug.Log(r.JoinToString(", "));
                 Coord loc = ramp[r[0]][r[1]];
                 ramp[r[0]].RemoveAt(r[1]);

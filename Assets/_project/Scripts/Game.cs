@@ -25,6 +25,8 @@ public class Game : MonoBehaviour
     public GameTimer timer;
     public Inventory inventory;
     public Text seedLabel;
+    public Text bestTimeLabel;
+    public ClickToMove clickToMove;
     public bool testingPickups = false;
     NonStandard.Data.Random random;
 
@@ -57,15 +59,11 @@ public class Game : MonoBehaviour
     }
     public void GenerateNext() {
         tokenCreator.AdvanceTokens();
-        nextLevelButton.SetActive(false);
-        maze.mazeGenerationArguments.size += new Vector2(2, 2);
         ++maze.stage;
         LevelGenerate(null);
-        timer.Start();
-        tokenCreator.GoalCheck(null);
     }
     [System.Serializable]
-    public class LevelInitState {
+    public class LevelState {
         public int stage;
         public long seed;
         public int tokensDistributed;
@@ -76,42 +74,74 @@ public class Game : MonoBehaviour
         // TODO log of: player inputs with location and timestamps, character waypoints with location and timestamps
 	}
 
-    public List<LevelInitState> levels = new List<LevelInitState>();
-
-    public void LevelGenerate(LevelInitState lvl) {
+    public List<LevelState> levels = new List<LevelState>();
+    public void RestartLevel() {
+        LevelState lvl = levels.Find(l => l.stage == maze.stage);
+        LevelGenerate(lvl);
+	}
+    public void LevelGenerate(LevelState lvl) {
         Team team = Global.Get<Team>();
         if (lvl == null) {
-            lvl = new LevelInitState();
+            lvl = new LevelState();
             lvl.stage = maze.stage;
             lvl.seed = random.Seed;
             lvl.tokensDistributed = tokenCreator.tokensDistributed;
             if(inventory.GetItems() != null) {
-                lvl.tokenInventory = Show.Stringify(inventory.GetItems().ConvertAll(go => { TokenId t = go.GetComponent<TokenId>(); return t ? t.id : null; }), false);
+                lvl.tokenInventory = CodeConvert.Stringify(inventory.GetItems().ConvertAll(go => { TokenId t = go.GetComponent<TokenId>(); return t ? t.id : null; }));
 			} else {
-                lvl.tokenInventory = "[]";
+                lvl.tokenInventory = "";
             }
-            lvl.variables = Show.Stringify(mainDictionaryKeeper.Dictionary,false);
-            lvl.allies = Show.Stringify(team.members.ConvertAll(m => npcCreator.npcs.FindIndex(n => n.gameObject == m)),false);
+            lvl.variables = CodeConvert.Stringify(mainDictionaryKeeper.Dictionary);
+            lvl.allies = CodeConvert.Stringify(team.members.ConvertAll(m => npcCreator.npcs.FindIndex(n => n.gameObject == m)));
             levels.Add(lvl);
 		} else {
-			// check if level is valid
-			if (levels.IndexOf(lvl) < 0) {
+            Tokenizer tokenizer = new Tokenizer();
+            // check if level is valid
+            if (levels.IndexOf(lvl) < 0) {
                 throw new Exception("TODO validate the level plz!");
 			}
-            // clear inventory
+            // set allies
+            int[] allies; CodeConvert.TryParse(lvl.allies, out allies, null, tokenizer);
+            team.Clear();
+            team.AddMember(firstPlayer);
+            for(int i = 0; i < allies.Length; ++i) {
+                int index = allies[i];
+                if (index < 0) continue;
+                team.AddMember(npcCreator.npcs[index].gameObject);
+			}
+            // clear existing tokens
+            tokenCreator.Clear();
+            // reset inventory to match start state
+            inventory.RemoveAllItems();
+            int[][] invToLoad;
+            CodeConvert.TryParse(lvl.tokenInventory, out invToLoad, null, tokenizer);
+            //Debug.Log(Show.Stringify(invToLoad,false));
+            Vector3 playerLoc = Global.Get<CharacterControlManager>().localPlayerInterfaceObject.transform.position;
+            for (int i = 0; i < invToLoad.Length; ++i) {
+                int[] t = invToLoad[i];
+                if (t == null || t.Length == 0) continue;
+                GameObject token = tokenCreator.CreateToken(t[0], t[1], GoalCheck);
+                token.transform.position = playerLoc + Vector3.forward;
+                inventory.AddItem(token);
+            }
             // set stage
+            maze.stage = lvl.stage;
             // set seed
-            // set inventory (objects in front)
+            random.Seed = lvl.seed;
             // set variables
+            SensitiveHashTable_stringobject d = mainDictionaryKeeper.Dictionary;
+            CodeConvert.TryParse(lvl.variables, out d, null, tokenizer);
+            // set 
 		}
         MarkTouchdown.ClearMarkers();
+        clickToMove.ClearAllWaypoints();
         seedLabel.text = "level "+maze.stage+"." + Convert.ToBase64String(BitConverter.GetBytes(random.Seed));
         maze.Generate(random);
-        tokenCreator.Generate();
+        tokenCreator.Generate(GoalCheck);
         int len = Mathf.Min(maze.floorTileNeighborHistogram[2], tokenCreator.tokenMaterials.Count);
         npcCreator.GenerateMore(len);
         if (testingPickups) {
-            tokenCreator.GenerateMoreIdols();
+            tokenCreator.GenerateMoreIdols(GoalCheck);
         }
         // TODO maze should have a list of unfilled tiles sorted by weight
         for (int i = 0; i < npcCreator.npcs.Count; ++i) {
@@ -129,6 +159,11 @@ public class Game : MonoBehaviour
                 cm.StrafeRightMovement = 0;
             }
         }
+        UiText.SetColor(timer.gameObject, Color.white);
+        timer.Start();
+        GoalCheck(null);
+        nextLevelButton.SetActive(false);
+        bestTimeLabel.gameObject.SetActive(false);
     }
 
     public Discovery EnsureExplorer(GameObject go) {
@@ -157,6 +192,30 @@ public class Game : MonoBehaviour
         InventoryCollector inv = npc.GetComponentInChildren<InventoryCollector>();
         inv.inventory = InventoryManager.main;
         inv.autoPickup = true;
+    }
+    public void GoalCheck(Inventory inv) {
+        if (tokenCreator.tokens == null) return;
+        if (tokenCreator.tokens.CountEach(i => i != null && i.activeInHierarchy) == 0) {
+            nextLevelButton.SetActive(true);
+            timer.Pause();
+            LevelState lvl = levels.Find(l => l.stage == maze.stage);
+			if (lvl == null) {
+                throw new Exception("level not properly initialized");
+			}
+            int t = timer.GetDuration();
+            bool firstTime = lvl.bestTime == 0;
+            bool betterTime = t < lvl.bestTime;
+            if (firstTime || betterTime) {
+                lvl.bestTime = t;
+            }
+			if (betterTime) {
+                UiText.SetColor(timer.gameObject, Color.green);
+			} else if (!firstTime) {
+                UiText.SetColor(timer.gameObject, Color.gray);
+            }
+            bestTimeLabel.text = "best time: " + GameTimer.TimingToString(lvl.bestTime,true);
+            bestTimeLabel.gameObject.SetActive(true);
+        }
     }
 
 }

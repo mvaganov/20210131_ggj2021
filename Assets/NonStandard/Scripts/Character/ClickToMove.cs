@@ -1,5 +1,6 @@
 ﻿using NonStandard.GameUi;
 using NonStandard.Ui;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -15,6 +16,7 @@ namespace NonStandard.Character {
 		public Interact3dItem prefab_middleWaypoint;
 		public int mouseSet_move = 1, mouseSet_ui = 0;
 		private ClickToMoveFollower follower;
+
 #if UNITY_EDITOR
 		/// called when created by Unity Editor
 		void Reset() {
@@ -40,6 +42,11 @@ namespace NonStandard.Character {
 			if (follower == null) {
 				follower = currentChar.gameObject.AddComponent<ClickToMoveFollower>();
 				follower.clickToMoveUi = this;
+				ParticleSystem ps = currentChar.GetComponentInChildren<ParticleSystem>();
+				if (ps != null) {
+					ParticleSystem.MainModule m = ps.main;
+					follower.color = m.startColor.color;
+				}
 				follower.Init(currentChar.gameObject);
 			}
 			return follower;
@@ -75,6 +82,10 @@ namespace NonStandard.Character {
 			if (prefab_waypoint != null && Input.GetKeyUp(key)) {
 				follower.ShowCurrentWaypoint();
 			}
+		}
+
+		public void ClearAllWaypoints() {
+			ClickToMoveFollower.allFollowers.ForEach(f => f.ClearWaypoints());
 		}
 	}
 }

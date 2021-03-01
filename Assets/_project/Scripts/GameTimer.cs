@@ -6,7 +6,6 @@ using UnityEngine.UI;
 
 public class GameTimer : MonoBehaviour {
     long started, pausedTime;
-    public int min, sec, ms;
     public bool paused;
     public Text label;
     public void Start() {
@@ -18,6 +17,23 @@ public class GameTimer : MonoBehaviour {
 
     public void Pause() { paused = true; }
     public void Unpause() { paused = false; }
+    public static void CalculateTime(int durationMs, out int ms, out int sec, out int min) {
+        ms = durationMs;
+        sec = Math.DivRem(ms, 1000, out ms);
+        min = Math.DivRem(sec, 60, out sec);
+    }
+    public static string TimingToString(int duration, bool showMs) {
+        int min, sec, ms;
+        CalculateTime(duration, out ms, out sec, out min);
+        StringBuilder sb = new StringBuilder();
+        if (min > 0) { sb.Append(min).Append(":").Append(sec.ToString("D2")); } else {
+            sb.Append(sec.ToString());
+        }
+		if (showMs) {
+            sb.Append(".").Append(ms.ToString("D3"));
+		}
+        return sb.ToString();
+    }
     void Update() {
         if (!paused) {
 			if (pausedTime != 0) {
@@ -25,17 +41,10 @@ public class GameTimer : MonoBehaviour {
                 started = Clock.Now - delta;
                 pausedTime = 0;
             }
-            ms = GetDuration();
-            sec = Math.DivRem(ms, 1000, out ms);
-            min = Math.DivRem(sec, 60, out sec);
-            StringBuilder sb = new StringBuilder();
-		    if (min > 0) { sb.Append(min).Append(":").Append(sec.ToString("D2")); } else {
-                sb.Append(sec.ToString());
-            }
-            label.text = sb.ToString();
+            label.text = TimingToString(GetDuration(), false);
             if (!label.enabled) { label.enabled = true; }
         } else {
-            if(pausedTime == 0) { pausedTime = Clock.Now; }
+            if(pausedTime == 0) { pausedTime = Clock.Now; label.text = TimingToString(GetDuration(), true); }
             label.enabled = (Clock.NowRealTicks & (1<<blinkDuration)) == 0;
         }
     }

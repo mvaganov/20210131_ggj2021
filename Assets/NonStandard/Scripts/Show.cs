@@ -69,8 +69,7 @@ namespace NonStandard {
 		/// <param name="rStack">used to prevent recursion stack overflows</param>
 		/// <param name="filter">object0 is the object, object1 is the member, object2 is the value. if it returns null, print as usual. if returns "", skip print.</param>
 		/// <returns></returns>
-		public static string Stringify(object obj, bool pretty = true, bool showType = true, bool showNulls = false, int depth = 0, 
-			List<object> rStack = null, Func<object,object,object,string> filter = null) {
+		public static string Stringify(object obj, bool pretty = true, bool showType = true, bool showNulls = false, bool showFirstBoundary = true, int depth = 0, List<object> rStack = null, Func<object,object,object,string> filter = null) {
 			if (obj == null) return showNulls?"null":"";
 			if(filter != null) { string res = filter.Invoke(obj, null, null); if(res != null) { return res; } }
 			Type t = obj.GetType();
@@ -88,7 +87,9 @@ namespace NonStandard {
 			string s = obj as string;
 			if (s != null || t.IsPrimitive || t.IsEnum) {
 				if (s != null) {
-					sb.Append("\"").Append(Escape(s)).Append("\"");
+					if (showFirstBoundary) { sb.Append("\""); }
+					sb.Append(Escape(s));
+					if (showFirstBoundary) { sb.Append("\""); }
 				} else {
 					sb.Append(obj.ToString());
 				}
@@ -102,7 +103,7 @@ namespace NonStandard {
 			}
 			rStack.Add(obj);
 			if (t.IsArray || iListElement != null) {
-				sb.Append("[");
+				if (showFirstBoundary) sb.Append("[");
 				if (showTypeHere) {
 					if (pretty) { sb.Append("\n" + Indent(depth + 1)); }
 					sb.Append("=\"" + obj.GetType().ToString() + "\" " + obj.GetType().BaseType);
@@ -114,17 +115,17 @@ namespace NonStandard {
 					if (i > 0) { sb.Append(","); }
 					if (pretty && !iListElement.IsPrimitive) { sb.Append("\n" + Indent(depth + 1)); }
 					if (filter == null) {
-						sb.Append(Stringify(list[i], pretty, showType, showNulls, depth + 1, rStack));
+						sb.Append(Stringify(list[i], pretty, showType, showNulls, true, depth + 1, rStack));
 					} else {
 						FilterElement(sb, obj, i, list[i], pretty, showType, showNulls, true, depth, rStack, filter);
 					}
 				}
 				if (pretty) { sb.Append("\n" + Indent(depth)); }
-				sb.Append("]");
+				if (showFirstBoundary) sb.Append("]");
 			} else {
 				KeyValuePair<Type, Type> kvp = t.GetIDictionaryType();
 				bool isDict = kvp.Key != null;
-				sb.Append("{");
+				if (showFirstBoundary) sb.Append("{");
 				if (showTypeHere) {
 					if (pretty) { sb.Append("\n" + Indent(depth + 1)); }
 					sb.Append("=\"" + obj.GetType().ToString() + "\"");
@@ -138,7 +139,7 @@ namespace NonStandard {
 						if (pretty) { sb.Append("\n" + Indent(depth + 1)); }
 						if (filter == null) {
 							sb.Append(fi[i].Name).Append(pretty ? " : " : ":");
-							sb.Append(Stringify(val, pretty, showType, showNulls, depth + 1, rStack));
+							sb.Append(Stringify(val, pretty, showType, showNulls, true, depth + 1, rStack));
 						} else {
 							FilterElement(sb, obj, fi[i].Name, val, 
 								pretty, showType, showNulls, false, depth, rStack, filter);
@@ -161,7 +162,7 @@ namespace NonStandard {
 						if (!showNulls && v == null) { continue; }
 						if (filter == null) {
 							sb.Append(k).Append(pretty ? " : " : ":");
-							sb.Append(Stringify(v, pretty, showType, showNulls, depth + 1, rStack));
+							sb.Append(Stringify(v, pretty, showType, showNulls, true, depth + 1, rStack));
 							printed = true;
 						} else {
 							printed = FilterElement(sb, obj, k, v, pretty, showType, showNulls, false, depth, rStack, filter);
@@ -169,7 +170,7 @@ namespace NonStandard {
 					}
 				}
 				if (pretty) { sb.Append("\n" + Indent(depth)); }
-				sb.Append("}");
+				if (showFirstBoundary) sb.Append("}");
 			}
 			if (sb.Length == 0) { sb.Append(obj.ToString()); }
 			return sb.ToString();
@@ -186,7 +187,7 @@ namespace NonStandard {
 			}
 			if (unfiltered) {
 				if (!isArray) { sb.Append(key).Append(pretty ? " : " : ":"); }
-				sb.Append(Stringify(val, pretty, includeType, showNulls, depth + 1, recursionStack));
+				sb.Append(Stringify(val, pretty, includeType, showNulls, true, depth + 1, recursionStack));
 				return true;
 			}
 			return false;

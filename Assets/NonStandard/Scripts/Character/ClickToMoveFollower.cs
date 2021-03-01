@@ -16,6 +16,13 @@ public class ClickToMoveFollower : MonoBehaviour {
 	public CharacterMove mover;
 	public ClickToMove clickToMoveUi;
 	float characterHeight = 0, characterRadius = 0;
+	public Color color = Color.white;
+
+	public static List<ClickToMoveFollower> allFollowers = new List<ClickToMoveFollower>();
+
+	private void Awake() {
+		allFollowers.Add(this);
+	}
 
 	private void Start() {
 		Init(gameObject);
@@ -36,7 +43,7 @@ public class ClickToMoveFollower : MonoBehaviour {
 	public void HidePath() { ShowPath(false); }
 	public void ShowPath(bool show=true) {
 		line.gameObject.SetActive(show);
-		waypoints.ForEach(w => w.gameObject.SetActive(show));			
+		waypoints.ForEach(w => w.gameObject.SetActive(show));
 	}
 	public void UpdateLine() {
 		List<Vector3> points = new List<Vector3>();
@@ -47,7 +54,8 @@ public class ClickToMoveFollower : MonoBehaviour {
 		if(waypoints.Count == 0 || (waypoints[waypoints.Count-1].transform.position != currentWaypoint.transform.position)) {
 			points.Add(targetPosition);
 		}
-		line.Line(points, Color.red, Lines.End.Arrow);
+		line.Line(points, color, Lines.End.Arrow);
+		line.gameObject.SetActive(true);
 	}
 	float ManhattanDistance(Vector3 a, Vector3 b) {
 		return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y) + Mathf.Abs(a.z - b.z);
@@ -86,6 +94,7 @@ public class ClickToMoveFollower : MonoBehaviour {
 			mover.SetAutoMovePosition(wpObj.transform.position, NotifyEndPointReached, 0);
 		} else {
 			if (currentWaypoint != null && currentWaypoint.showing) { currentWaypoint.showing = false; }
+			ShowPath(false);
 		}
 	}
 
@@ -127,17 +136,18 @@ public class ClickToMoveFollower : MonoBehaviour {
 	public void AddWaypoint() {
 		Interact3dItem newWayPoint = Instantiate(clickToMoveUi.prefab_middleWaypoint.gameObject).GetComponent<Interact3dItem>();
 		newWayPoint.transform.position = currentWaypoint.transform.position;
-		newWayPoint.OnInteract = CancelWaypoints;// ()=>RemoveWaypoint(newWayPoint);
+		newWayPoint.OnInteract = ClearWaypoints;// ()=>RemoveWaypoint(newWayPoint);
 		newWayPoint.gameObject.SetActive(true);
 		waypoints.Add(newWayPoint);
 		currentWaypoint.showing = false;
 	}
-	public void CancelWaypoints() {
+	public void ClearWaypoints() {
 		for(int i = 0; i < waypoints.Count; ++i) {
 			Destroy(waypoints[i].gameObject);
 		}
 		waypoints.Clear();
 		NotifyEndPointReached();
+		ShowPath(false);
 	}
 	public void RemoveWaypoint(Interact3dItem wp) {
 		int i = waypoints.IndexOf(wp);

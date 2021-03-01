@@ -3,6 +3,7 @@ using NonStandard.Data;
 using NonStandard.Data.Parse;
 using NonStandard.GameUi.Inventory;
 using NonStandard.GameUi.Particles;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -33,25 +34,27 @@ public class TokenCreation : MonoBehaviour
             //Show.Log(advancementColor.JoinToString(" ", i=>i.ToString("X")) + "\n" + advancementShape.JoinToString(" "));
         }
     }
-    public void Generate() {
-        tokens = CreateTokens(game.maze.floorTileNeighborHistogram[1]);
+    // TODO move to Game?
+    public void Generate(Action<Inventory> onAdd) {
+        tokens = CreateTokens(game.maze.floorTileNeighborHistogram[1], onAdd);
         for (int i = 0; i < game.maze.floorTileNeighborHistogram[1]; ++i) {
             game.maze.PlaceObjectOverTile(tokens[i].transform, game.maze.floorTiles[i]);
         }
     }
 
-    public void GenerateMoreIdols() {
+    // TODO move to Game?
+    public void GenerateMoreIdols(Action<Inventory> onAdd) {
         // TODO maze should have a list of unfilled tiles sorted by weight
         int start = game.maze.floorTileNeighborHistogram[1] + game.npcCreator.npcs.Count;
         int limit = game.maze.floorTileNeighborHistogram[1] + game.maze.floorTileNeighborHistogram[2] + game.maze.floorTileNeighborHistogram[3];
         int ii = tokens.Count;
-        tokens.AddRange(CreateTokens(limit - start));
+        tokens.AddRange(CreateTokens(limit - start, onAdd));
         for (int i = start; i < limit; ++i) {
             game.maze.PlaceObjectOverTile(tokens[ii++].transform, game.maze.floorTiles[i]);
         }
     }
 
-    public GameObject CreateToken(int color, int shape) {
+    public GameObject CreateToken(int color, int shape, Action<Inventory> onAdd) {
         Material mat = tokenMaterials[color];
         GameObject originalItem = tokenPrefabs[shape];
         GameObject go = Instantiate(originalItem);
@@ -61,7 +64,9 @@ public class TokenCreation : MonoBehaviour
         Renderer r = go.GetComponent<Renderer>();
         r.material = mat;
         InventoryItem ii = go.GetComponent<InventoryItem>();
-        ii.onAddToInventory += GoalCheck;
+        if (onAdd != null) {
+            ii.onAddToInventory += onAdd;// GoalCheck;
+        }
         ii.onAddToInventory += inv => game.mainDictionaryKeeper.AddTo(mat.name, 1);
         string floatyTextString = mat.name;
         string[] floatyTextOptions = null;
@@ -89,22 +94,22 @@ public class TokenCreation : MonoBehaviour
         return go;
     }
 
-    public List<GameObject> CreateTokens(int count) {
+	public void Clear() {
+        if (tokens == null) return;
+        for(int i = tokens.Count - 1; i >= 0; --i) {
+            Destroy(tokens[i]);
+		}
+        tokens.Clear();
+	}
+
+	public List<GameObject> CreateTokens(int count, Action<Inventory> onAdd) {
         List<GameObject> idols = new List<GameObject>();
         int advancementindex = tokensDistributed;
         for (int i = 0; i < count; ++i) {
-            idols.Add(CreateToken(advancementColor[advancementindex], advancementShape[advancementindex]));
+            idols.Add(CreateToken(advancementColor[advancementindex], advancementShape[advancementindex], onAdd));
             ++advancementindex;
             if (advancementindex >= advancementShape.Length) { advancementindex = 0; }
         }
         return idols;
     }
-    public void GoalCheck(Inventory inv) {
-        if (tokens == null) return;
-        if (tokens.CountEach(i => i != null && i.activeInHierarchy) == 0) {
-            game.nextLevelButton.SetActive(true);
-            game.timer.Pause();
-        }
-    }
-
 }

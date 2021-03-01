@@ -52,13 +52,13 @@ public static class IListExtension {
 	public static float Sum<T>(this IList<T> list, Func<T, float> valueFunction) {
 		float sum = 0; for (int i = 0; i < list.Count; ++i) { sum += valueFunction(list[i]); } return sum;
 	}
-	public static int[] GetFlattenedIndex<T>(this IList<IList<T>> list, int index) {
+	public static int[] GetNestedIndex<T>(this IList<IList<T>> list, int flatIndex) {
 		int[] path = new int[2] { -1, -1 };
-		int original = index;
-		if (index >= 0) {
+		int original = flatIndex;
+		if (flatIndex >= 0) {
 			for (int i = 0; i < list.Count; ++i) {
-				if (index < list[i].Count) { path[0] = i; path[1] = index; break; }
-				index -= list[i].Count;
+				if (flatIndex < list[i].Count) { path[0] = i; path[1] = flatIndex; break; }
+				flatIndex -= list[i].Count;
 			}
 		}
 		if(path[0] < 0 || path[1] < 0) {
@@ -67,8 +67,8 @@ public static class IListExtension {
 		}
 		return path;
 	}
-	public static T GetFromFlattened<T>(this IList<IList<T>> list, int[] index) {
-		return list[index[0]][index[1]];
+	public static T GetFromNestedIndex<T>(this IList<IList<T>> list, int[] nestedIndex) {
+		return list[nestedIndex[0]][nestedIndex[1]];
 	}
 	public static string JoinToString<T>(this IList<T> source, string separator, Func<T, string> toString = null) {
 		string[] strings = new string[source.Count];
