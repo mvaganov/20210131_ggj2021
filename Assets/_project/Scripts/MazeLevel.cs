@@ -23,6 +23,17 @@ public class MazeLevel : MonoBehaviour {
     public List<MazeTile> floorTiles;
     public int[] floorTileNeighborHistogram = new int[0];
 
+    public Coord GetCoord(Vector3 p) {
+        p -= transform.position;
+        float x = (p.x) / tileSize.x + 0.5f;
+        float y = (p.z) / tileSize.z + 0.5f;
+        return new Coord((int)x, (int)y);
+    }
+
+    public Vector3 GetPosition(Coord c) { return new Vector3(c.X * tileSize.x, 0, c.Y * tileSize.z); }
+
+    public Map2d Map { get { return map; } }
+
     [System.Serializable] public class MazeGenArgs {
         public Vector2 size = new Vector2(21, 21), start = Vector2.one, step = Vector2.one, wall = Vector2.one;
         public int seed = -1, erosion = 0;
@@ -89,6 +100,7 @@ public class MazeLevel : MonoBehaviour {
                 --totalRamps;
             }
             this.map = new Map2d(map);
+            Debug.Log(this.map);
         } else {
             map.LoadFromString(mazeSrc.text);
         }
@@ -148,12 +160,6 @@ public class MazeLevel : MonoBehaviour {
         return neighborFloor + distFromCenter / maxDist;
     }
 
-    private static Coord[] _cardinalDirs = new Coord[]{Coord.Up, Coord.Left, Coord.Right, Coord.Down};
-    private static Coord[] _allDirs = new Coord[] { 
-    new Coord(-1,-1),new Coord( 0,-1),new Coord( 1,-1),
-    new Coord(-1, 0),                 new Coord( 1, 0),
-    new Coord(-1, 1),new Coord( 0, 1),new Coord( 1, 1),
-    };
     int CountTileNeighbors(Coord coord, Coord[] neighborOffsets, Func<Coord,bool> predicate) {
         Coord msize = map.GetSize();
         int count = 0;
@@ -164,6 +170,6 @@ public class MazeLevel : MonoBehaviour {
         return count;
 	}
     public int CountDiscoveredNeighborWalls(Coord coord) {
-        return CountTileNeighbors(coord, _cardinalDirs, c => GetTile(c).discovered && map[c] != ' ');
+        return CountTileNeighbors(coord, Coord.CardinalDirs, c => GetTile(c).discovered && map[c] != ' ');
 	}
 }

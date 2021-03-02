@@ -41,12 +41,14 @@ public class MazeTile : MonoBehaviour
 		if(_discovered == false) {
 			h = maze.undiscoveredHeight;
 		} else switch (kind) { 
-			case Kind.Floor: h = maze.floorHeight; break;
-			case Kind.Wall: h = maze.wallHeight; break;
-			case Kind.RampEast: case Kind.RampWest: case Kind.RampSouth: case Kind.RampNorth: 
-				h = maze.rampHeight; break;
-			}
-		return new Vector3(coord.X * maze.tileSize.x, h* maze.tileSize.y, coord.Y * maze.tileSize.z);
+		case Kind.Floor: h = maze.floorHeight; break;
+		case Kind.Wall: h = maze.wallHeight; break;
+		case Kind.RampEast: case Kind.RampWest: case Kind.RampSouth: case Kind.RampNorth: 
+			h = maze.rampHeight; break;
+		}
+		Vector3 p = maze.GetPosition(coord);
+		p.y += h * maze.tileSize.y;
+		return p;
 	}
 	public Vector3 CalcVisibilityTarget() {
 		Vector3 s = discovered ? maze.tileSize : maze.undiscoveredTileSize;

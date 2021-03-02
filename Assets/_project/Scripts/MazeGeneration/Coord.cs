@@ -11,6 +11,9 @@ namespace MazeGeneration {
 		public static implicit operator Coord(Vector2 v) {
 			return new Coord((int)v.x, (int)v.y);
 		}
+		public static explicit operator Vector2(Coord c) {
+			return new Vector2(c.X, c.Y);
+		}
 		public short row, col;
 
 		public Coord(int col, int row) {
@@ -28,6 +31,14 @@ namespace MazeGeneration {
 		public static readonly Coord Left = new Coord(-1, 0);
 		public static readonly Coord Down = new Coord(0, 1);
 		public static readonly Coord Right = new Coord(1, 0);
+		public static Coord[] CardinalDirs = new Coord[]{Coord.Up, Coord.Left, Coord.Right, Coord.Down};
+		private static Coord[] CardinalDirsAll = new Coord[] { 
+			Left+Up  , Up ,  Up+Right,
+			Left,               Right,
+			Left+Down,Down,Down+Right
+		};
+		public enum CardinalDirsEnum {Up=0,Left=1,Right=2,Down=3}
+		public enum CardinalDirsAllEnum {UpLeft=0,Up=1,UpRight=2,Left=3,Right=4,DownLeft=5,Down=6,DownRight=7}
 
 		public override string ToString() => "(" + col + "," + row + ")";
 		public override int GetHashCode() => row * 0x00010000 + col;
@@ -40,6 +51,7 @@ namespace MazeGeneration {
 		public static bool operator !=(Coord a, Coord b) => !a.Equals(b);
 		public static Coord operator +(Coord a, Coord b) => new Coord(a.col + b.col, a.row + b.row);
 		public static Coord operator *(Coord a, Coord b) => new Coord(a.col * b.col, a.row * b.row);
+		public static Coord operator *(Coord a, int n) => new Coord(a.col * n, a.row * n);
 		public static Coord operator -(Coord a, Coord b) => new Coord(a.col - b.col, a.row - b.row);
 		public static Coord operator -(Coord a) => new Coord(-a.col, -a.row);
 
@@ -56,6 +68,7 @@ namespace MazeGeneration {
 		/// <param name="max">exclusive limit</param>
 		/// <returns>IsWithin(<see cref="Coord.Zero"/>, max)</returns>
 		public bool IsWithin(Coord max) => IsWithin(Zero, max);
+		public bool Contains(Coord c) => c.IsWithin(Zero, this);
 
 		public bool IsGreaterThan(Coord other) => col > other.col && row > other.row;
 		public bool IsGreaterThanOrEqualTo(Coord other) => col >= other.col && row >= other.row;
