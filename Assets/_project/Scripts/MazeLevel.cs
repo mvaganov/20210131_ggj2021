@@ -1,6 +1,7 @@
 ﻿using MazeGeneration;
 using NonStandard;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 public class MazeLevel : MonoBehaviour {
@@ -18,12 +19,16 @@ public class MazeLevel : MonoBehaviour {
     public float rampScale = 1.5f;
     public Color undiscoveredWall = Color.clear, undiscoveredFloor = Color.clear, undiscoveredRamp = Color.clear;
     public int stage = -1;
+    public VisionMapping seen;
 
-	List<MazeTile> mazeTiles = new List<MazeTile>();
+
+    List<MazeTile> mazeTiles = new List<MazeTile>();
     public List<MazeTile> floorTiles;
     public int[] floorTileNeighborHistogram = new int[0];
-
-    public Coord GetCoord(Vector3 p) {
+	private void Awake() {
+        seen = new VisionMapping(() => map != null ? map.GetSize() : new Coord(7,7));
+    }
+	public Coord GetCoord(Vector3 p) {
         p -= transform.position;
         float x = (p.x) / tileSize.x + 0.5f;
         float y = (p.z) / tileSize.z + 0.5f;
@@ -57,7 +62,7 @@ public class MazeLevel : MonoBehaviour {
             Coord size = map.GetSize();
             List<Coord>[] ramp = new List<Coord>[4];
             for(int r = 0; r < ramp.Length; ++r) { ramp[r] = new List<Coord>(); }
-            const int W = 0, N = 1, E = 2, S = 3;
+            const int W = 0, N = 1, E = 2, S = 3;// todo nwse
             size.ForEach(c => {
                 if (c.row == 0 || c.row == size.row - 1 || c.col == 0 || c.col == size.col - 1) return;
                 char letter = map.At(c);
@@ -100,10 +105,11 @@ public class MazeLevel : MonoBehaviour {
                 --totalRamps;
             }
             this.map = new Map2d(map);
-            Debug.Log(this.map);
+            //Debug.Log(this.map);
         } else {
             map.LoadFromString(mazeSrc.text);
         }
+        seen.Reset();
         int count = map.Height * map.Width;
         while (mazeTiles.Count < count) {
             mazeTiles.Add(Instantiate(prefab_mazeTile.gameObject).GetComponent<MazeTile>());

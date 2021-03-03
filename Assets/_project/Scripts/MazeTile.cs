@@ -65,6 +65,7 @@ public class MazeTile : MonoBehaviour
 	}
 	public void SetDiscovered(bool discovered, Discovery d, MazeLevel maze) {
 		this.maze = maze;
+		maze.seen[coord] = discovered;
 		this.d = d;
 		_discovered = discovered;
 		t = transform;

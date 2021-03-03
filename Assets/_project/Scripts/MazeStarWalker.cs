@@ -1,5 +1,6 @@
 ﻿using MazeGeneration;
 using NonStandard;
+using NonStandard.Character;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,8 +10,14 @@ public class MazeStarWalker : MonoBehaviour
     public MazeLevel maze;
     public GameObject textOutput;
     public bool canJump;
-
+    public Discovery discovery;
+    public Game game;
+    public ClickToMoveFollower follower;
     GenericAStar<Coord, int> astar;
+    CharacterMove cm;
+
+    public enum AiBehavior { None, Random }
+    public AiBehavior aiBehavior = AiBehavior.None;
 
     Coord[] edgeDirs = new Coord[] {
         Coord.Up, Coord.Left, Coord.Down, Coord.Right,
@@ -24,8 +31,8 @@ public class MazeStarWalker : MonoBehaviour
     public enum EdgeDir { N, W, S, E, NW, NE, SW, SE, NN, WW, SS, EE, NNW, NNE, SSW, SSE, NWW, NEE, SWW, SEE }
     public List<int> GetEdges(Coord node) {
         List<int> edges = new List<int>();
-        char thisSquare = maze.Map[node];
         Coord size = maze.Map.GetSize();
+        char thisSquare = size.Contains(node) ? maze.Map[node].letter : '\0';
         int dirOptions = canJump ? edgeDirs.Length : 4;
         switch (thisSquare) {
         case '#':
@@ -96,9 +103,14 @@ public class MazeStarWalker : MonoBehaviour
     void Start()
     {
         astar = new GenericAStar<Coord, int>(Coord.Zero, Coord.One * 3, GetEdges, NextNode, Dist);
+        cm = GetComponent<CharacterMove>();
+        follower = game.clickToMove.Follower(cm);
+        discovery = game.EnsureExplorer(gameObject);
+        visionParticle = GetComponentInChildren<ParticleSystem>();
     }
-
+    ParticleSystem visionParticle;
     List<Lines.Wire> wires = new List<Lines.Wire>();
+    private float timer = 0;
     void Update()
     {
         Vector3 p = transform.position;
@@ -114,6 +126,28 @@ public class MazeStarWalker : MonoBehaviour
         }
         for (int i = world.Count; i < wires.Count; ++i) {
             wires[i].gameObject.SetActive(false);
+		}
+        if (visionParticle) {
+            timer -= Time.deltaTime;
+            if (timer <= 0) {
+                maze.Map.GetSize().ForEach(co => {
+                    if (discovery.vision[co]) {
+                        Vector3 po = maze.GetPosition(co) + maze.transform.position;
+                        po.y = transform.position.y+3;
+                        visionParticle.transform.position = po;
+                        visionParticle.Emit(1);
+                    }
+                });
+                timer = .5f;
+            }
+        }
+		switch (aiBehavior) {
+        case AiBehavior.Random:
+            if (!cm.IsAutoMoving()) {
+                Vector3 t = world[Random.Range(0, world.Count)];
+                cm.SetAutoMovePosition(t);
+			}
+            break;
 		}
     }
 }

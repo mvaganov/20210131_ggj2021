@@ -23,6 +23,7 @@ namespace MazeGeneration {
 
 		public int X { get => col; set => col = (short)value; }
 		public int Y { get => row; set => row = (short)value; }
+		public int Area { get { return X * Y; } }
 
 		public static readonly Coord Zero = new Coord(0, 0);
 		public static readonly Coord One = new Coord(1, 1);

@@ -13,6 +13,22 @@ public class Discovery : MonoBehaviour
     List<MazeTile> pending = new List<MazeTile>();
     private static int playerLayer = -1;
     private SphereCollider sc;
+    public VisionMapping vision;
+
+    static List<Discovery> allDiscovery = new List<Discovery>();
+
+	private void Awake() {
+        allDiscovery.Add(this);
+	}
+
+    public static void ResetAll() {
+        //Show.Log("reset all");
+        for(int i = allDiscovery.Count-1; i >= 0; --i) {
+            if (allDiscovery[i] == null) { allDiscovery.RemoveAt(i); continue; }
+            allDiscovery[i].ResetCalc();
+		}
+	}
+
 	private void Start() {
 		if(maze == null) { maze = FindObjectOfType<MazeLevel>(); }
         CharacterMove cm = transform.parent.GetComponent<CharacterMove>();
@@ -21,19 +37,29 @@ public class Discovery : MonoBehaviour
         //cm.callbacks.stand.AddListener(v => Blink());
         cm.callbacks.fall.AddListener(() => Blink());
         if (playerLayer == -1) { LayerMask.NameToLayer("player"); }
+        ResetCalc();
+    }
+	public void ResetCalc() {
+        if (vision == null) {
+            if (maze != null && maze.Map != null) {
+                vision = new VisionMapping(()=>maze.Map.GetSize()           );
+            }
+        } else {
+            vision.Reset();
+        }
+        Blink();
 	}
-
-    public void Blink() {
+	public void Blink() {
         //Debug.Log("blink");
         gameObject.SetActive(false);
         pending.Clear();
         Clock.setTimeout(() => gameObject.SetActive(true), 0);
 	}
-
 	private void OnTriggerEnter(Collider other) {
+        //Debug.Log("triggered");
         MazeTile mt = other.GetComponent<MazeTile>();
 		if (mt) {
-			if (!mt.discovered) {
+			if (!mt.discovered || !vision[mt.coord]) {
                 if(!VisTest(mt, -1)) {
                     pending.Add(mt);
                 }
@@ -43,7 +69,10 @@ public class Discovery : MonoBehaviour
     private bool VisTest(MazeTile mt, int i) {
         if (maze.GetTileSrc(mt.coord) == '#') {
             int neighborsWhoAreUp = maze.CountDiscoveredNeighborWalls(mt.coord);
-            if (neighborsWhoAreUp >= 2) { mt.SetDiscovered(true, this, maze); return true; }
+            if (neighborsWhoAreUp >= 2) { 
+                mt.SetDiscovered(true, this, maze);
+                vision[mt.coord] = true;
+                return true; }
         }
         Vector3 p = transform.position;
         Vector3 t = mt.transform.position;//CalcVisibilityTarget();
@@ -55,6 +84,7 @@ public class Discovery : MonoBehaviour
         float dist = delta.magnitude;
         if(dist < maze.tileSize.x) {
             mt.SetDiscovered(true, this, maze);
+            vision[mt.coord] = true;
             return true;
         }
         if(dist > sc.radius + maze.tileSize.x) { Blink(); return true; } // remove from list without resolving visibility
@@ -67,6 +97,7 @@ public class Discovery : MonoBehaviour
         if (rh.transform == mt.transform) {
             if(wires != null && i >= 0) wires[i].Line(p, t, Color.green);
             mt.SetDiscovered(true, this, maze);
+            vision[mt.coord] = true;
             return true;
         } else {
             if (wires != null && i >= 0) wires[i].Line(p, rh.point, Color.red);

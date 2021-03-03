@@ -27,7 +27,7 @@ public class GenericAStar<NODE_TYPE, EDGE_TYPE> {
 	//function A*(start,goal)
 	public NODE_TYPE start, goal;
 	// closedset := the empty set    // The set of nodes already evaluated.
-	public List<NODE_TYPE> closedset = new List<NODE_TYPE>();
+	public List<NODE_TYPE> closedset = new List<NODE_TYPE>(); // TODO make this a HashSet
 	public List<NODE_TYPE> openset = new List<NODE_TYPE>();
 	// came_from := the empty map    // The map of navigated nodes.
 	public Dictionary<NODE_TYPE, NODE_TYPE> came_from = new Dictionary<NODE_TYPE, NODE_TYPE>();

@@ -137,6 +137,7 @@ public class Game : MonoBehaviour
         clickToMove.ClearAllWaypoints();
         seedLabel.text = "level "+maze.stage+"." + Convert.ToBase64String(BitConverter.GetBytes(random.Seed));
         maze.Generate(random);
+        Discovery.ResetAll();
         tokenCreator.Generate(GoalCheck);
         int len = Mathf.Min(maze.floorTileNeighborHistogram[2], tokenCreator.tokenMaterials.Count);
         npcCreator.GenerateMore(len);

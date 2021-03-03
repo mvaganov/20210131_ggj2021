@@ -1,6 +1,7 @@
 ﻿using NonStandard;
 using NonStandard.Character;
 using NonStandard.GameUi;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -17,6 +18,7 @@ public class ClickToMoveFollower : MonoBehaviour {
 	public ClickToMove clickToMoveUi;
 	float characterHeight = 0, characterRadius = 0;
 	public Color color = Color.white;
+	public Action<Vector3> onTargetSet;
 
 	public static List<ClickToMoveFollower> allFollowers = new List<ClickToMoveFollower>();
 
@@ -100,7 +102,8 @@ public class ClickToMoveFollower : MonoBehaviour {
 
 	public void SetCurrentTarget(Vector3 position, Vector3 normal) {
 		targetPosition = position;
-		if (Vector3.Dot(position, Vector3.up) > 0.5f) {
+		onTargetSet?.Invoke(position);
+		if (Vector3.Dot(normal, Vector3.up) > 0.5f) {
 			targetPosition += characterHeight * Vector3.up;
 		} else {
 			targetPosition += characterRadius * normal;
