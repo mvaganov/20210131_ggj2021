@@ -16,7 +16,7 @@ public class MazeStarWalker : MonoBehaviour
     GenericAStar<Coord, int> astar;
     CharacterMove cm;
 
-    public enum AiBehavior { None, Random }
+    public enum AiBehavior { None, RandomLocalEdges, RandomInVision }
     public AiBehavior aiBehavior = AiBehavior.None;
 
     Coord[] edgeDirs = new Coord[] {
@@ -111,6 +111,17 @@ public class MazeStarWalker : MonoBehaviour
     ParticleSystem visionParticle;
     List<Lines.Wire> wires = new List<Lines.Wire>();
     private float timer = 0;
+    Coord RandomVisibleNode() {
+        Coord size = maze.Map.GetSize();
+        Coord c = Coord.Up;
+        for (int i = 0; i < 50; ++i) {
+            c = new Coord(Random.Range(0, size.X), Random.Range(0, size.Y));
+			if (discovery.vision[c]) { return c; }
+		}
+        c = Coord.Up;
+        size.ForEach(co => { if (discovery.vision[co]) { c = co; return true; } return false; });
+        return c;
+    }
     void Update()
     {
         Vector3 p = transform.position;
@@ -142,12 +153,23 @@ public class MazeStarWalker : MonoBehaviour
             }
         }
 		switch (aiBehavior) {
-        case AiBehavior.Random:
+        case AiBehavior.RandomLocalEdges:
             if (!cm.IsAutoMoving()) {
                 Vector3 t = world[Random.Range(0, world.Count)];
                 cm.SetAutoMovePosition(t);
 			}
             break;
-		}
+        case AiBehavior.RandomInVision:
+            if (!cm.IsAutoMoving()) {
+                c = RandomVisibleNode();
+                Vector3 pos = maze.GetPosition(c) + maze.transform.position;
+                pos.y = transform.position.y + 3;
+                cm.SetAutoMovePosition(pos);
+                // TODO start astar algorithm. 
+            } else {
+                // iterate astar algorithm
+			}
+            break;
+        }
     }
 }
