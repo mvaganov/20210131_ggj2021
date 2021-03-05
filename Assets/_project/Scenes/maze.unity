@@ -1345,7 +1345,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maze: {fileID: 283455128}
   textOutput: {fileID: 1924026821}
-  canJump: 1
+  canJump: 0
   discovery: {fileID: 0}
   game: {fileID: 893536459}
   follower: {fileID: 0}
@@ -3618,7 +3618,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1444928080
 Transform:
   m_ObjectHideFlags: 0
@@ -4636,7 +4636,7 @@ ParticleSystem:
     m_BurstCount: 0
     m_Bursts: []
   SizeModule:
-    enabled: 0
+    enabled: 1
     curve:
       serializedVersion: 2
       minMaxState: 1
@@ -4648,23 +4648,32 @@ ParticleSystem:
         - serializedVersion: 3
           time: 0
           value: 0
-          inSlope: 0
-          outSlope: 1
+          inSlope: 0.06301775
+          outSlope: 0.06301775
           tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0.4814814
+        - serializedVersion: 3
+          time: 0.5070423
+          value: 1
+          inSlope: -0.028174758
+          outSlope: -0.028174758
+          tangentMode: 34
           weightedMode: 0
           inWeight: 0.33333334
           outWeight: 0.33333334
         - serializedVersion: 3
           time: 1
-          value: 1
-          inSlope: 1
-          outSlope: 0
+          value: 0
+          inSlope: 0.05461537
+          outSlope: 0.05461537
           tangentMode: 0
           weightedMode: 0
-          inWeight: 0.33333334
-          outWeight: 0.33333334
-        m_PreInfinity: 2
-        m_PostInfinity: 2
+          inWeight: 0.5714287
+          outWeight: 0
+        m_PreInfinity: 1
+        m_PostInfinity: 1
         m_RotationOrder: 4
       minCurve:
         serializedVersion: 2
@@ -9251,7 +9260,7 @@ MonoBehaviour:
   discovery: {fileID: 0}
   game: {fileID: 893536459}
   follower: {fileID: 0}
-  aiBehavior: 1
+  aiBehavior: 2
 --- !u!1 &1586781955
 GameObject:
   m_ObjectHideFlags: 0

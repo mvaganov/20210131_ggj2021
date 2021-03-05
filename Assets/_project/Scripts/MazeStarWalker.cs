@@ -30,8 +30,9 @@ public class MazeStarWalker : MonoBehaviour
     };
     public enum EdgeDir { N, W, S, E, NW, NE, SW, SE, NN, WW, SS, EE, NNW, NNE, SSW, SSE, NWW, NEE, SWW, SEE }
     public List<int> GetEdges(Coord node) {
-        List<int> edges = new List<int>();
         Coord size = maze.Map.GetSize();
+        List<int> edges = new List<int>();
+		if (!size.Contains(node) || discovery == null || discovery.vision == null || !discovery.vision[node]) { return edges; } // no edges from ubknown tiles
         char thisSquare = size.Contains(node) ? maze.Map[node].letter : '\0';
         int dirOptions = canJump ? edgeDirs.Length : 4;
         switch (thisSquare) {
@@ -39,7 +40,44 @@ public class MazeStarWalker : MonoBehaviour
             for (int i = 0; i < dirOptions; ++i) { edges.Add(i); }
             break;
         case 'n': case 'w': case 's': case 'e':
-            for (int i = 0; i < 4; ++i) { edges.Add(i); }
+            for (int dir = 0; dir < 4; ++dir) {
+                Coord other = node + edgeDirs[dir];
+                if (!size.Contains(other)) { continue; }
+                char otherSq = maze.Map[other];
+                bool walkable = false, jumpable = false;
+                switch (otherSq) {
+                case ' ': walkable = true; break;
+                case '#':
+                    walkable = false;
+                    jumpable = true;
+					switch (thisSquare) {
+                    case 'n': walkable = (dir == (int)EdgeDir.N); break;
+                    case 'w': walkable = (dir == (int)EdgeDir.W); break;
+                    case 's': walkable = (dir == (int)EdgeDir.S); break;
+                    case 'e': walkable = (dir == (int)EdgeDir.E); break;
+                    }
+                    break;
+                case 'n':
+                    walkable = (dir == (int)EdgeDir.N);
+                    jumpable = (dir != (int)EdgeDir.S && dir < 4);
+                    break;
+                case 'w':
+                    walkable = (dir == (int)EdgeDir.W);
+                    jumpable = (dir != (int)EdgeDir.E && dir < 4);
+                    break;
+                case 's':
+                    walkable = (dir == (int)EdgeDir.S);
+                    jumpable = (dir != (int)EdgeDir.N && dir < 4);
+                    break;
+                case 'e':
+                    walkable = (dir == (int)EdgeDir.E);
+                    jumpable = (dir != (int)EdgeDir.W && dir < 4);
+                    break;
+                }
+                if (walkable || (canJump && jumpable)) {
+                    edges.Add(dir);
+                }
+            }
             break;
         case ' ':
             for (int i = 0; i < 4; ++i) {
@@ -102,51 +140,69 @@ public class MazeStarWalker : MonoBehaviour
 
     void Start()
     {
-        astar = new GenericAStar<Coord, int>(Coord.Zero, Coord.One * 3, GetEdges, NextNode, Dist);
+        astar = new GenericAStar<Coord, int>(GetEdges, NextNode, Dist);
         cm = GetComponent<CharacterMove>();
         follower = game.clickToMove.Follower(cm);
         discovery = game.EnsureExplorer(gameObject);
         visionParticle = GetComponentInChildren<ParticleSystem>();
+        Vector3 p = transform.position;
+        Coord here = maze.GetCoord(p);
+        astar.Start(here, here);
     }
     ParticleSystem visionParticle;
-    List<Lines.Wire> wires = new List<Lines.Wire>();
+    List<Lines.Wire> wires = null;// new List<Lines.Wire>();
     private float timer = 0;
-    Coord RandomVisibleNode() {
+    bool RandomVisibleNode(out Coord c) {
         Coord size = maze.Map.GetSize();
-        Coord c = Coord.Up;
+        c = Coord.Up;
         for (int i = 0; i < 50; ++i) {
             c = new Coord(Random.Range(0, size.X), Random.Range(0, size.Y));
-			if (discovery.vision[c]) { return c; }
+			if (discovery.vision[c]) { return true; }
 		}
-        c = Coord.Up;
-        size.ForEach(co => { if (discovery.vision[co]) { c = co; return true; } return false; });
-        return c;
+        Coord found = Coord.Up;
+        if(!size.ForEach(co => { if (discovery.vision[co]) { found = co; return true; } return false; })) {
+            return false;
+		}
+        c = found;
+        return true;
     }
     void Update()
     {
         Vector3 p = transform.position;
-        Coord c = maze.GetCoord(p);
-        List<Coord> moves = Moves(c);
-        UiText.SetText(textOutput, c.ToString()+":"+(p - maze.transform.position)+" "+moves.JoinToString(", "));
-        List<Vector3> world = MoveToWorld(moves, p.y);
-        for(int i = 0; i < world.Count; ++i) {
-			while (wires.Count <= i) { wires.Add(Lines.MakeWire()); }
-            //Debug.Log(wires[i] + "  " + p + " " + world[i]);
-            wires[i].Line(p, world[i], Color.yellow);
-            wires[i].gameObject.SetActive(true);
+        Coord here = maze.GetCoord(p);
+        List<Coord> moves = Moves(here);
+        if (textOutput != null) {
+            UiText.SetText(textOutput, here.ToString() + ":" + (p - maze.transform.position) + " " + moves.JoinToString(", "));
         }
-        for (int i = world.Count; i < wires.Count; ++i) {
-            wires[i].gameObject.SetActive(false);
-		}
+        List<Vector3> world = MoveToWorld(moves, p.y);
+        if (wires != null) {
+            for (int i = 0; i < world.Count; ++i) {
+                while (wires.Count <= i) { wires.Add(Lines.MakeWire()); }
+                //Debug.Log(wires[i] + "  " + p + " " + world[i]);
+                wires[i].Line(p, world[i], Color.yellow);
+                wires[i].gameObject.SetActive(true);
+            }
+            for (int i = world.Count; i < wires.Count; ++i) {
+                wires[i].gameObject.SetActive(false);
+            }
+        }
         if (visionParticle) {
             timer -= Time.deltaTime;
             if (timer <= 0) {
                 maze.Map.GetSize().ForEach(co => {
                     if (discovery.vision[co]) {
                         Vector3 po = maze.GetPosition(co) + maze.transform.position;
-                        po.y = transform.position.y+3;
-                        visionParticle.transform.position = po;
-                        visionParticle.Emit(1);
+                        po.y = transform.position.y;
+                        if (currentBestPath != null) {
+                            if(currentBestPath.IndexOf(co) >= 0) {
+                                po.y += 3;
+                                visionParticle.transform.position = po;
+                                visionParticle.Emit(1);
+                            }
+                        } else {
+                            visionParticle.transform.position = po;
+                            visionParticle.Emit(1);
+                        }
                     }
                 });
                 timer = .5f;
@@ -160,16 +216,48 @@ public class MazeStarWalker : MonoBehaviour
 			}
             break;
         case AiBehavior.RandomInVision:
-            if (!cm.IsAutoMoving()) {
-                c = RandomVisibleNode();
-                Vector3 pos = maze.GetPosition(c) + maze.transform.position;
-                pos.y = transform.position.y + 3;
-                cm.SetAutoMovePosition(pos);
-                // TODO start astar algorithm. 
+            if (astar.goal == here) {
+                if (RandomVisibleNode(out Coord there)) {
+                    astar.Start(here, there);
+                    //Debug.Log("goal " + there+ " "+astar.IsFinished());
+                } else {
+                    //Debug.Log("nothing visible " + there);
+                }
             } else {
                 // iterate astar algorithm
-			}
+				if (!astar.IsFinished()) {
+                    astar.Update();
+                } else if(astar.BestPath == null) {
+                    //Debug.Log("f" + astar.IsFinished() + " " + astar.BestPath);
+                    astar.Start(here, here);
+                }
+                if(astar.BestPath != null) {
+                    if(astar.BestPath != currentBestPath) {
+                        currentBestPath = astar.BestPath;
+                        //Debug.Log(currentBestPath.JoinToString(", "));
+                        indexOnBestPath = currentBestPath.IndexOf(here);
+						if (indexOnBestPath < 0) { astar.Start(here, astar.goal); }
+                        for(int i = indexOnBestPath; i >= 0; --i) {
+                            Vector3 pos = maze.GetPosition(currentBestPath[i]) + maze.transform.position;
+                            pos.y = transform.position.y + 3;
+                            follower.AddWaypoint(pos);
+                        }
+                    } else {
+						if (!cm.IsAutoMoving()) {
+                            astar.Start(here,here);
+      //                      //Debug.Log("#"+ indexOnBestPath+" "+ currentBestPath.JoinToString(", "));
+      //                      if(indexOnBestPath < currentBestPath.Count && indexOnBestPath >= 0) {
+      //                          Vector3 pos = maze.GetPosition(currentBestPath[indexOnBestPath]) + maze.transform.position;
+      //                          pos.y = transform.position.y + 3;
+      //                          cm.SetAutoMovePosition(pos, () => --indexOnBestPath);
+      //                      }
+                        }
+                    }
+                }
+            }
             break;
         }
     }
+    int indexOnBestPath = -1;
+    List<Coord> currentBestPath;
 }

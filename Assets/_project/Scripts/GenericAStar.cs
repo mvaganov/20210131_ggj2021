@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class GenericAStar<NODE_TYPE, EDGE_TYPE> {
 
 	bool finished = false;
+	public List<NODE_TYPE> BestPath;
 	public bool IsFinished() { return finished; }
 
 	public delegate List<EDGE_TYPE> GetEdges(NODE_TYPE node);
@@ -34,18 +35,26 @@ public class GenericAStar<NODE_TYPE, EDGE_TYPE> {
 	public Dictionary<NODE_TYPE, float> g_score = new Dictionary<NODE_TYPE, float>();
 	public Dictionary<NODE_TYPE, float> f_score = new Dictionary<NODE_TYPE, float>();
 
-	public GenericAStar(NODE_TYPE start, NODE_TYPE goal, GetEdges getEdges, GetTo getEdgeToNode, DistBetween distanceHeuristic) {
+	public GenericAStar(GetEdges getEdges, GetTo getEdgeToNode, DistBetween distanceHeuristic) {
 		SetNodeAndEdgeMethods(getEdges, getEdgeToNode, distanceHeuristic);
+	}
+	public void Start(NODE_TYPE start, NODE_TYPE goal) {
+		openset.Clear();
+		closedset.Clear();
+		came_from.Clear();
+		g_score.Clear();
+		f_score.Clear();
+		BestPath = null;
+		finished = false;
 		this.start = start;
 		this.goal = goal;
-		// openset := {start}    // The set of tentative nodes to be evaluated, initially containing the start node
+		// openset := {start} // The set of tentative nodes to be evaluated, initially containing the start node
 		openset.Add(start);
-		// g_score[start] := 0    // Cost from start along best known path.
+		// g_score[start] := 0 // Cost from start along best known path.
 		g_score[start] = 0;
 		// // Estimated total cost from start to goal through y.
 		// f_score[start] := g_score[start] + heuristic_cost_estimate(start, goal)
 		f_score[start] = g_score[start] + heuristic_cost_estimate(start, goal);
-		//LineLib.CreateLineRender(ref showDelta, start.gameObject.transform.position, goal.gameObject.transform.position); 
 	}
 
 	/// <summary>calculates A-star, one iteration at a time</summary>
@@ -55,41 +64,39 @@ public class GenericAStar<NODE_TYPE, EDGE_TYPE> {
 		// while openset is not empty
 		/*while*/
 		if (openset.Count > 0) {
-			//     current := the node in openset having the lowest f_score[] value
+			// current := the node in openset having the lowest f_score[] value
 			NODE_TYPE current = smallestFrom(openset, f_score);
-			//LineLib.CreateLineRender(ref showCalc, start.gameObject.transform.position, current.gameObject.transform.position); 
-			//     remove current from openset
+			// remove current from openset
 			openset.Remove(current);
-			//     add current to closedset
+			// add current to closedset
 			closedset.Add(current);
-			//     if current = goal
+			// if current = goal
 			if (current.Equals(goal)) {
-				//Debug.Log("found path! "+current+" "+goal);
-				//         return reconstruct_path(came_from, goal)
-				return reconstruct_path(came_from, goal);
+				// return reconstruct_path(came_from, goal)
+				return BestPath = reconstruct_path(came_from, goal);
 			}
-			//     for each neighbor in neighbor_nodes(current)
+			// for each neighbor in neighbor_nodes(current)
 			edges = getEdges(current);
 			for (int i = 0; edges != null && i < edges.Count; ++i) {
 				NODE_TYPE neighbor = getEdgeToNode(current, edges[i]); // current.edges[i].end2;
-																	   //         tentative_g_score := g_score[current] + dist_between(current,neighbor)
+				// tentative_g_score := g_score[current] + dist_between(current,neighbor)
 				float tentative_g_score = g_score[current] + dist_between(current, neighbor);
-				//         if neighbor in closedset and tentative_g_score >= g_score[neighbor]
+				// if neighbor in closedset and tentative_g_score >= g_score[neighbor]
 				if (closedset.IndexOf(neighbor) >= 0 && tentative_g_score >= g_score[neighbor]) {
-					//                 continue
+					// continue
 					continue;
 				}
-				//         if neighbor not in openset or tentative_g_score < g_score[neighbor] 
+				// if neighbor not in openset or tentative_g_score < g_score[neighbor] 
 				if (openset.IndexOf(neighbor) < 0 || tentative_g_score < g_score[neighbor]) {
-					//             came_from[neighbor] := current
+					// came_from[neighbor] := current
 					came_from[neighbor] = current;
-					//             g_score[neighbor] := tentative_g_score
+					// g_score[neighbor] := tentative_g_score
 					g_score[neighbor] = tentative_g_score;
-					//             f_score[neighbor] := g_score[neighbor] + heuristic_cost_estimate(neighbor, goal)
+					// f_score[neighbor] := g_score[neighbor] + heuristic_cost_estimate(neighbor, goal)
 					f_score[neighbor] = g_score[neighbor] + heuristic_cost_estimate(neighbor, goal);
-					//             if neighbor not in openset
+					// if neighbor not in openset
 					if (openset.IndexOf(neighbor) < 0) {
-						//                 add neighbor to openset
+						// add neighbor to openset
 						openset.Add(neighbor);
 					}
 				}
@@ -117,7 +124,7 @@ public class GenericAStar<NODE_TYPE, EDGE_TYPE> {
 	static List<NODE_TYPE> reconstruct_path(Dictionary<NODE_TYPE, NODE_TYPE> previous, NODE_TYPE goal) {
 		List<NODE_TYPE> list = new List<NODE_TYPE>();
 		NODE_TYPE prev = goal;
-		bool hasPreviousNode = true;
+		bool hasPreviousNode;
 		do {
 			list.Add(prev);
 			hasPreviousNode = previous.TryGetValue(prev, out prev);

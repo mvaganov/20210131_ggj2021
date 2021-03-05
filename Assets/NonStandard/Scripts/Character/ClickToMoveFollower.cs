@@ -125,7 +125,7 @@ public class ClickToMoveFollower : MonoBehaviour {
 	public void ShowCurrentWaypoint() {
 		if (currentWaypoint == null) {
 			currentWaypoint = Instantiate(clickToMoveUi.prefab_waypoint.gameObject).GetComponent<Interact3dItem>();
-			currentWaypoint.OnInteract = AddWaypoint;
+			currentWaypoint.OnInteract = AddWaypointHere;
 			//Debug.Log("waypoint made " + targetPosition);
 		}
 		bool showIt = mover.IsAutoMoving() && (waypoints.Count == 0 ||
@@ -136,13 +136,16 @@ public class ClickToMoveFollower : MonoBehaviour {
 			Interact3dUi.Instance.UpdateItem(currentWaypoint);
 		}
 	}
-	public void AddWaypoint() {
+	public void AddWaypointHere() {
+		AddWaypoint(currentWaypoint.transform.position);
+	}
+	public void AddWaypoint(Vector3 position) {
 		Interact3dItem newWayPoint = Instantiate(clickToMoveUi.prefab_middleWaypoint.gameObject).GetComponent<Interact3dItem>();
-		newWayPoint.transform.position = currentWaypoint.transform.position;
+		newWayPoint.transform.position = position;
 		newWayPoint.OnInteract = ClearWaypoints;// ()=>RemoveWaypoint(newWayPoint);
 		newWayPoint.gameObject.SetActive(true);
 		waypoints.Add(newWayPoint);
-		currentWaypoint.showing = false;
+		if(currentWaypoint != null) currentWaypoint.showing = false;
 	}
 	public void ClearWaypoints() {
 		for(int i = 0; i < waypoints.Count; ++i) {
