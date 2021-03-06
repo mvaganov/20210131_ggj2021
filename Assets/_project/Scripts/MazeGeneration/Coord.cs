@@ -32,6 +32,7 @@ namespace MazeGeneration {
 		public static readonly Coord Left = new Coord(-1, 0);
 		public static readonly Coord Down = new Coord(0, 1);
 		public static readonly Coord Right = new Coord(1, 0);
+		public static readonly Coord NegativeOne = new Coord(-1, -1);
 		public static Coord[] CardinalDirs = new Coord[]{Coord.Up, Coord.Left, Coord.Right, Coord.Down};
 		private static Coord[] CardinalDirsAll = new Coord[] { 
 			Left+Up  , Up ,  Up+Right,

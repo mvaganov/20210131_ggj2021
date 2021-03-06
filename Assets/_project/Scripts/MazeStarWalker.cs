@@ -129,24 +129,47 @@ public class MazeStarWalker : MonoBehaviour
     List<Vector3> MoveToWorld(List<Coord> moves, float y) {
         List<Vector3> world = new List<Vector3>();
         world.Capacity = moves.Count;
-        Vector3 o = maze.transform.position;
         for(int i = 0; i < moves.Count; ++i) {
-            Vector3 v = maze.GetPosition(moves[i]) + o;
+            Vector3 v = maze.GetPosition(moves[i]);
             v.y = y;
             world.Add(v);
 		}
         return world;
     }
 
+	Dictionary<Coord, float> fscore = new Dictionary<Coord, float>();
+	Dictionary<Coord, float> gscore = new Dictionary<Coord, float>();
+	Dictionary<Coord, Coord> cameFrom = new Dictionary<Coord, Coord>();
+
+	public class AStarData { public float f=-1, g=-1; public Coord from= Coord.NegativeOne; 
+        public void Invalidate() { f = g = -1; from = Coord.NegativeOne; }
+    }
+    AStarData[,] calcSpace;
+    void ResetCalcSpace() { calcSpace?.GetSize().ForEach(c => calcSpace.At(c).Invalidate()); }
     void Start()
     {
-        astar = new GenericAStar<Coord, int>(GetEdges, NextNode, Dist);
+        astar = new GenericAStar<Coord, int>(GetEdges, NextNode, Dist,
+		() => { fscore.Clear(); gscore.Clear(); cameFrom.Clear(); },
+		c => cameFrom.TryGetValue(c, out Coord found) ? found : c,
+						  (c, f) => cameFrom[c] = f,
+		c => fscore[c], (c, f) => fscore[c] = f,
+		c => gscore[c], (c, f) => gscore[c] = f);
+		//ResetCalcSpace, 
+  //      c => { Coord f = calcSpace.At(c).from; return f != Coord.NegativeOne ? f : c; },
+  //                               (c, f) => calcSpace.At(c).from = f, 
+  //      c => calcSpace.At(c).f,  (c, f) => calcSpace.At(c).f = f,
+  //      c => calcSpace.At(c).g,  (c, f) => calcSpace.At(c).g = f);
+
         cm = GetComponent<CharacterMove>();
         follower = game.clickToMove.Follower(cm);
         discovery = game.EnsureExplorer(gameObject);
         visionParticle = GetComponentInChildren<ParticleSystem>();
         Vector3 p = transform.position;
         Coord here = maze.GetCoord(p);
+
+        //Coord mapSize = maze.Map.GetSize();
+        //calcSpace = new AStarData[mapSize.row, mapSize.col];
+
         astar.Start(here, here);
     }
     ParticleSystem visionParticle;
@@ -168,6 +191,11 @@ public class MazeStarWalker : MonoBehaviour
     }
     void Update()
     {
+        Coord mapSize = maze.Map.GetSize();
+		//if (calcSpace == null || calcSpace.GetSize() != mapSize) {
+  //          calcSpace = new AStarData[mapSize.row, mapSize.col];
+  //          ResetCalcSpace();
+		//}
         Vector3 p = transform.position;
         Coord here = maze.GetCoord(p);
         List<Coord> moves = Moves(here);
@@ -189,9 +217,9 @@ public class MazeStarWalker : MonoBehaviour
         if (visionParticle) {
             timer -= Time.deltaTime;
             if (timer <= 0) {
-                maze.Map.GetSize().ForEach(co => {
+                mapSize.ForEach(co => {
                     if (discovery.vision[co]) {
-                        Vector3 po = maze.GetPosition(co) + maze.transform.position;
+                        Vector3 po = maze.GetPosition(co);
                         po.y = transform.position.y;
                         if (currentBestPath != null) {
                             if(currentBestPath.IndexOf(co) >= 0) {
@@ -219,6 +247,7 @@ public class MazeStarWalker : MonoBehaviour
             if (astar.goal == here) {
                 if (RandomVisibleNode(out Coord there)) {
                     astar.Start(here, there);
+                    //Debug.Log("startover #");
                     //Debug.Log("goal " + there+ " "+astar.IsFinished());
                 } else {
                     //Debug.Log("nothing visible " + there);
@@ -230,29 +259,33 @@ public class MazeStarWalker : MonoBehaviour
                 } else if(astar.BestPath == null) {
                     //Debug.Log("f" + astar.IsFinished() + " " + astar.BestPath);
                     astar.Start(here, here);
+                    //Debug.Log("startover could not find path");
                 }
                 if(astar.BestPath != null) {
                     if(astar.BestPath != currentBestPath) {
                         currentBestPath = astar.BestPath;
                         //Debug.Log(currentBestPath.JoinToString(", "));
                         indexOnBestPath = currentBestPath.IndexOf(here);
-						if (indexOnBestPath < 0) { astar.Start(here, astar.goal); }
-                        for(int i = indexOnBestPath; i >= 0; --i) {
-                            Vector3 pos = maze.GetPosition(currentBestPath[i]) + maze.transform.position;
-                            pos.y = transform.position.y + 3;
-                            follower.AddWaypoint(pos);
+						if (indexOnBestPath < 0) {
+                            astar.Start(here, astar.goal);
+                            //Debug.Log("startover new better path");
                         }
+                        Vector3 pos = transform.position;
+                        follower.ClearWaypoints();
+                        for (int i = indexOnBestPath; i >= 0; --i) {
+                            pos = //maze.GetPosition(currentBestPath[i]);
+                            maze.GetTile(currentBestPath[i]).CalcVisibilityTarget();
+                            pos.y += follower.CharacterHeight;
+                            follower.AddWaypoint(pos, false);
+                        }
+                        follower.SetCurrentTarget(pos);
+                        follower.UpdateLine();
                     } else {
-						if (!cm.IsAutoMoving()) {
-                            astar.Start(here,here);
-      //                      //Debug.Log("#"+ indexOnBestPath+" "+ currentBestPath.JoinToString(", "));
-      //                      if(indexOnBestPath < currentBestPath.Count && indexOnBestPath >= 0) {
-      //                          Vector3 pos = maze.GetPosition(currentBestPath[indexOnBestPath]) + maze.transform.position;
-      //                          pos.y = transform.position.y + 3;
-      //                          cm.SetAutoMovePosition(pos, () => --indexOnBestPath);
-      //                      }
-                        }
-                    }
+						if (!cm.IsAutoMoving() && follower.waypoints.Count==0) {
+							astar.Start(here, here);
+							//Debug.Log("startover new level?");
+						}
+					}
                 }
             }
             break;

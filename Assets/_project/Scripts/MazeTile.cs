@@ -46,7 +46,7 @@ public class MazeTile : MonoBehaviour
 		case Kind.RampEast: case Kind.RampWest: case Kind.RampSouth: case Kind.RampNorth: 
 			h = maze.rampHeight; break;
 		}
-		Vector3 p = maze.GetPosition(coord);
+		Vector3 p = maze.GetLocalPosition(coord);
 		p.y += h * maze.tileSize.y;
 		return p;
 	}

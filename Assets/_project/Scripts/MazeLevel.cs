@@ -20,22 +20,24 @@ public class MazeLevel : MonoBehaviour {
     public Color undiscoveredWall = Color.clear, undiscoveredFloor = Color.clear, undiscoveredRamp = Color.clear;
     public int stage = -1;
     public VisionMapping seen;
-
+    Transform _t;
 
     List<MazeTile> mazeTiles = new List<MazeTile>();
     public List<MazeTile> floorTiles;
     public int[] floorTileNeighborHistogram = new int[0];
 	private void Awake() {
+        _t = transform;
         seen = new VisionMapping(() => map != null ? map.GetSize() : new Coord(7,7));
     }
 	public Coord GetCoord(Vector3 p) {
-        p -= transform.position;
+        p -= _t.position;
         float x = (p.x) / tileSize.x + 0.5f;
         float y = (p.z) / tileSize.z + 0.5f;
         return new Coord((int)x, (int)y);
     }
 
-    public Vector3 GetPosition(Coord c) { return new Vector3(c.X * tileSize.x, 0, c.Y * tileSize.z); }
+    public Vector3 GetPosition(Coord c) { return GetLocalPosition(c)+_t.position; }
+    public Vector3 GetLocalPosition(Coord c) { return new Vector3(c.X * tileSize.x, 0, c.Y * tileSize.z); }
 
     public Map2d Map { get { return map; } }
 
@@ -116,7 +118,6 @@ public class MazeLevel : MonoBehaviour {
         }
         //int index = 0;
         Vector3 off = new Vector3(map.Width / -2f * tileSize.x, 0, map.Height / -2f * tileSize.z);
-        Transform selfT = transform;
         floorTiles = new List<MazeTile>();
         floorTileNeighborHistogram.SetEach(0);
         map.GetSize().ForEach(c => {
@@ -124,7 +125,7 @@ public class MazeLevel : MonoBehaviour {
             mt.maze = this;
             mt.coord = c;
             Transform t = mt.transform;
-            t.SetParent(selfT);
+            t.SetParent(_t);
             t.localPosition = mt.CalcLocalPosition();
             MazeTile.Kind k = MazeTile.Kind.None;
 			switch (map[c]) {
