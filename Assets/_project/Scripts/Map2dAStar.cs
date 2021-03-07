@@ -12,8 +12,15 @@ public class Map2dAStar : MazeAStar {
 		this.maze = maze;
 		this.prefab_debug_astar = prefab_debug_astar;
 		SetAstarSourceData(vision, () => maze.Map, ResetCalcSpace,
-			c => { Coord f = calcSpace.At(c).from; return f != Coord.NegativeOne ? f : c; },
-									(c, f) => { calcSpace.At(c).from = f; },
+			(Coord c, out int e) => {
+				AStarData a = calcSpace.At(c);
+				Coord f = a.from; e = a._edge;
+				return f != Coord.NegativeOne ? f : c;
+			},
+			(c, f, e) => {
+				AStarData a = calcSpace.At(c);
+				a.from = f; a._edge = e;
+			},
 			c => calcSpace.At(c).f, (c, f) => { calcSpace.At(c).f = f; },
 			c => calcSpace.At(c).g, (c, f) => { calcSpace.At(c).g = f; });
 		ResetCalcSpace(Map.GetSize());
@@ -26,7 +33,7 @@ public class Map2dAStar : MazeAStar {
 		}
 	}
 	public class AStarData {
-		private float _f = -1, _g = -1; public Coord _from = Coord.NegativeOne;
+		private float _f = -1, _g = -1; private Coord _from = Coord.NegativeOne; public int _edge = -1;
 		public Coord coord;
 		public GameObject debugVisibleObject;
 		public Lines.Wire fromArrow;
@@ -47,11 +54,15 @@ public class Map2dAStar : MazeAStar {
 		void RefreshDebugFromArrow() {
 			if (debugVisibleObject == null) return;
 			Vector3 start = maze.GetGroundPosition(_from), u = Vector3.up * .125f, end = maze.GetGroundPosition(coord);
-			if (fromArrow == null) { fromArrow = Lines.MakeWire(); fromArrow.gameObject.transform.SetParent(debugVisibleObject.transform); }
+			if (fromArrow == null) {
+				fromArrow = Lines.MakeWire(); fromArrow.gameObject.transform.SetParent(debugVisibleObject.transform);
+			}
+			// TODO if the edge is a fall, make a line that starts level and ends pointing down... that starts at the edge of this tile
+			// TODO if the edge is a jump, make an arc... that starts at the edge of this tile
 			fromArrow.Arrow(start + u, end + u, Color.gray);
 		}
 		public AStarData Reset(Coord c, MazeLevel m, VisionMapping vm, GameObject prefab_data_vis) {
-			_f = _g = -1; _from = c;
+			_f = _g = _edge = -1; _from = c;
 			coord = c;
 			maze = m;
 			visMap = vm;

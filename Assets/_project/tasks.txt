@@ -9,8 +9,11 @@
 	]}
 	{done:"2021.03.06 22:15" n"pick random location on tile when moving to a tile" created"2021.03.01"}
 	{done:"2021.03.06 22:15" n"pick closest location on tile to travel to as target" created"2021.03.01"}
-	{n"with and without jumping" created"2021.03.01"}
-	{n"visualizations look different when falling or jumping"}
+	{n"with and without jumping" created"2021.03.01" sub[
+		{done"2021.03.06 23:45" n"edge data preserved when generating paths, so type of edge can be reflected in visual" created"2021.03.06 22:30"}
+		{n"show different edges in path: walk/fall/jump" created"2021.03.06 22:30"}
+		{n"path follower generates path with edges in mind, AI will walk/fall/jump correctly" created"2021.03.06 22:30"}
+	]}
 	{n"AI opponent that does astar to random token" created"2021.03.01"}
 	{n"astar to closest token (not just random)" created"2021.03.01"}
 	{n"opponent picks a new target if it realizes you are closer than it to it's target" created"2021.03.04 23:47"}

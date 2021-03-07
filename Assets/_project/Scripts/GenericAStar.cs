@@ -6,7 +6,8 @@ using System;
 public class GenericAStar<NODE_TYPE, EDGE_TYPE> {
 
 	bool finished = false;
-	public List<NODE_TYPE> BestPath;
+	//public List<NODE_TYPE> BestPath;
+	public List<EDGE_TYPE> BestPath;
 	public bool IsFinished() { return finished; }
 
 	Func<NODE_TYPE, List<EDGE_TYPE>> getEdges;
@@ -15,7 +16,7 @@ public class GenericAStar<NODE_TYPE, EDGE_TYPE> {
 
 	public void SetNodeAndEdgeMethods(Func<NODE_TYPE, List<EDGE_TYPE>> getEdges, Func<NODE_TYPE, EDGE_TYPE, NODE_TYPE> getEdgeToNode, Func<NODE_TYPE, NODE_TYPE, float> distanceHeuristic,
 		Action reset_state,
-		Func<NODE_TYPE, NODE_TYPE> get_came_from, Action<NODE_TYPE, NODE_TYPE> set_came_from,
+		GetCameFrom get_came_from, Action<NODE_TYPE, NODE_TYPE, EDGE_TYPE> set_came_from,
 		Func<NODE_TYPE, float> get_f_score, Action<NODE_TYPE, float> set_f_score,
 		Func<NODE_TYPE, float> get_g_score, Action<NODE_TYPE, float> set_g_score) {
 		this.getEdges = getEdges;
@@ -39,17 +40,18 @@ public class GenericAStar<NODE_TYPE, EDGE_TYPE> {
 	public HashSet<NODE_TYPE> openset = new HashSet<NODE_TYPE>();
 	// came_from := the empty map    // The map of navigated nodes.
 	public Action reset_state;
-	public Func<NODE_TYPE, NODE_TYPE> get_came_from;
-	public Action<NODE_TYPE, NODE_TYPE> set_came_from;
+	public GetCameFrom get_came_from;
+	public Action<NODE_TYPE, NODE_TYPE, EDGE_TYPE> set_came_from;
 	public Func<NODE_TYPE, float> get_f_score;
 	public Action<NODE_TYPE, float> set_f_score;
 	public Func<NODE_TYPE, float> get_g_score;
 	public Action<NODE_TYPE, float> set_g_score;
 
+	public delegate NODE_TYPE GetCameFrom(NODE_TYPE destination, out EDGE_TYPE edge);
 	public GenericAStar() { }
 	public GenericAStar(Func<NODE_TYPE, List<EDGE_TYPE>> getEdges, Func<NODE_TYPE, EDGE_TYPE, NODE_TYPE> getEdgeToNode, Func<NODE_TYPE, NODE_TYPE, float> distanceHeuristic,
 				Action reset_state,
-		Func<NODE_TYPE, NODE_TYPE> get_came_from, Action<NODE_TYPE, NODE_TYPE> set_came_from,
+		GetCameFrom get_came_from, Action<NODE_TYPE, NODE_TYPE, EDGE_TYPE> set_came_from,
 		Func<NODE_TYPE, float> get_f_score, Action<NODE_TYPE, float> set_f_score,
 		Func<NODE_TYPE, float> get_g_score, Action<NODE_TYPE, float> set_g_score) {
 		SetNodeAndEdgeMethods(getEdges, getEdgeToNode, distanceHeuristic, reset_state, get_came_from, set_came_from, get_f_score, set_f_score, get_g_score, set_g_score);
@@ -71,7 +73,8 @@ public class GenericAStar<NODE_TYPE, EDGE_TYPE> {
 
 	/// <summary>calculates A-star, one iteration at a time</summary>
 	/// <returns>null until a path is found. this.finished is set to true when a path is found, or all posibilities are exhausted.</returns>
-	public List<NODE_TYPE> Update() {
+	//public List<NODE_TYPE> Update() {
+	public List<EDGE_TYPE> Update() {
 		List<EDGE_TYPE> edges;
 		// while openset is not empty
 		/*while*/
@@ -101,7 +104,7 @@ public class GenericAStar<NODE_TYPE, EDGE_TYPE> {
 				// if neighbor not in openset or tentative_g_score < g_score[neighbor] 
 				if (!openset.Contains(neighbor) || tentative_g_score < get_g_score(neighbor)) {
 					// came_from[neighbor] := current
-					set_came_from(neighbor, current);
+					set_came_from(neighbor, current, edges[i]);
 					// g_score[neighbor] := tentative_g_score
 					set_g_score(neighbor, tentative_g_score);
 					// f_score[neighbor] := g_score[neighbor] + heuristic_cost_estimate(neighbor, goal)
@@ -140,15 +143,30 @@ public class GenericAStar<NODE_TYPE, EDGE_TYPE> {
 		e.Dispose();
 		return bestNode;//list[minIndex];
 	}
-	static List<NODE_TYPE> reconstruct_path(Func<NODE_TYPE, NODE_TYPE> previous, NODE_TYPE goal) {
-		List<NODE_TYPE> list = new List<NODE_TYPE>();
-		NODE_TYPE prev = goal;
+	//static List<NODE_TYPE> reconstruct_path(GetCameFrom previous, NODE_TYPE goal) {
+	//	List<NODE_TYPE> list = new List<NODE_TYPE>();
+	//	NODE_TYPE prev = goal;
+	//	int loopGuard = 0;
+	//	do {
+	//		list.Add(prev);
+	//		EDGE_TYPE edge;
+	//		prev = previous(prev, out edge);
+	//		if(prev.Equals(list[list.Count - 1])) { break; }
+	//	} while (++loopGuard < 1<<20);// hasPreviousNode);
+	//	return list;
+	//}
+	static List<EDGE_TYPE> reconstruct_path(GetCameFrom previous, NODE_TYPE goal) {
+		List<EDGE_TYPE> list = new List<EDGE_TYPE>();
+		NODE_TYPE prev = goal, cursor;
 		int loopGuard = 0;
 		do {
-			list.Add(prev);
-			prev = previous(prev);
-			if(prev.Equals(list[list.Count - 1])) { break; }
-		} while (++loopGuard < 1<<20);// hasPreviousNode);
+			//list.Add(prev);
+			EDGE_TYPE edge;
+			cursor = previous(prev, out edge);
+			if (prev.Equals(cursor)) { break; }
+			list.Add(edge);
+			prev = cursor;
+		} while (++loopGuard < 1 << 20);// hasPreviousNode);
 		return list;
 	}
 }

@@ -7,8 +7,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Random = NonStandard.Data.Random;
 
-public class MazeStarWalker : MonoBehaviour
-{
+public class MazeStarWalker : MonoBehaviour {
 	public MazeLevel maze;
 	public GameObject textOutput;
 	public bool canJump;
@@ -37,7 +36,6 @@ public class MazeStarWalker : MonoBehaviour
 			if (Physics.Raycast(p + r, Vector3.down, out RaycastHit rh, maze.tileSize.y * 2, ~pathingIgnores, QueryTriggerInteraction.Ignore)) {
 				p = rh.point;
 			}
-			//p += r;
 		}
 		break;
 		case TileSurfaceChoice.Closest: {
@@ -138,16 +136,23 @@ public class MazeStarWalker : MonoBehaviour
 				if(mapAstar.BestPath != null) {
 					if(mapAstar.BestPath != currentBestPath) {
 						currentBestPath = mapAstar.BestPath;
+						List<Coord> nodes = new List<Coord>();
+						Coord c = mapAstar.start;
+						nodes.Add(c);
+						for(int i = currentBestPath.Count-1; i >=0 ; --i) {
+							c = mapAstar.NextNode(c, currentBestPath[i]);
+							nodes.Add(c);
+						}
 						//Debug.Log(currentBestPath.JoinToString(", "));
-						indexOnBestPath = currentBestPath.IndexOf(here);
+						indexOnBestPath = nodes.IndexOf(here);
 						if (indexOnBestPath < 0) {
 							mapAstar.Start(here, mapAstar.goal);
 							//Debug.Log("startover new better path");
 						}
 						Vector3 pos = p;
 						follower.ClearWaypoints();
-						for (int i = indexOnBestPath; i >= 0; --i) {
-							pos = MoveablePosition(currentBestPath[i], pos);
+						for (int i = 0; i < nodes.Count; ++i) {
+							pos = MoveablePosition(nodes[i], pos);
 							//pos.y += follower.CharacterHeight;
 							follower.AddWaypoint(pos, false);
 						}
@@ -165,5 +170,6 @@ public class MazeStarWalker : MonoBehaviour
 		}
 	}
 	int indexOnBestPath = -1;
-	List<Coord> currentBestPath;
+	//List<Coord> currentBestPath;
+	List<int> currentBestPath;
 }
