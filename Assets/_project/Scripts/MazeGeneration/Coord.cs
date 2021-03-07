@@ -97,6 +97,7 @@ namespace MazeGeneration {
 			}
 			return true;
 		}
+		public bool Increment(Coord max, short mincol = 0) { return Iterate(max,mincol); }
 		public static void ForEach(Coord min, Coord max, Action<Coord> action) {
 			Coord cursor = min;
 			for (cursor.row = min.row; cursor.row < max.row; ++cursor.row) {
@@ -171,7 +172,13 @@ namespace MazeGeneration {
 			return new Coord(matrix.GetLength(1), matrix.GetLength(0));
 		}
 		public static TYPE At<TYPE>(this TYPE[,] matrix, Coord coord) {
+			if(coord.row < 0 || coord.col < 0 || coord.row >= matrix.GetLength(0) || coord.col >= matrix.GetLength(1)) {
+				throw new IndexOutOfRangeException(coord + " with limit " + matrix.GetSize());
+			}
 			return matrix[coord.row, coord.col];
+		}
+		public static bool IsValid<TYPE>(this TYPE[,] matrix, Coord coord) {
+			return matrix.GetSize().Contains(coord);
 		}
 		public static void SetAt<TYPE>(this TYPE[,] matrix, Coord position, TYPE value) {
 			matrix[position.row, position.col] = value;

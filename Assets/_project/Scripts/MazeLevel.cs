@@ -38,7 +38,10 @@ public class MazeLevel : MonoBehaviour {
 
     public Vector3 GetPosition(Coord c) { return GetLocalPosition(c)+_t.position; }
     public Vector3 GetLocalPosition(Coord c) { return new Vector3(c.X * tileSize.x, 0, c.Y * tileSize.z); }
-
+    public Vector3 GetGroundPosition(Coord c) {
+        MazeTile t = GetTile(c);
+        return t?t.CalcVisibilityTarget():GetPosition(c);
+    }
     public Map2d Map { get { return map; } }
 
     [System.Serializable] public class MazeGenArgs {
@@ -48,7 +51,11 @@ public class MazeLevel : MonoBehaviour {
     public MazeGenArgs mazeGenerationArguments = new MazeGenArgs();
     // Start is called before the first frame update
     public char GetTileSrc(Coord c) { return map[c].letter; }
-    public MazeTile GetTile(Coord c) { return mazeTiles[c.Y*map.Width+c.X]; }
+    public MazeTile GetTile(Coord c) {
+        int i = c.Y * map.Width + c.X;
+        if (i < 0 || i >= mazeTiles.Count) return null;
+        return mazeTiles[i];
+    }
     public void Generate(NonStandard.Data.Random random) {
         int width = ((stage + 2) * 2) + 1;
         mazeGenerationArguments.size = new Vector2(width, width);

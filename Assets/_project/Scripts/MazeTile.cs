@@ -64,10 +64,10 @@ public class MazeTile : MonoBehaviour
 		return Color.magenta;
 	}
 	public void SetDiscovered(bool discovered, Discovery d, MazeLevel maze) {
+		_discovered = discovered;
 		this.maze = maze;
 		maze.seen[coord] = discovered;
 		this.d = d;
-		_discovered = discovered;
 		t = transform;
 		DoAnimate();
 	}

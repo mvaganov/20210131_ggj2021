@@ -1,21 +1,22 @@
-﻿{n"ai that starts at the same position and goes out looking for tokens too" start"2021.03.01" sub[
-	{done:"2021.03.01 23:50" n"random walk, ai grows map as it travels also" start"2021.03.01"}
-	{done:"2021.03.04 23:40" n"astar to random visible tile (astar should only work on visible tiles)" start"2021.03.01"}
-	{n"clean up Astar path" start"2021.03.04" sub[
-		{done:"2021.03.04 23:00" n"dont create ui elements for AI created waypoints" start"2021.03.04"}
-		{n"abstract Astar so it doesn't require dictionaries (can use 2D array of metadata)" start"2021.03.04"}
-		{done:"2021.03.04 23:30" n"draw path in pretty way (with Lines.Wire)" start"2021.03.04"}
+﻿{n"ai that starts at the same position and goes out looking for tokens too" created"2021.03.01" sub[
+	{done:"2021.03.01 23:50" n"random walk, ai grows map as it travels also" created"2021.03.01"}
+	{done:"2021.03.04 23:40" n"astar to random visible tile (astar should only work on visible tiles)" created"2021.03.01"}
+	{n"clean up Astar path" created"2021.03.04" sub[
+		{done:"2021.03.05 23:00" n"dont create ui elements for AI created waypoints" created"2021.03.04"}
+		{done:"2021.03.06 15:30" n"abstract Astar so it doesn't require dictionaries (can use 2D array of metadata)" created"2021.03.04"}
+		{done:"2021.03.05 23:30" n"draw path in pretty way (with Lines.Wire)" created"2021.03.04"}
+		{done:"2021.03.06 20:30" n"break up MazeStarWalker into multiple files, one that manages the 2d array as nodes and edges" created"2021.03.06 16:00"}
 	]}
-	{n"pick random location on tile when moving to a tile" start"2021.03.01"}
-	{n"pick closest location on tile to travel to as target" start"2021.03.01"}
-	{n"AI opponent that does astar to random token" start"2021.03.01"}
-	{n"AI opponent can do Astar with and without jumping" start"2021.03.01"}
-	{n"astar to closest token (not just random)" start"2021.03.01"}
-	{n"opponent picks a new target if it realizes you are closer than it to it's target" start"2021.03.04 23:47"}
-	{n"travelling salesman solution <-- do not solve for this. stop before getting here." start"2021.03.01"}
+	{n"pick random location on tile when moving to a tile" created"2021.03.01"}
+	{n"pick closest location on tile to travel to as target" created"2021.03.01"}
+	{n"AI opponent that does astar to random token" created"2021.03.01"}
+	{n"AI opponent can do Astar with and without jumping" created"2021.03.01"}
+	{n"astar to closest token (not just random)" created"2021.03.01"}
+	{n"opponent picks a new target if it realizes you are closer than it to it's target" created"2021.03.04 23:47"}
+	{n"travelling salesman solution <-- do not solve for this. stop before getting here." created"2021.03.01"}
 ]}
-{n"save state can be loaded from main menu" start"2021.03.01"}
-{n"save level sequence to file system" start"2021.03.01"}
-{n"time per level is saved in local leaderboard" start"2021.03.01"}
-{n"button to allow selection of multiple characters" start"2021.03.01"}
-{n"put interactable items in a list, which means items should have a list priority value" start"2021.03.01"}
+{n"save state can be loaded from main menu" created"2021.03.01"}
+{n"save level sequence to file system" created"2021.03.01"}
+{n"time per level is saved in local leaderboard" created"2021.03.01"}
+{n"button to allow selection of multiple characters" created"2021.03.01"}
+{n"put interactable items in a list, which means items should have a list priority value" created"2021.03.01"}

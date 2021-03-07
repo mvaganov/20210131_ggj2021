@@ -9,16 +9,11 @@ public class GenericAStar<NODE_TYPE, EDGE_TYPE> {
 	public List<NODE_TYPE> BestPath;
 	public bool IsFinished() { return finished; }
 
-	public delegate List<EDGE_TYPE> GetEdges(NODE_TYPE node);
-	public delegate NODE_TYPE GetTo(NODE_TYPE from, EDGE_TYPE edge);
-	public delegate float DistBetween(NODE_TYPE a, NODE_TYPE b);
+	Func<NODE_TYPE, List<EDGE_TYPE>> getEdges;
+	Func<NODE_TYPE, EDGE_TYPE, NODE_TYPE> getEdgeToNode;
+	Func<NODE_TYPE, NODE_TYPE, float> dist_between;
 
-	GetEdges getEdges;
-	GetTo getEdgeToNode;
-	//public static float dist_between(NODE_TYPE a, NODE_TYPE b) { return Vector3.Distance(a.owner.transform.position, b.owner.transform.position); }
-	DistBetween dist_between;
-
-	public void SetNodeAndEdgeMethods(GetEdges getEdges, GetTo getEdgeToNode, DistBetween distanceHeuristic,
+	public void SetNodeAndEdgeMethods(Func<NODE_TYPE, List<EDGE_TYPE>> getEdges, Func<NODE_TYPE, EDGE_TYPE, NODE_TYPE> getEdgeToNode, Func<NODE_TYPE, NODE_TYPE, float> distanceHeuristic,
 		Action reset_state,
 		Func<NODE_TYPE, NODE_TYPE> get_came_from, Action<NODE_TYPE, NODE_TYPE> set_came_from,
 		Func<NODE_TYPE, float> get_f_score, Action<NODE_TYPE, float> set_f_score,
@@ -51,7 +46,8 @@ public class GenericAStar<NODE_TYPE, EDGE_TYPE> {
 	public Func<NODE_TYPE, float> get_g_score;
 	public Action<NODE_TYPE, float> set_g_score;
 
-	public GenericAStar(GetEdges getEdges, GetTo getEdgeToNode, DistBetween distanceHeuristic,
+	public GenericAStar() { }
+	public GenericAStar(Func<NODE_TYPE, List<EDGE_TYPE>> getEdges, Func<NODE_TYPE, EDGE_TYPE, NODE_TYPE> getEdgeToNode, Func<NODE_TYPE, NODE_TYPE, float> distanceHeuristic,
 				Action reset_state,
 		Func<NODE_TYPE, NODE_TYPE> get_came_from, Action<NODE_TYPE, NODE_TYPE> set_came_from,
 		Func<NODE_TYPE, float> get_f_score, Action<NODE_TYPE, float> set_f_score,
