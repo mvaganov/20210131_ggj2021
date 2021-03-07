@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = NonStandard.Data.Random;
 
 public class MazeStarWalker : MonoBehaviour
 {
@@ -18,12 +19,48 @@ public class MazeStarWalker : MonoBehaviour
 	public GameObject prefab_debug_astar;
 
 	public enum AiBehavior { None, RandomLocalEdges, RandomInVision }
+	public enum TileSurfaceChoice { Center, Random, Closest }
 	public AiBehavior aiBehavior = AiBehavior.None;
-
+	public TileSurfaceChoice tileSurfaceChoice = TileSurfaceChoice.Center;
+	public LayerMask pathingIgnores;
 	Map2dAStar mapAstar;
 
 	Vector3 MoveablePosition(Coord coord, Vector3 currentPosition) {
-		return maze.GetGroundPosition(coord) + Vector3.up*follower.CharacterHeight;
+		Vector3 p = maze.GetGroundPosition(coord);
+		switch (tileSurfaceChoice) {
+		case TileSurfaceChoice.Center: break;
+		case TileSurfaceChoice.Random: {
+			Vector3 extents = maze.tileSize / 2; extents.y = 0;
+			Vector3 r = new Vector3(Random.A.NextFloat(-1,1) * extents.x, 0, extents.z * Random.A.NextFloat(-1,1));
+			// raycasting hits something early quite often, resulting in very high points. not sure what is going on there.
+			r.y = maze.tileSize.y;
+			if (Physics.Raycast(p + r, Vector3.down, out RaycastHit rh, maze.tileSize.y * 2, ~pathingIgnores, QueryTriggerInteraction.Ignore)) {
+				p = rh.point;
+			}
+			//p += r;
+		}
+		break;
+		case TileSurfaceChoice.Closest: {
+			Vector3 extents = maze.tileSize / 2; extents.y = 0;
+			extents.z -= follower.CharacterRadius*2;
+			extents.x -= follower.CharacterRadius*2;
+			float fDot = Vector3.Dot(Vector3.forward, currentPosition - (p + Vector3.forward * extents.z));
+			float bDot = Vector3.Dot(Vector3.back, currentPosition - (p + Vector3.back * extents.z));
+			float lDot = Vector3.Dot(Vector3.left, currentPosition - (p + Vector3.left * extents.x));
+			float rDot = Vector3.Dot(Vector3.right, currentPosition - (p + Vector3.right* extents.x));
+			Vector3 inner = currentPosition;
+			if (fDot > 0) { inner.z = p.z+extents.z; }
+			if (bDot > 0) { inner.z = p.z-extents.z; }
+			if (rDot > 0) { inner.x = p.x + extents.x; }
+			if (lDot > 0) { inner.x = p.x - extents.x; }
+			inner.y = p.y + maze.tileSize.y;
+			if (Physics.Raycast(inner, Vector3.down, out RaycastHit rh, maze.tileSize.y * 2, ~pathingIgnores, QueryTriggerInteraction.Ignore)) {
+				p = rh.point;
+			}
+		}
+		break;
+		}
+		return p + Vector3.up * follower.CharacterHeight;
 	}
 	List<Vector3> MoveToWorld(List<Coord> moves, float y) {
 		List<Vector3> world = new List<Vector3>();
@@ -76,7 +113,7 @@ public class MazeStarWalker : MonoBehaviour
 		switch (aiBehavior) {
 		case AiBehavior.RandomLocalEdges:
 			if (!cm.IsAutoMoving()) {
-				Coord c = moves[NonStandard.Data.Random.A.Next(moves.Count)];
+				Coord c = moves[Random.A.Next(moves.Count)];
 				cm.SetAutoMovePosition(MoveablePosition(c, p));
 			}
 			break;

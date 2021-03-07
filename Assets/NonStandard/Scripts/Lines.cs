@@ -106,6 +106,7 @@ namespace NonStandard {
 			MakeLineRenderer(ref go);
 			Wire line = go.GetComponent<Wire>();
 			if (!line) { line = go.AddComponent<Wire>(); line.RefreshSource(); }
+			go.layer = LayerMask.NameToLayer("UI");
 			return line;
 		}
 

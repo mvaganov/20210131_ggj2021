@@ -7,10 +7,11 @@
 		{done:"2021.03.05 23:30" n"draw path in pretty way (with Lines.Wire)" created"2021.03.04"}
 		{done:"2021.03.06 20:30" n"break up MazeStarWalker into multiple files, one that manages the 2d array as nodes and edges" created"2021.03.06 16:00"}
 	]}
-	{n"pick random location on tile when moving to a tile" created"2021.03.01"}
-	{n"pick closest location on tile to travel to as target" created"2021.03.01"}
+	{done:"2021.03.06 22:15" n"pick random location on tile when moving to a tile" created"2021.03.01"}
+	{done:"2021.03.06 22:15" n"pick closest location on tile to travel to as target" created"2021.03.01"}
+	{n"with and without jumping" created"2021.03.01"}
+	{n"visualizations look different when falling or jumping"}
 	{n"AI opponent that does astar to random token" created"2021.03.01"}
-	{n"AI opponent can do Astar with and without jumping" created"2021.03.01"}
 	{n"astar to closest token (not just random)" created"2021.03.01"}
 	{n"opponent picks a new target if it realizes you are closer than it to it's target" created"2021.03.04 23:47"}
 	{n"travelling salesman solution <-- do not solve for this. stop before getting here." created"2021.03.01"}

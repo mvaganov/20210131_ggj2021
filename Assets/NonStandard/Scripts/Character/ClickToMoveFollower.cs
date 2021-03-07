@@ -29,6 +29,7 @@ public class ClickToMoveFollower : MonoBehaviour {
 	public Color color = Color.white;
 	public Action<Vector3> onTargetSet;
 
+	public float CharacterRadius => characterRadius;
 	public float CharacterHeight => characterHeight;
 	public static List<ClickToMoveFollower> allFollowers = new List<ClickToMoveFollower>();
 
