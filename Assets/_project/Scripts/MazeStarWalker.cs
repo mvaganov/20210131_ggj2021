@@ -85,7 +85,7 @@ public class MazeStarWalker : MonoBehaviour {
 	{
 		Coord mapSize = maze.Map.GetSize();
 		if (mapAstar == null) {
-			mapAstar = new Map2dAStar(maze, discovery.vision, transform, prefab_debug_astar);
+			mapAstar = new Map2dAStar(() => canJump, maze, discovery.vision, transform, prefab_debug_astar);
 		}
 		mapAstar.UpdateMapSize();
 		Vector3 p = transform.position;
@@ -154,6 +154,14 @@ public class MazeStarWalker : MonoBehaviour {
 						for (int i = 0; i < nodes.Count; ++i) {
 							pos = MoveablePosition(nodes[i], pos);
 							//pos.y += follower.CharacterHeight;
+							MazeAStar.EdgeMoveType moveType = MazeAStar.GetEdgeMoveType(currentBestPath[nodes.Count - i]);
+							switch (moveType) {
+							case MazeAStar.EdgeMoveType.Walk:
+							case MazeAStar.EdgeMoveType.Fall:
+							case MazeAStar.EdgeMoveType.Jump:
+								// TODO different waypoint movement based on the edge type
+								break;
+							}
 							follower.AddWaypoint(pos, false);
 						}
 						follower.SetCurrentTarget(pos);

@@ -12,16 +12,17 @@ public class GenericAStar<NODE_TYPE, EDGE_TYPE> {
 
 	Func<NODE_TYPE, List<EDGE_TYPE>> getEdges;
 	Func<NODE_TYPE, EDGE_TYPE, NODE_TYPE> getEdgeToNode;
-	Func<NODE_TYPE, NODE_TYPE, float> dist_between;
+	Func<NODE_TYPE, NODE_TYPE, float> distanceHeuristic;
+	Func<NODE_TYPE, EDGE_TYPE, float> edgeCost;
 
-	public void SetNodeAndEdgeMethods(Func<NODE_TYPE, List<EDGE_TYPE>> getEdges, Func<NODE_TYPE, EDGE_TYPE, NODE_TYPE> getEdgeToNode, Func<NODE_TYPE, NODE_TYPE, float> distanceHeuristic,
-		Action reset_state,
+	public void SetNodeAndEdgeMethods(Func<NODE_TYPE, List<EDGE_TYPE>> getEdges, Func<NODE_TYPE, EDGE_TYPE, NODE_TYPE> getEdgeToNode, Func<NODE_TYPE, EDGE_TYPE, float> edgeCost, Func<NODE_TYPE, NODE_TYPE, float> distanceHeuristic, Action reset_state,
 		GetCameFrom get_came_from, Action<NODE_TYPE, NODE_TYPE, EDGE_TYPE> set_came_from,
 		Func<NODE_TYPE, float> get_f_score, Action<NODE_TYPE, float> set_f_score,
 		Func<NODE_TYPE, float> get_g_score, Action<NODE_TYPE, float> set_g_score) {
 		this.getEdges = getEdges;
 		this.getEdgeToNode = getEdgeToNode;
-		this.dist_between = distanceHeuristic;
+		this.edgeCost = edgeCost;
+		this.distanceHeuristic = distanceHeuristic;
 		this.reset_state = reset_state;
 		this.get_came_from = get_came_from;
 		this.set_came_from = set_came_from;
@@ -47,14 +48,14 @@ public class GenericAStar<NODE_TYPE, EDGE_TYPE> {
 	public Func<NODE_TYPE, float> get_g_score;
 	public Action<NODE_TYPE, float> set_g_score;
 
-	public delegate NODE_TYPE GetCameFrom(NODE_TYPE destination, out EDGE_TYPE edge);
+	public delegate EDGE_TYPE GetCameFrom(NODE_TYPE destination, out NODE_TYPE node);
 	public GenericAStar() { }
-	public GenericAStar(Func<NODE_TYPE, List<EDGE_TYPE>> getEdges, Func<NODE_TYPE, EDGE_TYPE, NODE_TYPE> getEdgeToNode, Func<NODE_TYPE, NODE_TYPE, float> distanceHeuristic,
-				Action reset_state,
+	public GenericAStar(Func<NODE_TYPE, List<EDGE_TYPE>> getEdges, Func<NODE_TYPE, EDGE_TYPE, NODE_TYPE> getEdgeToNode,
+		Func<NODE_TYPE, EDGE_TYPE, float> edgeCost, Func<NODE_TYPE, NODE_TYPE, float> distanceHeuristic, Action reset_state,
 		GetCameFrom get_came_from, Action<NODE_TYPE, NODE_TYPE, EDGE_TYPE> set_came_from,
 		Func<NODE_TYPE, float> get_f_score, Action<NODE_TYPE, float> set_f_score,
 		Func<NODE_TYPE, float> get_g_score, Action<NODE_TYPE, float> set_g_score) {
-		SetNodeAndEdgeMethods(getEdges, getEdgeToNode, distanceHeuristic, reset_state, get_came_from, set_came_from, get_f_score, set_f_score, get_g_score, set_g_score);
+		SetNodeAndEdgeMethods(getEdges, getEdgeToNode, edgeCost, distanceHeuristic, reset_state, get_came_from, set_came_from, get_f_score, set_f_score, get_g_score, set_g_score);
 	}
 	public void Start(NODE_TYPE start, NODE_TYPE goal) {
 		openset.Clear();
@@ -93,9 +94,9 @@ public class GenericAStar<NODE_TYPE, EDGE_TYPE> {
 			// for each neighbor in neighbor_nodes(current)
 			edges = getEdges(current);
 			for (int i = 0; edges != null && i < edges.Count; ++i) {
-				NODE_TYPE neighbor = getEdgeToNode(current, edges[i]); // current.edges[i].end2;
+				NODE_TYPE neighbor = getEdgeToNode(current, edges[i]);
 				// tentative_g_score := g_score[current] + dist_between(current,neighbor)
-				float tentative_g_score = get_g_score(current) + dist_between(current, neighbor);
+				float tentative_g_score = get_g_score(current) + edgeCost(current, edges[i]);
 				// if neighbor in closedset and tentative_g_score >= g_score[neighbor]
 				if (closedset.Contains(neighbor) && tentative_g_score >= get_g_score(neighbor)) {
 					// continue
@@ -122,7 +123,7 @@ public class GenericAStar<NODE_TYPE, EDGE_TYPE> {
 		return null;
 	}
 	public float heuristic_cost_estimate(NODE_TYPE start, NODE_TYPE goal) {
-		return dist_between(start, goal) * heuristicWeight;
+		return distanceHeuristic(start, goal) * heuristicWeight;
 	}
 	//public static NODE_TYPE smallestFrom(ICollection<NODE_TYPE> list, Dictionary<NODE_TYPE, float> values) {
 	public static NODE_TYPE smallestFrom(ICollection<NODE_TYPE> list, Func<NODE_TYPE, float> values) {
@@ -143,18 +144,6 @@ public class GenericAStar<NODE_TYPE, EDGE_TYPE> {
 		e.Dispose();
 		return bestNode;//list[minIndex];
 	}
-	//static List<NODE_TYPE> reconstruct_path(GetCameFrom previous, NODE_TYPE goal) {
-	//	List<NODE_TYPE> list = new List<NODE_TYPE>();
-	//	NODE_TYPE prev = goal;
-	//	int loopGuard = 0;
-	//	do {
-	//		list.Add(prev);
-	//		EDGE_TYPE edge;
-	//		prev = previous(prev, out edge);
-	//		if(prev.Equals(list[list.Count - 1])) { break; }
-	//	} while (++loopGuard < 1<<20);// hasPreviousNode);
-	//	return list;
-	//}
 	static List<EDGE_TYPE> reconstruct_path(GetCameFrom previous, NODE_TYPE goal) {
 		List<EDGE_TYPE> list = new List<EDGE_TYPE>();
 		NODE_TYPE prev = goal, cursor;
@@ -162,7 +151,7 @@ public class GenericAStar<NODE_TYPE, EDGE_TYPE> {
 		do {
 			//list.Add(prev);
 			EDGE_TYPE edge;
-			cursor = previous(prev, out edge);
+			edge = previous(prev, out cursor);
 			if (prev.Equals(cursor)) { break; }
 			list.Add(edge);
 			prev = cursor;

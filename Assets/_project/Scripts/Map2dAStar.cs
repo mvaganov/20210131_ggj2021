@@ -8,14 +8,15 @@ using UnityEngine;
 public class Map2dAStar : MazeAStar {
 	MazeLevel maze;
 	GameObject prefab_debug_astar;
-	public Map2dAStar(MazeLevel maze, VisionMapping vision, Transform transform, GameObject prefab_debug_astar) {
+	public Map2dAStar(Func<bool> canJump, MazeLevel maze, VisionMapping vision, Transform transform, GameObject prefab_debug_astar) {
 		this.maze = maze;
 		this.prefab_debug_astar = prefab_debug_astar;
-		SetAstarSourceData(vision, () => maze.Map, ResetCalcSpace,
-			(Coord c, out int e) => {
+		SetAstarSourceData(vision, () => maze.Map, canJump,ResetCalcSpace,
+			(Coord c, out Coord n) => {
 				AStarData a = calcSpace.At(c);
-				Coord f = a.from; e = a._edge;
-				return f != Coord.NegativeOne ? f : c;
+				Coord f = a.from; //e = a._edge;
+				n = f != Coord.NegativeOne ? f : c;
+				return a._edge;
 			},
 			(c, f, e) => {
 				AStarData a = calcSpace.At(c);
@@ -57,7 +58,7 @@ public class Map2dAStar : MazeAStar {
 			if (fromArrow == null) {
 				fromArrow = Lines.MakeWire(); fromArrow.gameObject.transform.SetParent(debugVisibleObject.transform);
 			}
-			EdgeMoveType mtype = GetMoveType(_edge);
+			EdgeMoveType mtype = GetEdgeMoveType(_edge);
 			switch (mtype) {
 			case EdgeMoveType.None:
 				fromArrow.Arrow(start, end, Color.yellow);
@@ -71,7 +72,8 @@ public class Map2dAStar : MazeAStar {
 				fromArrow.Bezier(start, startCp, end + Vector3.up, end, Color.blue);
 				break;
 			case EdgeMoveType.Jump:
-				fromArrow.Bezier(start, start + Vector3.up, end + Vector3.up, end, Color.green);
+				Vector3 mid = (start + end) / 2 + Vector3.up * 3;
+				fromArrow.Bezier(start, (start+mid)/2, (end+mid)/2, end, Color.green);
 				break;
 			case EdgeMoveType.OOB:
 				fromArrow.Arrow(start, end, Color.magenta);

@@ -5,23 +5,27 @@ using Random = NonStandard.Data.Random;
 
 public class MazeAStar : GenericAStar<Coord, int> {
 	public VisionMapping vision;
+	public float extraJumpCost = 0.125f, extraFallCost = 0.5f;
+	Func<bool> canJump;
 	Func<Map2d> getMap;
 	public Map2d Map => getMap();
+	public bool CanJump => canJump();
 	public MazeAStar() { }
-	public MazeAStar(VisionMapping vision, Func<Map2d> getMap, Action reset_state,
-		GenericAStar<Coord, int>.GetCameFrom get_came_from, Action<Coord, Coord, int> set_came_from,
+	public MazeAStar(VisionMapping vision, Func<Map2d> getMap, Func<bool> canJump, Action reset_state,
+		GetCameFrom get_came_from, Action<Coord, Coord, int> set_came_from,
 		Func<Coord, float> get_f_score, Action<Coord, float> set_f_score,
 		Func<Coord, float> get_g_score, Action<Coord, float> set_g_score) {
-		SetAstarSourceData(vision, getMap, reset_state, get_came_from, set_came_from, get_f_score, set_f_score, get_g_score, set_g_score);
+		SetAstarSourceData(vision, getMap, canJump, reset_state, get_came_from, set_came_from, get_f_score, set_f_score, get_g_score, set_g_score);
 	}
 
-	public void SetAstarSourceData(VisionMapping vision, Func<Map2d> getMap, Action reset_state,
-		GenericAStar<Coord,int>.GetCameFrom get_came_from, Action<Coord, Coord, int> set_came_from,
+	public void SetAstarSourceData(VisionMapping vision, Func<Map2d> getMap, Func<bool> canJump, Action reset_state,
+		GetCameFrom get_came_from, Action<Coord, Coord, int> set_came_from,
 		Func<Coord, float> get_f_score, Action<Coord, float> set_f_score,
 		Func<Coord, float> get_g_score, Action<Coord, float> set_g_score) {
 		this.getMap = getMap;
+		this.canJump = canJump;
 		this.vision = vision;
-		SetNodeAndEdgeMethods(GetEdges, NextNode, Dist, reset_state, get_came_from, set_came_from, get_f_score, set_f_score, get_g_score, set_g_score);
+		SetNodeAndEdgeMethods(GetEdges, NextNode, EdgeCost, Dist, reset_state, get_came_from, set_came_from, get_f_score, set_f_score, get_g_score, set_g_score);
 	}
 
 	Coord[] edgeDirs = new Coord[] {
@@ -44,15 +48,15 @@ public class MazeAStar : GenericAStar<Coord, int> {
 		jNWW,jNEE,jSWW,jSEE
 	}
 	public enum EdgeMoveType { None, Walk, Fall, Jump, OOB }
-	public static EdgeMoveType GetMoveType(int edge) {
+	public static EdgeMoveType GetEdgeMoveType(int edge) {
 		if (edge < 0) return EdgeMoveType.None;
 		if (edge < _basicmoves) return EdgeMoveType.Walk;
 		if (edge < _basicmoves * 2) return EdgeMoveType.Fall;
 		if (edge < _basicmoves * 4.5) return EdgeMoveType.Jump;
 		return EdgeMoveType.OOB;
 	}
-	public List<int> GetEdges(Coord node) { return GetEdges(node, false); }
-	public List<int> GetEdgesWithJump(Coord node) { return GetEdges(node, true); }
+	public List<int> GetEdges(Coord node) { return GetEdges(node, CanJump); }
+	public List<int> GetEdgesWithJump(Coord node) { return GetEdges(node, CanJump); }
 	public List<int> GetEdges(Coord node, bool canJump) {
 		Coord size = Map.GetSize();
 		List<int> edges = new List<int>();
@@ -183,8 +187,16 @@ public class MazeAStar : GenericAStar<Coord, int> {
 		}
 		return edges;
 	}
-
-	public Coord NextNode(Coord here, int dirIndex) { return here + edgeDirs[dirIndex]; }
+	public float EdgeCost(Coord c, int edge) {
+		float cost = edgeDirs[edge].GetMagnitude();
+		EdgeMoveType m = GetEdgeMoveType(edge);
+		switch (m) {
+		case EdgeMoveType.Fall: cost += extraFallCost; break;
+		case EdgeMoveType.Jump: cost += extraJumpCost; break;
+		}
+		return cost;
+	}
+	public Coord NextNode(Coord here, int edge) { return here + edgeDirs[edge]; }
 	public float Dist(Coord a, Coord b) {
 		int dx = a.X - b.X, dy = a.Y - b.Y;
 		return (float)Math.Sqrt(dx*dx+dy*dy);

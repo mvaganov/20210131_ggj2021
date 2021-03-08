@@ -145,6 +145,7 @@ namespace MazeGeneration {
 			Coord delta = b - a;
 			return Math.Abs(delta.col) + Math.Abs(delta.row);
 		}
+		public float GetMagnitude() { return (float)Math.Sqrt(col*col+row*row); }
 
 		public void SetCursorPosition() => Console.SetCursorPosition(col, row);
 		public static Coord GetCursorPosition() => new Coord(Console.CursorLeft, Console.CursorTop);
