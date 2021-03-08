@@ -209,7 +209,7 @@ namespace NonStandard {
 				kind = Kind.Line;
 				if (points != null) {
 					_points = new Vector3[points.Count];
-					for(int i = 0; i < _points.Length; ++i) { _points[i] = points[i]; }
+					for (int i = 0; i < _points.Length; ++i) { _points[i] = points[i]; }
 				}
 				//_points = null; // commented this out. was it here for a reason?
 				_startSize = startSize; _endSize = endSize; _lineEnds = lineEnds;
@@ -311,7 +311,11 @@ namespace NonStandard {
 			public Wire Arrow(Vector3 start, Vector3 end, Color color = default, float startSize = LINE_SIZE, float endSize = SAME_AS_START_SIZE) {
 				return Line(new Vector3[] { start, end }, color, End.Arrow, startSize, endSize);
 			}
-
+			public Wire Bezier(Vector3 start, Vector3 startControl, Vector3 endControl, Vector3 end, Color color = default, End cap = End.Normal, float startSize = LINE_SIZE, int bezierPointCount = 25, float endSize = SAME_AS_START_SIZE) {
+				Vector3[] bezier = new Vector3[bezierPointCount];
+				WriteBezier(bezier, start, startControl, endControl, end);
+				return Line(bezier, color, cap, startSize, endSize);
+			}
 			public Wire Line(Vector3 vector, Color color = default, float startSize = LINE_SIZE, float endSize = SAME_AS_START_SIZE) {
 				return Line(new Vector3[] { Vector3.zero, vector }, color, End.Normal, startSize, endSize);
 			}
@@ -634,6 +638,19 @@ namespace NonStandard {
 			for (int i = startIndex + 1; i < startIndex + pointCount; ++i) { points[i] = q * points[i - 1]; }
 			if (offset != Vector3.zero)
 				for (int i = startIndex; i < startIndex + pointCount; ++i) { points[i] += offset; }
+		}
+
+		public static void WriteBezier(IList<Vector3> points, Vector3 start, Vector3 startControl, Vector3 endControl, Vector3 end, int startIndex = 0, int count = -1) {
+			if(count < 0) { count = points.Count - startIndex; }
+			float num = count - 1;
+			for(int i = 0; i < count; ++i) {
+				points[i+startIndex] = GetBezierPoint(start, startControl, endControl, end, i / num);
+			}
+		}
+
+		public static Vector3 GetBezierPoint(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t) {
+			t = Mathf.Clamp01(t); float o = 1 - t, tt = t*t, oo = o*o;
+			return  oo * o * p0 + 3 * oo * t * p1 + 3 * o * tt * p2 + t * tt * p3;
 		}
 
 		/// <summary>

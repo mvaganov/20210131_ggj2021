@@ -19,7 +19,7 @@ public class Map2dAStar : MazeAStar {
 			},
 			(c, f, e) => {
 				AStarData a = calcSpace.At(c);
-				a.from = f; a._edge = e;
+				a._edge = e; a.from = f;
 			},
 			c => calcSpace.At(c).f, (c, f) => { calcSpace.At(c).f = f; },
 			c => calcSpace.At(c).g, (c, f) => { calcSpace.At(c).g = f; });
@@ -37,36 +37,53 @@ public class Map2dAStar : MazeAStar {
 		public Coord coord;
 		public GameObject debugVisibleObject;
 		public Lines.Wire fromArrow;
-		public MazeLevel maze;
+		public Map2dAStar astar;
 		public VisionMapping visMap;
-		public AStarData(Coord c, MazeLevel m, VisionMapping vm, GameObject prefab_data_vis) { Reset(c, m, vm, prefab_data_vis); }
+		public AStarData(Coord c, Map2dAStar a, VisionMapping vm, GameObject prefab_data_vis) { Reset(c, a, vm, prefab_data_vis); }
 		public void RefreshDebug() {
 			if (!debugVisibleObject) { return; }
-			Vector3 p = maze.GetGroundPosition(coord), u = Vector3.up * .125f;
+			Vector3 p = astar.maze.GetGroundPosition(coord), u = Vector3.up * .125f;
 			debugVisibleObject.transform.position = p + u;
 			bool isVisible = visMap[coord];
 			string text = (_f < 0 && _g < 0)
 				? coord.ToString()
-				: $"{coord}\nf:{_f}\ng:{_g}";
+				: $"{coord}\nf:{_f}\ng:{_g}\n{_edge}";
 			UiText.SetText(debugVisibleObject, text);
 			UiText.SetColor(debugVisibleObject, isVisible ? Color.white : Color.black);
 		}
 		void RefreshDebugFromArrow() {
 			if (debugVisibleObject == null) return;
-			Vector3 start = maze.GetGroundPosition(_from), u = Vector3.up * .125f, end = maze.GetGroundPosition(coord);
+			Vector3 u = Vector3.up * .125f, start = u+astar.maze.GetGroundPosition(_from), end = u+astar.maze.GetGroundPosition(coord);
 			if (fromArrow == null) {
 				fromArrow = Lines.MakeWire(); fromArrow.gameObject.transform.SetParent(debugVisibleObject.transform);
 			}
-			// TODO if the edge is a fall, make a line that starts level and ends pointing down... that starts at the edge of this tile
-			// TODO if the edge is a jump, make an arc... that starts at the edge of this tile
-			fromArrow.Arrow(start + u, end + u, Color.gray);
+			EdgeMoveType mtype = GetMoveType(_edge);
+			switch (mtype) {
+			case EdgeMoveType.None:
+				fromArrow.Arrow(start, end, Color.yellow);
+				break;
+			case EdgeMoveType.Walk:
+				fromArrow.Arrow(start, end, Color.cyan);
+				break;
+			case EdgeMoveType.Fall:
+				Vector3 startCp = end;
+				startCp.y = start.y + 1;
+				fromArrow.Bezier(start, startCp, end + Vector3.up, end, Color.blue);
+				break;
+			case EdgeMoveType.Jump:
+				fromArrow.Bezier(start, start + Vector3.up, end + Vector3.up, end, Color.green);
+				break;
+			case EdgeMoveType.OOB:
+				fromArrow.Arrow(start, end, Color.magenta);
+				break;
+			}
 		}
-		public AStarData Reset(Coord c, MazeLevel m, VisionMapping vm, GameObject prefab_data_vis) {
+		public AStarData Reset(Coord c, Map2dAStar a, VisionMapping vm, GameObject prefab_data_vis) {
 			_f = _g = _edge = -1; _from = c;
 			coord = c;
-			maze = m;
+			astar = a;
 			visMap = vm;
-			if (debugVisibleObject == null && m != null && prefab_data_vis != null) {
+			if (debugVisibleObject == null && prefab_data_vis != null) {
 				debugVisibleObject = GameObject.Instantiate(prefab_data_vis);
 				RefreshDebug();
 			}
@@ -88,19 +105,19 @@ public class Map2dAStar : MazeAStar {
 			int count = Math.Min(oldSize.Area, size.Area);
 			Coord fromOld = Coord.Zero, toNew = Coord.Zero;
 			for (int i = 0; i < count; ++i) {
-				newSpace.SetAt(toNew, calcSpace.At(fromOld).Reset(toNew, maze, vision, prefab_debug_astar));
+				newSpace.SetAt(toNew, calcSpace.At(fromOld).Reset(toNew, this, vision, prefab_debug_astar));
 				toNew.Increment(size);
 				fromOld.Increment(oldSize);
 			}
 		}
 		vision?.Reset();
 		size.ForEach(c => {
-			if (newSpace.At(c) == null) { newSpace.SetAt(c, new AStarData(c, maze, vision, prefab_debug_astar)); }
+			if (newSpace.At(c) == null) { newSpace.SetAt(c, new AStarData(c, this, vision, prefab_debug_astar)); }
 		});
 		calcSpace = newSpace;
 	}
 	void ResetCalcSpace() {
-		calcSpace?.GetSize().ForEach(c => calcSpace.At(c).Reset(c, maze, vision, prefab_debug_astar));
+		calcSpace?.GetSize().ForEach(c => calcSpace.At(c).Reset(c, this, vision, prefab_debug_astar));
 	}
 	void RefreshVision(Coord coord, bool visible) {
 		Coord mapSize = maze.Map.GetSize();

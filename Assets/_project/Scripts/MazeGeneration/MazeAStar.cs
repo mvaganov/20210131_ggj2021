@@ -43,13 +43,13 @@ public class MazeAStar : GenericAStar<Coord, int> {
 		 jNN, jWW, jSS, jEE, jNNW,jNNE,jSSW,jSSE,
 		jNWW,jNEE,jSWW,jSEE
 	}
-	public enum EdgeMoveType { None, Walk, Fall, Jump }
-	static EdgeMoveType GetMoveType(int move) {
-		if (move < 0) return EdgeMoveType.None;
-		if (move < _basicmoves) return EdgeMoveType.Walk;
-		if (move < _basicmoves * 2) return EdgeMoveType.Fall;
-		if (move < _basicmoves * 4.5) return EdgeMoveType.Jump;
-		return EdgeMoveType.None;
+	public enum EdgeMoveType { None, Walk, Fall, Jump, OOB }
+	public static EdgeMoveType GetMoveType(int edge) {
+		if (edge < 0) return EdgeMoveType.None;
+		if (edge < _basicmoves) return EdgeMoveType.Walk;
+		if (edge < _basicmoves * 2) return EdgeMoveType.Fall;
+		if (edge < _basicmoves * 4.5) return EdgeMoveType.Jump;
+		return EdgeMoveType.OOB;
 	}
 	public List<int> GetEdges(Coord node) { return GetEdges(node, false); }
 	public List<int> GetEdgesWithJump(Coord node) { return GetEdges(node, true); }

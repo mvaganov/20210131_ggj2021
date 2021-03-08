@@ -104,7 +104,7 @@ public class MazeLevel : MonoBehaviour {
             //ramp[E].ForEach(c => { map.SetAt(c, 'e'); });
             //ramp[S].ForEach(c => { map.SetAt(c, 's'); });
             int totalRamps = ramp.Sum(r=>r.Count);
-            for(int i = 0; i < totalRamps && i < stage; ++i) {
+            for(int i = 0; i < totalRamps && i < stage+1; ++i) {
                 int[] r = ramp.GetNestedIndex(random.Next(totalRamps));
                 //Debug.Log(r.JoinToString(", "));
                 Coord loc = ramp[r[0]][r[1]];

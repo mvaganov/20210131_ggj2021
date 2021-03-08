@@ -3000,7 +3000,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1402369697}
   m_HandleRect: {fileID: 1402369696}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -9173,7 +9173,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maze: {fileID: 283455128}
   textOutput: {fileID: 939166343}
-  canJump: 0
+  canJump: 1
   discovery: {fileID: 0}
   game: {fileID: 893536459}
   follower: {fileID: 0}
