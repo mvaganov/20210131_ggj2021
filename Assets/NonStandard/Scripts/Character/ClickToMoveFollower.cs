@@ -8,14 +8,14 @@ using UnityEngine;
 using static NonStandard.Lines;
 
 public class ClickToMoveFollower : MonoBehaviour {
-	[System.Serializable] public struct Waypoint {
-		public Vector3 p;
+	[System.Serializable] public class Waypoint {
+		public enum Act { None, Move, Jump, Fall }
+		public Act act;
+		public Vector3 positon;
+		public float value = 0;
 		public Interact3dItem ui;
-		public Waypoint(Interact3dItem ui) {
-			p = ui.transform.position;
-			this.ui = ui;
-		}
-		public Waypoint(Vector3 p) { ui = null; this.p = p; }
+		public Waypoint(Interact3dItem _ui, Act a = Act.Move, float v = 0) { positon = _ui.transform.position; ui = _ui; act = a; value = v; }
+		public Waypoint(Vector3 p, Act a = Act.Move, float v = 0) { ui = null; positon = p; act = a; value = v; }
 	}
 	public List<Waypoint> waypoints = new List<Waypoint>();
 	public Interact3dItem currentWaypoint;
@@ -61,10 +61,28 @@ public class ClickToMoveFollower : MonoBehaviour {
 	public void UpdateLine() {
 		List<Vector3> points = new List<Vector3>();
 		points.Add(mover.transform.position);
+		Vector3 here;
 		for(int i = 0; i < waypoints.Count; ++i) {
-			points.Add(waypoints[i].p);
+			here = waypoints[i].positon;
+			switch (waypoints[i].act) {
+			case Waypoint.Act.Move: points.Add(here); break;
+			case Waypoint.Act.Fall:
+			case Waypoint.Act.Jump: {
+				points.Add(here);
+				Vector3 nextPosition = (i < waypoints.Count) ? waypoints[i].positon : targetPosition;
+				Vector3 delta = (nextPosition - here);
+				if (delta == Vector3.zero) break;
+				float dist = delta.magnitude;
+				float jumpMove = Mathf.Min(1, dist / 2);
+				Vector3 dir = delta / dist;
+				points.Add(here + Vector3.up * 4 * waypoints[i].value + dir * jumpMove);
+				if (waypoints[i].act == Waypoint.Act.Jump) {
+					points.Add(here + dir * 2);
+				}
+			} break;
+			}
 		}
-		if(waypoints.Count == 0 || (waypoints[waypoints.Count-1].p != targetPosition)) {
+		if(waypoints.Count == 0 || (waypoints[waypoints.Count-1].positon != targetPosition)) {
 			points.Add(targetPosition);
 		}
 		line.Line(points, color, Lines.End.Arrow);
@@ -100,11 +118,14 @@ public class ClickToMoveFollower : MonoBehaviour {
 			waypoints.RemoveAt(0);
 			if(wpObj) Destroy(wpObj.gameObject);
 			Vector3 p = targetPosition;
+			float jumpPress = 0;
 			if (waypoints.Count > 0) {
-				p = waypoints[0].p;
+				if (waypoints[0].act == Waypoint.Act.Jump) { jumpPress = waypoints[0].value; }
+				p = waypoints[0].positon;
 			} else if (currentWaypoint != null) {
 				p = currentWaypoint.transform.position;
 			}
+			if (jumpPress > 0) { mover.JumpButtonTimed = jumpPress; }
 			mover.SetAutoMovePosition(p, NotifyEndPointReached, 0);
 		} else {
 			if (currentWaypoint != null && currentWaypoint.showing) { currentWaypoint.showing = false; }
@@ -143,7 +164,7 @@ public class ClickToMoveFollower : MonoBehaviour {
 			//Debug.Log("waypoint made " + targetPosition);
 		}
 		bool showIt = mover.IsAutoMoving() && (waypoints.Count == 0 ||
-			waypoints[waypoints.Count - 1].p != currentWaypoint.transform.position);
+			waypoints[waypoints.Count - 1].positon != currentWaypoint.transform.position);
 		if (showIt) {
 			currentWaypoint.showing = true;
 			currentWaypoint.transform.position = targetPosition;
@@ -153,15 +174,17 @@ public class ClickToMoveFollower : MonoBehaviour {
 	public void AddWaypointHere() {
 		AddWaypoint(currentWaypoint.transform.position, true);
 	}
-	public void AddWaypoint(Vector3 position, bool includeUiElement) {
+	public void AddWaypoint(Vector3 position, bool includeUiElement, float jumpValue = 0, bool fall = false) {
+		Waypoint.Act act = Waypoint.Act.Move;
+		if(jumpValue > 0) { act = Waypoint.Act.Jump; } else if (fall) { act = Waypoint.Act.Fall; }
 		if (includeUiElement) {
 			Interact3dItem newWayPoint = Instantiate(clickToMoveUi.prefab_middleWaypoint.gameObject).GetComponent<Interact3dItem>();
 			newWayPoint.transform.position = position;
 			newWayPoint.OnInteract = ClearWaypoints;// ()=>RemoveWaypoint(newWayPoint);
 			newWayPoint.gameObject.SetActive(true);
-			waypoints.Add(new Waypoint(newWayPoint));
+			waypoints.Add(new Waypoint(newWayPoint, act, jumpValue));
 		} else {
-			waypoints.Add(new Waypoint(position));
+			waypoints.Add(new Waypoint(position, act, jumpValue));
 		}
 		if(currentWaypoint != null) currentWaypoint.showing = false;
 	}

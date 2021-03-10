@@ -83,6 +83,13 @@ public class MazeStarWalker : MonoBehaviour {
 
 	void Update()
 	{
+		if (visionParticle != null) {
+			if (cm.JumpButtonTimed > 0 && !visionParticle.isPlaying) {
+				visionParticle.Play();
+			} else if (cm.JumpButtonTimed == 0 && visionParticle.isPlaying) {
+				visionParticle.Stop();
+			}
+		}
 		Coord mapSize = maze.Map.GetSize();
 		if (mapAstar == null) {
 			mapAstar = new Map2dAStar(() => canJump, maze, discovery.vision, transform, prefab_debug_astar);
@@ -151,18 +158,16 @@ public class MazeStarWalker : MonoBehaviour {
 						}
 						Vector3 pos = p;
 						follower.ClearWaypoints();
-						for (int i = 0; i < nodes.Count; ++i) {
-							pos = MoveablePosition(nodes[i], pos);
+						for (int i = 0; i < currentBestPath.Count; ++i) {
+							pos = MoveablePosition(nodes[i+1], pos);
 							//pos.y += follower.CharacterHeight;
-							MazeAStar.EdgeMoveType moveType = MazeAStar.GetEdgeMoveType(currentBestPath[nodes.Count - i]);
+							//Show.Log(i + " " + nodes.Count + " " + currentBestPath.Count + " " + (currentBestPath.Count - i - 1));
+							MazeAStar.EdgeMoveType moveType = MazeAStar.GetEdgeMoveType(currentBestPath[currentBestPath.Count - i - 1]);
 							switch (moveType) {
-							case MazeAStar.EdgeMoveType.Walk:
-							case MazeAStar.EdgeMoveType.Fall:
-							case MazeAStar.EdgeMoveType.Jump:
-								// TODO different waypoint movement based on the edge type
-								break;
+							case MazeAStar.EdgeMoveType.Walk: follower.AddWaypoint(pos, false); break;
+							case MazeAStar.EdgeMoveType.Fall: follower.AddWaypoint(pos, false, 0, true); break;
+							case MazeAStar.EdgeMoveType.Jump: follower.AddWaypoint(pos, false, cm.jump.fullJumpPressDuration); break;
 							}
-							follower.AddWaypoint(pos, false);
 						}
 						follower.SetCurrentTarget(pos);
 						follower.UpdateLine();

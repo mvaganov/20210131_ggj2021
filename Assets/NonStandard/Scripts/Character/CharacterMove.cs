@@ -17,9 +17,13 @@ namespace NonStandard.Character {
 			rb.freezeRotation = true;
 		}
 		/// <summary>
-		/// how many seconds to hold down the jump button. if a non-zero value, a jump impulse will be applied
+		/// how many seconds to hold down the jump button. if a non-zero value, a jump impulse will be applied. if zero, stop jumping.
 		/// </summary>
 		public float Jump { get; set; }
+		/// <summary>
+		/// how many seconds to hold down the jump button. if a non-zero value, a jump impulse will be applied. decays to zero with time.
+		/// </summary>
+		public float JumpButtonTimed { get { return jump.PressJump; } set { jump.PressJump = value; } }
 		public float MoveSpeed { get { return move.speed; } set { move.speed = value; } }
 		public float JumpHeight { get { return jump.maxJumpHeight; } set { jump.maxJumpHeight = value; } }
 		private float lastJump = -1;
@@ -285,7 +289,8 @@ namespace NonStandard.Character {
 			public int maxJumps = 1;
 			/// <summary>Whether or not the jumper wants to press jump (specifically, how many seconds of jump)
 			/// <code>jump.PressJump = Input.GetButton("Jump") ? 1 : 0;</code></summary>
-			[HideInInspector] public float PressJump;
+			//[HideInInspector] 
+			public float PressJump;
 			[HideInInspector] public bool impulseActive;
 			protected float currentJumpVelocity, heightReached, heightReachedTotal, timeHeld, targetHeight;
 			/// to modify inputHeld, set PressJump to a positive value.
@@ -301,7 +306,7 @@ namespace NonStandard.Character {
 			public bool IsJumping { get { return inputHeld; } set { inputHeld = value; } }
 			/// <summary>pretends to hold the jump button for the specified duration</summary>
 			public void FixedUpdate(CharacterMove p) {
-				if (inputHeld = (PressJump > 0)) { PressJump -= Time.deltaTime; }
+				if (inputHeld = (PressJump > 0)) { PressJump -= Time.deltaTime; if (PressJump < 0) { PressJump = 0; } }
 				if (impulseActive && !inputHeld) { impulseActive = false; peaked = true; }
 				if (!inputHeld) { return; }
 				bool isStableOnGround = p.IsStableOnGround();
