@@ -103,14 +103,14 @@ public class ClickToMoveFollower : MonoBehaviour {
 	}
 	public void FixedUpdate() {
 		if (mover.IsAutoMoving()) {
-			if (IsStuck(mover.transform.position)) { NotifyEndPointReached(); }
+			if (IsStuck(mover.transform.position)) { NotifyWayPointReached(); }
 		} else {
 			if (waypoints.Count > 0) {
-				NotifyEndPointReached();
+				NotifyWayPointReached();
 			}
 		}
 	}
-	void NotifyEndPointReached() {
+	public void NotifyWayPointReached() {
 		mover.DisableAutoMove();
 		//line.Line(Vector3.zero, Vector3.zero);
 		if (waypoints.Count > 0) {
@@ -125,8 +125,24 @@ public class ClickToMoveFollower : MonoBehaviour {
 			} else if (currentWaypoint != null) {
 				p = currentWaypoint.transform.position;
 			}
-			if (jumpPress > 0) { mover.JumpButtonTimed = jumpPress; }
-			mover.SetAutoMovePosition(p, NotifyEndPointReached, 0);
+			if (jumpPress > 0) {
+				mover.JumpButtonTimed = jumpPress;
+				Vector3 delta = p - transform.position;
+				// calculate the distance needed to jump to, both vertically and horizontally
+				float vDist = delta.y;
+				delta.y = 0;
+				float hDist = delta.magnitude;
+				// estimate max jump distance TODO work out this math...
+				float height = mover.jump.maxJumpHeight;
+				float v = Mathf.Sqrt(height * 2);
+
+				float jDist = mover.MoveSpeed * height;
+				float distExtra = jDist - hDist;
+				long howLongToWaitInAir = (long)(distExtra * 1000 / jDist);
+				Clock.setTimeout(() => mover.SetAutoMovePosition(p, NotifyWayPointReached, 0), howLongToWaitInAir);
+			} else {
+				mover.SetAutoMovePosition(p, NotifyWayPointReached, 0);
+			}
 		} else {
 			if (currentWaypoint != null && currentWaypoint.showing) { currentWaypoint.showing = false; }
 			ShowPath(false);
@@ -145,7 +161,7 @@ public class ClickToMoveFollower : MonoBehaviour {
 		}
 		historyDuringThisMove = 0;
 		if (waypoints.Count == 0) {
-			mover.SetAutoMovePosition(targetPosition, NotifyEndPointReached, 0);
+			mover.SetAutoMovePosition(targetPosition, NotifyWayPointReached, 0);
 			//line.Arrow(mover.transform.position, targetPosition, Color.red);
 		} else {
 			//line.Arrow(waypoints[waypoints.Count - 1].transform.position, targetPosition, Color.red);
@@ -193,7 +209,7 @@ public class ClickToMoveFollower : MonoBehaviour {
 			if (waypoints[i].ui) { Destroy(waypoints[i].ui.gameObject); }
 		}
 		waypoints.Clear();
-		NotifyEndPointReached();
+		NotifyWayPointReached();
 		ShowPath(false);
 	}
 	public void RemoveWaypoint(Interact3dItem wp) {

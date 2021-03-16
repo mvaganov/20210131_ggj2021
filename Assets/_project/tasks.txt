@@ -12,8 +12,10 @@
 	{n"with and without jumping" created"2021.03.01" sub[
 		{done"2021.03.06 23:45" n"edge data preserved when generating paths, so type of edge can be reflected in visual" created"2021.03.06 22:30"}
 		{done"2021.03.07 17:30" n"show different edges in path: walk/fall/jump" created"2021.03.06 22:30"}
-		{n"path follower generates path with edge type in mind, AI will walk/fall/jump correctly" created"2021.03.06 22:30"}
+		{done"2021.03.09 22:20" n"path follower generates path with edge type in mind, AI will walk/jump" created"2021.03.06 22:30"}
+		{done"2021.03.15 22:15" n"stop getting stuck when jumping into a wall" created"2021.03.09 22:20"}
 	]}
+	{done"2021.03.15 22:15" n"AI opponent recognizes when they reach their waypoint tile, and doesn't need to backtrack if it hit a bump in the road" created"2021.03.09 22:50"}
 	{n"AI opponent that does astar to random token" created"2021.03.01"}
 	{n"astar to closest token (not just random)" created"2021.03.01"}
 	{n"opponent picks a new target if it realizes you are closer than it to it's target" created"2021.03.04 23:47"}

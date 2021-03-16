@@ -1,5 +1,6 @@
 ﻿// http://codegiraffe.com/unity/NonStandardPlayer.unitypackage
 using NonStandard.Inputs;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -75,7 +76,7 @@ namespace NonStandard.Character {
 			move.automaticMovement.SetAutoMovePosition(position, closeEnough);
 			move.automaticMovement.whatToDoWhenTargetIsReached = whatToDoWhenTargetIsReached;
 		}
-		public void DisableAutoMove() { move.automaticMovement.DisableAutoMove(); }
+		public void DisableAutoMove() { move.automaticMovement.DisableAutoMove(); MoveForwardMovement = StrafeRightMovement = 0; move.moveDirection = move.oppositionDirection; }
 
 		[System.Serializable]
 		public struct CharacterMoveControls {
@@ -202,6 +203,13 @@ namespace NonStandard.Character {
 					Vector3 surfaceNormal = collision.contacts[i].normal;
 					float a = Vector3.Angle(Vector3.up, surfaceNormal);
 					if (a <= maxStableAngle) {
+						if (!isStableOnGround) {
+							if (cm.jump.landed == null) { cm.jump.landed = Lines.MakeWire(); cm.jump.landed.enabled = false; }
+							if (!cm.jump.landed.enabled) {
+								cm.jump.landed.enabled = true;
+								cm.jump.landed.Circle(cm.transform.position, Vector3.up, Color.cyan, .25f);
+							}
+						}
 						isStableOnGround = true;
 						stableIndex = i;
 						standingNormal = surfaceNormal;
@@ -299,15 +307,24 @@ namespace NonStandard.Character {
 			public bool disabled = false;
 			public bool Peaked { get { return peaked; } }
 
+			public Lines.Wire start, path, estimateEnd, peak, calcpeak, calcland, landed;
+
 			[Tooltip("if false, double jumps won't 'restart' a jump, just add jump velocity")]
 			private bool jumpStartResetsVerticalMotion = true;
 			[HideInInspector] public int jumpsSoFar;// { get; protected set; }
+			public float CalcGForce(CharacterMove cm) { return Physics.gravity.y * cm.rb.mass; }
 			/// <returns>if this instance is trying to jump</returns>
 			public bool IsJumping { get { return inputHeld; } set { inputHeld = value; } }
 			/// <summary>pretends to hold the jump button for the specified duration</summary>
 			public void FixedUpdate(CharacterMove p) {
 				if (inputHeld = (PressJump > 0)) { PressJump -= Time.deltaTime; if (PressJump < 0) { PressJump = 0; } }
 				if (impulseActive && !inputHeld) { impulseActive = false; peaked = true; }
+				if (peaked && (peak == null || !peak.enabled)) {
+					if (peak == null) { peak = Lines.MakeWire(); }
+					peak.Circle(p.transform.position, Vector3.up, Color.yellow, .5f);
+					peak.enabled = true;
+					landed.enabled = false;
+				}
 				if (!inputHeld) { return; }
 				bool isStableOnGround = p.IsStableOnGround();
 				// check stable footing for the jump
@@ -319,7 +336,7 @@ namespace NonStandard.Character {
 					peaked = true; // used for multi-jumping state
 				}
 				// calculate the jump
-				float gForce = -Physics.gravity.y * p.rb.mass;
+				float gForce = -CalcGForce(p);
 				Vector3 jump_force = Vector3.zero, jumpDirection = Vector3.up;//-p.gravity.dir;
 				// if the user wants to jump, and is allowed to jump again
 				if (!impulseActive && (jumpsSoFar < maxJumps) && peaked) {
@@ -332,6 +349,38 @@ namespace NonStandard.Character {
 					if (jumpStartResetsVerticalMotion) {
 						float motionInVerticalDirection = Vector3.Dot(jumpDirection, p.rb.velocity);
 						jump_force -= (motionInVerticalDirection * jumpDirection) / Time.deltaTime;
+					}
+					if (start == null) { start = Lines.MakeWire(); }
+					start.Circle(p.transform.position, Vector3.up, Color.red, .5f);
+					if (peak != null) { peak.enabled = false; }
+					if (path == null) { path = Lines.MakeWire(); }
+					if (p.move.moveDirection != Vector3.zero) {
+						float vertV = Mathf.Sqrt(maxJumpHeight * 2 * gForce);
+						Vector3 pos = p.transform.position;
+						Vector3 vel = p.move.moveDirection * p.move.speed;
+						vel.y = vertV;
+						List<Vector3> points = new List<Vector3>();
+						points.Add(pos);
+						if(calcpeak == null) { calcpeak = Lines.MakeWire(); }
+						calcpeak.enabled = false;
+						float ystart = pos.y;
+						for(int i = 0; i < 256; ++i) {
+							pos += vel * 1f / 128;
+							vel.y -= gForce * 1f / 128;
+							if(vel.y <= 0 && !calcpeak.enabled) {
+								calcpeak.enabled = true;
+								calcpeak.Circle(pos, Vector3.up, Color.green, .125f);
+							}
+							points.Add(pos);
+							if(pos.y <= ystart) {
+								if (calcland == null) { calcland = Lines.MakeWire(); }
+								calcland.Circle(pos, Vector3.up, Color.blue, .125f);
+								break;
+							}
+						}
+						path.Line(points, Color.red);
+					} else {
+						path.Line(p.transform.position, p.transform.position + Vector3.up * maxJumpHeight);
 					}
 					// apply proper jump force
 					currentJumpVelocity = velocityRequiredToJump;

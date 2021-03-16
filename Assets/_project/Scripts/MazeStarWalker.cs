@@ -97,6 +97,12 @@ public class MazeStarWalker : MonoBehaviour {
 		mapAstar.UpdateMapSize();
 		Vector3 p = transform.position;
 		Coord here = maze.GetCoord(p);
+		if(follower.waypoints.Count > 0) {
+			Coord there = maze.GetCoord(follower.waypoints[0].positon);
+			if(here == there) {
+				follower.NotifyWayPointReached();
+			}
+		}
 		List<Coord> moves = mapAstar.Moves(here, canJump);
 		if (textOutput != null) {
 			UiText.SetText(textOutput, here.ToString() + ":" + (p - maze.transform.position) + " " + moves.JoinToString(", "));
