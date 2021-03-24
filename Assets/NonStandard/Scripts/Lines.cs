@@ -101,9 +101,10 @@ namespace NonStandard {
 
 		/// <summary></summary>
 		/// <returns>an unnamed, unmanaged Line object</returns>
-		public static Wire MakeWire() {
+		public static Wire MakeWire(string wirename = null) {
 			GameObject go = null;
 			MakeLineRenderer(ref go);
+			if (!string.IsNullOrEmpty(wirename)) { go.name = wirename; }
 			Wire line = go.GetComponent<Wire>();
 			if (!line) { line = go.AddComponent<Wire>(); line.RefreshSource(); }
 			go.layer = LayerMask.NameToLayer("UI");

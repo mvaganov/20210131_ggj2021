@@ -247,25 +247,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f77fa27e7b406843aff85971f89e7cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  onGround: 0
+  moveH: 0
+  moveV: 0
   speed: 5
   jump:
     minJumpHeight: 0.015625
     maxJumpHeight: 2
     jumpMaxPressDuration: 0.25
+    doubleJumps: 1
+    TimedJumpPress: 0
+    targetJumpHeight: 0
     position: {x: 0, y: 0, z: 0}
-    isJumping: 0
-    peaked: 0
-    heightSet: 0
-    jumpRequested: 0
     jumpTime: 0
     peakTime: 0
     usedExtraJumps: 0
-    extraJumps: 2
-    tillPeak: 0
-  moveH: 0
-  moveV: 0
-  moveJ: 0
-  onGround: 0
+    isJumping: 0
+    peaked: 0
+    heightSet: 0
+    Pressed: 0
+    showJumpArc: 0
 --- !u!54 &230466702
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1262,7 +1263,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1874644614
 MonoBehaviour:
   m_ObjectHideFlags: 0
