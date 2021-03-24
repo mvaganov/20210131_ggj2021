@@ -16,6 +16,12 @@
 		{done"2021.03.15 22:15" n"stop getting stuck when jumping into a wall" created"2021.03.09 22:20"}
 	]}
 	{done"2021.03.15 22:15" n"AI opponent recognizes when they reach their waypoint tile, and doesn't need to backtrack if it hit a bump in the road" created"2021.03.09 22:50"}
+	{n"improve the jump calculations" created"2021.03.15 23:30" sub[
+		{n"mark where jump started (last valid stand location)"}
+		{n"predict path based on desired jump height, which starts at max"}
+		{n"set desired jumpheight when jump button is released, and move player to correct height & vertical-velocity based on time"}
+		{n"if player hits something during jump, stop calculations, and maintain current state"}
+	]}
 	{n"AI opponent that does astar to random token" created"2021.03.01"}
 	{n"astar to closest token (not just random)" created"2021.03.01"}
 	{n"opponent picks a new target if it realizes you are closer than it to it's target" created"2021.03.04 23:47"}

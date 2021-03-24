@@ -215,7 +215,7 @@ namespace NonStandard
 		/// Unix Time: milliseconds since Jan 1 1970
 		public static long NowRealtime { get { return System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMillisecond; } }
 		/// very fast time keeping at millisecond resolution. no guarantees about the range of values, just that time is kept.
-		public static long NowRealTicks { get { return System.Environment.TickCount; } }
+		public static int NowRealTicks { get { return System.Environment.TickCount; } }
 
 		/// game time right now (modified by pausing or Time.timeScale)
 		public long now { get { return (alternativeTicks == 0) ? NowRealtime : alternativeTicks; } }

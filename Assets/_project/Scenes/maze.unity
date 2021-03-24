@@ -956,11 +956,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 863121875, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: -0.00013826632
       objectReference: {fileID: 0}
     - target: {fileID: 863121875, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -0.000022888184
+      value: -0.000022028542
       objectReference: {fileID: 0}
     - target: {fileID: 1028323530, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_AnchorMax.x
@@ -1096,11 +1096,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2110826550, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0.00012207031
+      value: 0.00022485739
       objectReference: {fileID: 0}
     - target: {fileID: 2110826550, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: 0.00023272214
       objectReference: {fileID: 0}
     - target: {fileID: 1037285241940550, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_Name
@@ -1186,6 +1186,26 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.y
       value: -180
       objectReference: {fileID: 0}
+    - target: {fileID: 114967211894144060, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
+        type: 3}
+      propertyPath: jump.canJumpAfterSteppingFromLedge
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114967211894144060, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
+        type: 3}
+      propertyPath: jump.minJumpHeight
+      value: 0.125
+      objectReference: {fileID: 0}
+    - target: {fileID: 114967211894144060, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
+        type: 3}
+      propertyPath: move.speed
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 114967211894144060, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
+        type: 3}
+      propertyPath: jump.maxJumps
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1013968932422646874, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
       propertyPath: m_AnchorMax.x
@@ -1244,12 +1264,12 @@ PrefabInstance:
     - target: {fileID: 4757234333020682062, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: -0.00041360394
       objectReference: {fileID: 0}
     - target: {fileID: 4757234333020682062, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -0.000091552734
+      value: 0.0002584025
       objectReference: {fileID: 0}
     - target: {fileID: 5320489882521334824, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
@@ -2559,12 +2579,12 @@ GameObject:
   - component: {fileID: 939166345}
   - component: {fileID: 939166344}
   m_Layer: 5
-  m_Name: test Text (1)
+  m_Name: walker text out
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &939166344
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8669,7 +8689,11 @@ MonoBehaviour:
     maxJumps: 1
     PressJump: 0
     impulseActive: 0
+    canJumpAfterSteppingFromLedge: 0
+    collided: 0
     disabled: 1
+    lastValidStand: 0
+    lastStablePosition: {x: 0, y: 0, z: 0}
     start: {fileID: 0}
     path: {fileID: 0}
     estimateEnd: {fileID: 0}
@@ -8677,6 +8701,11 @@ MonoBehaviour:
     calcpeak: {fileID: 0}
     calcland: {fileID: 0}
     landed: {fileID: 0}
+    pathMax: {fileID: 0}
+    pathMin: {fileID: 0}
+    pathMaxTest: {fileID: 0}
+    pathActualJump: {fileID: 0}
+    jumpPressedMs: 0
     jumpsSoFar: 0
   callbacks:
     moveDirectionChanged:
@@ -9087,7 +9116,11 @@ MonoBehaviour:
     maxJumps: 1
     PressJump: 0
     impulseActive: 0
+    canJumpAfterSteppingFromLedge: 0
+    collided: 0
     disabled: 0
+    lastValidStand: 0
+    lastStablePosition: {x: 0, y: 0, z: 0}
     start: {fileID: 0}
     path: {fileID: 0}
     estimateEnd: {fileID: 0}
@@ -9095,6 +9128,11 @@ MonoBehaviour:
     calcpeak: {fileID: 0}
     calcland: {fileID: 0}
     landed: {fileID: 0}
+    pathMax: {fileID: 0}
+    pathMin: {fileID: 0}
+    pathMaxTest: {fileID: 0}
+    pathActualJump: {fileID: 0}
+    jumpPressedMs: 0
     jumpsSoFar: 0
   callbacks:
     moveDirectionChanged:
@@ -14860,12 +14898,12 @@ GameObject:
   - component: {fileID: 1924026824}
   - component: {fileID: 1924026823}
   m_Layer: 5
-  m_Name: test Text
+  m_Name: player text out
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1924026822
 RectTransform:
   m_ObjectHideFlags: 0

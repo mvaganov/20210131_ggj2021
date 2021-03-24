@@ -148,6 +148,7 @@ public class ClickToMoveFollower : MonoBehaviour {
 			ShowPath(false);
 		}
 	}
+
 	public void SetCurrentTarget(Vector3 position) { SetCurrentTarget(position, Vector3.zero); }
 	public void SetCurrentTarget(Vector3 position, Vector3 normal) {
 		targetPosition = position;

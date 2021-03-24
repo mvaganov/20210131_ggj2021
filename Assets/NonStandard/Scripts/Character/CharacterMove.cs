@@ -184,6 +184,10 @@ namespace NonStandard.Character {
 			}
 			public void FixedUpdate(CharacterMove c) {
 				if (isStableOnGround || canMoveInAir) {
+					if(isStableOnGround) {
+						c.jump.lastStablePosition = c.transform.position;
+						if (c.jump.canJumpAfterSteppingFromLedge) { c.jump.lastValidStand = Clock.NowRealTicks; }
+					}
 					ApplyMoveFromInput(c);
 				}
 			}
@@ -284,6 +288,7 @@ namespace NonStandard.Character {
 			if (collision.impulse != Vector3.zero && move.CollisionStabilityCheck(this, collision) < 0) {
 				rb.velocity = move.lastVelocity; // on a real collision, where the player is unstable, maintain velocity
 			}
+			jump.collided = true;
 		}
 
 		public Jumping jump = new Jumping();
@@ -299,15 +304,22 @@ namespace NonStandard.Character {
 			/// <code>jump.PressJump = Input.GetButton("Jump") ? 1 : 0;</code></summary>
 			//[HideInInspector] 
 			public float PressJump;
-			[HideInInspector] public bool impulseActive;
 			protected float currentJumpVelocity, heightReached, heightReachedTotal, timeHeld, targetHeight;
+			[HideInInspector] public bool impulseActive;
 			/// to modify inputHeld, set PressJump to a positive value.
 			private bool inputHeld;
 			private bool peaked;
+			public bool canJumpAfterSteppingFromLedge;
+			[HideInInspector] public bool collided = false;
 			public bool disabled = false;
 			public bool Peaked { get { return peaked; } }
+			[HideInInspector] public int lastValidStand;
+			//[HideInInspector] 
+			public Vector3 lastStablePosition;
 
-			public Lines.Wire start, path, estimateEnd, peak, calcpeak, calcland, landed;
+			public Lines.Wire start, path, estimateEnd, peak, calcpeak, calcland, landed, pathMax, pathMin, pathMaxTest, pathActualJump;
+			public int jumpPressedMs;
+			List<Vector3> jumpPositions = new List<Vector3>();
 
 			[Tooltip("if false, double jumps won't 'restart' a jump, just add jump velocity")]
 			private bool jumpStartResetsVerticalMotion = true;
@@ -325,62 +337,60 @@ namespace NonStandard.Character {
 					peak.enabled = true;
 					landed.enabled = false;
 				}
+				if (!p.IsStableOnGround()) {
+					jumpPositions.Add(p.transform.position);
+					if (pathActualJump == null) { pathActualJump = Lines.MakeWire(); }
+					pathActualJump.Line(jumpPositions, Color.green);
+				}
 				if (!inputHeld) { return; }
-				bool isStableOnGround = p.IsStableOnGround();
+				bool isStableEnoughToJump = p.IsStableOnGround();
+				bool isForgiven = false;
+				if (!isStableEnoughToJump && !impulseActive && lastValidStand > 0) {
+					int lateMs = Clock.NowRealTicks - lastValidStand;
+					isForgiven = (canJumpAfterSteppingFromLedge && lateMs < 250);
+					if (isForgiven) {
+						isStableEnoughToJump = true;
+						timeHeld = lateMs / 1000f;
+					}
+				}
 				// check stable footing for the jump
-				if (isStableOnGround && !impulseActive) {
+				if (isStableEnoughToJump && !impulseActive) {
 					jumpsSoFar = 0;
 					heightReached = 0;
 					currentJumpVelocity = 0;
 					timeHeld = 0;
+					collided = false;
 					peaked = true; // used for multi-jumping state
 				}
 				// calculate the jump
 				float gForce = -CalcGForce(p);
 				Vector3 jump_force = Vector3.zero, jumpDirection = Vector3.up;//-p.gravity.dir;
-				// if the user wants to jump, and is allowed to jump again
+																			  // if the user wants to jump, and is allowed to jump again
 				if (!impulseActive && (jumpsSoFar < maxJumps) && peaked) {
+					jumpPressedMs = (int)Clock.NowTicks;
+					Debug.Log(jumpPressedMs);
+					lastValidStand = 0;
 					heightReached = 0;
-					timeHeld = 0;
+					jumpPositions.Clear();
+					if (!isForgiven) {
+						timeHeld = 0;
+						lastStablePosition = p.transform.position;
+					}
 					jumpsSoFar++;
 					targetHeight = minJumpHeight * p.rb.mass;
 					float velocityRequiredToJump = Mathf.Sqrt(targetHeight * 2 * gForce);
-					// cancel out current jump/fall forces
+					// cancel our current jump/fall forces
 					if (jumpStartResetsVerticalMotion) {
-						float motionInVerticalDirection = Vector3.Dot(jumpDirection, p.rb.velocity);
-						jump_force -= (motionInVerticalDirection * jumpDirection) / Time.deltaTime;
+						float motionInVerticalDirection = p.rb.velocity.y;//Vector3.Dot(jumpDirection, p.rb.velocity);
+						jump_force -= new Vector3(0, motionInVerticalDirection / Time.deltaTime, 0);//(motionInVerticalDirection * jumpDirection) / Time.deltaTime;
 					}
 					if (start == null) { start = Lines.MakeWire(); }
 					start.Circle(p.transform.position, Vector3.up, Color.red, .5f);
-					if (peak != null) { peak.enabled = false; }
-					if (path == null) { path = Lines.MakeWire(); }
-					if (p.move.moveDirection != Vector3.zero) {
-						float vertV = Mathf.Sqrt(maxJumpHeight * 2 * gForce);
-						Vector3 pos = p.transform.position;
-						Vector3 vel = p.move.moveDirection * p.move.speed;
-						vel.y = vertV;
-						List<Vector3> points = new List<Vector3>();
-						points.Add(pos);
-						if(calcpeak == null) { calcpeak = Lines.MakeWire(); }
-						calcpeak.enabled = false;
-						float ystart = pos.y;
-						for(int i = 0; i < 256; ++i) {
-							pos += vel * 1f / 128;
-							vel.y -= gForce * 1f / 128;
-							if(vel.y <= 0 && !calcpeak.enabled) {
-								calcpeak.enabled = true;
-								calcpeak.Circle(pos, Vector3.up, Color.green, .125f);
-							}
-							points.Add(pos);
-							if(pos.y <= ystart) {
-								if (calcland == null) { calcland = Lines.MakeWire(); }
-								calcland.Circle(pos, Vector3.up, Color.blue, .125f);
-								break;
-							}
-						}
-						path.Line(points, Color.red);
-					} else {
-						path.Line(p.transform.position, p.transform.position + Vector3.up * maxJumpHeight);
+					if (!collided) {
+						Vector3 jumpDir = p.move.moveDirection;
+						if (jumpDir == Vector3.zero) { jumpDir = p.transform.forward; }
+						if (pathMax == null) { pathMax = Lines.MakeWire(); }
+						pathMax.Line(CalcJumpPath(lastStablePosition, jumpDir, p.move.speed, maxJumpHeight, gForce), Color.white);
 					}
 					// apply proper jump force
 					currentJumpVelocity = velocityRequiredToJump;
@@ -391,8 +401,7 @@ namespace NonStandard.Character {
 					p.callbacks.jumped.Invoke(jumpDirection);
 				} else
 					// if a jump is happening      
-					if (currentJumpVelocity > 0)
-				{
+					if (currentJumpVelocity > 0) {
 					// handle jump height: the longer you hold jump, the higher you jump
 					if (inputHeld) {
 						timeHeld += Time.deltaTime;
@@ -403,6 +412,13 @@ namespace NonStandard.Character {
 							targetHeight = minJumpHeight + ((maxJumpHeight - minJumpHeight) * timeHeld / fullJumpPressDuration);
 							targetHeight *= p.rb.mass;
 						}
+						//if (!collided) {
+						//	Vector3 pos = p.transform.position;
+						//	float duration = CalcStandardJumpDuration(targetHeight, gForce);
+						//	float seconds = ((int)Clock.Now - jumpPressedMs)/1000f;
+						//	pos.y = CalcJumpHeightAt(seconds / duration, targetHeight, gForce) + lastStablePosition.y;
+						//	p.transform.position = pos;
+						//} else
 						if (heightReached < targetHeight) {
 							float requiredJumpVelocity = Mathf.Sqrt((targetHeight - heightReached) * 2 * gForce);
 							float forceNeeded = requiredJumpVelocity - currentJumpVelocity;
@@ -410,6 +426,13 @@ namespace NonStandard.Character {
 							currentJumpVelocity = requiredJumpVelocity;
 						}
 					} else { peaked = true; }
+					if (!collided) {
+						Vector3 jumpDir = p.move.moveDirection;
+						if (jumpDir == Vector3.zero) { jumpDir = p.transform.forward; }
+						float minJump = (maxJumpHeight - minJumpHeight) * timeHeld / fullJumpPressDuration + minJumpHeight;
+						if (pathMin == null) { pathMin = Lines.MakeWire(); }
+						pathMin.Line(CalcJumpPath(lastStablePosition, jumpDir, p.move.speed, minJump, gForce), Color.red);
+					}
 				} else {
 					impulseActive = false;
 				}
@@ -418,12 +441,45 @@ namespace NonStandard.Character {
 					heightReached += moved;
 					heightReachedTotal += moved;
 					currentJumpVelocity -= gForce * Time.deltaTime;
-				} else if (!peaked && !isStableOnGround) {
+				} else if (!peaked && !isStableEnoughToJump) {
 					peaked = true;
 					impulseActive = false;
 				}
 				p.rb.AddForce(jump_force);
 			}
+		}
+
+		static List<Vector3> CalcJumpPath(Vector3 position, Vector3 dir, float speed, float jumpHeight, float gForce) {
+			List<Vector3> points = new List<Vector3>();
+			float timing = CalcStandardJumpDuration(jumpHeight, gForce);
+			//Debug.Log(timing);
+			float dist = timing * speed;
+			points.Add(position + dir * dist);
+			//points.Add(position);
+			for (float t = 0; t <= 1; t += 1f / 32) {
+				float y = CalcJumpHeightAt(t, jumpHeight, gForce);
+				//((t - velocityRequiredToJumpMax) * (t - velocityRequiredToJumpMax)) / (-gForce*2) + maxJumpHeight;
+				//Vector3 pos = lastStablePosition + jumpDir * p.move.speed * t / gForce + Vector3.up * y;
+				Vector3 pos = position + dir * (dist * t) + Vector3.up * y;
+				points.Add(pos);
+			}
+			return points;
+		}
+
+		static float CalcJumpHeightAt(float percent, float jumpHeight, float gForce) {
+			//float velocityRequiredToJumpMax = Mathf.Sqrt(jumpHeight * 2 * gForce);
+			//float y = ((t - velocityRequiredToJumpMax) * (t - velocityRequiredToJumpMax)) / (-gForce * 2) + jumpHeight;
+
+			//float y = -((t * t) / (2 * gForce)) + (Mathf.Sqrt(2 * jumpHeight) * t) / Mathf.Sqrt(gForce);
+			float velocity = Mathf.Sqrt(jumpHeight * 2 * gForce);
+			//float n = (t * 2 * v - v);
+			float n = velocity * (percent * 2 - 1);
+			//float n = percent - velocity;
+			float y = (n * n) / (-gForce * 2) + jumpHeight;
+			return y;
+		}
+		static float CalcStandardJumpDuration(float jumpHeight, float gForce) {
+			return Mathf.Sqrt(jumpHeight * 2 * gForce) * 2 / gForce;
 		}
 
 		[Tooltip("hooks that allow code execution when character state changes (useful for animation)")]
