@@ -664,7 +664,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2136581222}
   m_HandleRect: {fileID: 2136581221}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -3056,7 +3056,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1402369697}
   m_HandleRect: {fileID: 1402369696}
   m_Direction: 0
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -8683,30 +8683,21 @@ MonoBehaviour:
     lastOppositionDirection: {x: 0, y: 0, z: 0}
     orientationTransform: {fileID: 0}
   jump:
+    isJumping: 0
+    peaked: 0
+    heightSet: 0
+    pressed: 0
+    showJumpArc: 0
+    forgiveLateJumps: 1
+    enabled: 1
     minJumpHeight: 0.25
     maxJumpHeight: 2
     fullJumpPressDuration: 0.25
-    maxJumps: 1
-    PressJump: 0
-    impulseActive: 0
-    canJumpAfterSteppingFromLedge: 0
-    collided: 0
-    disabled: 1
-    lastValidStand: 0
-    lastStablePosition: {x: 0, y: 0, z: 0}
-    start: {fileID: 0}
-    path: {fileID: 0}
-    estimateEnd: {fileID: 0}
-    peak: {fileID: 0}
-    calcpeak: {fileID: 0}
-    calcland: {fileID: 0}
-    landed: {fileID: 0}
-    pathMax: {fileID: 0}
-    pathMin: {fileID: 0}
-    pathMaxTest: {fileID: 0}
-    pathActualJump: {fileID: 0}
-    jumpPressedMs: 0
-    jumpsSoFar: 0
+    doubleJumps: 0
+    TimedJumpPress: 0
+    targetJumpHeight: 0
+    position: {x: 0, y: 0, z: 0}
+    usedDoubleJumps: 0
   callbacks:
     moveDirectionChanged:
       m_PersistentCalls:
@@ -9110,30 +9101,21 @@ MonoBehaviour:
     lastOppositionDirection: {x: 0, y: 0, z: 0}
     orientationTransform: {fileID: 0}
   jump:
+    isJumping: 0
+    peaked: 0
+    heightSet: 0
+    pressed: 0
+    showJumpArc: 0
+    forgiveLateJumps: 1
+    enabled: 1
     minJumpHeight: 0.25
     maxJumpHeight: 2
     fullJumpPressDuration: 0.25
-    maxJumps: 1
-    PressJump: 0
-    impulseActive: 0
-    canJumpAfterSteppingFromLedge: 0
-    collided: 0
-    disabled: 0
-    lastValidStand: 0
-    lastStablePosition: {x: 0, y: 0, z: 0}
-    start: {fileID: 0}
-    path: {fileID: 0}
-    estimateEnd: {fileID: 0}
-    peak: {fileID: 0}
-    calcpeak: {fileID: 0}
-    calcland: {fileID: 0}
-    landed: {fileID: 0}
-    pathMax: {fileID: 0}
-    pathMin: {fileID: 0}
-    pathMaxTest: {fileID: 0}
-    pathActualJump: {fileID: 0}
-    jumpPressedMs: 0
-    jumpsSoFar: 0
+    doubleJumps: 0
+    TimedJumpPress: 0
+    targetJumpHeight: 0
+    position: {x: 0, y: 0, z: 0}
+    usedDoubleJumps: 0
   callbacks:
     moveDirectionChanged:
       m_PersistentCalls:

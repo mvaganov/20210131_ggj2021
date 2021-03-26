@@ -11,7 +11,9 @@ namespace NonStandard.Character {
 		[HideInInspector] public Rigidbody rb;
 		[ContextMenuItem("Create default user controls", "CreateDefaultUserControls")]
 		public Transform head;
+		private Transform body;
 
+		private void Awake() { body = transform; }
 		void Start()
 		{
 			rb = GetComponent<Rigidbody>();
@@ -24,7 +26,7 @@ namespace NonStandard.Character {
 		/// <summary>
 		/// how many seconds to hold down the jump button. if a non-zero value, a jump impulse will be applied. decays to zero with time.
 		/// </summary>
-		public float JumpButtonTimed { get { return jump.PressJump; } set { jump.PressJump = value; } }
+		public float JumpButtonTimed { get { return jump.TimedJumpPress; } set { jump.TimedJumpPress = value; } }
 		public float MoveSpeed { get { return move.speed; } set { move.speed = value; } }
 		public float JumpHeight { get { return jump.maxJumpHeight; } set { jump.maxJumpHeight = value; } }
 		private float lastJump = -1;
@@ -137,7 +139,7 @@ namespace NonStandard.Character {
 
 			public void ApplyMoveFromInput(CharacterMove cm) {
 				Vector3 moveVelocity = Vector3.zero;
-				Transform t = cm.transform;
+				Transform t = cm.body;
 				Vector3 oldDirection = moveDirection;
 				moveDirection = new Vector3(strafeRightMovement, 0, moveForwardMovement);
 				float intendedSpeed = 1;
@@ -166,13 +168,13 @@ namespace NonStandard.Character {
 				moveVelocity.y = gravity; // apply to new velocity
 				if(lookForwardMoving && moveDirection != Vector3.zero && orientationTransform != null)
 				{
-					cm.transform.rotation = Quaternion.LookRotation(moveDirection, Vector3.up);
+					cm.body.rotation = Quaternion.LookRotation(moveDirection, Vector3.up);
 					if(cm.head != null) { cm.head.localRotation = Quaternion.identity; } // turn head straight while walking
 				}
 				if (!systemMovement) {
 					cm.rb.velocity = moveVelocity;
 				} else {
-					cm.transform.position += moveVelocity * Time.unscaledDeltaTime;
+					cm.body.position += moveVelocity * Time.unscaledDeltaTime;
 				}
 				lastVelocity = moveVelocity;
 				if(oppositionDirection == Vector3.zero && lastOppositionDirection != Vector3.zero)
@@ -185,8 +187,7 @@ namespace NonStandard.Character {
 			public void FixedUpdate(CharacterMove c) {
 				if (isStableOnGround || canMoveInAir) {
 					if(isStableOnGround) {
-						c.jump.lastStablePosition = c.transform.position;
-						if (c.jump.canJumpAfterSteppingFromLedge) { c.jump.lastValidStand = Clock.NowRealTicks; }
+						c.jump.MarkStableJumpPoint(c.body.position); 
 					}
 					ApplyMoveFromInput(c);
 				}
@@ -207,13 +208,6 @@ namespace NonStandard.Character {
 					Vector3 surfaceNormal = collision.contacts[i].normal;
 					float a = Vector3.Angle(Vector3.up, surfaceNormal);
 					if (a <= maxStableAngle) {
-						if (!isStableOnGround) {
-							if (cm.jump.landed == null) { cm.jump.landed = Lines.MakeWire(); cm.jump.landed.enabled = false; }
-							if (!cm.jump.landed.enabled) {
-								cm.jump.landed.enabled = true;
-								cm.jump.landed.Circle(cm.transform.position, Vector3.up, Color.cyan, .25f);
-							}
-						}
 						isStableOnGround = true;
 						stableIndex = i;
 						standingNormal = surfaceNormal;
@@ -225,7 +219,7 @@ namespace NonStandard.Character {
 							oppositionDirection = surfaceNormal;
 						}
 						if(automaticMovement.jumpAtObstacle){
-							cm.jump.PressJump = 1;
+							cm.jump.TimedJumpPress = cm.jump.fullJumpPressDuration;
 						}
 					}
 				}
@@ -247,19 +241,19 @@ namespace NonStandard.Character {
 		};
 
 		public float GetJumpProgress() {
-			return move.isStableOnGround ? 1 : (1 - ((float)jump.jumpsSoFar / jump.maxJumps));
+			return move.isStableOnGround ? 1 : (1 - ((float)(jump.usedDoubleJumps+1) / (jump.doubleJumps+1)));
 		}
 		private void Update() {
 			if (move.systemMovement && !move.disabled && Time.timeScale ==0) { move.FixedUpdate(this); }
 		}
 		void FixedUpdate() {
 			if (Jump != lastJump) {
-				jump.PressJump = Jump;
+				jump.Pressed = Jump > 0;//jump.PressJump = Jump;
 				lastJump = Jump;
 			}
 			if (!move.disabled) { move.FixedUpdate(this); }
-			if (!jump.disabled) { jump.FixedUpdate(this); }
-			if (!move.isStableOnGround && !jump.impulseActive && move.groundNormal != Vector3.zero) {
+			if (jump.enabled) { jump.FixedUpdate(this); }
+			if (!move.isStableOnGround && !jump.isJumping && move.groundNormal != Vector3.zero) {
 				move.groundNormal = Vector3.zero;
 				callbacks.fall.Invoke();
 			}
@@ -288,198 +282,190 @@ namespace NonStandard.Character {
 			if (collision.impulse != Vector3.zero && move.CollisionStabilityCheck(this, collision) < 0) {
 				rb.velocity = move.lastVelocity; // on a real collision, where the player is unstable, maintain velocity
 			}
-			jump.collided = true;
+			jump.Interrupt(); //jump.collided = true;
 		}
 
-		public Jumping jump = new Jumping();
-
+		public JumpModule jump = new JumpModule();
 		[System.Serializable]
-		public class Jumping {
-			public float minJumpHeight = 0.25f, maxJumpHeight = 2;
+		public class JumpModule {
+			/// <summary>if true, the jump is intentionally happening and hasn't been interrupted</summary>
+			[HideInInspector] public bool isJumping;
+			/// <summary>if true, the jump has passed it's apex</summary>
+			[HideInInspector] public bool peaked;
+			/// <summary>if true, the jump is no longer adjusting it's height based on Pressed value</summary>
+			[HideInInspector] public bool heightSet;
+			/// <summary>while this is true, the jump module is trying to jump</summary>
+			[HideInInspector] public bool pressed;
+			/// <summary>for debugging: shows the jump arc, and how it grows as Pressed is held</summary>
+			[HideInInspector] public bool showJumpArc = false;
+			/// <summary>allows ret-con of a missed jump (user presses jump a bit late after walking off a ledge)</summary>
+			[HideInInspector] public bool forgiveLateJumps = true;
+			[Tooltip("Enable or disable jumping")]
+			public bool enabled = true;
+			[Tooltip("Tapping the jump button for the shortest amount of time possible will result in this height")]
+			public float minJumpHeight = .125f;
+			[Tooltip("Holding the jump button for fullJumpPressDuration seconds will result in this height")]
+			public float maxJumpHeight = 1;
 			[Tooltip("How long the jump button must be pressed to jump the maximum height")]
-			public float fullJumpPressDuration = 0.25f;
-			[Tooltip("for double-jumping, put a 2 here. To eliminate jumping, put a 0 here.")]
-			public int maxJumps = 1;
-			/// <summary>Whether or not the jumper wants to press jump (specifically, how many seconds of jump)
-			/// <code>jump.PressJump = Input.GetButton("Jump") ? 1 : 0;</code></summary>
-			//[HideInInspector] 
-			public float PressJump;
-			protected float currentJumpVelocity, heightReached, heightReachedTotal, timeHeld, targetHeight;
-			[HideInInspector] public bool impulseActive;
-			/// to modify inputHeld, set PressJump to a positive value.
-			private bool inputHeld;
-			private bool peaked;
-			public bool canJumpAfterSteppingFromLedge;
-			[HideInInspector] public bool collided = false;
-			public bool disabled = false;
-			public bool Peaked { get { return peaked; } }
-			[HideInInspector] public int lastValidStand;
-			//[HideInInspector] 
-			public Vector3 lastStablePosition;
-
-			public Lines.Wire start, path, estimateEnd, peak, calcpeak, calcland, landed, pathMax, pathMin, pathMaxTest, pathActualJump;
-			public int jumpPressedMs;
-			List<Vector3> jumpPositions = new List<Vector3>();
-
-			[Tooltip("if false, double jumps won't 'restart' a jump, just add jump velocity")]
-			private bool jumpStartResetsVerticalMotion = true;
-			[HideInInspector] public int jumpsSoFar;// { get; protected set; }
-			public float CalcGForce(CharacterMove cm) { return Physics.gravity.y * cm.rb.mass; }
-			/// <returns>if this instance is trying to jump</returns>
-			public bool IsJumping { get { return inputHeld; } set { inputHeld = value; } }
-			/// <summary>pretends to hold the jump button for the specified duration</summary>
-			public void FixedUpdate(CharacterMove p) {
-				if (inputHeld = (PressJump > 0)) { PressJump -= Time.deltaTime; if (PressJump < 0) { PressJump = 0; } }
-				if (impulseActive && !inputHeld) { impulseActive = false; peaked = true; }
-				if (peaked && (peak == null || !peak.enabled)) {
-					if (peak == null) { peak = Lines.MakeWire(); }
-					peak.Circle(p.transform.position, Vector3.up, Color.yellow, .5f);
-					peak.enabled = true;
-					landed.enabled = false;
+			public float fullJumpPressDuration = .25f;
+			[Tooltip("For double-jumping, put a 2 here. To eliminate jumping, put a 0 here.")]
+			public int doubleJumps = 0;
+			[Tooltip("Used for AI driven jumps of different height")]
+			public float TimedJumpPress = 0; // TODO just set targetJumpHeight?
+			/// <summary>how long to wait for a jump after walking off a ledge</summary>
+			public const long jumpLagForgivenessMs = 200;
+			/// <summary>how long to wait to jump if press happens while still in the air</summary>
+			public const long jumpTooEarlyForgivenessMs = 500;
+			/// <summary>calculated target jump height</summary>
+			[HideInInspector] public float targetJumpHeight;
+			[HideInInspector] public Vector3 position;
+			/// <summary>when jump was started, ideally when the button was pressed</summary>
+			protected long jumpTime;
+			/// <summary>when jump should reach apex</summary>
+			protected long peakTime;
+			/// <summary>when jump start position was last recognized as stable</summary>
+			protected long stableTime;
+			/// <summary>when the jump button was pressed</summary>
+			protected long timePressed;
+			/// <summary>How many double jumps have happend since being on the ground</summary>
+			[HideInInspector] public int usedDoubleJumps;
+			/// <summary>debug artifact, for seeing the jump arc</summary>
+			[HideInInspector] Lines.Wire jumpArc;
+			public bool Pressed {
+				get { return pressed; }
+				set { if (value && !pressed) { timePressed = Clock.NowRealTicks; } pressed = value; }
+			}
+			public void Start(Vector3 p) {
+				jumpTime = Clock.NowTicks;
+				peakTime = 0;
+				isJumping = true;
+				peaked = false;
+				heightSet = false;
+				position = p;
+			}
+			public void Interrupt() {
+				isJumping = false;
+				heightSet = true;
+				targetJumpHeight = 0;
+			}
+			public void FixedUpdate(CharacterMove cm) {
+				if (!enabled) return;
+				bool peakedAtStart = peaked, jumpingAtStart = isJumping;
+				bool jpress = pressed;
+				long now = Clock.NowTicks;
+				if (TimedJumpPress > 0) {
+					jpress = true; TimedJumpPress -= Time.deltaTime; if (TimedJumpPress < 0) { TimedJumpPress = 0; }
 				}
-				if (!p.IsStableOnGround()) {
-					jumpPositions.Add(p.transform.position);
-					if (pathActualJump == null) { pathActualJump = Lines.MakeWire(); }
-					pathActualJump.Line(jumpPositions, Color.green);
+				bool lateButForgiven = false;
+				long late = 0;
+				if (cm.move.isStableOnGround) { usedDoubleJumps = 0; } else if (jpress && forgiveLateJumps && (late = Clock.NowRealTicks - stableTime) < jumpLagForgivenessMs) {
+					stableTime = 0;
+					cm.move.isStableOnGround = lateButForgiven = true;
 				}
-				if (!inputHeld) { return; }
-				bool isStableEnoughToJump = p.IsStableOnGround();
-				bool isForgiven = false;
-				if (!isStableEnoughToJump && !impulseActive && lastValidStand > 0) {
-					int lateMs = Clock.NowRealTicks - lastValidStand;
-					isForgiven = (canJumpAfterSteppingFromLedge && lateMs < 250);
-					if (isForgiven) {
-						isStableEnoughToJump = true;
-						timeHeld = lateMs / 1000f;
-					}
+				if (jpress && cm.move.isStableOnGround && !isJumping && now - timePressed < jumpTooEarlyForgivenessMs) {
+					timePressed = 0;
+					if (!lateButForgiven) { Start(cm.body.position); } else { Start(position); jumpTime -= late; }
 				}
-				// check stable footing for the jump
-				if (isStableEnoughToJump && !impulseActive) {
-					jumpsSoFar = 0;
-					heightReached = 0;
-					currentJumpVelocity = 0;
-					timeHeld = 0;
-					collided = false;
-					peaked = true; // used for multi-jumping state
-				}
-				// calculate the jump
-				float gForce = -CalcGForce(p);
-				Vector3 jump_force = Vector3.zero, jumpDirection = Vector3.up;//-p.gravity.dir;
-																			  // if the user wants to jump, and is allowed to jump again
-				if (!impulseActive && (jumpsSoFar < maxJumps) && peaked) {
-					jumpPressedMs = (int)Clock.NowTicks;
-					Debug.Log(jumpPressedMs);
-					lastValidStand = 0;
-					heightReached = 0;
-					jumpPositions.Clear();
-					if (!isForgiven) {
-						timeHeld = 0;
-						lastStablePosition = p.transform.position;
-					}
-					jumpsSoFar++;
-					targetHeight = minJumpHeight * p.rb.mass;
-					float velocityRequiredToJump = Mathf.Sqrt(targetHeight * 2 * gForce);
-					// cancel our current jump/fall forces
-					if (jumpStartResetsVerticalMotion) {
-						float motionInVerticalDirection = p.rb.velocity.y;//Vector3.Dot(jumpDirection, p.rb.velocity);
-						jump_force -= new Vector3(0, motionInVerticalDirection / Time.deltaTime, 0);//(motionInVerticalDirection * jumpDirection) / Time.deltaTime;
-					}
-					if (start == null) { start = Lines.MakeWire(); }
-					start.Circle(p.transform.position, Vector3.up, Color.red, .5f);
-					if (!collided) {
-						Vector3 jumpDir = p.move.moveDirection;
-						if (jumpDir == Vector3.zero) { jumpDir = p.transform.forward; }
-						if (pathMax == null) { pathMax = Lines.MakeWire(); }
-						pathMax.Line(CalcJumpPath(lastStablePosition, jumpDir, p.move.speed, maxJumpHeight, gForce), Color.white);
-					}
-					// apply proper jump force
-					currentJumpVelocity = velocityRequiredToJump;
-					peaked = false;
-					jump_force += (jumpDirection * currentJumpVelocity) / Time.deltaTime;
-					impulseActive = true;
-					p.move.groundNormal = jumpDirection; // animation callback code might be waiting for this
-					p.callbacks.jumped.Invoke(jumpDirection);
-				} else
-					// if a jump is happening      
-					if (currentJumpVelocity > 0) {
-					// handle jump height: the longer you hold jump, the higher you jump
-					if (inputHeld) {
-						timeHeld += Time.deltaTime;
-						if (timeHeld >= fullJumpPressDuration) {
-							targetHeight = maxJumpHeight;
-							timeHeld = fullJumpPressDuration;
-						} else {
-							targetHeight = minJumpHeight + ((maxJumpHeight - minJumpHeight) * timeHeld / fullJumpPressDuration);
-							targetHeight *= p.rb.mass;
-						}
-						//if (!collided) {
-						//	Vector3 pos = p.transform.position;
-						//	float duration = CalcStandardJumpDuration(targetHeight, gForce);
-						//	float seconds = ((int)Clock.Now - jumpPressedMs)/1000f;
-						//	pos.y = CalcJumpHeightAt(seconds / duration, targetHeight, gForce) + lastStablePosition.y;
-						//	p.transform.position = pos;
-						//} else
-						if (heightReached < targetHeight) {
-							float requiredJumpVelocity = Mathf.Sqrt((targetHeight - heightReached) * 2 * gForce);
-							float forceNeeded = requiredJumpVelocity - currentJumpVelocity;
-							jump_force += (jumpDirection * forceNeeded) / Time.deltaTime;
-							currentJumpVelocity = requiredJumpVelocity;
-						}
-					} else { peaked = true; }
-					if (!collided) {
-						Vector3 jumpDir = p.move.moveDirection;
-						if (jumpDir == Vector3.zero) { jumpDir = p.transform.forward; }
-						float minJump = (maxJumpHeight - minJumpHeight) * timeHeld / fullJumpPressDuration + minJumpHeight;
-						if (pathMin == null) { pathMin = Lines.MakeWire(); }
-						pathMin.Line(CalcJumpPath(lastStablePosition, jumpDir, p.move.speed, minJump, gForce), Color.red);
-					}
+				float gForce = Mathf.Abs(Physics.gravity.y);
+				if (isJumping) {
+					Vector3 vel = cm.rb.velocity;
+					JumpUpdate(now, gForce, cm.move.speed, jpress, cm.body, ref vel);
+					cm.rb.velocity = vel;
 				} else {
-					impulseActive = false;
+					peaked = now >= peakTime;
 				}
-				if (currentJumpVelocity > 0) {
-					float moved = currentJumpVelocity * Time.deltaTime;
-					heightReached += moved;
-					heightReachedTotal += moved;
-					currentJumpVelocity -= gForce * Time.deltaTime;
-				} else if (!peaked && !isStableEnoughToJump) {
-					peaked = true;
-					impulseActive = false;
+				if (!isJumping && jpress && usedDoubleJumps < doubleJumps) {
+					DoubleJump(cm.body, cm.move.speed, gForce, peaked && !peakedAtStart && jumpingAtStart);
 				}
-				p.rb.AddForce(jump_force);
 			}
-		}
 
-		static List<Vector3> CalcJumpPath(Vector3 position, Vector3 dir, float speed, float jumpHeight, float gForce) {
-			List<Vector3> points = new List<Vector3>();
-			float timing = CalcStandardJumpDuration(jumpHeight, gForce);
-			//Debug.Log(timing);
-			float dist = timing * speed;
-			points.Add(position + dir * dist);
-			//points.Add(position);
-			for (float t = 0; t <= 1; t += 1f / 32) {
-				float y = CalcJumpHeightAt(t, jumpHeight, gForce);
-				//((t - velocityRequiredToJumpMax) * (t - velocityRequiredToJumpMax)) / (-gForce*2) + maxJumpHeight;
-				//Vector3 pos = lastStablePosition + jumpDir * p.move.speed * t / gForce + Vector3.up * y;
-				Vector3 pos = position + dir * (dist * t) + Vector3.up * y;
-				points.Add(pos);
+			private void JumpUpdate(long now, float gForce, float speed, bool jpress, Transform t, ref Vector3 vel) {
+				if (!heightSet) {
+					CalcJumpOverTime(now - jumpTime, gForce, out float y, out float yVelocity);
+					Vector3 p = t.position;
+					p.y = position.y + y;
+					t.position = p;
+					vel.y = yVelocity;
+					if (showJumpArc) {
+						if (jumpArc == null) { jumpArc = Lines.MakeWire("jump arc").Line(Vector3.zero); }
+						jumpArc.Line(CalcJumpPath(position, t.forward, speed, targetJumpHeight, gForce), Color.red);
+					}
+				}
+				peaked = heightSet && now >= peakTime;
+				isJumping = !peaked && jpress;
 			}
-			return points;
-		}
-
-		static float CalcJumpHeightAt(float percent, float jumpHeight, float gForce) {
-			//float velocityRequiredToJumpMax = Mathf.Sqrt(jumpHeight * 2 * gForce);
-			//float y = ((t - velocityRequiredToJumpMax) * (t - velocityRequiredToJumpMax)) / (-gForce * 2) + jumpHeight;
-
-			//float y = -((t * t) / (2 * gForce)) + (Mathf.Sqrt(2 * jumpHeight) * t) / Mathf.Sqrt(gForce);
-			float velocity = Mathf.Sqrt(jumpHeight * 2 * gForce);
-			//float n = (t * 2 * v - v);
-			float n = velocity * (percent * 2 - 1);
-			//float n = percent - velocity;
-			float y = (n * n) / (-gForce * 2) + jumpHeight;
-			return y;
-		}
-		static float CalcStandardJumpDuration(float jumpHeight, float gForce) {
-			return Mathf.Sqrt(jumpHeight * 2 * gForce) * 2 / gForce;
+			private void CalcJumpOverTime(long jumpMsSoFar, float gForce, out float yPos, out float yVel) {
+				float jumptiming = jumpMsSoFar / 1000f;
+				float jumpP = Mathf.Min(jumptiming / fullJumpPressDuration, 1);
+				if (jumpP >= 1) { heightSet = true; }
+				targetJumpHeight = (maxJumpHeight - minJumpHeight) * jumpP + minJumpHeight;
+				float jVelocity = CalcJumpVelocity(targetJumpHeight, gForce);
+				float jtime = 500 * CalcStandardDuration_WithJumpVelocity(jVelocity, gForce);
+				peakTime = jumpTime + (int)jtime;
+				yPos = CalcHeightAt_WithJumpVelocity(jVelocity, jumptiming, targetJumpHeight, gForce);
+				yVel = CalcVelocityAt_WithJumpVelocity(jVelocity, jumptiming, gForce);
+			}
+			private void DoubleJump(Transform t, float speed, float gForce, bool justPeaked) {
+				if (justPeaked) {
+					float peakHeight = position.y + targetJumpHeight;
+					Vector3 delta = t.position - position;
+					delta.y = 0;
+					float dist = delta.magnitude;
+					float peakTime = CalcStandardJumpDuration(targetJumpHeight, gForce) / 2;
+					float expectedDist = peakTime * speed;
+					if (dist > expectedDist) {
+						Vector3 p = position + delta * expectedDist / dist;
+						p.y = peakHeight;
+						t.position = p;
+					}
+					position = t.position;
+					position.y = peakHeight;
+				} else {
+					position = t.position;
+				}
+				Start(position);
+				++usedDoubleJumps;
+			}
+			public void MarkStableJumpPoint(Vector3 position) {
+				this.position = position;
+				stableTime = Clock.NowRealTicks;
+			}
+			static List<Vector3> CalcJumpPath(Vector3 pos, Vector3 dir, float speed, float jHeight, float gForce) {
+				return CalcPath_WithVelocity(CalcJumpVelocity(jHeight, gForce), pos, dir, speed, jHeight, gForce);
+			}
+			static List<Vector3> CalcPath_WithVelocity(float jVelocity, Vector3 p, Vector3 dir, float speed, float jHeight, float gForce) {
+				List<Vector3> points = new List<Vector3>();
+				float stdJumpDuration = 2 * jVelocity / gForce;
+				for (float t = 0; t < stdJumpDuration; t += 1f / 32) {
+					float vAtPoint = t * gForce - jVelocity;
+					float y = -(vAtPoint * vAtPoint) / (gForce * 2) + jHeight;
+					Vector3 pos = p + dir * (speed * t) + Vector3.up * y;
+					points.Add(pos);
+				}
+				points.Add(p + dir * speed * stdJumpDuration);
+				return points;
+			}
+			static float CalcJumpVelocity(float jumpHeight, float gForce) { return Mathf.Sqrt(2 * jumpHeight * gForce); }
+			static float CalcJumpHeightAt(float time, float jumpHeight, float gForce) {
+				return CalcHeightAt_WithJumpVelocity(CalcJumpVelocityAt(time, jumpHeight, gForce), time, jumpHeight, gForce);
+			}
+			static float CalcHeightAt_WithJumpVelocity(float jumpVelocity, float time, float jumpHeight, float gForce) {
+				float vAtPoint = CalcVelocityAt_WithJumpVelocity(jumpVelocity, time, gForce);
+				float y = -(vAtPoint * vAtPoint) / (gForce * 2) + jumpHeight;
+				return y;
+			}
+			static float CalcJumpVelocityAt(float time, float jumpHeight, float gForce) {
+				return CalcVelocityAt_WithJumpVelocity(CalcJumpVelocity(jumpHeight, gForce), time, gForce);
+			}
+			static float CalcVelocityAt_WithJumpVelocity(float jumpVelocity, float time, float gForce) {
+				return -(time * gForce - jumpVelocity);
+			}
+			static float CalcStandardJumpDuration(float jumpHeight, float gForce) {
+				return CalcStandardDuration_WithJumpVelocity(CalcJumpVelocity(jumpHeight, gForce), gForce);
+			}
+			static float CalcStandardDuration_WithJumpVelocity(float jumpVelocity, float gForce) {
+				return 2 * jumpVelocity / gForce;
+			}
 		}
 
 		[Tooltip("hooks that allow code execution when character state changes (useful for animation)")]
