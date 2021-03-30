@@ -140,11 +140,9 @@ public class MinHeap<T> : Heap<T> {
 	protected override bool Dominates(T x, T y) { return Comparer.Compare(x, y) <= 0; }
 }
 
-public static class HeapSearch {
-	struct DistanceEntry<T> {
-		public float distance;
-		public T value;
-		public DistanceEntry(T v, float d) { this.value = v; this.distance = d; }
+public static class HeapSearchExtension {
+	struct DistanceEntry<T> { public float distance; public T value;
+		public DistanceEntry(T v, float d) { value = v; distance = d; }
 	}
 	/// <typeparam name="T"></typeparam>
 	/// <param name="list">unsorted list of elements</param>
@@ -152,14 +150,14 @@ public static class HeapSearch {
 	/// <param name="DistanceFunction">heuristic to determine how close an element is</param>
 	/// <param name="sorted">if true, minor additional process cost (another O(c log c) function) un-heaping, to sort</param>
 	/// <returns>a list of count elements if list length is greater count. these are the closest to 0 according to the given distance heuristic. if sorted is false, they are not in gauranteed order.</returns>
-	public static T[] GetClosest<T>(IEnumerable<T> list, int count, Func<T,float> DistanceFunction, bool sorted = true) {
+	public static T[] GetClosest<T>(this IEnumerable<T> list, int count, Func<T,float> DistanceFunction, bool sorted = true) {
 		List<T> result = new List<T>();
 		Comparer<DistanceEntry<T>> comparer = Comparer<DistanceEntry<T>>.Create((a, b) => a.distance.CompareTo(b.distance));
 		MaxHeap<DistanceEntry<T>> maxheap = new MaxHeap<DistanceEntry<T>>(comparer);
 		foreach (T e in list) {
 			DistanceEntry<T> de = new DistanceEntry<T>(e, DistanceFunction(e));
 			maxheap.Add(de);
-			if(maxheap.Count > count) { maxheap.Pop(); }
+			if (maxheap.Count > count) { maxheap.Pop(); }
 		}
 		return sorted ? maxheap.ToSortedArray(sortedElement=> sortedElement.value) 
 			: maxheap.ToArray(partiallySortedElement=>partiallySortedElement.value);

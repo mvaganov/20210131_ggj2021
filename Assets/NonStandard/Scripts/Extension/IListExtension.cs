@@ -3,19 +3,19 @@ using System.Collections.Generic;
 using System.Text;
 
 public static class IListExtension {
-	public static Int32 BinarySearchIndexOf<T>(this IList<T> list, T value, IComparer<T> comparer = null) {
-		if (list == null)
-			throw new ArgumentNullException("list");
+	public static int BinarySearchIndexOf<T>(this IList<T> list, T value, IComparer<T> comparer = null) {
+		if (list == null) { throw new ArgumentNullException("list"); }
 		if (comparer == null) { comparer = Comparer<T>.Default; }
-		Int32 lower = 0, upper = list.Count - 1;
+		return list.BinarySearchIndexOf(value, comparer.Compare);
+	}
+	public static int BinarySearchIndexOf<T>(this IList<T> list, T value, Func<T,T,int> comparer) {
+		if (list == null) { throw new ArgumentNullException("list"); }
+		int lower = 0, upper = list.Count - 1;
 		while (lower <= upper) {
-			Int32 middle = lower + (upper - lower) / 2, comparisonResult = comparer.Compare(value, list[middle]);
-			if (comparisonResult == 0)
-				return middle;
-			else if (comparisonResult < 0)
-				upper = middle - 1;
-			else
-				lower = middle + 1;
+			int middle = lower + (upper - lower) / 2, comparisonResult = comparer.Invoke(value, list[middle]);
+			if (comparisonResult == 0) return middle;
+			if (comparisonResult < 0) upper = middle - 1;
+			else                      lower = middle + 1;
 		}
 		return ~lower;
 	}

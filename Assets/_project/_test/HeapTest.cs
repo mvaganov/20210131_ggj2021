@@ -22,7 +22,7 @@ public class HeapTest : MonoBehaviour
             list.Add(go);
 		}
         Vector3 p = transform.position;
-        GameObject[] closest = HeapSearch.GetClosest(list, grabClosest, i => Vector3.Distance(i.transform.position, p));
+        GameObject[] closest = list.GetClosest(grabClosest, i => i.transform.position.Distance(p));
         //Debug.Log(closest.JoinToString(", ", i => Vector3.Distance(i.transform.position, p).ToString()));
         Array.ForEach(closest, go => { go.transform.localScale *= 0.5f; });
     }

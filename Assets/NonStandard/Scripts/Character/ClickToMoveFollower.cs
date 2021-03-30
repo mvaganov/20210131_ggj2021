@@ -13,8 +13,13 @@ public class ClickToMoveFollower : MonoBehaviour {
 		public Act act;
 		public Vector3 positon;
 		public float value = 0;
+		/// <summary>optionally change the speed of motion (lowered speed)</summary>
+		public float speed = 1;
+		/// <summary>optionally do this action for a certain time limit. if zero, there are no time limits.</summary>
+		public float timeLimit;
 		public Interact3dItem ui;
-		public Waypoint(Interact3dItem _ui, Act a = Act.Move, float v = 0) { positon = _ui.transform.position; ui = _ui; act = a; value = v; }
+		public Waypoint(Interact3dItem _ui, Act a = Act.Move, float v = 0) {
+			positon = _ui.transform.position; ui = _ui; act = a; value = v; }
 		public Waypoint(Vector3 p, Act a = Act.Move, float v = 0) { ui = null; positon = p; act = a; value = v; }
 	}
 	public List<Waypoint> waypoints = new List<Waypoint>();
@@ -109,6 +114,121 @@ public class ClickToMoveFollower : MonoBehaviour {
 				NotifyWayPointReached();
 			}
 		}
+	}
+
+	public bool doPrediction = false;
+	public float predictionSeconds;
+	public float predictionProgressOnWaypoint;
+	public int predictionWaypointIndex = -1;
+	public Vector3 predictionPos;
+	const float timeJump = 1f / 16;
+	const int maxPredictionsPerCycle = 16;
+	public List<Vector3> predictionPath = new List<Vector3>();
+	public Lines.Wire predictionLine, startArrow, endArrow;
+
+	void PredictionPathAdd(Vector3 p) {
+		if (predictionPath.Count == 0) { predictionPath.Add(p); return; }
+		Vector3 last = predictionPath[predictionPath.Count - 1];
+		if(p.DistanceManhattan(last) > 1f / 1024f) { predictionPath.Add(p); }
+	}
+	public void Update() {
+		//return; // TODO work on this code.
+		// if the path is known, walk down path ahead of time with collision detection to get a more precise prediction
+		if (!doPrediction) return;
+		// if the prediction is starting, initialize prediction state
+		if(predictionWaypointIndex < 0) {
+			predictionProgressOnWaypoint = 0;
+			predictionSeconds = 0;
+			predictionWaypointIndex = 0;
+			predictionPos = waypoints[0].positon;
+			//Debug.Log("start"+predictionPos);
+			predictionPath.Clear();
+			predictionPath.Add(predictionPos);
+			if (predictionLine != null) { predictionLine.Line(Vector3.zero); }
+			if (startArrow == null) { startArrow = Lines.MakeWire("start"); }
+			startArrow.Arrow (predictionPos + Vector3.up, predictionPos, Color.red, .25f);
+		}
+		int predictionsMadeThisTime = 0;
+		float speed = mover.move.speed;
+		float move = speed * timeJump;
+		Vector3 capT, capB;
+		float rad;
+		float gForce = Mathf.Abs(Physics.gravity.y);
+		mover.GetLocalCapsule(out capT, out capB, out rad);
+		do {
+			if(predictionWaypointIndex+1 >= waypoints.Count) { doPrediction = false; break; }
+			Vector3 next = waypoints[predictionWaypointIndex + 1].positon;
+			if(waypoints[predictionWaypointIndex].act != Waypoint.Act.Move) {
+				//Debug.Log("not move?");
+				break;
+			}
+			Vector3 delta = next - predictionPos;
+			float dist = delta.magnitude;
+			Vector3 dir = delta / dist;
+			//Vector3 expectedAfterTimeJump = predictionPos + dir * move;
+			//float timeCollisionOccuredAt = 0;
+			delta.y = 0;
+			dist = delta.magnitude;
+			while (predictionWaypointIndex < waypoints.Count-1) {
+				if (Physics.CapsuleCast(capT + predictionPos, capB + predictionPos, rad, dir, out RaycastHit hitInfo, move)) {
+					if(hitInfo.distance > 0) {
+						float timePassed = hitInfo.distance / speed;
+						predictionSeconds += timePassed;
+						predictionPos += dir * timePassed;
+						PredictionPathAdd(predictionPos);
+					}
+					Vector3 r = Vector3.Cross(hitInfo.normal, dir).normalized;
+					dir = Vector3.Cross(r, dir);
+					float shorterMove = move - hitInfo.distance;
+					if(Physics.CapsuleCast(capT + predictionPos, capB + predictionPos, rad, dir, out hitInfo, shorterMove)) {
+						if (hitInfo.distance > 0) {
+							float timePassed = hitInfo.distance / speed;
+							predictionSeconds += timePassed;
+							predictionPos += dir * timePassed;
+							PredictionPathAdd(predictionPos);
+						} else {
+							Debug.Log("blocked!");
+							doPrediction = false;
+						}
+					} else {
+						float timePassed = shorterMove / speed;
+						PredictionMove_ThenToGround(dir, shorterMove, timePassed, rad, gForce);
+					}
+					doPrediction = false; // till the collision logic can be tested, stop after the first collision
+				} else {
+					PredictionMove_ThenToGround(dir, move, timeJump, rad, gForce);
+				}
+				delta = next - predictionPos;
+				delta.y = 0;
+				float nextDist = delta.magnitude;
+				if(nextDist > dist) {
+					++predictionWaypointIndex;
+					break;
+				} else {
+					dist = nextDist;
+				}
+				if (++predictionsMadeThisTime >= maxPredictionsPerCycle) { break; }
+			}
+			if(predictionWaypointIndex >= waypoints.Count - 1) { doPrediction = false; ; }
+		} while (predictionsMadeThisTime < maxPredictionsPerCycle);
+		if (predictionLine == null) { predictionLine = Lines.MakeWire("prediction"); }
+		if (!doPrediction) { predictionWaypointIndex = -1; }
+		predictionLine.Line(predictionPath, Color.magenta, End.Normal, 0.25f);
+		if (endArrow == null) { endArrow = Lines.MakeWire("end"); }
+		Vector3 endP = predictionPath[predictionPath.Count - 1];
+		endArrow.Arrow(endP, endP + Vector3.up, Color.yellow, .25f);
+	}
+	public void PredictionMove_ThenToGround(Vector3 dir, float distToMove, float timeToFall, float rad, float gForce) {
+		predictionPos += dir * distToMove;
+		float fallMove = timeToFall * timeToFall * gForce;
+		if (Physics.SphereCast(predictionPos, rad, Vector3.down, out RaycastHit hitInfo, fallMove)) {
+			predictionPos += Vector3.down * hitInfo.distance;
+			timeToFall = Mathf.Sqrt(hitInfo.distance / gForce);
+		} else {
+			predictionPos += Vector3.down * fallMove;
+		}
+		PredictionPathAdd(predictionPos);
+		predictionSeconds += timeToFall;
 	}
 	public void NotifyWayPointReached() {
 		mover.DisableAutoMove();

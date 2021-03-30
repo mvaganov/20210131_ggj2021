@@ -12,8 +12,9 @@ namespace NonStandard.Character {
 		[ContextMenuItem("Create default user controls", "CreateDefaultUserControls")]
 		public Transform head;
 		private Transform body;
+		private CapsuleCollider capsule;
 
-		private void Awake() { body = transform; }
+		private void Awake() { body = transform; capsule = GetComponentInChildren<CapsuleCollider>(); }
 		void Start()
 		{
 			rb = GetComponent<Rigidbody>();
@@ -79,6 +80,21 @@ namespace NonStandard.Character {
 			move.automaticMovement.whatToDoWhenTargetIsReached = whatToDoWhenTargetIsReached;
 		}
 		public void DisableAutoMove() { move.automaticMovement.DisableAutoMove(); MoveForwardMovement = StrafeRightMovement = 0; move.moveDirection = move.oppositionDirection; }
+		public void GetLocalCapsule(out Vector3 top, out Vector3 bottom, out float rad) {
+			float h = capsule.height / 2f;
+			Vector3 r = Vector3.zero;
+			switch (capsule.direction) {
+			case 0: r = new Vector3(h, 0); break;
+			case 1: r = new Vector3(0, h); break;
+			case 2: r = new Vector3(0, 0, h); break;
+			}
+			top = capsule.center + r;
+			bottom = capsule.center - r;
+			top = body.rotation * top;
+			bottom = body.rotation * bottom;
+			rad = capsule.radius;
+		}
+
 
 		[System.Serializable]
 		public struct CharacterMoveControls {
@@ -388,7 +404,7 @@ namespace NonStandard.Character {
 					vel.y = yVelocity;
 					if (showJumpArc) {
 						if (jumpArc == null) { jumpArc = Lines.MakeWire("jump arc").Line(Vector3.zero); }
-						jumpArc.Line(CalcJumpPath(position, t.forward, speed, targetJumpHeight, gForce), Color.red);
+						jumpArc.Line(CalcPath(position, t.forward, speed, targetJumpHeight, gForce), Color.red);
 					}
 				}
 				peaked = heightSet && now >= peakTime;
@@ -430,13 +446,19 @@ namespace NonStandard.Character {
 				this.position = position;
 				stableTime = Clock.NowRealTicks;
 			}
-			static List<Vector3> CalcJumpPath(Vector3 pos, Vector3 dir, float speed, float jHeight, float gForce) {
-				return CalcPath_WithVelocity(CalcJumpVelocity(jHeight, gForce), pos, dir, speed, jHeight, gForce);
+			/// <param name="pos">starting position of the jump</param>
+			/// <param name="dir"></param>
+			/// <param name="speed"></param>
+			/// <param name="jHeight"></param>
+			/// <param name="gForce"></param>
+			/// <returns></returns>
+			public static List<Vector3> CalcPath(Vector3 pos, Vector3 dir, float speed, float jHeight, float gForce, float timeIncrement = 1f/32) {
+				return CalcPath_WithVelocity(CalcJumpVelocity(jHeight, gForce), pos, dir, speed, jHeight, gForce, timeIncrement);
 			}
-			static List<Vector3> CalcPath_WithVelocity(float jVelocity, Vector3 p, Vector3 dir, float speed, float jHeight, float gForce) {
+			static List<Vector3> CalcPath_WithVelocity(float jVelocity, Vector3 p, Vector3 dir, float speed, float jHeight, float gForce, float timeIncrement) {
 				List<Vector3> points = new List<Vector3>();
 				float stdJumpDuration = 2 * jVelocity / gForce;
-				for (float t = 0; t < stdJumpDuration; t += 1f / 32) {
+				for (float t = 0; t < stdJumpDuration; t += timeIncrement) {
 					float vAtPoint = t * gForce - jVelocity;
 					float y = -(vAtPoint * vAtPoint) / (gForce * 2) + jHeight;
 					Vector3 pos = p + dir * (speed * t) + Vector3.up * y;

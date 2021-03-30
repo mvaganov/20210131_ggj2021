@@ -177,6 +177,7 @@ public class MazeStarWalker : MonoBehaviour {
 						}
 						follower.SetCurrentTarget(pos);
 						follower.UpdateLine();
+						follower.doPrediction = true;
 					} else {
 						if (!cm.IsAutoMoving() && follower.waypoints.Count==0) {
 							mapAstar.Start(here, here);
