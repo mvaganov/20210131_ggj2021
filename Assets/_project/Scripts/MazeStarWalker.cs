@@ -1,21 +1,20 @@
 ﻿using MazeGeneration;
-using NonStandard;
 using NonStandard.Character;
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = NonStandard.Data.Random;
 
 public class MazeStarWalker : MonoBehaviour {
+	public CharacterMove characterMover;
 	public MazeLevel maze;
 	public GameObject textOutput;
 	public bool canJump;
 	public Discovery discovery;
 	public Game game;
 	public ClickToMoveFollower follower;
-	CharacterMove cm;
 	public GameObject prefab_debug_astar;
+
+	private Transform _t;
 
 	public enum AiBehavior { None, RandomLocalEdges, RandomInVision }
 	public enum TileSurfaceChoice { Center, Random, Closest }
@@ -72,9 +71,10 @@ public class MazeStarWalker : MonoBehaviour {
 	}
 	void Start()
 	{
-		cm = GetComponent<CharacterMove>();
-		follower = game.clickToMove.Follower(cm);
-		discovery = game.EnsureExplorer(gameObject);
+		if (characterMover == null) { characterMover = GetComponent<CharacterMove>(); }
+		_t = characterMover.transform;
+		follower = game.clickToMove.Follower(characterMover);
+		discovery = game.EnsureExplorer(characterMover.gameObject);
 		visionParticle = GetComponentInChildren<ParticleSystem>();
 	}
 	public bool useVisionParticle = false;
@@ -84,18 +84,18 @@ public class MazeStarWalker : MonoBehaviour {
 	void Update()
 	{
 		if (visionParticle != null) {
-			if (cm.JumpButtonTimed > 0 && !visionParticle.isPlaying) {
+			if (characterMover.JumpButtonTimed > 0 && !visionParticle.isPlaying) {
 				visionParticle.Play();
-			} else if (cm.JumpButtonTimed == 0 && visionParticle.isPlaying) {
+			} else if (characterMover.JumpButtonTimed == 0 && visionParticle.isPlaying) {
 				visionParticle.Stop();
 			}
 		}
 		Coord mapSize = maze.Map.GetSize();
 		if (mapAstar == null) {
-			mapAstar = new Map2dAStar(() => canJump, maze, discovery.vision, transform, prefab_debug_astar);
+			mapAstar = new Map2dAStar(() => canJump, maze, discovery.vision, _t, prefab_debug_astar);
 		}
 		mapAstar.UpdateMapSize();
-		Vector3 p = transform.position;
+		Vector3 p = _t.position;
 		Coord here = maze.GetCoord(p);
 		if(follower.waypoints.Count > 0) {
 			Coord there = maze.GetCoord(follower.waypoints[0].positon);
@@ -113,7 +113,7 @@ public class MazeStarWalker : MonoBehaviour {
 				mapSize.ForEach(co => {
 					if (discovery.vision[co]) {
 						Vector3 po = maze.GetPosition(co);
-						po.y = transform.position.y;
+						po.y = _t.position.y;
 						visionParticle.transform.position = po;
 						visionParticle.Emit(1);
 					}
@@ -123,9 +123,9 @@ public class MazeStarWalker : MonoBehaviour {
 		}
 		switch (aiBehavior) {
 		case AiBehavior.RandomLocalEdges:
-			if (!cm.IsAutoMoving()) {
+			if (!characterMover.IsAutoMoving()) {
 				Coord c = moves[Random.A.Next(moves.Count)];
-				cm.SetAutoMovePosition(MoveablePosition(c, p));
+				characterMover.SetAutoMovePosition(MoveablePosition(c, p));
 			}
 			break;
 		case AiBehavior.RandomInVision:
@@ -172,14 +172,14 @@ public class MazeStarWalker : MonoBehaviour {
 							switch (moveType) {
 							case MazeAStar.EdgeMoveType.Walk: follower.AddWaypoint(pos, false); break;
 							case MazeAStar.EdgeMoveType.Fall: follower.AddWaypoint(pos, false, 0, true); break;
-							case MazeAStar.EdgeMoveType.Jump: follower.AddWaypoint(pos, false, cm.jump.fullJumpPressDuration); break;
+							case MazeAStar.EdgeMoveType.Jump: follower.AddWaypoint(pos, false, characterMover.jump.fullJumpPressDuration); break;
 							}
 						}
 						follower.SetCurrentTarget(pos);
 						follower.UpdateLine();
 						follower.doPrediction = true;
 					} else {
-						if (!cm.IsAutoMoving() && follower.waypoints.Count==0) {
+						if (!characterMover.IsAutoMoving() && follower.waypoints.Count==0) {
 							mapAstar.Start(here, here);
 							//Debug.Log("startover new level?");
 						}

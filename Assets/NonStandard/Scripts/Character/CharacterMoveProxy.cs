@@ -1,14 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace NonStandard.Character {
 	public class CharacterMoveProxy : MonoBehaviour {
+		[Tooltip("What character to pass input to")]
 		[SerializeField] protected CharacterMove target;
 		public Transform MoveTransform {
 			get { return target != null ? target.transform : null; }
 			set {
-				Debug.Log("!@## " + Show.GetStack(10));
 				Target = value.GetComponent<CharacterMove>();
 				//if(target != null) {
 				//	transform.parent = MoveTransform;

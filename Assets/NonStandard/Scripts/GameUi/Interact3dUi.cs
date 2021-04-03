@@ -21,7 +21,7 @@ namespace NonStandard.GameUi {
             }
             private void OnTriggerExit(Collider other) {
                 Interact3dItem item = other.GetComponentInChildren<Interact3dItem>();
-                if (item && !item.alwaysOn) { ui.Remove(item); }
+                if (item && !item.internalState.alwaysOn) { ui.Remove(item); }
             }
             public void Blink() {
                 ui.Clear();
@@ -33,8 +33,8 @@ namespace NonStandard.GameUi {
             if (item.screenUi == null) {
                 item.screenUi = Instantiate(prefab_interactButton).GetComponent<RectTransform>();
                 item.screenUi.SetParent(uiArea);
-                item.screenUi.transform.localScale = prefab_interactButton.transform.localScale * item.size;
-                item.fontSize = item.fontSize * item.fontCoefficient;
+                item.screenUi.transform.localScale = prefab_interactButton.transform.localScale * item.internalState.size;
+                item.fontSize = item.fontSize * item.internalState.fontCoefficient;
                 item.onInteractVisible?.Invoke();
             }
         }
@@ -49,7 +49,7 @@ namespace NonStandard.GameUi {
 			}
 		}
         public void Remove(Interact3dItem item) {
-            if (item.alwaysOn) return;
+            if (item.internalState.alwaysOn) return;
             if (item.screenUi != null) {
                 Destroy(item.screenUi.gameObject);
             }
@@ -71,7 +71,7 @@ namespace NonStandard.GameUi {
             }
             if (item.showing) {
                 item.screenUi.gameObject.SetActive(true);
-                Vector3 screenP = cam.WorldToScreenPoint(item.transform.position + item.worldOffset);
+                Vector3 screenP = cam.WorldToScreenPoint(item.transform.position + item.internalState.worldOffset);
                 item.screenUi.position = screenP;
             } else {
                 item.screenUi.gameObject.SetActive(false);

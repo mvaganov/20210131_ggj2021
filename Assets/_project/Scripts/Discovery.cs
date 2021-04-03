@@ -1,6 +1,5 @@
 ﻿using NonStandard;
 using NonStandard.Character;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using static NonStandard.Lines;
@@ -32,6 +31,9 @@ public class Discovery : MonoBehaviour
 	private void Start() {
 		if(maze == null) { maze = FindObjectOfType<MazeLevel>(); }
         CharacterMove cm = transform.parent.GetComponent<CharacterMove>();
+        if(cm == null) {
+            Debug.Log(transform.HierarchyPath());
+		}
         sc = GetComponent<SphereCollider>();
         cm.callbacks.jumped.AddListener(v => Blink());
         //cm.callbacks.stand.AddListener(v => Blink());

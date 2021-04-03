@@ -5,22 +5,28 @@ using UnityEngine.UI;
 namespace NonStandard.GameUi {
 	public class Interact3dItem : MonoBehaviour {
 		[SerializeField] private string _text = "interact";
-		[SerializeField] private RectTransform _interactUi;
 		[SerializeField] private Action _onInteract;
-		public Vector3 worldOffset;
-		[SerializeField] private bool _showing = true;
-		public bool alwaysOn = false;
-		public float size = 1;
-		public float fontCoefficient = 1;
 		public Action onInteractVisible;
 		public Action onInteractHidden;
-		public void Start() { if (alwaysOn) { Interact3dUi.Instance.Add(this); } }
-		private void OnDestroy() { if (_interactUi) { Destroy(_interactUi.gameObject); } }
+		public InternalState internalState = new InternalState();
+
+		[System.Serializable] public class InternalState {
+			public RectTransform _interactUi;
+			public Vector3 worldOffset;
+			public bool _showing = true;
+			public bool alwaysOn = false;
+			public float size = 1;
+			public float fontCoefficient = 1;
+		}
+
+
+		public void Start() { if (internalState.alwaysOn) { Interact3dUi.Instance.Add(this); } }
+		private void OnDestroy() { if (internalState._interactUi) { Destroy(internalState._interactUi.gameObject); } }
 		public bool showing {
-			get { return _showing; }
+			get { return internalState._showing; }
 			set {
-				_showing = value;
-				if (_interactUi) { _interactUi.gameObject.SetActive(_showing); }
+				internalState._showing = value;
+				if (internalState._interactUi) { internalState._interactUi.gameObject.SetActive(internalState._showing); }
 			}
 		}
 		public Action OnInteract {
@@ -40,12 +46,12 @@ namespace NonStandard.GameUi {
 			}
 		}
 		public RectTransform screenUi {
-			get { return _interactUi; }
+			get { return internalState._interactUi; }
 			set {
-				_interactUi = value;
+				internalState._interactUi = value;
 				Text = _text;
 				OnInteract = _onInteract;
-				showing = _showing;
+				showing = internalState._showing;
 			}
 		}
 		public string Text {

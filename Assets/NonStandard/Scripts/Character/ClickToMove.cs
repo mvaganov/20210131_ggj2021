@@ -1,9 +1,6 @@
 ﻿using NonStandard.GameUi;
 using NonStandard.Ui;
-using System;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 namespace NonStandard.Character {
 	public class ClickToMove : MonoBehaviour {

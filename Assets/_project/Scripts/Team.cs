@@ -59,7 +59,7 @@ public class Team : MonoBehaviour {
 		if (i3i != null) {
 			i3i.OnInteract = activateMember;
 			i3i.Text = "switch";
-			i3i.alwaysOn = true;
+			i3i.internalState.alwaysOn = true;
 		}
 		if (rosterUi == null) {
 			Show.Log("missing roster UI");

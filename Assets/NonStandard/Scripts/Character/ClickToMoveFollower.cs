@@ -131,9 +131,12 @@ public class ClickToMoveFollower : MonoBehaviour {
 		Vector3 last = predictionPath[predictionPath.Count - 1];
 		if(p.DistanceManhattan(last) > 1f / 1024f) { predictionPath.Add(p); }
 	}
+
+	// the Update method does fine-grained prediction, unlike FixedUpdate, which does more standard timed game logic
 	public void Update() {
 		//return; // TODO work on this code.
 		// if the path is known, walk down path ahead of time with collision detection to get a more precise prediction
+		if(waypoints.Count == 0) { doPrediction = false; }
 		if (!doPrediction) return;
 		// if the prediction is starting, initialize prediction state
 		if(predictionWaypointIndex < 0) {

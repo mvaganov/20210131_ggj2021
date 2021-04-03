@@ -312,12 +312,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _text: waypoint
-  _interactUi: {fileID: 0}
-  worldOffset: {x: 0, y: 0, z: 0}
-  _showing: 1
-  alwaysOn: 1
-  size: 1
-  fontCoefficient: 1
+  internalState:
+    _interactUi: {fileID: 0}
+    worldOffset: {x: 0, y: 0, z: 0}
+    _showing: 1
+    alwaysOn: 0
+    size: 1
+    fontCoefficient: 1
 --- !u!1 &253954732
 GameObject:
   m_ObjectHideFlags: 0
@@ -592,7 +593,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1875188103}
   m_HandleRect: {fileID: 1875188102}
   m_Direction: 0
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -716,7 +717,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2018154531}
   m_HandleRect: {fileID: 2018154530}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -1398,7 +1399,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.0000709664, y: -0.000013088775}
+  m_AnchoredPosition: {x: 0.000045776367, y: -0.000910324}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &863121878
@@ -2640,7 +2641,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1585056158}
   m_HandleRect: {fileID: 1585056157}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -3080,7 +3081,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.00023082006, y: 0.0004916427}
+  m_AnchoredPosition: {x: 0.00002670288, y: -0.000030517578}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &2110826547
@@ -3413,10 +3414,8 @@ GameObject:
   - component: {fileID: 136207236746507222}
   - component: {fileID: 54973691620447810}
   - component: {fileID: 114967211894144060}
-  - component: {fileID: 415154514}
   - component: {fileID: 516913407}
   - component: {fileID: 5278388871029571172}
-  - component: {fileID: 516913414}
   m_Layer: 8
   m_Name: player character
   m_TagString: Player
@@ -3511,14 +3510,21 @@ MonoBehaviour:
     lastOppositionDirection: {x: 0, y: 0, z: 0}
     orientationTransform: {fileID: 4975665806956440}
   jump:
-    minJumpHeight: 0.25
+    isJumping: 0
+    peaked: 0
+    heightSet: 0
+    pressed: 0
+    showJumpArc: 0
+    forgiveLateJumps: 1
+    enabled: 1
+    minJumpHeight: 0.125
     maxJumpHeight: 1.5
     fullJumpPressDuration: 0.25
-    maxJumps: 1
-    PressJump: 0
-    impulseActive: 0
-    disabled: 0
-    jumpsSoFar: 0
+    doubleJumps: 0
+    TimedJumpPress: 0
+    targetJumpHeight: 0
+    position: {x: 0, y: 0, z: 0}
+    usedDoubleJumps: 0
   callbacks:
     moveDirectionChanged:
       m_PersistentCalls:
@@ -3541,25 +3547,6 @@ MonoBehaviour:
     arrived:
       m_PersistentCalls:
         m_Calls: []
---- !u!114 &415154514
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1037285241940550}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c170263af72d0c419d673e1e883bd67, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _text: player
-  _interactUi: {fileID: 0}
-  worldOffset: {x: 0, y: 1, z: 0}
-  _showing: 0
-  alwaysOn: 1
-  size: 1
-  fontCoefficient: 1
 --- !u!114 &516913407
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3572,9 +3559,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 347a01521cfaa3c4e8125fe409d3b99f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  binders: []
-  homePoint: {x: 0, y: 0, z: 0}
   bindOnStart: 1
+  homePoint: {x: 0, y: 0, z: 0}
+  gameAreaInhabited: []
 --- !u!114 &5278388871029571172
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3589,25 +3576,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   inventory: {fileID: 1699271875226481581}
   autoPickup: 1
---- !u!114 &516913414
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1037285241940550}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ba1da41eb9072df4ab539e97525512b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  maze: {fileID: 0}
-  textOutput: {fileID: 0}
-  canJump: 0
-  discovery: {fileID: 0}
-  game: {fileID: 0}
-  follower: {fileID: 0}
-  aiBehavior: 0
 --- !u!1 &1060579637219368
 GameObject:
   m_ObjectHideFlags: 0
@@ -3637,13 +3605,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1060579637219368}
-  m_LocalRotation: {x: 0.13701387, y: -0.8608901, z: 0.3126097, w: 0.37732044}
-  m_LocalPosition: {x: 8.077926, y: 8.901104, z: 9.447336}
+  m_LocalRotation: {x: 0, y: -0.92387956, z: 0.38268343, w: 0}
+  m_LocalPosition: {x: 0, y: 10, z: 10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4550302886921004}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 45, y: -180, z: 0}
 --- !u!20 &20710112917179096
 Camera:
   m_ObjectHideFlags: 0
@@ -5750,10 +5718,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4591834187444804}
-  - component: {fileID: 114968291233072610}
-  - component: {fileID: 114427438296991374}
-  - component: {fileID: 114087168626643078}
   - component: {fileID: 1402800217}
+  - component: {fileID: 114087168626643078}
+  - component: {fileID: 114427438296991374}
+  - component: {fileID: 114968291233072610}
   - component: {fileID: 1848120938323894431}
   m_Layer: 0
   m_Name: player input
@@ -5778,113 +5746,19 @@ Transform:
   m_Father: {fileID: 4550302886921004}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &114968291233072610
+--- !u!114 &1402800217
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1888769986504204}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7be7f486be486684f8af159712ddde6e, type: 3}
+  m_Script: {fileID: 11500000, guid: c00bd0280a8ae8b40b385381b3f5fd5b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  characterToMove: {fileID: 1402800217}
-  key: 323
-  _camera: {fileID: 20710112917179096}
-  validToMove:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  moveToTrigger: 1
-  prefab_waypoint: {fileID: 234466087}
-  prefab_middleWaypoint: {fileID: 0}
-  mouseSet_move: 1
-  mouseSet_ui: 0
---- !u!114 &114427438296991374
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1888769986504204}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 78a45a8d0e6ebf94380ee15da45acc23, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  keyBinds: []
-  axisBinds:
-  - name: mouselook X
-    disable: 0
-    axis:
-    - name: Mouse X
-      multiplier: 5
-      filteredValue: 0
-      stickyInput: 0
-      cachedValue: 0
-      modifiers: []
-    axisEvent:
-      onAxisChange:
-        m_PersistentCalls:
-          m_Calls:
-          - m_Target: {fileID: 114677157611889786}
-            m_MethodName: set_HorizontalRotateInput
-            m_Mode: 0
-            m_Arguments:
-              m_ObjectArgument: {fileID: 0}
-              m_ObjectArgumentAssemblyTypeName: 
-              m_IntArgument: 0
-              m_FloatArgument: 0
-              m_StringArgument: 
-              m_BoolArgument: 0
-            m_CallState: 2
-          - m_Target: {fileID: 114786457863538574}
-            m_MethodName: set_Horizontal
-            m_Mode: 0
-            m_Arguments:
-              m_ObjectArgument: {fileID: 0}
-              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-              m_IntArgument: 0
-              m_FloatArgument: 0
-              m_StringArgument: 
-              m_BoolArgument: 0
-            m_CallState: 2
-  - name: mouselook Y
-    disable: 0
-    axis:
-    - name: Mouse Y
-      multiplier: 5
-      filteredValue: 0
-      stickyInput: 0
-      cachedValue: 0
-      modifiers: []
-    axisEvent:
-      onAxisChange:
-        m_PersistentCalls:
-          m_Calls:
-          - m_Target: {fileID: 114677157611889786}
-            m_MethodName: set_VerticalRotateInput
-            m_Mode: 0
-            m_Arguments:
-              m_ObjectArgument: {fileID: 0}
-              m_ObjectArgumentAssemblyTypeName: 
-              m_IntArgument: 0
-              m_FloatArgument: 0
-              m_StringArgument: 
-              m_BoolArgument: 0
-            m_CallState: 2
-          - m_Target: {fileID: 114786457863538574}
-            m_MethodName: set_Vertical
-            m_Mode: 0
-            m_Arguments:
-              m_ObjectArgument: {fileID: 0}
-              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-              m_IntArgument: 0
-              m_FloatArgument: 0
-              m_StringArgument: 
-              m_BoolArgument: 0
-            m_CallState: 2
+  target: {fileID: 114967211894144060}
 --- !u!114 &114087168626643078
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6215,19 +6089,113 @@ MonoBehaviour:
               m_StringArgument: 
               m_BoolArgument: 0
             m_CallState: 2
---- !u!114 &1402800217
+--- !u!114 &114427438296991374
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1888769986504204}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c00bd0280a8ae8b40b385381b3f5fd5b, type: 3}
+  m_Script: {fileID: 11500000, guid: 78a45a8d0e6ebf94380ee15da45acc23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 114967211894144060}
+  keyBinds: []
+  axisBinds:
+  - name: mouselook X
+    disable: 0
+    axis:
+    - name: Mouse X
+      multiplier: 5
+      filteredValue: 0
+      stickyInput: 0
+      cachedValue: 0
+      modifiers: []
+    axisEvent:
+      onAxisChange:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 114677157611889786}
+            m_MethodName: set_HorizontalRotateInput
+            m_Mode: 0
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: 
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+          - m_Target: {fileID: 114786457863538574}
+            m_MethodName: set_Horizontal
+            m_Mode: 0
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+  - name: mouselook Y
+    disable: 0
+    axis:
+    - name: Mouse Y
+      multiplier: 5
+      filteredValue: 0
+      stickyInput: 0
+      cachedValue: 0
+      modifiers: []
+    axisEvent:
+      onAxisChange:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 114677157611889786}
+            m_MethodName: set_VerticalRotateInput
+            m_Mode: 0
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: 
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+          - m_Target: {fileID: 114786457863538574}
+            m_MethodName: set_Vertical
+            m_Mode: 0
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+--- !u!114 &114968291233072610
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1888769986504204}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7be7f486be486684f8af159712ddde6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  characterToMove: {fileID: 1402800217}
+  key: 323
+  _camera: {fileID: 20710112917179096}
+  validToMove:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  moveToTrigger: 1
+  prefab_waypoint: {fileID: 234466087}
+  prefab_middleWaypoint: {fileID: 0}
+  mouseSet_move: 1
+  mouseSet_ui: 0
 --- !u!135 &1848120938323894431
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -7257,7 +7225,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.00051908015, y: 0.0001369317}
+  m_AnchoredPosition: {x: -0.000030517578, y: 0.000061035156}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &6579488468370552462
@@ -8046,7 +8014,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 7413846207896300752}
   m_HandleRect: {fileID: 1563717447998030004}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:

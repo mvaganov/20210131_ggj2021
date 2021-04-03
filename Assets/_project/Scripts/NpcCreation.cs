@@ -36,8 +36,8 @@ public class NpcCreation : MonoBehaviour
             }
             Interact3dItem i3d = npc.GetComponentInChildren<Interact3dItem>();
             i3d.Text = npc.name;
-            i3d.size = 1.75f;
-            i3d.fontCoefficient = .7f;
+            i3d.internalState.size = 1.75f;
+            i3d.internalState.fontCoefficient = .7f;
             i3d.OnInteract = () => {
                 DialogManager.Instance.dialogWithWho = npc;
                 DialogManager.Instance.Show();
