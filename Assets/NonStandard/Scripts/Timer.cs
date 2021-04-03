@@ -114,7 +114,7 @@ namespace NonStandard
 		internal static MainClock s_instance;
 		public static MainClock Instance() {
 			if (s_instance != null) return s_instance;
-			s_instance = FindObjectOfType<MainClock>();
+			//s_instance = FindObjectOfType<MainClock>();
 			if (s_instance == null) { // if it doesn't exist
 				GameObject g = new GameObject("<" + typeof(Clock).Name + ">");
 				s_instance = g.AddComponent<MainClock>(); // create one

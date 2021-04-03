@@ -61,3 +61,5 @@ crashlytics-build.properties
 !ConsoleApp1.csproj
 !ConsoleApp1.sln
 bin/
+Assets/NonStandard/Resources/app_build_time.txt
+Assets/NonStandard/Resources/app_build_time.txt.meta
