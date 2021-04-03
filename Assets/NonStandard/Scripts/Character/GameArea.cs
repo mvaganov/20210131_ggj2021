@@ -1,3 +1,2 @@
 ﻿using UnityEngine;
-
-public class GameArea : MonoBehaviour { }
+public class GameArea : MonoBehaviour {}

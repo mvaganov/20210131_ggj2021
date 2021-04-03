@@ -17,13 +17,17 @@ public class GameResident : MonoBehaviour {
         if (bindOnStart) { BindHomePointHere(); }
     }
 	private void OnTriggerEnter(Collider other) {
-        GameArea binder = other.GetComponent<GameArea>();
-		if (binder && gameAreaInhabited.IndexOf(binder) < 0) { gameAreaInhabited.Add(binder); }
+        GameArea area = other.GetComponent<GameArea>();
+		if (area && gameAreaInhabited.IndexOf(area) < 0 && area.enabled) { gameAreaInhabited.Add(area); }
 	}
 	private void OnTriggerExit(Collider other) {
-        GameArea binder = other.GetComponent<GameArea>();
-        if (binder) {
-            gameAreaInhabited.Remove(binder);
+        GameArea area = other.GetComponent<GameArea>();
+        if (area) {
+            for(int i = gameAreaInhabited.Count-1; i >= 0; --i) {
+                if(gameAreaInhabited[i] == null || gameAreaInhabited[i] == area || !gameAreaInhabited[i].enabled || !gameAreaInhabited[i].gameObject.activeInHierarchy) {
+                    gameAreaInhabited.RemoveAt(i);
+				}
+			}
 			if (gameAreaInhabited.Count == 0) { ReturnToHome(); }
         }
     }
