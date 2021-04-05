@@ -267,7 +267,7 @@ namespace NonStandard.Cli {
 			if (inst != null)
 			{
 				s = inst.text;
-				if (s != null) { DoCommand(s, inst.user); }
+				if (s != null) { DoCommand(s, inst.source); }
 			}
 			if (string.IsNullOrEmpty(s) &&
 			string.IsNullOrEmpty(currentCommand) &&

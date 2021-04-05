@@ -18,14 +18,14 @@ namespace NonStandard.Cli {
 		/// <param name="command">name of the command to add (case insensitive)</param>
 		/// <param name="handler">code to execute with this command, think standard main</param>
 		/// <param name="help">reference information, think concise man-pages. Make help <c>"\b"</c> for hidden commands</param>
-		public static void AddCommand(string command, Commander.CommandHandler handler, string help) {
+		public static void AddCommand(string command, Commander.Command.Handler handler, string help) {
 			Instance.commander.addCommand(command, handler, help);
 		}
 
 		/// <summary>Enqueues a command to run, which will be run during the next Update</summary>
 		public static void DoCommand(string commandWithArguments, object fromWho = null) {
 			bool isNewInstance = _instance == null;
-			Instance.commander.EnqueueRun(new Commander.Instruction() { text = commandWithArguments, user = fromWho });
+			Instance.commander.EnqueueRun(new Commander.Instruction() { text = commandWithArguments, source = fromWho });
 			if (isNewInstance) { Instance.Interactivity = ManageUI.InteractivityEnum.Disabled; }
 		}
 
@@ -322,7 +322,7 @@ namespace NonStandard.Cli {
 			if(_initailized == false) {
 				_initailized = true;
 				//Debug.Log("INITING " + this.GetHashCode());
-				commander = new Commander { cmd = this };
+				commander = new Commander { cmdLine = this };
 				data = new TTYData();
 				data.SetSize(maxLines, commandLineWidth);
 				data.SetColors(this.ColorSet);

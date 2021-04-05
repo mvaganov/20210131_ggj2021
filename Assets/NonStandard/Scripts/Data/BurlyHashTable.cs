@@ -6,19 +6,27 @@ using System.Text;
 namespace NonStandard.Data {
 	/// <summary>
 	/// hash table that can have callbacks put on key/value pairs to notify when values change (keys are immutable)
-	/// key/value pairs can also be Set to functions, meaning that they are calculated by code, including possibly other members.
+	/// key/value pairs can also be Set to functions, meaning that they are calculated by code, including possibly other members of this dictionary, which could also be functions. dependencies are calculated, and errors are thrown if recursion is discovered.
 	/// </summary>
 	/// <typeparam name="KEY"></typeparam>
 	/// <typeparam name="VAL"></typeparam>
-	public class BurlyHashTable<KEY, VAL> : IDictionary<KEY, VAL> 
-	//where VAL : IEquatable<VAL>
-	where KEY : IComparable<KEY> {
+	public class BurlyHashTable<KEY, VAL> : IDictionary<KEY, VAL> where KEY : IComparable<KEY> {
+		/// <summary>
+		/// user can define their own hash function
+		/// </summary>
 		public Func<KEY, int> hFunc = null;
+		/// <summary>
+		/// callback whenever any change is made. onChange(key, oldValue, newValue)
+		/// </summary>
+		public Action<KEY, VAL, VAL> onChange;
 		protected List<List<KV>> buckets;
 		public const int defaultBuckets = 8;
-		public List<KV> orderedPairs = new List<KV>();
-		public Action<KEY, VAL, VAL> onChange;
-		// TODO prototype fallback dictionary
+		public const int maxComputeDepth = 1000;
+		/// <summary>
+		/// used to log the order of key/value pairs and cache them in an easily traversed list
+		/// </summary>
+		protected List<KV> orderedPairs = new List<KV>();
+		// TODO prototype fallback dictionary, like EcmaScript
 		public enum ResultOfAssigningToFunction { ThrowException, Ignore, OverwriteFunction }
 		public ResultOfAssigningToFunction onAssignmentToFunction = ResultOfAssigningToFunction.ThrowException;
 		public void FunctionAssignIgnore() { onAssignmentToFunction = ResultOfAssigningToFunction.Ignore; }
@@ -26,21 +34,39 @@ namespace NonStandard.Data {
 		public void FunctionAssignOverwrite() { onAssignmentToFunction = ResultOfAssigningToFunction.OverwriteFunction; }
 		int Hash(KEY key) { return Math.Abs(hFunc != null ? hFunc(key) : key.GetHashCode()); }
 		public class KV {
-			public int hash;
+			public readonly int hash;
 			public readonly KEY _key;
 			public VAL _val;
-			internal BurlyHashTable<KEY, VAL> parent;
+			/// <summary>
+			/// callback whenever any change is made. onChange(oldValue, newValue)
+			/// </summary>
 			public Action<VAL, VAL> onChange;
-
-			public List<KV> dependents, reliesOn; // calculate which fields rely on this one
-			private bool needsRecalculation = true;
-			private Func<VAL> calc;
+			/// <summary>
+			/// values that depend on this value. if this value changes, these need to be notified. we are the sunlight, these are the plant.
+			/// </summary>
+			public List<KV> dependents;
+			/// <summary>
+			/// values that this value relies on. if these values change, this needs to be notified. we are the plant, these are the sunlight.
+			/// </summary>
+			public List<KV> reliesOn;
+			/// <summary>
+			/// dirty flag, set when values this value relies on are changed. the sunlight told us it is changing, we need to adjust!
+			/// </summary>
+			private bool needsDependencyRecalculation = true;
+			/// <summary>
+			/// if false, this is a simple value. if true, this value is calculated using a lambda expression
+			/// </summary>
+			public bool IsComputed => compute != null;
+			private Func<VAL> compute;
 			private bool RemoveDependent(KV kv) { return (dependents != null) ? dependents.Remove(kv) : false; }
 			private void AddDependent(KV kv) { if (dependents == null) { dependents = new List<KV>(); } dependents.Add(kv); }
-			public Func<VAL> Calc {
-				get { return calc; }
+			/// <summary>
+			/// the function used to compute this value. when set, the function is executed, and it's execution path is tested
+			/// </summary>
+			public Func<VAL> Compute {
+				get { return compute; }
 				set {
-					calc = value;
+					compute = value;
 					path.Clear();
 					if (reliesOn != null) {
 						reliesOn.ForEach(kv => kv.RemoveDependent(this));
@@ -66,40 +92,32 @@ namespace NonStandard.Data {
 			public VAL val {
 				get {
 					if (watchingPath) {
-						if (path.Contains(this)) { throw new Exception("recursion: "+
-							string.Join("->", path.ConvertAll(kv=>kv._key.ToString()).ToArray()) + "~>" + key);
-						}
 						path.Add(this);
-						needsRecalculation = true;
+						needsDependencyRecalculation = true;
+						string err = null;
+						if (path.Contains(this)) { err += "recursion"; }
+						if (path.Count >= maxComputeDepth) { err += "max compute depth reached"; }
+						if (!string.IsNullOrEmpty(err)) {
+							throw new Exception(err + string.Join("->", path.ConvertAll(kv => kv._key.ToString()).ToArray()) + "~>" + key);
+						}
 					}
-					if(calc != null && needsRecalculation) { SetInternal(calc.Invoke()); needsRecalculation = false; }
+					if(IsComputed && needsDependencyRecalculation) { SetInternal(compute.Invoke()); needsDependencyRecalculation = false; }
 					return _val;
 				}
-				set {
-					if (calc != null) {
-						switch (parent.onAssignmentToFunction) {
-						case ResultOfAssigningToFunction.ThrowException:
-							string errorMessage = "can't set " + key + ", this value is calculated.";
-							if (reliesOn != null) {
-								errorMessage += " relies on: " + string.Join(", ", reliesOn.ConvertAll(kv => kv.key.ToString()).ToArray());
-							}
-							throw new Exception(errorMessage);
-						case ResultOfAssigningToFunction.Ignore: return;
-						case ResultOfAssigningToFunction.OverwriteFunction: calc = null; break;
-						}
-					}
-					SetInternal(value);
+			}
+			/// <summary>
+			/// hidden to the outside world so we cna be sure parent listener/callbacks are called
+			/// </summary>
+			internal void SetInternal(VAL newValue) {
+				if ((_val == null && newValue != null) || (_val != null && !_val.Equals(newValue))) {
+					if (dependents != null) dependents.ForEach(dep => dep.needsDependencyRecalculation = true);
+					VAL oldValue = _val;
+					_val = newValue;
+					if (onChange != null) onChange.Invoke(oldValue, newValue);
 				}
 			}
-			private void SetInternal(VAL value) {
-				if ((_val == null && value != null) || (_val != null && !_val.Equals(value))) {
-					if (dependents != null) dependents.ForEach(dep => dep.needsRecalculation = true);
-					if (onChange != null) onChange.Invoke(_val, value);
-					_val = value;
-				}
-			}
-			public KV(int hash, KEY k, BurlyHashTable<KEY, VAL> p) : this(hash, k, default(VAL), p) { }
-			public KV(int h, KEY k, VAL v, BurlyHashTable<KEY, VAL> p) { parent = p; _key = k; _val = v; hash = h; }
+			public KV(int hash, KEY k) : this(hash, k, default(VAL)) { }
+			public KV(int h, KEY k, VAL v) { _key = k; _val = v; hash = h; }
 			public override string ToString() { return key + "(" + hash + "):" + val; }
 			public string ToString(bool showDependencies, bool showDependents) {
 				StringBuilder sb = new StringBuilder();
@@ -110,13 +128,13 @@ namespace NonStandard.Data {
 					sb.Append(" /*");
 					if (showDependencies) {
 						sb.Append(" relies on: ");
-						reliesOn.JoinToString(sb, ", ", r=>r.key.ToString());
 						//for(int i = 0; i < reliesOn.Count; ++i) { if(i>0) sb.Append(", "); sb.Append(reliesOn[i].key); }
+						reliesOn.JoinToString(sb, ", ", r=>r.key.ToString());
 					}
 					if (showDependents) {
 						sb.Append(" dependents: ");
-						dependents.JoinToString(sb, ", ", d => d.key.ToString());
 						//for (int i = 0; i < dependents.Count; ++i) { if (i > 0) sb.Append(", "); sb.Append(dependents[i].key); }
+						dependents.JoinToString(sb, ", ", d => d.key.ToString());
 					}
 					sb.Append(" */");
 				}
@@ -128,8 +146,8 @@ namespace NonStandard.Data {
 			public static Comparer comparer = new Comparer();
 			public static implicit operator KeyValuePair<KEY, VAL>(KV k) { return new KeyValuePair<KEY, VAL>(k.key, k.val); }
 		}
-		private KV Kv(KEY key) { return new KV(Hash(key), key, this); }
-		private KV Kv(KEY key, VAL val) { return new KV(Hash(key), key, val, this); }
+		private KV Kv(KEY key) { return new KV(Hash(key), key); }
+		private KV Kv(KEY key, VAL val) { return new KV(Hash(key), key, val); }
 		public BurlyHashTable(Func<KEY, int> hashFunc, int bCount = defaultBuckets) { hFunc = hashFunc; BucketCount = bCount; }
 		public BurlyHashTable() { }
 		public BurlyHashTable(int bucketCount) { BucketCount = bucketCount; }
@@ -147,7 +165,7 @@ namespace NonStandard.Data {
 			if (bucketCount <= 0) { buckets = null; return; }
 			SetBucketCount(bucketCount);
 		}
-		private void SetBucketCount(int bucketCount) {
+		protected void SetBucketCount(int bucketCount) {
 			List<List<KV>> oldbuckets = buckets;
 			buckets = new List<List<KV>>(bucketCount);
 			for (int i = 0; i < bucketCount; ++i) { buckets.Add(null); }
@@ -155,7 +173,7 @@ namespace NonStandard.Data {
 				oldbuckets.ForEach(b => { if (b != null) b.ForEach(kvp => Set(kvp.key, kvp.val)); });
 			}
 		}
-		int FindExactIndex(KV kvp, int index, List<KV> list) {
+		protected int FindExactIndex(KV kvp, int index, List<KV> list) {
 			while (index > 0 && list[index - 1].hash == kvp.hash) { --index; }
 			do {
 				int compareValue = list[index].key.CompareTo(kvp.key);
@@ -165,10 +183,10 @@ namespace NonStandard.Data {
 			} while (index < list.Count && list[index].hash == kvp.hash);
 			return ~index;
 		}
-		private void EnsureBuckets() {
+		protected void EnsureBuckets() {
 			if (buckets == null || buckets.Count == 0) { SetBucketCount(defaultBuckets); }
 		}
-		public void FindEntry(KV kvp, out List<KV> bucket, out int bestIndexInBucket) {
+		protected void FindEntry(KV kvp, out List<KV> bucket, out int bestIndexInBucket) {
 			EnsureBuckets();
 			int whichBucket = kvp.hash % buckets.Count;
 			bucket = buckets[whichBucket];
@@ -182,20 +200,32 @@ namespace NonStandard.Data {
 			EnsureBuckets();
 			List<KV> bucket; int bestIndexInBucket;
 			FindEntry(kvp, out bucket, out bestIndexInBucket);
+			bool inserted = false;
 			if (bestIndexInBucket < 0) {
-				bucket.Insert(~bestIndexInBucket, kvp);
+				bestIndexInBucket = ~bestIndexInBucket;
+				bucket.Insert(bestIndexInBucket, kvp);
 				orderedPairs.Add(kvp);
-				if (onChange != null) onChange.Invoke(kvp._key, default(VAL), kvp._val);
-			} else {
-				if (onChange != null) {
-					VAL old = bucket[bestIndexInBucket].val;
-					bucket[bestIndexInBucket].val = kvp.val;
-					onChange.Invoke(kvp._key, old, kvp._val);
-				} else {
-					bucket[bestIndexInBucket].val = kvp.val;
+				inserted = true;
+			}
+			SetValue_Internal(bucket[bestIndexInBucket], kvp.val);
+			return inserted;
+		}
+		protected void SetValue_Internal(KV dest, VAL value) {
+			if (dest.IsComputed) {
+				switch (onAssignmentToFunction) {
+				case ResultOfAssigningToFunction.ThrowException:
+					string errorMessage = "can't set " + dest.key + ", this value is computed.";
+					if (dest.reliesOn != null) {
+						errorMessage += " relies on: " + string.Join(", ", dest.reliesOn.ConvertAll(kv => kv.key.ToString()).ToArray());
+					}
+					throw new Exception(errorMessage);
+				case ResultOfAssigningToFunction.Ignore: return;
+				case ResultOfAssigningToFunction.OverwriteFunction: dest.Compute = null; break;
 				}
 			}
-			return bestIndexInBucket < 0;
+			VAL old = dest.val;
+			dest.SetInternal(value);
+			onChange?.Invoke(dest._key, old, dest._val);
 		}
 		public bool Set(KEY key, Func<VAL> valFunc) {
 			EnsureBuckets();
@@ -207,7 +237,7 @@ namespace NonStandard.Data {
 				bucket.Insert(bestIndexInBucket, kvp);
 				orderedPairs.Add(kvp);
 			}
-			bucket[bestIndexInBucket].Calc = valFunc;
+			bucket[bestIndexInBucket].Compute = valFunc;
 			return true;
 		}
 		public bool TryGet(KEY key, out KV entry) {
@@ -226,32 +256,17 @@ namespace NonStandard.Data {
 			if (TryGet(key, out kvPair)) { return kvPair.val; }
 			throw new Exception("map does not contain key '"+key+"'");
 		}
-		public string ToDebugString() {
-			StringBuilder sb = new StringBuilder();
-			for (int b = 0; b < buckets.Count; ++b) {
-				if (b > 0) sb.Append("\n");
-				sb.Append(b.ToString()).Append(": ");
-				List<KV> bucket = buckets[b];
-				if (bucket != null) {
-					for (int i = 0; i < bucket.Count; ++i) {
-						if (i > 0) sb.Append(", ");
-						sb.Append(bucket[i].ToString());
-					}
-				}
-			}
-			return sb.ToString();
-		}
 		/// <summary>
 		/// calls any change listeners to mark initialization
 		/// </summary>
-		public void Start() {
+		public void NotifyStart() {
 			if (onChange != null) { onChange.Invoke(default(KEY), default(VAL), default(VAL)); }
 		}
 		public string Show(bool showCalcualted) {
 			StringBuilder sb = new StringBuilder();
 			bool printed = false;
 			for (int i = 0; i < orderedPairs.Count; ++i) {
-				if (showCalcualted || orderedPairs[i].Calc == null) {
+				if (showCalcualted || orderedPairs[i].Compute == null) {
 					if (printed) sb.Append("\n");
 					sb.Append(orderedPairs[i].ToString(true, false));
 					printed = true;
@@ -259,7 +274,7 @@ namespace NonStandard.Data {
 			}
 			return sb.ToString();
 		}
-		/////////////////////////////////////////////// implementing IDictionary below ////////////////////////////////////////
+/////////////////////////////////////////////// implementing IDictionary below ////////////////////////////////////////
 		public ICollection<KEY> Keys { get { return orderedPairs.ConvertAll(kv => kv.key); } }
 		public ICollection<VAL> Values { get { return orderedPairs.ConvertAll(kv => kv.val); } }
 		public bool IsReadOnly { get { return false; } }
@@ -314,7 +329,7 @@ namespace NonStandard.Data {
 		IEnumerator IEnumerable.GetEnumerator() { return new Enumerator(this); }
 		public class Enumerator : IEnumerator<KeyValuePair<KEY, VAL>> {
 			BurlyHashTable<KEY, VAL> htable;
-			int index = -1; // MoveNext() is always called before the enumeration begins
+			int index = -1; // MoveNext() is always called before the enumeration begins, to see if any values exist
 			public Enumerator(BurlyHashTable<KEY, VAL> htable) { this.htable = htable; }
 			public KeyValuePair<KEY, VAL> Current { get { return htable.orderedPairs[index]; } }
 			object IEnumerator.Current { get { return Current; } }

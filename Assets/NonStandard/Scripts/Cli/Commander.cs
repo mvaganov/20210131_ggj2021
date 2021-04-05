@@ -6,7 +6,7 @@ using UnityEngine;
 namespace NonStandard.Cli {
 	public class Commander
 	{
-		public CmdLine_base cmd;
+		public CmdLine_base cmdLine;
 
 #if !CONNECT_TO_REAL_COMMAND_LINE_TERMINAL
 			public void DoSystemCommand(string command, object whosAsking = null) {
@@ -16,23 +16,21 @@ namespace NonStandard.Cli {
 #else
 		public bool AllowSystemAccess = true;
 		public SystemBridge bash;
-		public void DoSystemCommand(string command, object whosAsking = null) {
-			bash.DoCommand(command, (whosAsking == null) ? bash : whosAsking, null, cmd);
+		public void DoSystemCommand(string command, object source = null) {
+			bash.DoCommand(command, (source == null) ? bash : source, null, cmdLine);
+		}
+		public void SystemCommand(string[] args, object source) {
+			if (AllowSystemAccess) {
+				bash.DoCommand(string.Join(" ", args, 1, args.Length - 1), this, null, cmdLine);
+			} else {
+				cmdLine.HandleLog("Access Denied", "", LogType.Warning);
+			}
 		}
 #endif
 
-		public void PopulateBasicCommands()
-		{
+		public void PopulateBasicCommands() {
 #if CONNECT_TO_REAL_COMMAND_LINE_TERMINAL
-			addCommand("cmd", (args, user) => {
-				if (AllowSystemAccess)
-				{
-					bash.DoCommand(string.Join(" ", args, 1, args.Length - 1), this, null, cmd);
-				} else
-				{
-					cmd.HandleLog("Access Denied", "", LogType.Warning);
-				}
-			}, "access the true system's command-line terminal");
+			addCommand("cmd", SystemCommand, "access the true system's command-line terminal");
 #endif
 		}
 
@@ -42,29 +40,24 @@ namespace NonStandard.Cli {
 		public CmdLine_base.DoAfterStringIsRead onInput;
 
 		/// <summary>watching for commands *about to execute*.</summary>
-		public event CommandHandler OnCommand;
+		public event Command.Handler OnCommand;
 		/// <summary>known commands</summary>
 		public Dictionary<string, Command> commands = new Dictionary<string, Command>();
 
-		public bool IsDefaultBehavior()
-		{
+		public bool IsDefaultBehavior() {
 			return waitingToReadLine == null || waitingToReadLine.GetInvocationList().Length == 0;
 		}
 
-		/// <summary>every command can be executed by a different user</summary>
-		[System.Serializable]
-		public class Instruction
-		{
-			public string text; public object user;
-			public bool IsUser(object a_user) { return user == a_user; }
+		/// <summary>every command can be executed by a different user, and might work differently based on user</summary>
+		[System.Serializable] public class Instruction {
+			public string text; public object source;
+			public bool IsSource(object a_source) { return source == a_source; }
 			public override string ToString() { return "(Instruction){text:\""+text+"\"}"; }
 		}
 		/// <summary>queue of instructions that this command line needs to execute.</summary>
 		private List<Instruction> instructionList = new List<Instruction>();
-		public Instruction PopInstruction()
-		{
-			if (instructionList.Count > 0)
-			{
+		public Instruction PopInstruction() {
+			if (instructionList.Count > 0) {
 				RecentInstruction = instructionList[0];
 				instructionList.RemoveAt(0);
 				return RecentInstruction;
@@ -78,7 +71,7 @@ namespace NonStandard.Cli {
 		/// <param name="command">name of the command to add (case insensitive)</param>
 		/// <param name="handler">code to execute with this command, think standard main</param>
 		/// <param name="help">reference information, think concise man-pages. Make help <c>"\b"</c> for hidden commands</param>
-		public void addCommand(string command, CommandHandler handler, string help)
+		public void addCommand(string command, Command.Handler handler, string help)
 		{
 			commands.Add(command.ToLower(), new Command(command, handler, help));
 		}
@@ -87,28 +80,25 @@ namespace NonStandard.Cli {
 		/// <summary>replace current commands with no commands</summary>
 		public void ClearCommands() { commands.Clear(); }
 
-		/// <summary>command-line handler. think "standard main" from Java or C/C++.
-		/// args[0] is the command, args[1] and beyond are the arguments.</summary>
-		public delegate void CommandHandler(string[] args, object whosAsking);
 
-		public class Command
-		{
-			public string command { get; private set; }
-			public CommandHandler handler { get; private set; }
+		public class Command {
+			/// <summary>command-line handler. think "standard main" from Java or C/C++.
+			/// args[0] is the command, args[1] and beyond are the arguments.</summary>
+			public delegate void Handler(string[] args, object whosAsking);
+
+			public readonly string command;
+			public Handler handler { get; private set; }
 			public string help { get; private set; }
-			public Command(string command, CommandHandler handler, string helpReferenceText)
-			{
+			public Command(string command, Handler handler, string helpReferenceText) {
 				this.command = command; this.handler = handler; this.help = helpReferenceText;
 			}
 		}
 
-		public string CommandPromptArtifact()
-		{
-			string promptText = cmd.PromptArtifact;
+		public string CommandPromptArtifact() {
+			string promptText = cmdLine.PromptArtifact;
 #if CONNECT_TO_REAL_COMMAND_LINE_TERMINAL
-			if (cmd.commander.bash.IsInitialized())
-			{
-				promptText = bash.MachineName + cmd.PromptArtifact;
+			if (cmdLine.commander.bash.IsInitialized()) {
+				promptText = bash.MachineName + cmdLine.PromptArtifact;
 			}
 #endif
 			return promptText;
@@ -131,9 +121,9 @@ namespace NonStandard.Cli {
 		public void EnqueueRun(Instruction instruction)
 		{
 			instructionList.Add(instruction);
-			if (instruction.IsUser(cmd.UserRawInput))
+			if (instruction.IsSource(cmdLine.UserRawInput))
 			{
-				cmd.indexWherePromptWasPrintedRecently = new Vector2Int(-1,-1); // make sure this command stays visible
+				cmdLine.indexWherePromptWasPrintedRecently = new Vector2Int(-1,-1); // make sure this command stays visible
 			}
 		}
 		public void Dispatch(Instruction instruction)
@@ -152,8 +142,8 @@ namespace NonStandard.Cli {
 				string[] args = Util.ParseArguments(s).ToArray();
 				//Debug.Log("C " + string.Join(":", args));
 				if (args.Length < 1) { return; }
-				if (OnCommand != null) { OnCommand(args, instruction.user); }
-				RunDispatcher(args[0].ToLower(), args, instruction.user);
+				if (OnCommand != null) { OnCommand(args, instruction.source); }
+				RunDispatcher(args[0].ToLower(), args, instruction.source);
 			}
 		}
 
@@ -168,7 +158,7 @@ namespace NonStandard.Cli {
 		/// <param name="command">Command.</param>
 		/// <param name="args">Arguments. [0] is the name of the command, with [1] and beyond being the arguments</param>
 		private void RunDispatcher(string command, string[] args, object user) {
-			Command cmd = null;
+			Command cmd;
 			// try to find the given command. or the default command. if we can't find either...
 			if (!commands.TryGetValue(command, out cmd) && !commands.TryGetValue("", out cmd)) {
 				// error!
@@ -178,7 +168,7 @@ namespace NonStandard.Cli {
 					if (i > 1) { error += ", "; }
 					error += "'" + NoparseFilterAroundTag(args[i]) + "'";
 				}
-				this.cmd.Log(error);
+				this.cmdLine.Log(error);
 			}
 			// if we have a command
 			if (cmd != null) {
@@ -186,7 +176,7 @@ namespace NonStandard.Cli {
 				if (cmd.handler != null) {
 					cmd.handler(args, user);
 				} else {
-					this.cmd.Log("Null command '" + command + "'");
+					this.cmdLine.Log("Null command '" + command + "'");
 				}
 			}
 		}
@@ -201,14 +191,14 @@ namespace NonStandard.Cli {
 			Instruction instruction = PopInstruction();
 #if CONNECT_TO_REAL_COMMAND_LINE_TERMINAL
 			if (bash == null) {
-				string cmdExe = cmd.alternateCommandExecutable;
+				string cmdExe = cmdLine.alternateCommandExecutable;
 				if(cmdExe == "") { cmdExe = null; }
 				bash = new SystemBridge(cmdExe);
 			}
-			if (bash.IsInitialized() && AllowSystemAccess && (instruction == null || instruction.IsUser(cmd.UserRawInput) || instruction.IsUser(bash)))
+			if (bash.IsInitialized() && AllowSystemAccess && (instruction == null || instruction.IsSource(cmdLine.UserRawInput) || instruction.IsSource(bash)))
 			{
 				//if(instruction != null) Debug.Log("dispatching [" + instruction.text + "]");
-				bash.Update(instruction, cmd); // always update, since this also pushes the pipeline
+				bash.Update(instruction, cmdLine); // always update, since this also pushes the pipeline
 				return true;
 			} else {
 #endif
@@ -216,9 +206,9 @@ namespace NonStandard.Cli {
 				if (instruction != null) {
 					//Debug.Log("dispatching " + instruction);
 					Dispatch(instruction);
-					cmd.NeedToRefreshUserPrompt = true;
-					if (!cmd.callbacks.ignoreCallbacks && cmd.callbacks.whenCommandRuns != null) {
-						cmd.callbacks.whenCommandRuns.Invoke();
+					cmdLine.NeedToRefreshUserPrompt = true;
+					if (!cmdLine.callbacks.ignoreCallbacks && cmdLine.callbacks.whenCommandRuns != null) {
+						cmdLine.callbacks.whenCommandRuns.Invoke();
 						return true;
 					}
 				}
@@ -231,16 +221,16 @@ namespace NonStandard.Cli {
 		public void UpdateActivationCallbacks()
 		{
 			// if this is the active command line and it has not yet disabled user controls. done in update to stop many onStart and onStop calls from being invoked in series
-			if (CmdLine_base.currentlyActiveCmdLine == cmd && CmdLine_base.disabledUserControls != cmd)
+			if (CmdLine_base.currentlyActiveCmdLine == cmdLine && CmdLine_base.disabledUserControls != cmdLine)
 			{
 				// if another command line disabled user controls
 				if (CmdLine_base.disabledUserControls != null)
 				{
 					// tell it to re-enable controls
-					if (!cmd.callbacks.ignoreCallbacks && cmd.callbacks.whenThisDeactivates != null) cmd.callbacks.whenThisDeactivates.Invoke();
+					if (!cmdLine.callbacks.ignoreCallbacks && cmdLine.callbacks.whenThisDeactivates != null) cmdLine.callbacks.whenThisDeactivates.Invoke();
 				}
-				CmdLine_base.disabledUserControls = cmd;
-				if (!cmd.callbacks.ignoreCallbacks && cmd.callbacks.whenThisActivates != null) cmd.callbacks.whenThisActivates.Invoke();
+				CmdLine_base.disabledUserControls = cmdLine;
+				if (!cmdLine.callbacks.ignoreCallbacks && cmdLine.callbacks.whenThisActivates != null) cmdLine.callbacks.whenThisActivates.Invoke();
 			}
 		}
 	}

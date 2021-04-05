@@ -95,13 +95,13 @@ namespace NonStandard.Cli
 					int len = end - start;
 					if (len > 0) {
 						Debug.Log("enqueue! " + inpt.Substring(start, len));
-						cmd.commander.EnqueueRun(new Commander.Instruction() { text = inpt.Substring(start, len), user = whoExecutes });
+						cmd.commander.EnqueueRun(new Commander.Instruction() { text = inpt.Substring(start, len), source = whoExecutes });
 					}
 					start = end + 1; // start again after the newline character
 				}
 			} while (end > 0);
 			if (start < inpt.Length) {
-				cmd.commander.EnqueueRun(new Commander.Instruction() { text = inpt.Substring(start), user = whoExecutes });
+				cmd.commander.EnqueueRun(new Commander.Instruction() { text = inpt.Substring(start), source = whoExecutes });
 			}
 		}
 

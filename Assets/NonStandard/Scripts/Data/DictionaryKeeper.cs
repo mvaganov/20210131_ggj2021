@@ -74,7 +74,7 @@ namespace NonStandard.Data {
 			//	dict.Set("_"+s, ()=>CalcStatModifier(s));
 			//}
 			//AddTo("cha", 4);
-			dict.Start();
+			dict.NotifyStart();
 		}
 		public float NumValue(string fieldName) {
 			object val;

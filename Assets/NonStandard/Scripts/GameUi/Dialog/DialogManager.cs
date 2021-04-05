@@ -1,5 +1,6 @@
 ﻿using NonStandard.Data;
 using NonStandard.Data.Parse;
+using NonStandard.Commands;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -35,7 +36,7 @@ namespace NonStandard.GameUi.Dialog {
                     ["hide"] = Hide,
                     ["show"] = _Show,
                 });
-            Commander.Instance.onErrors = OnCommanderError;
+            Commander.Instance.errorListeners = OnCommanderError;
         }
 
         void OnCommanderError(List<ParseError> errors) { ActiveDialog.ShowErrors(errors); }

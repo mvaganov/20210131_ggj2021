@@ -2,7 +2,7 @@
 using NonStandard.Character;
 using NonStandard.Data;
 using NonStandard.Data.Parse;
-using NonStandard.GameUi;
+using NonStandard.Commands;
 using NonStandard.GameUi.Dialog;
 using NonStandard.GameUi.Inventory;
 using NonStandard.GameUi.Particles;

@@ -1,12 +1,24 @@
-﻿using NonStandard.Data;
-using NonStandard.Data.Parse;
+﻿using NonStandard.Data.Parse;
 using System;
 using System.Collections.Generic;
 
-namespace NonStandard.GameUi {
+namespace NonStandard.Commands {
 	public class Commander {
 		Dictionary<string, Action<object, Tokenizer>> commandListing = null;
-		public Action<List<ParseError>> onErrors;
+		public Action<List<ParseError>> errorListeners;
+		/// <summary>every command can be executed by a different user, and might work differently based on user</summary>
+		[System.Serializable]
+		public class Instruction {
+			public string text; public object source;
+			public bool IsSource(object a_source) { return source == a_source; }
+			public override string ToString() { return "(Instruction){text:\"" + text + "\"}"; }
+		}
+		/// <summary>queue of instructions that this command line needs to execute.</summary>
+		private List<Instruction> instructionList = new List<Instruction>();
+		/// <summary>useful for callbacks, for finding out what is going on right now</summary>
+		public Instruction RecentInstruction;
+
+
 		private static Commander _instance;
 		public static Commander Instance { get { return (_instance != null) ? _instance : _instance = new Commander(); } }
 
@@ -14,6 +26,7 @@ namespace NonStandard.GameUi {
 		public void SetScope(object scope) { _scope = scope; }
 		public object GetScope() { return _scope; }
 		private Commander() { InitializeCommands(); }
+		public void ParseCommand(Instruction instruction) { ParseCommand(instruction.source, instruction.text); }
 		public void ParseCommand(object source, string command) {
 			Tokenizer cmdTok = new Tokenizer();
 			cmdTok.Tokenize(command);
@@ -43,8 +56,8 @@ namespace NonStandard.GameUi {
 			} else {
 				tok.AddError("unknown command \'" + command + "\'");
 			}
-			if (tok.errors.Count > 0 && onErrors != null) {
-				onErrors.Invoke(tok.errors);
+			if (tok.errors.Count > 0 && errorListeners != null) {
+				errorListeners.Invoke(tok.errors);
 				tok.errors.Clear();
 			}
 		}
@@ -62,5 +75,17 @@ namespace NonStandard.GameUi {
 				["exit"] = (s,t) => PlatformAdjust.Exit(),
 			};
 		}
+
+		public Instruction PopInstruction() {
+			if (instructionList.Count > 0) {
+				RecentInstruction = instructionList[0];
+				instructionList.RemoveAt(0);
+				return RecentInstruction;
+			}
+			return null;
+		}
+		/// <summary>Enqueues a command to run, which will be run during the next Update</summary>
+		/// <param name="instruction">Command string, with arguments.</param>
+		public void EnqueueRun(Instruction instruction) { instructionList.Add(instruction); }
 	}
 }
