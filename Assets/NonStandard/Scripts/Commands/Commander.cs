@@ -30,6 +30,11 @@ namespace NonStandard.Commands {
 		public void ParseCommand(object source, string command) {
 			Tokenizer cmdTok = new Tokenizer();
 			cmdTok.Tokenize(command);
+			if(cmdTok.errors.Count > 0) {
+				Show.Error(cmdTok.ErrorString());
+				return;
+			}
+			if(cmdTok.TokenCount == 0) { return; }
 			int iter = 0;
 			do {
 				string cmd = cmdTok.GetResolvedToken(0, GetScope()).ToString();

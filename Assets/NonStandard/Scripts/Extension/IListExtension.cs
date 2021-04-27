@@ -72,7 +72,7 @@ public static class IListExtension {
 	}
 	public static string JoinToString<T>(this IList<T> source, string separator, Func<T, string> toString = null) {
 		string[] strings = new string[source.Count];
-		if (toString == null) { toString = o => o.ToString(); }
+		if (toString == null) { toString = o => o != null ? o.ToString() : ""; }
 		for (int i = 0; i < strings.Length; ++i) {
 			strings[i] = toString.Invoke(source[i]);
 		}

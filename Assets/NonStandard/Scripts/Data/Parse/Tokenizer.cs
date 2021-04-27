@@ -6,6 +6,10 @@ namespace NonStandard.Data.Parse {
 	public class Tokenizer {
 		internal string str;
 		internal List<Token> tokens = new List<Token>(); // actually a tree. each token can point to more token lists
+		/// <summary>
+		/// TODO testme! does this produce all of the tokens in string form?
+		/// </summary>
+		protected List<string> tokenStrings = new List<string>();
 		public List<ParseError> errors = new List<ParseError>();
 		/// <summary>
 		/// the indexes of where rows end (newline characters), in order.
@@ -126,6 +130,7 @@ namespace NonStandard.Data.Parse {
 			}
 		}
 		protected void Tokenize(ParseRuleSet a_context = null, int index = 0) {
+			tokenStrings.Clear();
 			if (string.IsNullOrEmpty(str)) return;
 			List<ParseRuleSet.Entry> contextStack = new List<ParseRuleSet.Entry>();
 			if (a_context == null) a_context = CodeRules.Default;
@@ -155,7 +160,10 @@ namespace NonStandard.Data.Parse {
 		private bool FinishToken(int index, ref int tokenBegin) {
 			if (tokenBegin >= 0) {
 				int len = index - tokenBegin;
-				if (len > 0) { tokens.Add(new Token(str, tokenBegin, len)); }
+				if (len > 0) {
+					tokens.Add(new Token(str, tokenBegin, len));
+					tokenStrings.Add(str.Substring(tokenBegin, len));
+				}
 				tokenBegin = -1;
 				return true;
 			}
@@ -203,6 +211,7 @@ namespace NonStandard.Data.Parse {
 				}
 			}
 			tokens.Add(delimToken);
+			tokenStrings.Add(delim.text);
 			if (endedContext != null) { ExtractContextAsSubTokenList(endedContext); }
 		}
 		private void FinalTokenCleanup() {
