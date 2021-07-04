@@ -70,7 +70,7 @@ public static class IListExtension {
 	public static T GetFromNestedIndex<T>(this IList<IList<T>> list, int[] nestedIndex) {
 		return list[nestedIndex[0]][nestedIndex[1]];
 	}
-	public static string JoinToString<T>(this IList<T> source, string separator, Func<T, string> toString = null) {
+	public static string JoinToString<T>(this IList<T> source, string separator = ", ", Func<T, string> toString = null) {
 		string[] strings = new string[source.Count];
 		if (toString == null) { toString = o => o != null ? o.ToString() : ""; }
 		for (int i = 0; i < strings.Length; ++i) {
