@@ -32,13 +32,14 @@ public class Instigator : MonoBehaviour
 			Debug.Log("1: " + NonStandard.Show.Stringify(incident));
 		}).ThenDelay("count down 0", 1000, incident => {
 			Debug.Log("DONE! " + kPresses + "\n" + NonStandard.Show.Stringify(incident));
-		}).ThenDecideBestChoice("check k presses", new Decision[] { 
-			new Decision("bad",()=>kPresses < 3 ? 1 : 0, incident=>{
+		}).ThenDecideBestChoice("check k presses", new Decision[] {
+			new Decision("do nothing"),
+			new Decision("bad",()=>kPresses > 1 && kPresses <= 3 ? 1 : 0, incident=>{
 				Debug.Log("pathetic.");
 			}).ThenDelay("snark",1000,incident=>{
 				Debug.Log("do better next time."); 
 			}).RootDecision(),
-			new Decision("medium",()=>kPresses >= 3 && kPresses < 10 ? 2 : 0, incident=>{
+			new Decision("medium",()=>kPresses > 3 && kPresses < 10 ? 2 : 0, incident=>{
 				Debug.Log("you pressed K.");
 			}),
 			new Decision("best",()=>kPresses > 10 ? 1 : 0, incident=>{

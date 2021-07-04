@@ -4,6 +4,7 @@ using System.Collections.Generic;
 public class Decision : Strategy
 {
 	public Func<int> ValueHeuristic;
+	public static int ZeroHeuristic() => 0;
 
 	public Decision(string identifier, Func<int> valueHeuristic, Procedure.Reaction reaction, Strategy prev = null) 
 	: base(identifier, reaction, prev) {
@@ -13,6 +14,8 @@ public class Decision : Strategy
 	: base(identifier, Procedure.ToReaction(reaction), prev) {
 		ValueHeuristic = valueHeuristic;
 	}
+	public Decision(string identifier, Strategy prev = null)
+	: base(identifier, null, prev) { ValueHeuristic = ZeroHeuristic; }
 	public static Decision PickFirstGreatherThanZero(IList<Decision> decisions) {
 		for (int i = 0; i < decisions.Count; ++i) {
 			int v = decisions[i].ValueHeuristic.Invoke();

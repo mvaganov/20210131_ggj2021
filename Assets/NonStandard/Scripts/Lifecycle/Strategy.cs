@@ -62,14 +62,14 @@ public class Strategy
 		Strategy deferringStrategy = null;
 		deferringStrategy = ThenImmediately("(decide)" + identifier, incident => {
 			Decision d = Decision.PickBest(decisions);
-			Debug.Log("Picked [" + d.ListStrategies().JoinToString()+"]");
+			//Debug.Log("Picked [" + d.ListStrategies().JoinToString()+"]");
 			if (d == null) {
 				Debug.Log("Could not decide");
 				return Procedure.Result.Failure;
 			}
 			//Strategy deferredStrategy = new Strategy(identifier, d.Reaction, this);
 			d.Last().Next = deferringStrategy.Next;
-			Debug.Log("About to invoke [" + d.ListStrategies().JoinToString() + "]");
+			//Debug.Log("About to invoke [" + d.ListStrategies().JoinToString() + "]");
 			d.Invoke(incident);
 			return Procedure.Result.Halt;
 		});
