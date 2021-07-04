@@ -1,25 +1,24 @@
-﻿using System.Collections;
+﻿using NonStandard.Procedure;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Instigator : MonoBehaviour
 {
-	Procedure om;
 	void Start() {
-		//Procedure.Delay(3000, () => { Debug.Log("HELLO!"); });
-		//Procedure.OnIncident("Jump", occasion => {
-		//	Debug.Log(NonStandard.Show.Stringify(occasion));
-		//	return Procedure.Result.Success;
-		//}, 3);
-		//Procedure.Delay(2000, () => { Debug.Log("...."); });
-		//Procedure.Delay(5000, () => { Debug.Log("WORLD!"); });
+		Proc.Delay(200, () => { Debug.Log("HELLO!"); });
+		Proc.OnIncident("Jump", occasion => {
+			Debug.Log(NonStandard.Show.Stringify(occasion));
+		}, 3);
+		Proc.Delay(100, () => { Debug.Log("...."); });
+		Proc.Delay(300, () => { Debug.Log("WORLD!"); });
 
 		int kPresses = 0;
 		Strategy strat = new Strategy("the thing").AndThen("print hello", incident => {
 			Debug.Log("Hello");
 		}).ThenOnIncident("K", incident => {
 			kPresses = 1;
-			Procedure.OnIncident("K", kpress => {
+			Proc.OnIncident("K", kpress => {
 				kPresses++;
 				Debug.Log("~~ " + kPresses + " ~~" + kpress);
 			});
@@ -32,20 +31,23 @@ public class Instigator : MonoBehaviour
 			Debug.Log("1: " + NonStandard.Show.Stringify(incident));
 		}).ThenDelay("count down 0", 1000, incident => {
 			Debug.Log("DONE! " + kPresses + "\n" + NonStandard.Show.Stringify(incident));
-		}).ThenDecideBestChoice("check k presses", new Decision[] {
-			new Decision("do nothing"),
-			new Decision("bad",()=>kPresses > 1 && kPresses <= 3 ? 1 : 0, incident=>{
+		}).ThenDecideBestChoice("check k presses",
+			new Contingency("do nothing"),
+
+			new Contingency("bad",()=>kPresses > 1 && kPresses <= 3 ? 1 : 0, incident=>{
 				Debug.Log("pathetic.");
 			}).ThenDelay("snark",1000,incident=>{
 				Debug.Log("do better next time."); 
-			}).RootDecision(),
-			new Decision("medium",()=>kPresses > 3 && kPresses < 10 ? 2 : 0, incident=>{
+			}).ThenDelay("pause",3000),
+
+			new Contingency("medium",()=>kPresses > 3 && kPresses < 10 ? 2 : 0, incident=>{
 				Debug.Log("you pressed K.");
 			}),
-			new Decision("best",()=>kPresses > 10 ? 1 : 0, incident=>{
+
+			new Contingency("best",()=>kPresses > 10 ? 1 : 0, incident=>{
 				Debug.Log("pog");
-			}),
-		}).AndThen("the end", incident=> {
+			})
+		).AndThen("the end", incident=> {
 			Debug.Log("THE END");
 		}).Root();
 		Debug.Log("doing [" + strat.ListStrategies().JoinToString() + "]");
@@ -54,11 +56,11 @@ public class Instigator : MonoBehaviour
 
 	void Update() {
 		if (Input.GetButtonDown("Jump")) {
-			Procedure.NotifyIncident("Jump", this, "jump detail");
+			Proc.NotifyIncident("Jump", this, "jump detail");
 		}
 		if (Input.GetKeyDown(KeyCode.K)) {
-			Procedure.NotifyIncident("K", this, "k");
+			Proc.NotifyIncident("K", this, "k");
 		}
-		Procedure.Update();
+		Proc.Update();
 	}
 }

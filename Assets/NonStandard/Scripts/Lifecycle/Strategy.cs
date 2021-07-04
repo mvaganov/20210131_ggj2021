@@ -1,104 +1,119 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
 
-public class Strategy
-{
-	public Procedure.Reaction Reaction;
-	public string Identifier;
-	public Strategy Next;
-	public Strategy Prev;
-	public bool WaitForUpdate = false;
+namespace NonStandard.Procedure {
+	/// <summary>
+	/// a structure for connecting <see cref="Proc.edure"/>s into something more complex, with different kinds of linear advancement
+	/// </summary>
+	public class Strategy {
+		public Proc.edure Reaction;
+		public string Identifier;
+		public Strategy Next;
+		public Strategy Prev;
+		public bool WaitForUpdate = false;
 
-	public override string ToString() { return Identifier; }
+		public override string ToString() { return Identifier; }
 
-	public Procedure.Result Invoke(Incident incident) {
-		Procedure.Result result = Procedure.Result.Success;
-		//Debug.Log("Invoking " + Identifier);
-		if(Reaction != null) {
-			result = Reaction.Invoke(incident);
-		}
-		if (Next == null || result != Procedure.Result.Success) return result;
-		if (!Next.WaitForUpdate) {
-			result = Next.Invoke(incident);
-		} else {
-			Procedure.Delay(0, delayedIncident => Next.Invoke(incident));
-		}
-		return result;
-	}
-
-	public Strategy(string identifier, Strategy prev = null) { Identifier = identifier; Prev = prev; }
-	public Strategy(string identifier, Procedure.Reaction action, Strategy prev) : this(identifier, prev) {
-		Reaction = action;
-	}
-	public Strategy ThenImmediately(string identifier, Procedure.Reaction reaction) {
-		return Next = new Strategy(identifier, reaction, this);
-	}
-	public Strategy AndThen(string identifier, Procedure.Reaction reaction) {
-		Next = new Strategy(identifier, reaction, this);
-		Next.WaitForUpdate = true;
-		return Next;
-	}
-	public Strategy ThenOnIncident(string incidentId, Procedure.Reaction reaction) {
-		Strategy deferringStragegy = null;
-		deferringStragegy = ThenImmediately("(defer)" + incidentId, incident => {
-			Strategy deferredStrategy = new Strategy("(deferred)" + incidentId, reaction, this);
-			deferredStrategy.Next = deferringStragegy.Next;
-			Procedure.OnIncident(incidentId, deferredStrategy.Invoke, 1);
-			return Procedure.Result.Halt;
-		});
-		return deferringStragegy;
-	}
-	public Strategy ThenDelay(string identifier, int ms, Procedure.Reaction reaction) {
-		Strategy deferringStrategy = null;
-		deferringStrategy = ThenImmediately("(wait)" + identifier, incident => {
-			Strategy deferredStrategy = new Strategy(identifier, reaction, this);
-			deferredStrategy.Next = deferringStrategy.Next;
-			Procedure.Delay(ms, deferredStrategy.Invoke);
-			return Procedure.Result.Halt;
-		});
-		return deferringStrategy;
-	}
-	public Strategy ThenDecideBestChoice(string identifier, IList<Decision> decisions) {
-		Strategy deferringStrategy = null;
-		deferringStrategy = ThenImmediately("(decide)" + identifier, incident => {
-			Decision d = Decision.PickBest(decisions);
-			//Debug.Log("Picked [" + d.ListStrategies().JoinToString()+"]");
-			if (d == null) {
-				Debug.Log("Could not decide");
-				return Procedure.Result.Failure;
+		public Proc.Result Invoke(Incident incident) {
+			Proc.Result result = Proc.Result.Success;
+			//Debug.Log("Invoking " + Identifier);
+			if (Reaction != null) {
+				result = Reaction.Invoke(incident);
 			}
-			//Strategy deferredStrategy = new Strategy(identifier, d.Reaction, this);
-			d.Last().Next = deferringStrategy.Next;
-			//Debug.Log("About to invoke [" + d.ListStrategies().JoinToString() + "]");
-			d.Invoke(incident);
-			return Procedure.Result.Halt;
-		});
-		return deferringStrategy;
-	}
-	public Strategy Last() { Strategy s = this; while (s.Next != null) { s = s.Next; } return s; }
-	public Strategy Root() { Strategy s = this; while(s.Prev != null) { s = s.Prev; } return s; }
-	public Decision RootDecision() { Strategy s = this; while (s.Prev != null) { s = s.Prev; } return s as Decision; }
-	public List<Strategy> ListStrategies() {
-		Strategy s = this;
-		List<Strategy> strats = new List<Strategy>();
-		while (s != null) {
-			strats.Add(s);
-			s = s.Next;
+			if (Next == null || result != Proc.Result.Success) return result;
+			if (!Next.WaitForUpdate) {
+				result = Next.Invoke(incident);
+			} else {
+				Proc.Delay(0, delayedIncident => Next.Invoke(incident));
+			}
+			return result;
 		}
-		return strats;
-	}
-	public Strategy(string identifier, Procedure.ReactionNoReturn action, Strategy prev)
-		: this(identifier, Procedure.ToReaction(action), prev) {}
-	public Strategy ThenImmediately(string identifier, Procedure.ReactionNoReturn reaction) {
-		return ThenImmediately(identifier, Procedure.ToReaction(reaction));
-	}
-	public Strategy AndThen(string identifier, Procedure.ReactionNoReturn reaction) {
-		return AndThen(identifier, Procedure.ToReaction(reaction));
-	}
-	public Strategy ThenOnIncident(string incidentId, Procedure.ReactionNoReturn reaction) {
-		return ThenOnIncident(incidentId, Procedure.ToReaction(reaction));
-	}
-	public Strategy ThenDelay(string identifier, int ms, Procedure.ReactionNoReturn reaction) {
-		return ThenDelay(identifier, ms, Procedure.ToReaction(reaction));
+
+		public Strategy(string identifier, Strategy prev = null) { Identifier = identifier; Prev = prev; }
+		public Strategy(string identifier, Proc.edure action, Strategy prev) : this(identifier, prev) {
+			Reaction = action;
+		}
+		public Strategy ThenImmediately(string identifier, Proc.edure reaction) {
+			return Next = new Strategy(identifier, reaction, this);
+		}
+		public Strategy AndThen(string identifier, Proc.edure reaction) {
+			Next = new Strategy(identifier, reaction, this);
+			Next.WaitForUpdate = true;
+			return Next;
+		}
+		public Strategy ThenOnIncident(string incidentId, Proc.edure reaction = null) {
+			Strategy deferringStragegy = null;
+			deferringStragegy = ThenImmediately("(defer)" + incidentId, incident => {
+				Strategy deferredStrategy = new Strategy("(deferred)" + incidentId, reaction, this);
+				deferredStrategy.Next = deferringStragegy.Next;
+				Proc.OnIncident(incidentId, deferredStrategy.Invoke, 1);
+				return Proc.Result.Halt;
+			});
+			return deferringStragegy;
+		}
+		public Strategy ThenDelay(string identifier, int ms, Proc.edure reaction = null) {
+			Strategy deferringStrategy = null;
+			deferringStrategy = ThenImmediately("(wait)" + identifier, incident => {
+				Strategy deferredStrategy = new Strategy(identifier, reaction, this);
+				deferredStrategy.Next = deferringStrategy.Next;
+				Proc.Delay(ms, deferredStrategy.Invoke);
+				return Proc.Result.Halt;
+			});
+			return deferringStrategy;
+		}
+		public List<Strategy> Convert(object[] possibleStrategies) {
+			List<Strategy> strats = new List<Strategy>();
+			for (int i = 0; i < possibleStrategies.Length; ++i) {
+				if (possibleStrategies[i] is Strategy s) {
+					s = s.Root();
+					strats.Add(s);
+				} else {
+					//Debug.Log("non-strategy given in list");
+				}
+			}
+			return strats;
+		}
+		public Strategy ThenDecideBestChoice(string identifier, params object[] possibleStrategies) {
+			return ThenDecideBestChoice(identifier, Convert(possibleStrategies));
+		}
+		public Strategy ThenDecideBestChoice(string identifier, IList<Strategy> possibleStrategies) {
+			Strategy deferringStrategy = null;
+			deferringStrategy = ThenImmediately("(decide)" + identifier, incident => {
+				Strategy choice = Contingency.PickBest(possibleStrategies);
+				//Debug.Log("Picked [" + d.ListStrategies().JoinToString()+"]");
+				if (choice == null) {
+					//Debug.Log("Could not decide");
+					return Proc.Result.Failure;
+				}
+				//Strategy deferredStrategy = new Strategy(identifier, d.Reaction, this);
+				choice.Last().Next = deferringStrategy.Next;
+				//Debug.Log("About to invoke [" + d.ListStrategies().JoinToString() + "]");
+				choice.Invoke(incident);
+				return Proc.Result.Halt;
+			});
+			return deferringStrategy;
+		}
+		public Strategy Last() { Strategy s = this; while (s.Next != null) { s = s.Next; } return s; }
+		public Strategy Root() { Strategy s = this; while (s.Prev != null) { s = s.Prev; } return s; }
+		public Contingency RootDecision() { Strategy s = this; while (s.Prev != null) { s = s.Prev; } return s as Contingency; }
+		public List<Strategy> ListStrategies() {
+			Strategy s = this;
+			List<Strategy> strats = new List<Strategy>();
+			while (s != null) {
+				strats.Add(s);
+				s = s.Next;
+			}
+			return strats;
+		}
+		public Strategy(string identifier, Proc.edureSimple action, Strategy prev) : this(identifier, Proc.ConvertR(action), prev) { }
+		public Strategy(string identifier, Action action, Strategy prev) : this(identifier, Proc.ConvertR(action), prev) { }
+		public Strategy ThenImmediately(string identifier, Proc.edureSimple reaction) { return ThenImmediately(identifier, Proc.ConvertR(reaction)); }
+		public Strategy ThenImmediately(string identifier, Action reaction) { return ThenImmediately(identifier, Proc.ConvertR(reaction)); }
+		public Strategy AndThen(string identifier, Proc.edureSimple reaction) { return AndThen(identifier, Proc.ConvertR(reaction)); }
+		public Strategy AndThen(string identifier, Action reaction) { return AndThen(identifier, Proc.ConvertR(reaction)); }
+		public Strategy ThenOnIncident(string incidentId, Proc.edureSimple reaction) { return ThenOnIncident(incidentId, Proc.ConvertR(reaction)); }
+		public Strategy ThenOnIncident(string incidentId, Action reaction) { return ThenOnIncident(incidentId, Proc.ConvertR(reaction)); }
+		public Strategy ThenDelay(string identifier, int ms, Proc.edureSimple reaction) { return ThenDelay(identifier, ms, Proc.ConvertR(reaction)); }
+		public Strategy ThenDelay(string identifier, int ms, Action reaction) { return ThenDelay(identifier, ms, Proc.ConvertR(reaction)); }
 	}
 }

@@ -7,7 +7,7 @@ using System.Threading;
 namespace NonStandard.Cli {
 	public class SystemBridge
 	{
-		Process system_process;
+		System.Diagnostics.Process system_process;
 		Thread thread;
 		FileInfo cmdLineSemaphoreFile;
 		private string currentCommand = "";
@@ -91,7 +91,7 @@ namespace NonStandard.Cli {
 				system_process.StandardInput.WriteLine("exit");
 				system_process.StandardInput.Flush();
 			}
-			Process proc = system_process;
+			System.Diagnostics.Process proc = system_process;
 			Thread t = thread;
 			if (_cmd != null) { _cmd.NeedToRefreshUserPrompt = true; }
 			thread = null;
@@ -118,7 +118,7 @@ namespace NonStandard.Cli {
 					{
 						activeDir = PWD();
 					}
-					system_process = new Process {
+					system_process = new System.Diagnostics.Process {
 						StartInfo = new ProcessStartInfo {
 							FileName = commandName,
 							Arguments = "",
@@ -214,7 +214,7 @@ namespace NonStandard.Cli {
 
 		private string COMMAND_LINE_GETTER(string call)
 		{
-			Process proc = new Process {
+			System.Diagnostics.Process proc = new System.Diagnostics.Process {
 				StartInfo = new ProcessStartInfo {
 					FileName = call,
 					UseShellExecute = false,
