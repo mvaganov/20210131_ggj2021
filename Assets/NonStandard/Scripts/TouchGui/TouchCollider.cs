@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using NonStandard.Procedure;
+using UnityEngine;
 
 namespace NonStandard.TouchGui {
 	public class TouchCollider : MonoBehaviour {
@@ -26,7 +27,7 @@ namespace NonStandard.TouchGui {
 			} else {
 				transform.position = hiddenLocation;
 				touch.phase = TouchPhase.Ended;
-				NonStandard.Clock.setTimeoutRealtime(Deactivate, 0);
+				Proc.Delay(0, Deactivate);
 			}
 		}
 		private void Deactivate() {

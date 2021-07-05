@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using NonStandard.Procedure;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace NonStandard.GameUi {
@@ -26,7 +27,7 @@ namespace NonStandard.GameUi {
             public void Blink() {
                 ui.Clear();
                 ui.triggerArea.enabled = false;
-                Clock.setTimeout(() => ui.triggerArea.enabled = true, 16);
+                Proc.Delay(16, () => ui.triggerArea.enabled = true);
             }
         }
         public void EnsureUi(Interact3dItem item) {

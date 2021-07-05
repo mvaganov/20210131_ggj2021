@@ -4,19 +4,13 @@ using System.Collections;
 using System.Text;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using NonStandard.Procedure;
 #if UNITY_EDITOR
 using UnityEditor;
 using System.Linq;
 #endif
 #endif
 using System;
-
-/* // example code:
-NonStandard.Clock.setTimeout (() => {
-	NonStandard.Clock.Log("This will print 3 seconds after setTimeout was called!");
-}, 3000);
-// Code above will work like you expect if Chrono.Update() is being called regularly, which will happen if Unity has at least one Timer or MainTimer instance.
-*/
 
 // author: mvaganov@hotmail.com
 // license: Copyfree, public domain. This is free code! Great artists, steal this code!
@@ -26,7 +20,7 @@ namespace NonStandard
 #if UNITY_2017_1_OR_NEWER
 	public class Timer : MonoBehaviour
 	{
-		[Tooltip("When to trigger"), ContextMenuItem("Create Main Timer", "CraeteMainTimer")]
+		[Tooltip("When to trigger")]
 		public float seconds = 1;
 		[Tooltip("Transform to teleport to\nSceneAsset to load a new scene\nAudioClip to play audio\nGameObject to SetActivate(true)")]
 		public ObjectPtr whatToActivate = new ObjectPtr();
@@ -39,51 +33,58 @@ namespace NonStandard
 
 		private void DoTimer() {
 			Timer self = this;
+			long delay = (long)(seconds * 1000);
 			if (repeat) {
-				Clock.setTimeout(() => {
+				GameClock.Delay(delay, () => {
 					if (self == null) return; DoTimer();
-				}, (long)(seconds * 1000));
+				});
 			}
-			Clock.ScheduledTask todo;
+			Incident todo;
+			object whatToDo = whatToActivate.Data;
+			bool activate = !deactivate;
 			if (relentlessTimer) {
-				todo = Clock.setTimeout(whatToActivate.Data, (long)(seconds * 1000));
+				todo = GameClock.Delay(delay, ()=>ActivateAnything.DoActivate(whatToDo, this, null, activate));
 			} else {
-				object whatToDo = whatToActivate.Data;
-				todo = Clock.setTimeout(()=> {
-					if (self == null) return;
-					ActivateAnything.DoActivate(whatToDo, this, null, !deactivate);
-				}, (long)(seconds * 1000));
+				todo = GameClock.Delay(delay, ()=> {
+					if (self == null) return; // if this timer is destroyed, don't activate
+					ActivateAnything.DoActivate(whatToDo, this, null, activate);
+				});
 			}
-			todo.who = this;
-			todo.activate = !deactivate;
+			todo.Source = this;
 		}
 		public void DoActivateTrigger() {
 			ActivateAnything.DoActivate(whatToActivate.Data, this, null, !deactivate);
 		}
-		private void Awake() { MainClock.Instance(); }
+		private void Awake() { GameClock.Instance(); }
 		void Start() { if (whatToActivate.Data != null) { DoTimer(); } }
 	}
 
-	public static class TransformExtention {
-		public static string HierarchyPath(this Transform t) {
-			StringBuilder sb = new StringBuilder();
-			sb.Append(t.name);
-			t = t.parent;
-			while (t != null) {
-				sb.Insert(0, t.name + "/");
-				t = t.parent;
-			}
-			return sb.ToString();
-		}
-	}
-
 	/// <summary>
-	/// a class that enables the timer queue to be observed in the editor at runtime
+	/// a class that enables the Proc timer queue to be observed in the editor at runtime
+	/// TODO move to a separate class?
 	/// </summary>
-	public class MainClock : MonoBehaviour {
-		public Clock clock = null;
+	public class GameClock : MonoBehaviour {
+		public TimeKeeper timer;
+
+		public long updateCount = 0;
+		public long gameTimeMs = 0;
+		private float gameTimeRemainder = 0;
+		public long GetUpdateCount() => updateCount;
+		public long GetGameTimeMs() => gameTimeMs;
+
 		public PauseEvents pauseEvents = new PauseEvents();
 		bool initialized;
+		public bool isPaused;
+
+		public static bool IsPaused => Instance().isPaused;
+		public static TimeKeeper Timer => Instance().timer;
+		public static long Time => Instance().GetGameTimeMs();
+
+		public static Incident Delay(long delayMs, Action action) {
+			return Instance().timer.Delay(delayMs, action);
+		}
+		public static long GetTime() { return Instance().GetGameTimeMs(); }
+
 		[System.Serializable] public class PauseEvents {
 			[Tooltip("do this when time is paused")] public UnityEngine.Events.UnityEvent onPause;
 			[Tooltip("do this when time is unpaused")] public UnityEngine.Events.UnityEvent onUnpause;
@@ -91,419 +92,430 @@ namespace NonStandard
 		public void Init() {
 			if (initialized) { return; }
 			initialized = true;
-			if (clock != Clock.Instance && clock != null) { Clock.Instance.Absorb(clock); }
-			clock = Clock.Instance;
-			clock.linkedToMainThread = System.Threading.Thread.CurrentThread;
-			clock.onPause += SelfPause;
-			clock.onUnpause += SelfUnpause;
-			clock.Start();
+			timer = new TimeKeeper(GetGameTimeMs);
 		}
 		public void Awake() { Init(); }
-		private void SelfPause() { if (pauseEvents.onPause != null) { pauseEvents.onPause.Invoke(); } }
-		private void SelfUnpause() { if (pauseEvents.onPause != null) { pauseEvents.onUnpause.Invoke(); } }
+		public void Pause() { isPaused = true; if (pauseEvents.onPause != null) { pauseEvents.onPause.Invoke(); } }
+		public void Unpause() { isPaused = false; if (pauseEvents.onPause != null) { pauseEvents.onUnpause.Invoke(); } }
 
-		void Update() { clock.Update(); }
-		void OnApplicationPause(bool paused) { clock.OnApplicationPause(paused); }
-		void OnDisable() { clock.OnDisable(); }
-		void OnEnable() { clock.OnEnable(); }
-		private void OnDestroy() { clock.Release(); }
-		private void OnApplicationQuit() { clock.OnApplicationQuit(); }
+		private void IncrementTime() {
+			float deltaTimeMs = (UnityEngine.Time.deltaTime * 1000) + gameTimeRemainder;
+			long gameTimeDeltaMs = (long)deltaTimeMs;
+			gameTimeRemainder = deltaTimeMs - gameTimeDeltaMs;
+			gameTimeMs += gameTimeDeltaMs;
+		}
+
+		void Update() {
+			Proc.Update();
+			if (!isPaused) {
+				IncrementTime();
+			}
+			timer.Update();
+		}
+		public void FixedUpdate() {
+			++updateCount;
+		}
+		void OnApplicationPause(bool paused) { if (paused) { Pause(); } else { Unpause(); } }
+		void OnDisable() { Pause(); }
+		void OnEnable() { Unpause(); }
+		private void OnDestroy() { }
+		private void OnApplicationQuit() { }
 #if UNITY_EDITOR
-		public void OnValidate() { if (clock == null) { clock = Clock.Instance; } clock.OnValidate(); }
+		public void OnValidate() { }
 #endif
-		internal static MainClock s_instance;
-		public static MainClock Instance() {
+		internal static GameClock s_instance;
+		public static GameClock Instance() {
 			if (s_instance != null) return s_instance;
 			//s_instance = FindObjectOfType<MainClock>();
 			if (s_instance == null) { // if it doesn't exist
-				GameObject g = new GameObject("<" + typeof(Clock).Name + ">");
-				s_instance = g.AddComponent<MainClock>(); // create one
+				GameObject g = new GameObject("<Clock>");
+				s_instance = g.AddComponent<GameClock>(); // create one
 			}
 			return s_instance;
 		}
 	}
 #endif
 
-	[System.Serializable] public class Clock {
-		// https://docs.microsoft.com/en-us/dotnet/api/system.timers.timer?redirectedfrom=MSDN&view=netframework-4.8
-		// explicitly NOT using System.Timers.Timer because it's multi-threaded, and many Unity methods, notably the time keeping ones, must be called from the main thread.
+//	[System.Serializable] public class Clock {
+//		// https://docs.microsoft.com/en-us/dotnet/api/system.timers.timer?redirectedfrom=MSDN&view=netframework-4.8
+//		// explicitly NOT using System.Timers.Timer because it's multi-threaded, and many Unity methods, notably the time keeping ones, must be called from the main thread.
 
-		/// The singleton
-		private static Clock s_instance = null;
-		/// [Tooltip("keeps track of how long each update takes. If a timer-update takes longer than this, stop executing events and do them later. Less than 0 for no limit, 0 for one event per update.")]
-		public int maxMillisecondsPerUpdate = 100;
-		private long maxTicksPerUpdate;
-		public long updateCount { get; private set; }
-		public static long UpdateCount { get { return Instance.updateCount; } }
-		/// queue of things to do using game time. use this for in-game events that can be paused or slowed down with time dialation.
-		public List<ScheduledTask> queue = new List<ScheduledTask>();
-		/// queue of things to do using real-time game time. use this for UI events, or things that use the real-world as a reference, that should always work at the same rate
-		public List<ScheduledTask> queueRealtime = new List<ScheduledTask>();
-		/// While this is zero, use system time. As soon as time becomes perturbed, by pause or time scale, this now keeps track of game-time. To reset time back to realtime, use SynchToRealtime()
-		private long alternativeTicks = 0;
-#if UNITY_2017_1_OR_NEWER
-		private long realtimeOffset;
-#endif
-		/// [Tooltip("stop advancing time & executing the queue?")]
-		public bool IsPaused = false;
-		private bool pausedLastFrame = false;
-#if UNITY_2017_1_OR_NEWER
-		public bool pausePhysicsWhenPaused = true;
-#endif
-		/// <summary>
-		/// identifies the main thread
-		/// </summary>
-		internal System.Threading.Thread linkedToMainThread = null;
-		/// The timer counts in milliseconds, Unity measures in fractions of a second. This value reconciles fractional milliseconds.
-		private float leftOverTime = 0;
-		/// if actions are interrupted, probably by a deadline, this keeps track of what was being done
-		private List<ScheduledTask> _currentlyDoing = new List<ScheduledTask>();
-		private int currentlyDoneThingIndex = 0;
+//		/// The singleton
+//		private static Clock s_instance = null;
+//		/// [Tooltip("keeps track of how long each update takes. If a timer-update takes longer than this, stop executing events and do them later. Less than 0 for no limit, 0 for one event per update.")]
+//		public int maxMillisecondsPerUpdate = 100;
+//		private long maxTicksPerUpdate;
+//		public long updateCount { get; private set; }
+//		public static long UpdateCount { get { return Instance.updateCount; } }
+//		/// queue of things to do using game time. use this for in-game events that can be paused or slowed down with time dialation.
+//		public List<ScheduledTask> queue = new List<ScheduledTask>();
+//		/// queue of things to do using real-time game time. use this for UI events, or things that use the real-world as a reference, that should always work at the same rate
+//		public List<ScheduledTask> queueRealtime = new List<ScheduledTask>();
+//		/// While this is zero, use system time. As soon as time becomes perturbed, by pause or time scale, this now keeps track of game-time. To reset time back to realtime, use SynchToRealtime()
+//		private long alternativeTicks = 0;
+//#if UNITY_2017_1_OR_NEWER
+//		private long realtimeOffset;
+//#endif
+//		/// [Tooltip("stop advancing time & executing the queue?")]
+//		public bool IsPaused = false;
+//		private bool pausedLastFrame = false;
+//#if UNITY_2017_1_OR_NEWER
+//		public bool pausePhysicsWhenPaused = true;
+//#endif
+//		/// <summary>
+//		/// identifies the main thread
+//		/// </summary>
+//		internal System.Threading.Thread linkedToMainThread = null;
+//		/// The timer counts in milliseconds, Unity measures in fractions of a second. This value reconciles fractional milliseconds.
+//		private float leftOverTime = 0;
+//		/// if actions are interrupted, probably by a deadline, this keeps track of what was being done
+//		private List<ScheduledTask> _currentlyDoing = new List<ScheduledTask>();
+//		private int currentlyDoneThingIndex = 0;
 
-		public System.Action onPause, onUnpause;
+//		public System.Action onPause, onUnpause;
 
-		[System.Serializable]
-		public class ScheduledTask {
-			public string description;
-			/// Unix Epoch Time Milliseconds
-			public long when;
-			/// could be a delegate, or an executable object
-			public object what;
-			/// a parameter for 'who' wants this particular 'what' to be done, like a context.
-			public object who;
-			/// whether or not to DO or UN-do
-			public bool activate = true;
-			/// what could be a delegate, or an executable object, as executed by a Trigger
-			public ScheduledTask(long when, object what, string description = null, object who = null) {
-				if (description == null) {
-					if (what != null && typeof(System.Action).IsAssignableFrom(what.GetType())) {
-						System.Action a = what as System.Action;
-						description = a.Method.Name;
-					} else if (what != null) {
-						description = what.ToString();
-					}
-				}
-				this.description = description; this.when = when; this.what = what; this.who = who;
-			}
-			/// comparer, used to sort into a list
-			public class Comparer : IComparer<ScheduledTask> {
-				public int Compare(ScheduledTask x, ScheduledTask y) { return x.when.CompareTo(y.when); }
-			}
-			public static Comparer compare = new Comparer();
-		}
+//		[System.Serializable]
+//		public class ScheduledTask {
+//			public string description;
+//			/// Unix Epoch Time Milliseconds
+//			public long when;
+//			/// could be a delegate, or an executable object
+//			public object what;
+//			/// a parameter for 'who' wants this particular 'what' to be done, like a context.
+//			public object who;
+//			/// whether or not to DO or UN-do
+//			public bool activate = true;
+//			/// what could be a delegate, or an executable object, as executed by a Trigger
+//			public ScheduledTask(long when, object what, string description = null, object who = null) {
+//				if (description == null) {
+//					if (what != null && typeof(System.Action).IsAssignableFrom(what.GetType())) {
+//						System.Action a = what as System.Action;
+//						description = a.Method.Name;
+//					} else if (what != null) {
+//						description = what.ToString();
+//					}
+//				}
+//				this.description = description; this.when = when; this.what = what; this.who = who;
+//			}
+//			/// comparer, used to sort into a list
+//			public class Comparer : IComparer<ScheduledTask> {
+//				public int Compare(ScheduledTask x, ScheduledTask y) { return x.when.CompareTo(y.when); }
+//			}
+//			public static Comparer compare = new Comparer();
+//		}
 
-		public static void Log(string text, bool error = false) {
-#if UNITY_2017_1_OR_NEWER
-			if (error) Debug.LogError(text);
-			else Debug.Log(text);
-#else
-			if(error) System.Console.Error.WriteLine(text);
-			else System.Console.WriteLine(text);
-#endif
-		}
-		private Clock() {
-			if(s_instance == null) { s_instance = this; }
-			if(s_instance != this) { Log("multiple clocks instantiated?", true); }
-#if UNITY_2017_1_OR_NEWER
-			MainClock.Instance();
-#endif
-		}
-		public void Release() { s_instance = null; queue.Clear(); queueRealtime.Clear(); SyncToRealtime(); }
+//		public static void Log(string text, bool error = false) {
+//#if UNITY_2017_1_OR_NEWER
+//			if (error) Debug.LogError(text);
+//			else Debug.Log(text);
+//#else
+//			if(error) System.Console.Error.WriteLine(text);
+//			else System.Console.WriteLine(text);
+//#endif
+//		}
+//		private Clock() {
+//			if(s_instance == null) { s_instance = this; }
+//			if(s_instance != this) { Log("multiple clocks instantiated?", true); }
+//#if UNITY_2017_1_OR_NEWER
+//			MainClock.Instance();
+//#endif
+//		}
+//		public void Release() { s_instance = null; queue.Clear(); queueRealtime.Clear(); SyncToRealtime(); }
 
-		public static Clock Instance { get { return (s_instance != null) ? s_instance : (s_instance = new Clock()); } }
+//		public static Clock Instance { get { return (s_instance != null) ? s_instance : (s_instance = new Clock()); } }
 
-		/// Unix Time: milliseconds since Jan 1 1970
-		public static long NowRealtime { get { return System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMillisecond; } }
-		/// very fast time keeping at millisecond resolution. no guarantees about the range of values, just that time is kept.
-		public static int NowRealTicks { get { return System.Environment.TickCount; } }
+//		/// Unix Time: milliseconds since Jan 1 1970
+//		public static long NowRealtime { get { return System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMillisecond; } }
+//		/// very fast time keeping at millisecond resolution. no guarantees about the range of values, just that time is kept.
+//		public static int NowRealTicks { get { return System.Environment.TickCount; } }
 
-		/// game time right now (modified by pausing or Time.timeScale)
-		public long now { get { return (alternativeTicks == 0) ? NowRealtime : alternativeTicks; } }
-		public long nowTicks { get { return (alternativeTicks == 0) ? NowRealTicks : alternativeTicks; } }
+//		/// game time right now (modified by pausing or Time.timeScale)
+//		public long now { get { return (alternativeTicks == 0) ? NowRealtime : alternativeTicks; } }
+//		public long nowTicks { get { return (alternativeTicks == 0) ? NowRealTicks : alternativeTicks; } }
 
-		/// game time right now (modified by pausing or Time.timeScale)
-		public static long Now { get { return Instance.now; } }
-		/// time right now, modified by pausing or Time.timeScale
-		public static long NowTicks { get { return Instance.nowTicks; } }
+//		/// game time right now (modified by pausing or Time.timeScale)
+//		public static long Now { get { return Instance.now; } }
+//		/// time right now, modified by pausing or Time.timeScale
+//		public static long NowTicks { get { return Instance.nowTicks; } }
 
-		private static bool _quitting = false;
-		public static bool IsQuitting { get { return _quitting; } internal set { _quitting = value; } }
-		public void OnApplicationQuit() { _quitting = true; } // called by Unity
+//		private static bool _quitting = false;
+//		public static bool IsQuitting { get { return _quitting; } internal set { _quitting = value; } }
+//		public void OnApplicationQuit() { _quitting = true; } // called by Unity
 
-		/// clears the difference between game time and real time
-		public void SyncToRealtime() { alternativeTicks = 0; }
+//		/// clears the difference between game time and real time
+//		public void SyncToRealtime() { alternativeTicks = 0; }
 
-		/// <summary>
-		/// if more than one Clock is created accidentally, this allows them to merge
-		/// </summary>
-		/// <param name="otherTimerQueue"></param>
-		public void Absorb(Clock otherTimerQueue) {
-			for (int i = 0; i < otherTimerQueue.queue.Count; ++i) {
-				ScheduledTask todo = otherTimerQueue.queue[i];
-				queue.Insert(BestIndexFor(todo.when, queue), todo);
-			}
-			otherTimerQueue.queue.Clear();
-			for (int i = 0; i < otherTimerQueue.queue.Count; ++i) {
-				ScheduledTask todo = otherTimerQueue.queueRealtime[i];
-				queueRealtime.Insert(BestIndexFor(todo.when, queueRealtime), todo);
-			}
-			otherTimerQueue.queueRealtime.Clear();
-		}
+//		/// <summary>
+//		/// if more than one Clock is created accidentally, this allows them to merge
+//		/// </summary>
+//		/// <param name="otherTimerQueue"></param>
+//		public void Absorb(Clock otherTimerQueue) {
+//			for (int i = 0; i < otherTimerQueue.queue.Count; ++i) {
+//				ScheduledTask todo = otherTimerQueue.queue[i];
+//				queue.Insert(BestIndexFor(todo.when, queue), todo);
+//			}
+//			otherTimerQueue.queue.Clear();
+//			for (int i = 0; i < otherTimerQueue.queue.Count; ++i) {
+//				ScheduledTask todo = otherTimerQueue.queueRealtime[i];
+//				queueRealtime.Insert(BestIndexFor(todo.when, queueRealtime), todo);
+//			}
+//			otherTimerQueue.queueRealtime.Clear();
+//		}
 
-		/// <summary>
-		/// calculates the best index for a given task in a given queue
-		/// </summary>
-		/// <param name="soon">when the task needs to execute</param>
-		/// <param name="a_queue">the queue the task needs to go into</param>
-		/// <returns></returns>
-		private int BestIndexFor(long soon, List<ScheduledTask> a_queue) {
-			int index;
-			if (a_queue.Count < 8) { // for small lists (which happen A LOT), linear search is fine.
-				for (index = 0; index < a_queue.Count; ++index) {
-					if (a_queue[index].when > soon) break;
-				}
-			} else {
-				ScheduledTask toInsert = new ScheduledTask(soon, null);
-				index = a_queue.BinarySearch(toInsert, ScheduledTask.compare);
-				if (index < 0) { index = ~index; }
-			}
-			return index;
-		}
+//		/// <summary>
+//		/// calculates the best index for a given task in a given queue
+//		/// </summary>
+//		/// <param name="soon">when the task needs to execute</param>
+//		/// <param name="a_queue">the queue the task needs to go into</param>
+//		/// <returns></returns>
+//		private int BestIndexFor(long soon, List<ScheduledTask> a_queue) {
+//			int index;
+//			if (a_queue.Count < 8) { // for small lists (which happen A LOT), linear search is fine.
+//				for (index = 0; index < a_queue.Count; ++index) {
+//					if (a_queue[index].when > soon) break;
+//				}
+//			} else {
+//				ScheduledTask toInsert = new ScheduledTask(soon, null);
+//				index = a_queue.BinarySearch(toInsert, ScheduledTask.compare);
+//				if (index < 0) { index = ~index; }
+//			}
+//			return index;
+//		}
 
-		/// <summary>as the JavaScript function</summary>
-		/// <param name="action">Action. an object to trigger, expected to be a delegate or System.Action</param>
-		/// <param name="delayMilliseconds">Delay milliseconds.</param>
-		public ScheduledTask SetTimeout(System.Action action, long delayMilliseconds) {
-			return SetTimeout((object)action, delayMilliseconds);
-		}
-		public ScheduledTask ScheduleTimeout(System.Action action, long delayMilliseconds) {
-			return ScheduleTimeout((object)action, delayMilliseconds);
-		}
-		/// <summary>as the JavaScript function</summary>
-		/// <param name="action">Action. an object to trigger, expected to be a delegate or System.Action</param>
-		/// <param name="delayMilliseconds">Delay milliseconds.</param>
-		public ScheduledTask SetTimeout(object action, long delayMilliseconds) {
-			long soon = nowTicks + delayMilliseconds;// * System.TimeSpan.TicksPerMillisecond;
-			return ScheduleTimeout(action, soon);
-		}
-		public ScheduledTask ScheduleTimeout(object action, long soon) {
-			ScheduledTask todo = new ScheduledTask(soon, action);
-			queue.Insert(BestIndexFor(soon, queue), todo);
-			LinkedToMainThreadCheck();
-			return todo;
-		}
-		public static void Lerp(Action<float> action, long durationMs = 1000, float calculations = 10, float start = 0, float end = 1) {
-			Instance.DoLerp(action, durationMs, calculations, start, end);
-		}
-		public void DoLerp(Action<float> action, long durationMs = 1000, float calculations = 10, float start = 0, float end = 1) {
-			long started = nowTicks;
-			float iterations = 0;
-			void DoIt() {
-				float delta = end - start;
-				float p = (delta * iterations) / calculations + start;
-				action.Invoke(p);
-				long delay = (long)(durationMs / calculations);
-				if (iterations < calculations) {
-					long nextTime = (long)(durationMs * (iterations + 1) / calculations) + started;
-					ScheduleTimeout(DoIt, nextTime);//nowTicks + delay);
-				}
-				++iterations;
-			}
-			DoIt();
-		}
+//		/// <summary>as the JavaScript function</summary>
+//		/// <param name="action">Action. an object to trigger, expected to be a delegate or System.Action</param>
+//		/// <param name="delayMilliseconds">Delay milliseconds.</param>
+//		public ScheduledTask SetTimeout(System.Action action, long delayMilliseconds) {
+//			return SetTimeout((object)action, delayMilliseconds);
+//		}
+//		public ScheduledTask ScheduleTimeout(System.Action action, long delayMilliseconds) {
+//			return ScheduleTimeout((object)action, delayMilliseconds);
+//		}
+//		/// <summary>as the JavaScript function</summary>
+//		/// <param name="action">Action. an object to trigger, expected to be a delegate or System.Action</param>
+//		/// <param name="delayMilliseconds">Delay milliseconds.</param>
+//		public ScheduledTask SetTimeout(object action, long delayMilliseconds) {
+//			long soon = nowTicks + delayMilliseconds;// * System.TimeSpan.TicksPerMillisecond;
+//			return ScheduleTimeout(action, soon);
+//		}
+//		public ScheduledTask ScheduleTimeout(object action, long soon) {
+//			ScheduledTask todo = new ScheduledTask(soon, action);
+//			queue.Insert(BestIndexFor(soon, queue), todo);
+//			LinkedToMainThreadCheck();
+//			return todo;
+//		}
+//		public static void Lerp(Action<float> action, long durationMs = 1000, float calculations = 10, float start = 0, float end = 1) {
+//			Instance.DoLerp(action, durationMs, calculations, start, end);
+//		}
+//		public void DoLerp(Action<float> action, long durationMs = 1000, float calculations = 10, float start = 0, float end = 1) {
+//			long started = nowTicks;
+//			float iterations = 0;
+//			void DoIt() {
+//				float delta = end - start;
+//				float p = (delta * iterations) / calculations + start;
+//				action.Invoke(p);
+//				long delay = (long)(durationMs / calculations);
+//				if (iterations < calculations) {
+//					long nextTime = (long)(durationMs * (iterations + 1) / calculations) + started;
+//					ScheduleTimeout(DoIt, nextTime);//nowTicks + delay);
+//				}
+//				++iterations;
+//			}
+//			DoIt();
+//		}
 
-		public List<ScheduledTask> UnsetTimeout(object action) {
-			List<ScheduledTask> unset = new List<ScheduledTask>();
-			for (int i = queue.Count - 1; i >= 0; --i) {
-				if (queue[i].what == action) {
-					unset.Add(queue[i]);
-					queue.RemoveAt(i);
-				}
-			}
-			return unset;
-		}
+//		public List<ScheduledTask> UnsetTimeout(object action) {
+//			List<ScheduledTask> unset = new List<ScheduledTask>();
+//			for (int i = queue.Count - 1; i >= 0; --i) {
+//				if (queue[i].what == action) {
+//					unset.Add(queue[i]);
+//					queue.RemoveAt(i);
+//				}
+//			}
+//			return unset;
+//		}
 
-		/// <summary>as the JavaScript function</summary>
-		/// <param name="action">Action. an object to trigger, expected to be a delegate or System.Action</param>
-		/// <param name="delayMilliseconds">Delay milliseconds.</param>
-		public ScheduledTask SetTimeoutRealtime(object action, long delayMilliseconds) {
-			long soon = NowRealTicks + delayMilliseconds;// * System.TimeSpan.TicksPerMillisecond;
-			ScheduledTask todo = new ScheduledTask(soon, action);
-			queueRealtime.Insert(BestIndexFor(soon, queueRealtime), todo);
-			LinkedToMainThreadCheck();
-			return todo;
-		}
+//		/// <summary>as the JavaScript function</summary>
+//		/// <param name="action">Action. an object to trigger, expected to be a delegate or System.Action</param>
+//		/// <param name="delayMilliseconds">Delay milliseconds.</param>
+//		public ScheduledTask SetTimeoutRealtime(object action, long delayMilliseconds) {
+//			long soon = NowRealTicks + delayMilliseconds;// * System.TimeSpan.TicksPerMillisecond;
+//			ScheduledTask todo = new ScheduledTask(soon, action);
+//			queueRealtime.Insert(BestIndexFor(soon, queueRealtime), todo);
+//			LinkedToMainThreadCheck();
+//			return todo;
+//		}
 
-		public void LinkedToMainThreadCheck() {
-#if !UNITY_2017_1_OR_NEWER
-			if (linkedToMainThread == null) {
-				Log("Please call Clock.Instance.Update() regularly to use Clock system", true);
-			}
-#endif
-		}
+//		public void LinkedToMainThreadCheck() {
+//#if !UNITY_2017_1_OR_NEWER
+//			if (linkedToMainThread == null) {
+//				Log("Please call Clock.Instance.Update() regularly to use Clock system", true);
+//			}
+//#endif
+//		}
 
-		/// <param name="action">Action. what to do</param>
-		/// <param name="delayMilliseconds">Delay milliseconds. in how-many-milliseconds to do it</param>
-		public static ScheduledTask setTimeout(object action, long delayMilliseconds) {
-			return Instance.SetTimeout(action, delayMilliseconds);
-		}
+//		/// <param name="action">Action. what to do</param>
+//		/// <param name="delayMilliseconds">Delay milliseconds. in how-many-milliseconds to do it</param>
+//		public static ScheduledTask setTimeout(object action, long delayMilliseconds) {
+//			return Instance.SetTimeout(action, delayMilliseconds);
+//		}
 
-		public static List<ScheduledTask> unsetTimeout(System.Action action) {
-			return Instance.UnsetTimeout(action);
-		}
+//		public static List<ScheduledTask> unsetTimeout(System.Action action) {
+//			return Instance.UnsetTimeout(action);
+//		}
 
-		/// <param name="action">Action. what to do</param>
-		/// <param name="delayMilliseconds">Delay milliseconds. in how-many-milliseconds to do it</param>
-		public static ScheduledTask setTimeoutRealtime(object action, long delayMilliseconds) {
-			return Instance.SetTimeoutRealtime(action, delayMilliseconds);
-		}
+//		/// <param name="action">Action. what to do</param>
+//		/// <param name="delayMilliseconds">Delay milliseconds. in how-many-milliseconds to do it</param>
+//		public static ScheduledTask setTimeoutRealtime(object action, long delayMilliseconds) {
+//			return Instance.SetTimeoutRealtime(action, delayMilliseconds);
+//		}
 
-		/// Allows implicit conversion of lambda expressions and delegates
-		/// <param name="action">Action. what to do</param>
-		/// <param name="delayMilliseconds">Delay milliseconds. in how-many-milliseconds to do it</param>
-		public static ScheduledTask setTimeout(System.Action action, long delayMilliseconds) {
-			return Instance.SetTimeout(action, delayMilliseconds);
-		}
+//		/// Allows implicit conversion of lambda expressions and delegates
+//		/// <param name="action">Action. what to do</param>
+//		/// <param name="delayMilliseconds">Delay milliseconds. in how-many-milliseconds to do it</param>
+//		public static ScheduledTask setTimeout(System.Action action, long delayMilliseconds) {
+//			return Instance.SetTimeout(action, delayMilliseconds);
+//		}
 
-		/// <summary>Allows implicit conversion of lambda expressions and delegates</summary>
-		/// <param name="action">Action. what to do</param>
-		/// <param name="delayMilliseconds">Delay milliseconds. in how-many-milliseconds to do it</param>
-		public static ScheduledTask setTimeoutRealtime(System.Action action, long delayMilliseconds) {
-			return Instance.SetTimeoutRealtime(action, delayMilliseconds);
-		}
+//		/// <summary>Allows implicit conversion of lambda expressions and delegates</summary>
+//		/// <param name="action">Action. what to do</param>
+//		/// <param name="delayMilliseconds">Delay milliseconds. in how-many-milliseconds to do it</param>
+//		public static ScheduledTask setTimeoutRealtime(System.Action action, long delayMilliseconds) {
+//			return Instance.SetTimeoutRealtime(action, delayMilliseconds);
+//		}
 
-		//void OnApplicationPause(bool paused) { if(alternativeTime == 0) { alternativeTime = now; } }
-		public void Pause() { IsPaused = true; }
-		public void Unpause() { IsPaused = false; }
-		public void OnApplicationPause(bool paused) { if (alternativeTicks == 0) { alternativeTicks = nowTicks; } }
-		public void OnDisable() { OnApplicationPause(true); }
-		public void OnEnable() { OnApplicationPause(false); }
+//		//void OnApplicationPause(bool paused) { if(alternativeTime == 0) { alternativeTime = now; } }
+//		public void Pause() { IsPaused = true; }
+//		public void Unpause() { IsPaused = false; }
+//		public void OnApplicationPause(bool paused) { if (alternativeTicks == 0) { alternativeTicks = nowTicks; } }
+//		public void OnDisable() { OnApplicationPause(true); }
+//		public void OnEnable() { OnApplicationPause(false); }
 
-		/// used to handle pause/unpause behavior
-		public delegate void BooleanAction(bool b);
-		public static void EquateUnityEditorPauseWithApplicationPause(BooleanAction b) {
-#if UNITY_EDITOR
-			// This method is run whenever the playmode state is changed.
-			UnityEditor.EditorApplication.pauseStateChanged += (UnityEditor.PauseState ps) => {
-				b(ps == UnityEditor.PauseState.Paused);
-			};
-#endif
-		}
+//		/// used to handle pause/unpause behavior
+//		public delegate void BooleanAction(bool b);
+//		public static void EquateUnityEditorPauseWithApplicationPause(BooleanAction b) {
+//#if UNITY_EDITOR
+//			// This method is run whenever the playmode state is changed.
+//			UnityEditor.EditorApplication.pauseStateChanged += (UnityEditor.PauseState ps) => {
+//				b(ps == UnityEditor.PauseState.Paused);
+//			};
+//#endif
+//		}
 
-		public void Init() {
-			EquateUnityEditorPauseWithApplicationPause(OnApplicationPause);
-			if (s_instance != null && s_instance != this) { throw new System.Exception("There should only be one " + GetType()); }
-			s_instance = this;
-		}
+//		public void Init() {
+//			EquateUnityEditorPauseWithApplicationPause(OnApplicationPause);
+//			if (s_instance != null && s_instance != this) { throw new System.Exception("There should only be one " + GetType()); }
+//			s_instance = this;
+//		}
 
-		void RefreshTiming() { maxTicksPerUpdate = maxMillisecondsPerUpdate; }
+//		void RefreshTiming() { maxTicksPerUpdate = maxMillisecondsPerUpdate; }
 
-#if UNITY_EDITOR
-		public void OnValidate() { RefreshTiming(); }
-#endif
+//#if UNITY_EDITOR
+//		public void OnValidate() { RefreshTiming(); }
+//#endif
 
-		public void Start() { Init(); RefreshTiming(); }
+//		public void Start() { Init(); RefreshTiming(); }
 
-#if UNITY_2017_1_OR_NEWER
-		private float __oldTimeScale;
-#endif
-		public void Update() {
-			if(linkedToMainThread == null) { linkedToMainThread = System.Threading.Thread.CurrentThread; }
-			updateCount++;
-			// handle pause behavior
-			if (IsPaused) {
-				if (!pausedLastFrame) {
-					alternativeTicks = nowTicks;
-					if (onPause != null) { onPause.Invoke(); }
-					pausedLastFrame = true;
-#if UNITY_2017_1_OR_NEWER
-					if (pausePhysicsWhenPaused) {
-						__oldTimeScale = Time.timeScale;
-						Time.timeScale = 0;
-					}
-#endif
-				}
-			} else if (pausedLastFrame) {
-				if (onUnpause != null) { onUnpause.Invoke(); }
-				pausedLastFrame = false;
-#if UNITY_2017_1_OR_NEWER
-				if (pausePhysicsWhenPaused) {
-					Time.timeScale = __oldTimeScale;
-				}
-#endif
-			}
-			// pump the timer queues, both realtime (takes priority) and game-time
-			long now_t, nowForReals = NowRealTicks;
-			long deadline = nowForReals + maxTicksPerUpdate;
-			int thingsDone = 0;
-			if (queueRealtime.Count > 0) {
-				thingsDone = DoWhatIsNeededNow(queueRealtime, nowForReals, deadline);
-			}
-			if (!IsPaused) {
-				if (alternativeTicks == 0) {
-					now_t = nowForReals;
-#if UNITY_2017_1_OR_NEWER
-					if (Time.timeScale != 1) { alternativeTicks = now_t; }
-#endif
-				} else {
-					float deltaTimeTicks =
-#if UNITY_2017_1_OR_NEWER
-					(Time.deltaTime * 1000);
-#else
-					(__lastUpdate != 0) ? (NowRealTicks - __lastUpdate) : 0;
-#endif
-					long deltaTimeTicksLong = (long)(deltaTimeTicks + leftOverTime);
-					alternativeTicks += deltaTimeTicksLong;
-					leftOverTime = deltaTimeTicks - deltaTimeTicksLong;
-					now_t = alternativeTicks;
-				}
-				if (thingsDone == 0 || now_t < deadline) {
-					thingsDone += DoWhatIsNeededNow(queue, now_t, deadline);
-				}
-			}
-			__lastUpdate = NowRealTicks;
-		}
-		private long __lastUpdate = 0;
+//#if UNITY_2017_1_OR_NEWER
+//		private float __oldTimeScale;
+//#endif
+//		public void Update() {
+//			if(linkedToMainThread == null) { linkedToMainThread = System.Threading.Thread.CurrentThread; }
+//			updateCount++;
+//			// handle pause behavior
+//			if (IsPaused) {
+//				if (!pausedLastFrame) {
+//					alternativeTicks = nowTicks;
+//					if (onPause != null) { onPause.Invoke(); }
+//					pausedLastFrame = true;
+//#if UNITY_2017_1_OR_NEWER
+//					if (pausePhysicsWhenPaused) {
+//						__oldTimeScale = Time.timeScale;
+//						Time.timeScale = 0;
+//					}
+//#endif
+//				}
+//			} else if (pausedLastFrame) {
+//				if (onUnpause != null) { onUnpause.Invoke(); }
+//				pausedLastFrame = false;
+//#if UNITY_2017_1_OR_NEWER
+//				if (pausePhysicsWhenPaused) {
+//					Time.timeScale = __oldTimeScale;
+//				}
+//#endif
+//			}
+//			// pump the timer queues, both realtime (takes priority) and game-time
+//			long now_t, nowForReals = NowRealTicks;
+//			long deadline = nowForReals + maxTicksPerUpdate;
+//			int thingsDone = 0;
+//			if (queueRealtime.Count > 0) {
+//				thingsDone = DoWhatIsNeededNow(queueRealtime, nowForReals, deadline);
+//			}
+//			if (!IsPaused) {
+//				if (alternativeTicks == 0) {
+//					now_t = nowForReals;
+//#if UNITY_2017_1_OR_NEWER
+//					if (Time.timeScale != 1) { alternativeTicks = now_t; }
+//#endif
+//				} else {
+//					float deltaTimeTicks =
+//#if UNITY_2017_1_OR_NEWER
+//					(Time.deltaTime * 1000);
+//#else
+//					(__lastUpdate != 0) ? (NowRealTicks - __lastUpdate) : 0;
+//#endif
+//					long deltaTimeTicksLong = (long)(deltaTimeTicks + leftOverTime);
+//					alternativeTicks += deltaTimeTicksLong;
+//					leftOverTime = deltaTimeTicks - deltaTimeTicksLong;
+//					now_t = alternativeTicks;
+//				}
+//				if (thingsDone == 0 || now_t < deadline) {
+//					thingsDone += DoWhatIsNeededNow(queue, now_t, deadline);
+//				}
+//			}
+//			__lastUpdate = NowRealTicks;
+//		}
+//		private long __lastUpdate = 0;
 
-		int DoWhatIsNeededNow(List<ScheduledTask> a_queue, long now_t, long deadline) {
-			bool tryToDoMore;
-			int thingsDone = 0;
-			do {
-				tryToDoMore = false;
-				if (a_queue.Count > 0 && a_queue[0].when <= now_t) {
-					if (_currentlyDoing.Count == 0) {
-						// the things to do in the queue might add to the queue, so to prevent infinite looping...
-						// separate out the elements to do right now
-						for (int i = 0; i < a_queue.Count; ++i) {
-							if (a_queue[i].when > now_t) { break; }
-							_currentlyDoing.Add(a_queue[i]);
-						}
-						// if there's nothing to do, get out of this potential loop
-						if (_currentlyDoing.Count == 0) { break; }
-						a_queue.RemoveRange(0, _currentlyDoing.Count);
-						tryToDoMore = false;
-					}
-					// do what is scheduled to do right now
-					while (currentlyDoneThingIndex < _currentlyDoing.Count) {
-						ScheduledTask todo = _currentlyDoing[currentlyDoneThingIndex++];
-						// if DoActivate adds to the queue, it won't get executed this cycle
-						NonStandard.ActivateAnything.DoActivate(todo.what, this, todo.who, todo.activate);
-						++thingsDone;
-						// if it took too long to do that thing, stop and hold the rest of the things to do till later.
-						if (maxTicksPerUpdate >= 0 && NowRealTicks > deadline) {
-							break;
-						}
-					}
-					if (currentlyDoneThingIndex >= _currentlyDoing.Count) {
-						_currentlyDoing.Clear();
-						currentlyDoneThingIndex = 0;
-						tryToDoMore = NowRealTicks < deadline && a_queue.Count > 0;
-					}
-				}
-			} while (tryToDoMore);
-			return thingsDone;
-		}
-	}
+//		int DoWhatIsNeededNow(List<ScheduledTask> a_queue, long now_t, long deadline) {
+//			bool tryToDoMore;
+//			int thingsDone = 0;
+//			do {
+//				tryToDoMore = false;
+//				if (a_queue.Count > 0 && a_queue[0].when <= now_t) {
+//					if (_currentlyDoing.Count == 0) {
+//						// the things to do in the queue might add to the queue, so to prevent infinite looping...
+//						// separate out the elements to do right now
+//						for (int i = 0; i < a_queue.Count; ++i) {
+//							if (a_queue[i].when > now_t) { break; }
+//							_currentlyDoing.Add(a_queue[i]);
+//						}
+//						// if there's nothing to do, get out of this potential loop
+//						if (_currentlyDoing.Count == 0) { break; }
+//						a_queue.RemoveRange(0, _currentlyDoing.Count);
+//						tryToDoMore = false;
+//					}
+//					// do what is scheduled to do right now
+//					while (currentlyDoneThingIndex < _currentlyDoing.Count) {
+//						ScheduledTask todo = _currentlyDoing[currentlyDoneThingIndex++];
+//						// if DoActivate adds to the queue, it won't get executed this cycle
+//						NonStandard.ActivateAnything.DoActivate(todo.what, this, todo.who, todo.activate);
+//						++thingsDone;
+//						// if it took too long to do that thing, stop and hold the rest of the things to do till later.
+//						if (maxTicksPerUpdate >= 0 && NowRealTicks > deadline) {
+//							break;
+//						}
+//					}
+//					if (currentlyDoneThingIndex >= _currentlyDoing.Count) {
+//						_currentlyDoing.Clear();
+//						currentlyDoneThingIndex = 0;
+//						tryToDoMore = NowRealTicks < deadline && a_queue.Count > 0;
+//					}
+//				}
+//			} while (tryToDoMore);
+//			return thingsDone;
+//		}
+//	}
 
 	/// This class serves as a store for static Utility functions related to 'activating things'.
 	public static class ActivateAnything
@@ -521,9 +533,9 @@ namespace NonStandard
 			if (delayInSeconds <= 0) {
 				DoActivate(whatToActivate, causedActivate, doingActivate, activate);
 			} else {
-				Clock.setTimeout(() => {
+				GameClock.Delay((long)(delayInSeconds * 1000), () => {
 					DoActivate(whatToActivate, causedActivate, doingActivate, activate);
-				}, (long)(delayInSeconds * 1000));
+				});
 			}
 		}
 
@@ -535,7 +547,7 @@ namespace NonStandard
 		public static void DoActivate(
 			object whatToActivate, object causedActivate, object doingActivate, bool activate
 		) {
-			if (whatToActivate == null) { Clock.Log("Don't know how to activate null"); return; }
+			if (whatToActivate == null) { Debug.Log("Don't know how to activate null"); return; }
 			if (whatToActivate is IReference) {
 				whatToActivate = ((IReference)whatToActivate).Dereference();
 			}
@@ -660,7 +672,7 @@ namespace NonStandard
 					}
 				}
 				if (!invoked) {
-					Clock.Log("Don't know how to " + ((activate) ? "DoActivateTrigger" : "DoDeactivateTrigger") + " a \'" + type + "\' (" + whatToActivate + ") with \'" + doingActivate + "\', triggered by \'" + causedActivate + "\'", true);
+					Debug.LogError("Don't know how to " + ((activate) ? "DoActivateTrigger" : "DoDeactivateTrigger") + " a \'" + type + "\' (" + whatToActivate + ") with \'" + doingActivate + "\', triggered by \'" + causedActivate + "\'");
 				}
 			}
 		}

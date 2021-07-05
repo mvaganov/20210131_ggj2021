@@ -69,30 +69,33 @@ public class MazeTile : MonoBehaviour
 		maze.seen[coord] = discovered;
 		this.d = d;
 		t = transform;
+		started = 0;
 		DoAnimate();
 	}
 
 	public void DoAnimate() {
-		Clock.unsetTimeout(Animate);
+		//Clock.unsetTimeout(Animate);
+		//GameClock.Timer.RemoveScheduled(Animate);
+		if (started != 0) return;
 		r = GetComponent<Renderer>();
-		started = Clock.Now;
+		started = GameClock.Time;
 		startPos = t.localPosition;
 		startScale = t.localScale;
 		startColor = r.material.color;
 		duration = (long)(maze.animationTime * 1000);
 		startRot = t.rotation;
 		CalcLocal(out endPos, out endScale, out endRot, out endColor, d);
-		Animate();
+		AnimateLoop();
 	}
 	Discovery d;
 	Renderer r;
-	long started;
+	long started = 0;
 	Vector3 startPos, endPos, startScale, endScale;
 	Quaternion startRot, endRot;
 	Color startColor, endColor;
 	long duration;
-	void Animate() {
-		float p = duration > 0 ? (float)(Clock.Now - started) / duration : 1;
+	void AnimateLoop() {
+		float p = duration > 0 ? (float)(GameClock.Time - started) / duration : 1;
 		Color c;
 		if (p >= 1) {
 			t.localPosition = endPos;
@@ -106,7 +109,7 @@ public class MazeTile : MonoBehaviour
 			t.rotation = Quaternion.Lerp(startRot, endRot, p);
 			c = Color.Lerp(startColor, endColor, p);
 			r.material.color = c;
-			Clock.setTimeout(Animate, 10+Random.Range(0,20));
+			GameClock.Delay(10 + Random.Range(0, 20), AnimateLoop);
 		}
 		if (r.enabled) { if (c.a == 0) { r.enabled = false; } }
 		else { if(c.a != 0) { r.enabled = true; } }

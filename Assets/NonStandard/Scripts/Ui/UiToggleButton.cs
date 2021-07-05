@@ -26,12 +26,12 @@ public class UiToggleButton : MonoBehaviour {
         Button b = GetComponent<Button>();
         b.onClick.AddListener(DoActivateTrigger);
         if(uiToggleClose != null) { uiToggleClose.onClick.AddListener(DoActivateTrigger); }
-        if(uiStartsHidden || clickMeAfterStart) Clock.setTimeout(() => {
+        if(uiStartsHidden || clickMeAfterStart) GameClock.Delay(0, () => {
 			if (uiStartsHidden) { uiToControlVisibility.SetActive(false); }
             if (clickMeAfterStart) {
                 //Debug.Log("first click " + b);
                 UiClick.Click(b);
             }
-        }, 0);
+        });
     }
 }

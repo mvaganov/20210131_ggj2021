@@ -3,6 +3,7 @@ using UnityEngine;
 using System.IO;
 using System.Diagnostics;
 using System.Threading;
+using NonStandard.Procedure;
 
 namespace NonStandard.Cli {
 	public class SystemBridge
@@ -36,10 +37,10 @@ namespace NonStandard.Cli {
 #endif
 
 		private void BlockTillFile(string filename, bool writable, long timeout, string timeoutMessage) {
-			long start = Clock.NowRealtime;
+			long start = System.Environment.TickCount;//Clock.NowRealtime;
 			timeout += start;
 			while (((File.GetAttributes(filename) & FileAttributes.ReadOnly) != 0) == writable) {
-				if (Clock.NowRealtime >= timeout) { throw new System.Exception(timeoutMessage); }
+				if (System.Environment.TickCount >= timeout) { throw new System.Exception(timeoutMessage); }
 				Thread.Sleep(3);
 				if (system_process.HasExited)
 				{

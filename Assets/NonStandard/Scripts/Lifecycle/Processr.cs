@@ -24,7 +24,9 @@ namespace NonStandard.Procedure {
 		/// <summary>
 		/// used for time-based processing "chronos"
 		/// </summary>
-		TimeKeeper timer = new TimeKeeper();
+		TimeKeeper systemClock = new TimeKeeper();
+
+		public TimeKeeper SystemClock => systemClock;
 
 		public Proc.edure Convert(Proc.edureSimple reaction, bool createIfNotFound = true) {
 			if (!responseAilias.TryGetValue(reaction, out Proc.edure r) && createIfNotFound) {
@@ -40,8 +42,6 @@ namespace NonStandard.Procedure {
 			}
 			return r;
 		}
-
-		public long GetTime() { return timer.HowToGetTime(); }
 
 		public int Code(string identifier, bool createIfNotFound = false) {
 			if (!incidentIdTocode.TryGetValue(identifier, out int code)) {
@@ -60,12 +60,12 @@ namespace NonStandard.Procedure {
 			}
 			return code;
 		}
-		public void Update() { timer.Update(); }
+		public void Update() { systemClock.Update(); }
 		public void NotifyIncident(string incidentId, object source = null, object detail = null) {
-			NotifyIncident(incidentId, new Incident(GetTime(), incidentId, source, detail));
+			NotifyIncident(incidentId, new Incident(SystemClock.GetTime(), incidentId, source, detail));
 		}
-		public void NotifyIncident(int incidentCode, object source = null, object detail = null) {
-			NotifyIncident(incidentCode, new Incident(GetTime(), null, source, detail));
+		public void NotifyIncident(int incidentCode, object source = null, object detail = null, string identifier = null) {
+			NotifyIncident(incidentCode, new Incident(SystemClock.GetTime(), identifier, source, detail));
 		}
 		public void NotifyIncident(string incidentId, Incident incident) {
 			NotifyIncident(Code(incidentId, true), incident);
@@ -127,10 +127,9 @@ namespace NonStandard.Procedure {
 				}
 			}
 		}
-		public const string ScheduledId = "chrono";
-		public void Delay(long delay, int incidentCode) { timer.AddToSchedule(new Incident(GetTime() + delay, ScheduledId, incidentCode, null)); }
-		public void Delay(long delay, string incidentId) { timer.AddToSchedule(new Incident(GetTime() + delay, ScheduledId, incidentId, null)); }
-		public void Delay(long delay, Action action) { timer.AddToSchedule(new Incident(GetTime() + delay, ScheduledId, action, null)); }
-		public void Delay(long delay, Proc.edure response) { timer.AddToSchedule(new Incident(GetTime() + delay, ScheduledId, response, null)); }
+		//public Incident Delay(long delay, int incidentCode) { return systemClock.Delay(delay, incidentCode); }
+		//public Incident Delay(long delay, string incidentId) { return systemClock.Delay(delay, incidentId); }
+		//public Incident Delay(long delay, Action action) { return systemClock.Delay(delay, action); }
+		//public Incident Delay(long delay, Proc.edure response) { return systemClock.Delay(delay, response); }
 	}
 }

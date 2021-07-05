@@ -56,10 +56,10 @@ public class MoveTest : MonoBehaviour
 		/// <summary>debug artifact, for seeing the jump arc</summary>
 		[HideInInspector] Lines.Wire jumpArc;
 		public bool Pressed {
-			get { return pressed; } set { if (value && !pressed) { timePressed = Clock.NowRealTicks; } pressed = value; }
+			get { return pressed; } set { if (value && !pressed) { timePressed = GameClock.Time; } pressed = value; }
 		}
 		public void Start(Vector3 p) {
-			jumpTime = Clock.NowTicks;
+			jumpTime = GameClock.Time;
 			peakTime = 0;
 			isJumping = true;
 			peaked = false;
@@ -75,14 +75,14 @@ public class MoveTest : MonoBehaviour
 			if (!enabled) return;
 			bool peakedAtStart = peaked, jumpingAtStart = isJumping;
 			bool jpress = pressed;
-			long now = Clock.NowTicks;
+			long now = GameClock.Time;
 			if (TimedJumpPress > 0) {
 				jpress = true; TimedJumpPress -= Time.deltaTime; if (TimedJumpPress < 0) { TimedJumpPress = 0; }
 			}
 			bool lateButForgiven = false;
 			long late = 0;
 			if (onGround) { usedDoubleJumps = 0; }
-			else if (jpress && forgiveLateJumps && (late = Clock.NowRealTicks - stableTime) < jumpLagForgivenessMs) {
+			else if (jpress && forgiveLateJumps && (late = GameClock.Time - stableTime) < jumpLagForgivenessMs) {
 				stableTime = 0;
 				onGround = lateButForgiven = true;
 			}
@@ -150,7 +150,7 @@ public class MoveTest : MonoBehaviour
 		}
 		public void MarkStableJumpPoint(Vector3 position) {
 			this.position = position;
-			stableTime = Clock.NowRealTicks;
+			stableTime = GameClock.Time;
 		}
 
 		static List<Vector3> CalcJumpPath(Vector3 position, Vector3 dir, float speed, float jHeight, float gForce) {

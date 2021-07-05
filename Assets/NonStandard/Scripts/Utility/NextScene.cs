@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using NonStandard.Procedure;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -12,7 +13,8 @@ namespace NonStandard.Utility {
 				void UpdateProgressVisual() {
 					if (ao.isDone) return;
 					progressBar.fillAmount = ao.progress;
-					Clock.setTimeout(UpdateProgressVisual, 20);
+					//Clock.setTimeout(UpdateProgressVisual, 20);
+					Proc.Delay(20, UpdateProgressVisual);
 				}
 				UpdateProgressVisual();
 			}

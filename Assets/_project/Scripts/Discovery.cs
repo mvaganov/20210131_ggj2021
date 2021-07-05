@@ -55,7 +55,7 @@ public class Discovery : MonoBehaviour
         //Debug.Log("blink");
         gameObject.SetActive(false);
         pending.Clear();
-        Clock.setTimeout(() => gameObject.SetActive(true), 0);
+        GameClock.Delay(0, () => gameObject.SetActive(true));
 	}
 	private void OnTriggerEnter(Collider other) {
         //Debug.Log("triggered");

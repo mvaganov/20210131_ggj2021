@@ -1,4 +1,5 @@
 ﻿using NonStandard.Data;
+using NonStandard.Procedure;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,12 +14,12 @@ namespace NonStandard.Ui {
 		public void Refresh() {
 			if (refreshing) return;
 			refreshing = true;
-			NonStandard.Clock.setTimeout(() => {
+			Proc.Delay(100, () => {
 				refreshing = false;
 				LayoutGroup lg = GetComponent<LayoutGroup>();
 				lg.enabled = false;
 				lg.enabled = true;
-			}, 100);
+			});
 		}
 
 		public void SetItems(object[] items, string[] names, Action[] onButton) {

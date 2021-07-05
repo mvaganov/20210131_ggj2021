@@ -119,10 +119,13 @@ namespace NonStandard.Cli {
 				RollConsole(1);
 				cursorIndex.y--;
 			}
-			timestamp = Clock.NowRealTicks;
+			InitTimestamp();
 		}
 		public void RollConsole(int count) {
 			RollConsole(count, ref buffer, ref colors, ref lineOverflow);
+		}
+		private void InitTimestamp() {
+			timestamp = System.Environment.TickCount;
 		}
 		private void RollConsole(int count, ref char[][] a_buffer, ref ColorSpot[][] a_colors, ref bool[] a_lineOverflow) {
 			if (count == 0) return;
@@ -151,7 +154,7 @@ namespace NonStandard.Cli {
 				}
 			}
 			cacheValid = false;
-			timestamp = Clock.NowRealTicks;
+			InitTimestamp();
 		}
 		/// <summary>write a character into the commandline console</summary>
 		/// <param name="c">character</param>
@@ -187,7 +190,7 @@ namespace NonStandard.Cli {
 					break;
 			}
 			cacheValid = false;
-			timestamp = Clock.NowRealTicks;
+			InitTimestamp();
 			return changed;
 		}
 
@@ -198,7 +201,7 @@ namespace NonStandard.Cli {
 			if (cursorIndex.x >= buffer[cursorIndex.y].Length) {
 				AdvanceLine(ref cursorIndex);
 				return true;
-			} else { timestamp = Clock.NowRealTicks; }
+			} else { InitTimestamp(); }
 			return false;
 		}
 		public void PadEmptyWithSpace(int row, int col) {
@@ -211,7 +214,7 @@ namespace NonStandard.Cli {
 		public void SetCursorIndex(int row, int col) {
 			PadEmptyWithSpace(row, col);
 			cursorIndex = new Vector2Int(col, row);
-			timestamp = Clock.NowRealTicks;
+			InitTimestamp();
 		}
 		public bool Set(int row, int col, char c, Color f, Color b) {
 			bool changeHappened = Set(row, col, c, f, b, buffer, colors);
@@ -222,7 +225,7 @@ namespace NonStandard.Cli {
 			if (row > lastWrittenLine) {
 				lastWrittenLine = row;
 			}
-			timestamp = Clock.NowRealTicks;
+			timestamp = System.Environment.TickCount;
 			return changeHappened;
 		}
 		private static bool Set(int row, int col, char c, Color f, Color b, char[][] buffer, ColorSpot[][] colors)
@@ -287,7 +290,7 @@ namespace NonStandard.Cli {
 			if (cursorIndex.x <= width) { cursorIndex.x = width - 1; }
 			if (cursorIndex.y <= height) { cursorIndex.y = height - 1; }
 			cacheValid = false;
-			timestamp = Clock.NowRealTicks;
+			InitTimestamp();
 		}
 		public void ClearLine(int line, int startingWithCharacter = 0) {
 			for (int col = startingWithCharacter; col < buffer[line].Length; ++col) {
@@ -302,7 +305,7 @@ namespace NonStandard.Cli {
 			cursorIndex = new Vector2Int(0, 0);
 			cacheValid = true;
 			isClean = true;
-			timestamp = Clock.NowRealTicks;
+			InitTimestamp();
 		}
 
 		//public void SetText(string text)

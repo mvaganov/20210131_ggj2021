@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using NonStandard.Procedure;
+using UnityEngine;
 
 namespace NonStandard.GameUi.Particles {
     public class FloatyText : MonoBehaviour {
@@ -33,18 +34,18 @@ namespace NonStandard.GameUi.Particles {
             Rigidbody rb = GetComponent<Rigidbody>();
             rb.velocity = Vector3.up * speed;
             long timing = (long)(duration * 1000);
-            NonStandard.Clock.setTimeout(() => Destroy(gameObject), timing);
+            GameClock.Delay(timing, () => Destroy(gameObject));
             if (fade) {
                 TMPro.TMP_Text tt = TmpText;
                 Color originalFace = tt.faceColor, originalOutline = tt.outlineColor;
-                NonStandard.Clock.Lerp(p => {
+                Proc.SystemClock.Lerp(p => {
                     if (tt != null) {
                         tt.faceColor = Color.Lerp(originalFace, Color.clear, p);
                         tt.outlineColor = Color.Lerp(originalOutline, Color.clear, p);
                         transform.rotation = cam.transform.rotation;
                     }
                     //Show.Log(p);
-                }, timing, 100);
+                }, timing, 10);
             }
         }
     }

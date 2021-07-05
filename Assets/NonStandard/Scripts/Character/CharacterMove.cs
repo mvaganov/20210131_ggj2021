@@ -1,5 +1,6 @@
 ﻿// http://codegiraffe.com/unity/NonStandardPlayer.unitypackage
 using NonStandard.Inputs;
+using NonStandard.Procedure;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -349,10 +350,10 @@ namespace NonStandard.Character {
 			[HideInInspector] Lines.Wire jumpArc;
 			public bool Pressed {
 				get { return pressed; }
-				set { if (value && !pressed) { timePressed = Clock.NowRealTicks; } pressed = value; }
+				set { if (value && !pressed) { timePressed = Proc.Time; } pressed = value; }
 			}
 			public void Start(Vector3 p) {
-				jumpTime = Clock.NowTicks;
+				jumpTime = Proc.Time;
 				peakTime = 0;
 				isJumping = true;
 				peaked = false;
@@ -368,13 +369,13 @@ namespace NonStandard.Character {
 				if (!enabled) return;
 				bool peakedAtStart = peaked, jumpingAtStart = isJumping;
 				bool jpress = pressed;
-				long now = Clock.NowTicks;
+				long now = Proc.Time;
 				if (TimedJumpPress > 0) {
 					jpress = true; TimedJumpPress -= Time.deltaTime; if (TimedJumpPress < 0) { TimedJumpPress = 0; }
 				}
 				bool lateButForgiven = false;
 				long late = 0;
-				if (cm.move.isStableOnGround) { usedDoubleJumps = 0; } else if (jpress && forgiveLateJumps && (late = Clock.NowRealTicks - stableTime) < jumpLagForgivenessMs) {
+				if (cm.move.isStableOnGround) { usedDoubleJumps = 0; } else if (jpress && forgiveLateJumps && (late = System.Environment.TickCount - stableTime) < jumpLagForgivenessMs) {
 					stableTime = 0;
 					cm.move.isStableOnGround = lateButForgiven = true;
 				}
@@ -444,7 +445,7 @@ namespace NonStandard.Character {
 			}
 			public void MarkStableJumpPoint(Vector3 position) {
 				this.position = position;
-				stableTime = Clock.NowRealTicks;
+				stableTime = Proc.Time;
 			}
 			/// <param name="pos">starting position of the jump</param>
 			/// <param name="dir"></param>

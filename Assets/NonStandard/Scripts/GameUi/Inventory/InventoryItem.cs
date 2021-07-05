@@ -28,7 +28,8 @@ namespace NonStandard.GameUi.Inventory {
 			if (_pickupCollider == null) return;
 			CollisionTrigger trigger = _pickupCollider.GetComponent<CollisionTrigger>();
 			trigger.enabled = false;
-			NonStandard.Clock.setTimeout(() => { if (trigger != null) trigger.enabled = true; }, 500);
+			GameClock.Delay(500, () => { if (trigger != null) trigger.enabled = true; });
+			//NonStandard.Clock.setTimeout(() => { if (trigger != null) trigger.enabled = true; }, 500);
 		}
 	}
 }

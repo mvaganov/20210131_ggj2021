@@ -262,7 +262,7 @@ public class ClickToMoveFollower : MonoBehaviour {
 				float jDist = mover.MoveSpeed * height;
 				float distExtra = jDist - hDist;
 				long howLongToWaitInAir = (long)(distExtra * 1000 / jDist);
-				Clock.setTimeout(() => mover.SetAutoMovePosition(p, NotifyWayPointReached, 0), howLongToWaitInAir);
+				GameClock.Delay(howLongToWaitInAir, () => mover.SetAutoMovePosition(p, NotifyWayPointReached, 0));
 			} else {
 				mover.SetAutoMovePosition(p, NotifyWayPointReached, 0);
 			}

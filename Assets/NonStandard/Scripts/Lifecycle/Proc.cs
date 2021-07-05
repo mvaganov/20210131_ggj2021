@@ -27,12 +27,13 @@ namespace NonStandard.Procedure {
 		public static void RemoveIncident(int incidentCode, edure reaction) { Get().RemoveIncident(incidentCode, reaction); }
 		public static void RemoveIncident(int incidentCode, object reaction) { Get().RemoveIncident(incidentCode, reaction); }
 		public static void Update() { Get().Update(); }
-		public static void Delay(long delay, int incidentCode) { Get().Delay(delay, incidentCode); }
-		public static void Delay(long delay, string incidentId) { Get().Delay(delay, incidentId); }
-		public static void Delay(long delay, Action action) { Get().Delay(delay, action); }
-		public static void Delay(long delay, edure response) { Get().Delay(delay, response); }
-		public static void Delay(long delay, edureSimple response) { Get().Delay(delay, ConvertR(response)); }
-		public static long GetTime() { return Get().GetTime(); }
+		public static Incident Delay(long delay, int incidentCode) { return SystemClock.Delay(delay, incidentCode); }
+		public static Incident Delay(long delay, string incidentId) { return SystemClock.Delay(delay, incidentId); }
+		public static Incident Delay(long delay, Action action) { return SystemClock.Delay(delay, action); }
+		public static Incident Delay(long delay, edure response) { return SystemClock.Delay(delay, response); }
+		public static Incident Delay(long delay, edureSimple response) { return SystemClock.Delay(delay, ConvertR(response)); }
+		public static TimeKeeper SystemClock => Get().SystemClock;
+		public static long Time => SystemClock.GetTime();
 
 		// functions so we don't need to include "return Procedure.Result.Success;" at the end of each lambda
 		public static void OnIncident(string incidentId, edureSimple reaction, int count = -1) { Get().OnIncident(incidentId, ConvertR(reaction), count); }
@@ -48,5 +49,6 @@ namespace NonStandard.Procedure {
 			if (_instance != null) return _instance;
 			return _instance = new Processr();
 		}
+		public static TimeKeeper GetTimer() { return Get().SystemClock; }
 	}
 }

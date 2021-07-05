@@ -62,7 +62,7 @@ public class MazeLevel : MonoBehaviour {
         if (mazeSrc == null) {
             int seed = mazeGenerationArguments.seed;
             if (seed < 0) {
-                seed = (int)Clock.NowRealTicks;
+                seed = (int)GameClock.Time;
             }
             MazeGenerator mg = new MazeGenerator(random.Next);
             char[,] map = mg.Generate(mazeGenerationArguments.size, mazeGenerationArguments.start, mazeGenerationArguments.step, mazeGenerationArguments.wall);

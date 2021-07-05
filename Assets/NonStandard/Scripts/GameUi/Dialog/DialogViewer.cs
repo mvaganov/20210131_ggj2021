@@ -5,6 +5,7 @@ using NonStandard.Data.Parse;
 using NonStandard.Ui;
 using NonStandard.Commands;
 using UnityEngine.Events;
+using NonStandard.Procedure;
 
 namespace NonStandard.GameUi.Dialog {
 	public class DialogViewer : MonoBehaviour {
@@ -59,9 +60,9 @@ namespace NonStandard.GameUi.Dialog {
 			if (scrollAllTheWayDown && !goingToScrollAllTheWayDown) {
 				goingToScrollAllTheWayDown = true;
 				// we want scroll all the way down, and can't control when the UI updates enough to realize it can scroll
-				NonStandard.Clock.setTimeoutRealtime(() => {
+				Proc.Delay(100, () => {
 					goingToScrollAllTheWayDown = false; scrollRect.verticalNormalizedPosition = 0;
-				}, 100);
+				});
 				// 100ms (1/10th of a second) is not bad for UI lag, and should be enough time for the UI to update itself
 			}
 			return li;

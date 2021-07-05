@@ -33,7 +33,7 @@ public class Game : MonoBehaviour
     public void Awake() {
         Commander.Instance.SetScope(mainDictionaryKeeper.Dictionary);
         Commander.Instance.AddCommand("claimplayer", ClaimPlayer);
-        random = new NonStandard.Data.Random(Clock.NowRealtime);
+        random = new NonStandard.Data.Random(GameClock.Time);
     }
 
     void Start() {

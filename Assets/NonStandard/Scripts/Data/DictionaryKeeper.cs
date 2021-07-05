@@ -1,4 +1,5 @@
 ﻿using NonStandard.Data.Parse;
+using NonStandard.Procedure;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -42,7 +43,7 @@ namespace NonStandard.Data {
 			if (!validating) {
 				validating = true;
 				// TODO make this work better... current;y giving strings without quotes
-				Clock.setTimeout(() => { values = dict.Show(true); validating = false; }, 0);
+				Proc.Delay(0, () => { values = dict.Show(true); validating = false; });
 			}
 		}
 #else

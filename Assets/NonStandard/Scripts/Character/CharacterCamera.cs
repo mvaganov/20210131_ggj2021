@@ -1,4 +1,5 @@
 ﻿using NonStandard.Data;
+using NonStandard.Procedure;
 using NonStandard.Ui;
 using System;
 using System.Collections.Generic;
@@ -262,13 +263,13 @@ namespace NonStandard.Character {
 			//if (targetView.target != null) {
 				_target = null;
 			//}
-			started = Clock.NowRealtime;
-			end = Clock.NowRealtime + lerpDurationMs;
-			Clock.setTimeoutRealtime(LerpToTarget, 0);
+			started = Proc.Time;
+			end = Proc.Time + lerpDurationMs;
+			Proc.Delay(0, LerpToTarget);
 		}
 		private void LerpToTarget() {
 			lerping = true;
-			long now = Clock.NowRealtime;
+			long now = Proc.Time;
 			long passed = now - started;
 			float p = (float)passed / lerpDurationMs;
 			if (now >= end) { p = 1; }
@@ -303,7 +304,7 @@ namespace NonStandard.Character {
 				}
 			}
 			RecalculateRotation();
-			if (p < 1) { Clock.setTimeoutRealtime(LerpToTarget, 20); } else {
+			if (p < 1) { Proc.Delay(20, LerpToTarget); } else {
 				if (targetView.useTransformPositionChanges) {
 					_target = targetView.target;
 				}
