@@ -12,7 +12,7 @@ namespace NonStandard.Procedure {
 		public Strategy Next;
 		public Strategy Prev;
 		public bool WaitForUpdate = false;
-		public bool OnlyExecuteIfHasMerit = false;
+		public bool ExecuteEvenWithoutMerit = false;
 		/// <summary>
 		/// allows this strategy to have a value for desirability.
 		/// if the merit is less than or equal to zero, it will not be executed
@@ -31,7 +31,7 @@ namespace NonStandard.Procedure {
 
 		public Proc.Result Invoke(Incident incident) {
 			Proc.Result result = Proc.Result.Success;
-			bool allowedToRunOnMerit = !OnlyExecuteIfHasMerit || (MeritHeuristic == null || MeritHeuristic.Invoke() > 0);
+			bool allowedToRunOnMerit = ExecuteEvenWithoutMerit || (MeritHeuristic == null || MeritHeuristic.Invoke() > 0);
 			//Debug.Log("Invoking " + Identifier+ " "+allowedToRunOnMerit+" "+Procedure);
 			if (allowedToRunOnMerit && Procedure != null) {
 				result = Procedure.Invoke(incident);
@@ -53,13 +53,16 @@ namespace NonStandard.Procedure {
 			: this(identifier, Proc.ConvertR(action,false), prev) {}
 		public Strategy(string identifier, Proc.edureSimple action, Strategy prev)
 			: this(identifier, Proc.ConvertR(action, false), prev) { }
-		public Strategy(string identifier, MeritHeuristicFunctionType merit, Proc.edure action, Strategy prev = null)
+		public Strategy(MeritHeuristicFunctionType merit, string identifier, Proc.edure action, Strategy prev = null)
 			: this(identifier, action, prev) { MeritHeuristic= merit; }
-		public Strategy(string identifier, MeritHeuristicFunctionType merit, Action action, Strategy prev = null)
-			: this(identifier, merit, Proc.ConvertR(action,false), prev) {}
-		public Strategy(string identifier, MeritHeuristicFunctionType merit, Proc.edureSimple action, Strategy prev = null)
-			: this(identifier, merit, Proc.ConvertR(action, false), prev) { }
-
+		public Strategy(MeritHeuristicFunctionType merit, string identifier, Action action, Strategy prev = null)
+			: this(merit, identifier, Proc.ConvertR(action,false), prev) {}
+		public Strategy(MeritHeuristicFunctionType merit, string identifier, Proc.edureSimple action, Strategy prev = null)
+			: this(merit, identifier, Proc.ConvertR(action, false), prev) { }
+		public static Strategy If(MeritHeuristicFunctionType merit, string identifier, Proc.edureSimple action) {
+			Strategy strat = new Strategy(merit, identifier, action, null);
+			return strat;
+		}
 		public Strategy ThenImmediately(string identifier, Proc.edure reaction) {
 			return Next = new Strategy(identifier, reaction, this);
 		}
@@ -107,14 +110,14 @@ namespace NonStandard.Procedure {
 			Strategy deferringStrategy = null;
 			deferringStrategy = ThenImmediately("(decide)" + identifier, incident => {
 				Strategy choice = Strategy.PickBest(possibleStrategies);
-				Debug.Log("Picked [" + choice.ListStrategies().JoinToString()+"]");
+				//Debug.Log("Picked [" + choice.ListStrategies().JoinToString()+"]");
 				if (choice == null) {
 					//Debug.Log("Could not decide");
 					return Proc.Result.Failure;
 				}
 				//Strategy deferredStrategy = new Strategy(identifier, d.Reaction, this);
 				choice.Last().Next = deferringStrategy.Next;
-				Debug.Log("About to invoke [" + choice.ListStrategies().JoinToString() + "]");
+				//Debug.Log("About to invoke [" + choice.ListStrategies().JoinToString() + "]");
 				choice.Invoke(incident);
 				return Proc.Result.Halt;
 			});

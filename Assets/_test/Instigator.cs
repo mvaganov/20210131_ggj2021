@@ -34,23 +34,23 @@ public class Instigator : MonoBehaviour
 		}).ThenDecideBestChoice("check k presses",
 			new Strategy("do nothing"),
 
-			new Strategy("bad",()=>kPresses > 1 && kPresses <= 3 ? 1 : 0, incident=>{
+			Strategy.If(()=>kPresses > 1 && kPresses <= 3 ? 1 : 0, "bad", incident =>{
 				Debug.Log("pathetic.");
 			}).ThenDelay("snark",1000,incident=>{
 				Debug.Log("do better next time."); 
 			}).ThenDelay("pause",3000),
 
-			new Strategy("medium",()=>kPresses > 3 && kPresses < 10 ? 2 : 0, incident=>{
+			new Strategy(()=>kPresses > 3 && kPresses < 10 ? 2 : 0, "medium", incident =>{
 				Debug.Log("you pressed K.");
 			}),
 
-			new Strategy("best",()=>kPresses > 10 ? 1 : 0, incident=>{
+			new Strategy(()=>kPresses > 10 ? 1 : 0, "best", incident=>{
 				Debug.Log("pog");
 			})
 		).AndThen("the end", incident=> {
 			Debug.Log("THE END");
 		}).Root();
-		Debug.Log("doing [" + strat.ListStrategies().JoinToString() + "]");
+		//Debug.Log("doing [" + strat.ListStrategies().JoinToString() + "]");
 		strat.Invoke(new Incident("Instigator started"));
 	}
 
