@@ -28,17 +28,24 @@ namespace NonStandard.Procedure {
 
 		public TimeKeeper SystemClock => systemClock;
 
-		public Proc.edure Convert(Proc.edureSimple reaction, bool createIfNotFound = true) {
-			if (!responseAilias.TryGetValue(reaction, out Proc.edure r) && createIfNotFound) {
+		public Proc.edure ConvertR(Proc.edureSimple reaction, bool cacheIfNotFound) {
+			if (!responseAilias.TryGetValue(reaction, out Proc.edure r)) {
 				r = incident => { reaction.Invoke(incident); return Proc.Result.Success; };
-				responseAilias[reaction] = r;
+				if (cacheIfNotFound) { responseAilias[reaction] = r; }
 			}
 			return r;
 		}
-		public Proc.edure Convert(Action action, bool createIfNotFound = true) {
-			if (!responseAilias.TryGetValue(action, out Proc.edure r) && createIfNotFound) {
+		public Proc.edure ConvertR(Action action, bool cacheIfNotFound) {
+			if (!responseAilias.TryGetValue(action, out Proc.edure r)) {
 				r = unusedIncident => { action.Invoke(); return Proc.Result.Success; };
-				responseAilias[action] = r;
+				if (cacheIfNotFound) { responseAilias[action] = r; }
+			}
+			return r;
+		}
+		public Proc.edure ConvertR(Strategy strategy, bool cacheIfNotFound) {
+			if (!responseAilias.TryGetValue(strategy, out Proc.edure r)) {
+				r = incident => { return strategy.Invoke(incident); };
+				if (cacheIfNotFound) { responseAilias[strategy] = r; }
 			}
 			return r;
 		}

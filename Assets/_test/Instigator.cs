@@ -32,19 +32,19 @@ public class Instigator : MonoBehaviour
 		}).ThenDelay("count down 0", 1000, incident => {
 			Debug.Log("DONE! " + kPresses + "\n" + NonStandard.Show.Stringify(incident));
 		}).ThenDecideBestChoice("check k presses",
-			new Contingency("do nothing"),
+			new Strategy("do nothing"),
 
-			new Contingency("bad",()=>kPresses > 1 && kPresses <= 3 ? 1 : 0, incident=>{
+			new Strategy("bad",()=>kPresses > 1 && kPresses <= 3 ? 1 : 0, incident=>{
 				Debug.Log("pathetic.");
 			}).ThenDelay("snark",1000,incident=>{
 				Debug.Log("do better next time."); 
 			}).ThenDelay("pause",3000),
 
-			new Contingency("medium",()=>kPresses > 3 && kPresses < 10 ? 2 : 0, incident=>{
+			new Strategy("medium",()=>kPresses > 3 && kPresses < 10 ? 2 : 0, incident=>{
 				Debug.Log("you pressed K.");
 			}),
 
-			new Contingency("best",()=>kPresses > 10 ? 1 : 0, incident=>{
+			new Strategy("best",()=>kPresses > 10 ? 1 : 0, incident=>{
 				Debug.Log("pog");
 			})
 		).AndThen("the end", incident=> {

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 namespace NonStandard.Procedure {
 	[System.Serializable]
 	public class TimeKeeper {
+		public const string ScheduledId = "chrono";
 		public delegate long GetTimeFunction();
 		public GetTimeFunction GetTime = FileSystemTimeNow;
 		public static long FileSystemTimeNow() { return System.Environment.TickCount; }
@@ -53,6 +54,7 @@ namespace NonStandard.Procedure {
 				case string id: Proc.NotifyIncident(id, incident); break;
 				case Action act: act.Invoke(); break;
 				case Proc.edure r: r.Invoke(incident); break;
+				case Strategy s: s.Invoke(incident); break;
 				default: throw new Exception("Don't know how to execute '" + incident.Detail + "'");
 				}
 			}catch(Exception e) {
@@ -60,12 +62,20 @@ namespace NonStandard.Procedure {
 			}
 			return null;
 		}
-		public const string ScheduledId = "chrono";
+		public Incident AddToSchedule(long when, object whatIsBeingScheduled) {
+			return AddToSchedule(new Incident(when, ScheduledId, null, whatIsBeingScheduled));
+		}
+		public Incident AddToSchedule(long when, Action whatIsBeingScheduled) {
+			return AddToSchedule(new Incident(when, ScheduledId, null, whatIsBeingScheduled));
+		}
+		/// <summary>
+		/// int and string values translate to Incident triggers. <see cref="Action"/>, <see cref="Proc.edure"/>, and <see cref="Strategy"/> values are Invoked
+		/// </summary>
 		public Incident Delay(long delay, object whatIsBeingScheduled) {
-			return AddToSchedule(new Incident(GetTime() + delay, ScheduledId, null, whatIsBeingScheduled));
+			return AddToSchedule(GetTime() + delay, whatIsBeingScheduled);
 		}
 		public Incident Delay(long delay, Action whatIsBeingScheduled) {
-			return AddToSchedule(new Incident(GetTime() + delay, ScheduledId, null, whatIsBeingScheduled));
+			return AddToSchedule(GetTime() + delay, whatIsBeingScheduled);
 		}
 		public Incident RemoveScheduled(Action actionBeingScheduled) {
 			for (int i = 0; i < schedule.Count; ++i) {
@@ -97,7 +107,7 @@ namespace NonStandard.Procedure {
 			}
 			return incident;
 		}
-		public delegate void LerpMethod(float progress0to1);
+		public delegate void LerpMethod(float progress);
 		public void Lerp(LerpMethod action, long durationMs = 1000, float calculations = 10, float start = 0, float end = 1) {
 			long started = GetTime();
 			float iterations = 0;
@@ -115,4 +125,4 @@ namespace NonStandard.Procedure {
 			DoIt();
 		}
 	}
-	}
+}
