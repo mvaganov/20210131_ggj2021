@@ -37,42 +37,49 @@ namespace NonStandard {
 					if (stringStarted != i) { sb.Append(str.Substring(stringStarted, i - stringStarted)); }
 					++i;
 					if (i >= str.Length) { break; }
-					c = str[i];
-					string replacement;
-					switch (c) {
-					case 'a': replacement = "\a"; ++i; break;
-					case 'b': replacement = "\b"; ++i; break;
-					case 't': replacement = "\t"; ++i; break;
-					case 'n': replacement = "\n"; ++i; break;
-					case 'r': replacement = "\r"; ++i; break;
-					default: replacement = c.ToString(); ++i; break;
-					}
-					if (replacement != null) { sb.Append(replacement); }
-					stringStarted = i;
-					--i; // the for-loop is about to increment the iterator again
+					sb.Append(Unescape(str[i]));
+					stringStarted = i+1;
 				}
 			}
 			sb.Append(str.Substring(stringStarted, str.Length - stringStarted));
 			return sb.ToString();
 		}
+		public static char Unescape(char c) {
+			switch (c) {
+			case 'a': return '\a';
+			case 'b': return '\b';
+			case 'n': return '\n';
+			case 'r': return '\r';
+			case 'f': return '\f';
+			case 't': return '\t';
+			case 'v': return '\v';
+			}
+			return c;
+		}
 
-		/// TODO move to StringExtension?
+		public static string Escape(char c) {
+			switch (c) {
+			case '\a': return ("\\a");
+			case '\b': return ("\\b");
+			case '\n': return ("\\n");
+			case '\r': return ("\\r");
+			case '\f': return ("\\f");
+			case '\t': return ("\\t");
+			case '\v': return ("\\v");
+			case '\'': return ("\\\'");
+			case '\"': return ("\\\"");
+			case '\\': return ("\\\\");
+			}
+			return null;
+		}
 		public static string Escape(this string str) {
 			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < str.Length; ++i) {
 				char c = str[i];
-				switch (c) {
-				case '\a': sb.Append("\\a"); break;
-				case '\b': sb.Append("\\b"); break;
-				case '\n': sb.Append("\\n"); break;
-				case '\r': sb.Append("\\r"); break;
-				case '\f': sb.Append("\\f"); break;
-				case '\t': sb.Append("\\t"); break;
-				case '\v': sb.Append("\\v"); break;
-				case '\'': sb.Append("\\\'"); break;
-				case '\"': sb.Append("\\\""); break;
-				case '\\': sb.Append("\\\\"); break;
-				default:
+				string escaped = Escape(c);
+				if (escaped != null) {
+					sb.Append(escaped);
+				} else {
 					if (c < 32 || (c > 127 && c < 512)) {
 						sb.Append("\\").Append(Convert.ToString((int)c, 8));
 					} else if (c >= 512) {
@@ -80,7 +87,6 @@ namespace NonStandard {
 					} else {
 						sb.Append(c);
 					}
-					break;
 				}
 			}
 			return sb.ToString();
