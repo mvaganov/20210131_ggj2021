@@ -11,7 +11,6 @@ namespace NonStandard {
 			return str;
 		}
 
-		/// TODO move to StringExtension?
 		public static string Indentation(int depth, string indent = "  ") {
 			StringBuilder sb = new StringBuilder();
 			while (depth-- > 0) { sb.Append(indent); }
@@ -24,7 +23,6 @@ namespace NonStandard {
 
 		/// <summary>
 		/// converts a string from it's code to it's compiled form, with processed escape sequences
-		/// TODO move to StringExtension?
 		/// </summary>
 		/// <param name="str"></param>
 		/// <returns></returns>
