@@ -87,9 +87,9 @@ namespace NonStandard.Procedure {
 			NotifyIncident(Code(incidentId, true), incident);
 		}
 		public void NotifyIncident(int incidentCode, Incident incident) {
-			++codeToIncident[incidentCode].Count;
 			// make an array copy of the list because the list might be modified by the execution of elements in the list.
 			Proc.edure[] responses = incidentResponseTable[incidentCode].ToArray();
+			++codeToIncident[incidentCode].Count;
 			responses.ForEach(response => response.Invoke(incident));
 		}
 		public void OnIncident(string incidentId, Proc.edure procedure, int count = -1) {
