@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 
 namespace NonStandard.Procedure {
@@ -148,7 +149,7 @@ namespace NonStandard.Procedure {
 					if ((activate && method.Name == "DoActivateTrigger")
 					|| (!activate && method.Name == "DoDeactivateTrigger")) {
 						switch (method.GetParameters().Length) {
-						case 0: method.Invoke(whatToActivate, new object[] { }); invoked = true; break;
+						case 0: method.Invoke(whatToActivate, Array.Empty<object>()); invoked = true; break;
 						case 1: method.Invoke(whatToActivate, new object[] { causedActivate }); invoked = true; break;
 						case 2: method.Invoke(whatToActivate, new object[] { causedActivate, doingActivate }); invoked = true; break;
 						}

@@ -91,7 +91,7 @@ namespace NonStandard.Cli {
 					System.Text.StringBuilder sb = new System.Text.StringBuilder();
 					Array.ForEach(t, (e) => {
 						if (sb.Length > 0) sb.Append(", ");
-						sb.Append(NonStandard.Show.Stringify(e.name, true));
+						sb.Append(e.name.Stringify(true));
 					});
 					if(sb.Length > 0) {
 						Log(sb.ToString());
@@ -102,7 +102,7 @@ namespace NonStandard.Cli {
 						Array.ForEach(mb, (e) => {
 							if (sb.Length > 0) sb.Append(", ");
 							// TODO print index if this type has been appended already
-							sb.Append(NonStandard.Show.Stringify(e.GetType().Name, true));
+							sb.Append(e.GetType().Name.Stringify(true));
 						});
 						if (sb.Length > 0) {
 							Log(sb.ToString());
@@ -113,7 +113,7 @@ namespace NonStandard.Cli {
 					System.Reflection.MemberInfo[] m = workingObject.GetType().GetMembers();
 					Array.ForEach(m, (e) => {
 						if (sb.Length > 0) sb.Append(", ");
-						sb.Append(NonStandard.Show.Stringify(e.Name, true));
+						sb.Append(e.Name.Stringify(true));
 					});
 					Log(sb.ToString());
 				}	

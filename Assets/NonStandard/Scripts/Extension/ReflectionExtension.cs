@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
+using System.Text;
+using System.Diagnostics;
 
 namespace NonStandard {
 	public static class ReflectionExtension {
@@ -78,5 +80,32 @@ namespace NonStandard {
 			return list;
 		}
 
+		/// TODO move to ReflectionExtension?
+		public static IList<string> GetStackFullPath(int stackDepth = 1, int stackStart = 1) {
+			StackTrace stackTrace = new StackTrace(stackStart + 1, true);
+			int len = Math.Min(stackDepth, stackTrace.FrameCount);
+			List<string> stack = new List<string>();
+			for (int i = 0; i < len; ++i) {
+				StackFrame f = stackTrace.GetFrame(i);
+				if (f == null) break;
+				string path = f.GetFileName();
+				if (path == null) break;
+				stack.Add(path + ":" + f.GetFileLineNumber());
+			}
+			return stack;
+		}
+		/// TODO move to ReflectionExtension?
+		public static string GetStack(int stackDepth = 1, int stackStart = 1, string separator = ", ") {
+			StringBuilder sb = new StringBuilder();
+			IList<string> stack = GetStackFullPath(stackDepth, stackStart);
+			for (int i = 0; i < stack.Count; ++i) {
+				string path = stack[i];
+				int fileStart = path.LastIndexOf(System.IO.Path.DirectorySeparatorChar);
+				if (fileStart < 0) fileStart = path.LastIndexOf(System.IO.Path.AltDirectorySeparatorChar);
+				if (sb.Length > 0) sb.Append(separator);
+				sb.Append(path.Substring(fileStart + 1));
+			}
+			return sb.ToString();
+		}
 	}
 }

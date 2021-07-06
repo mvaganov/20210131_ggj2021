@@ -9,7 +9,7 @@ public class Instigator : MonoBehaviour
 	void Start() {
 		Proc.Delay(200, () => { Debug.Log("HELLO!"); });
 		Proc.OnIncident("Jump", occasion => {
-			Debug.Log(NonStandard.Show.Stringify(occasion));
+			Debug.Log(occasion.Stringify());
 		}, 3);
 		Proc.Delay(100, () => { Debug.Log("...."); });
 		Proc.Delay(300, () => { Debug.Log("WORLD!"); });
@@ -25,13 +25,13 @@ public class Instigator : MonoBehaviour
 			});
 			Debug.Log("pressed k");
 		}).ThenDelay("count down 3", 1000, incident=> {
-			Debug.Log("3: "+NonStandard.Show.Stringify(incident));
+			Debug.Log("3: "+ incident.Stringify());
 		}).ThenDelay("count down 2", 1000, incident => {
-			Debug.Log("2: " + NonStandard.Show.Stringify(incident));
+			Debug.Log("2: " + incident.Stringify());
 		}).ThenDelay("count down 1", 1000, incident => {
-			Debug.Log("1: " + NonStandard.Show.Stringify(incident));
+			Debug.Log("1: " + incident.Stringify());
 		}).ThenDelay("count down 0", 1000, incident => {
-			Debug.Log("DONE! " + kPresses + "\n" + NonStandard.Show.Stringify(incident));
+			Debug.Log("DONE! " + kPresses + "\n" + incident.Stringify());
 		}).ThenDecideBestChoice("check k presses",
 			new Strategy("do nothing"),
 

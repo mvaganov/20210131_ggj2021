@@ -115,10 +115,10 @@ namespace NonStandard.Data.Parse {
 						if (prevEntry != null && prevEntry.tokens != tokens) {
 							sb.Append(indent);
 						} else {
-							sb.Append("\n").Append(Show.Indent(depth + 1, indent));
+							sb.Append("\n").Append(StringExtension.Indentation(depth + 1, indent));
 						}
 						DebugPrint(e.tokens, depth + 1, indent, sb, path);
-						sb.Append("\n").Append(Show.Indent(depth, indent));
+						sb.Append("\n").Append(StringExtension.Indentation(depth, indent));
 					} else {
 						if (i == 0) { sb.Append(e.beginDelim); }
 						else if (i == tokens.Count-1) { sb.Append(e.endDelim); }

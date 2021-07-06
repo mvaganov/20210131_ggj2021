@@ -75,7 +75,7 @@ namespace NonStandard.GameUi.Dialog {
                     if (d != null) {
                         dialogs.AddRange(d);
                     } else {
-                        NonStandard.Show.Error("could not generate from " + NonStandard.Show.Stringify(td, false));
+                        NonStandard.Show.Error("could not generate from " + td.Stringify(false));
                     }
                     //NonStandard.Show.Log("replaced " + i + " "+dialogs.Count);
                     --i;

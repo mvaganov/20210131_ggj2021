@@ -30,12 +30,12 @@ namespace NonStandard.Data {
 				parseResults = tok.errors.JoinToString("\n");
 			} else {
 				//parseResults = dict.Show(true);
-				string newResults = Show.Stringify(dict, true);
+				string newResults = dict.Stringify(true);
 				if (parseResults != newResults) { parseResults = newResults; }
 			}
 		}
 		public void GiveInventoryTo(TMPro.TMP_Text textElement) {
-			string outText = Show.Stringify(dict, true);
+			string outText = dict.Stringify(true);
 			Debug.Log(outText);
 			textElement.text = outText;
 		}
@@ -60,7 +60,7 @@ namespace NonStandard.Data {
 			dict.onChange += (k, a, b) => { ShowChange(); };
 #endif
 			dict.onChange += (k, a, b) => {
-				string s = Show.Stringify(dict, true);
+				string s = dict.Stringify(true);
 				//Debug.Log(s);
 				stringListener.Invoke(s);
 			};
