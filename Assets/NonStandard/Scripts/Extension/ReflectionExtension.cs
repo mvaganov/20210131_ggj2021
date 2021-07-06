@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Linq;
 
 namespace NonStandard {
-	public static class GetSubClassesExtension {
+	public static class ReflectionExtension {
 		public static Type GetICollectionType(this Type type) {
 			foreach (Type i in type.GetInterfaces()) {
 				if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICollection<>)) {
@@ -58,5 +58,25 @@ namespace NonStandard {
 		}
 
 		public static object GetNewInstance(this Type t) { return Activator.CreateInstance(t); }
+
+		public static System.Type[] GetTypesInNamespace(this Assembly assembly, string nameSpace, bool includeComponentTypes = false) {
+			if (assembly == null) {
+				assembly = System.Reflection.Assembly.GetExecutingAssembly();
+			}
+			System.Type[] types = assembly.GetTypes().Where(t =>
+				System.String.Equals(t.Namespace, nameSpace, System.StringComparison.Ordinal)
+				&& (includeComponentTypes || !t.ToString().Contains('+'))).ToArray();
+			return types;
+		}
+		public static List<string> TypeNamesWithoutNamespace(System.Type[] validTypes, string namespaceToClean) {
+			List<string> list = new List<string>();
+			for (int i = 0; i < validTypes.Length; ++i) {
+				string typename = validTypes[i].ToString();
+				typename = typename.RemoveFromFront(namespaceToClean + ".");
+				list.Add(typename);
+			}
+			return list;
+		}
+
 	}
 }

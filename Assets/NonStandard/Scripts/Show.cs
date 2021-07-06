@@ -53,6 +53,7 @@ namespace NonStandard {
 #endif
 		}
 
+		/// TODO move to StringExtension?
 		public static string Indent(int depth, string indent = "  ") {
 			StringBuilder sb = new StringBuilder();
 			while (depth-- > 0) { sb.Append(indent); }
@@ -81,7 +82,7 @@ namespace NonStandard {
 			if (showType) {
 				Type b = t.BaseType; // if the parent class is a base class, there isn't any ambiguity
 				if (b == typeof(ValueType) || b == typeof(System.Object) || b == typeof(Array) || 
-					t.GetCustomAttributes(false).FindIndex(o=>o.GetType()==typeof(UnambiguousStringifyAttribute)) >= 0)
+					t.GetCustomAttributes(false).FindIndex(o=>o.GetType()==typeof(StringifyHideTypeAttribute)) >= 0)
 				{ showTypeHere = false; }
 			}
 			string s = obj as string;
@@ -195,6 +196,7 @@ namespace NonStandard {
 
 		/// <summary>
 		/// converts a string from it's code to it's compiled form, with processed escape sequences
+		/// TODO move to StringExtension?
 		/// </summary>
 		/// <param name="str"></param>
 		/// <returns></returns>
@@ -226,6 +228,7 @@ namespace NonStandard {
 			return sb.ToString();
 		}
 
+		/// TODO move to StringExtension?
 		public static string Escape(string str) {
 			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < str.Length; ++i) {
@@ -255,6 +258,7 @@ namespace NonStandard {
 			return sb.ToString();
 		}
 
+		/// TODO move to ReflectionExtension?
 		public static IList<string> GetStackFullPath(int stackDepth = 1, int stackStart = 1) {
 			StackTrace stackTrace = new StackTrace(stackStart+1, true);
 			int len = Math.Min(stackDepth, stackTrace.FrameCount);
@@ -268,19 +272,20 @@ namespace NonStandard {
 			}
 			return stack;
 		}
-		public static string GetStack(int stackDepth = 1, int stackStart = 1) {
+		/// TODO move to ReflectionExtension?
+		public static string GetStack(int stackDepth = 1, int stackStart = 1, string separator = ", ") {
 			StringBuilder sb = new StringBuilder();
 			IList<string> stack = GetStackFullPath(stackDepth, stackStart);
 			for(int i = 0; i < stack.Count; ++i) {
 				string path = stack[i];
 				int fileStart = path.LastIndexOf(System.IO.Path.DirectorySeparatorChar);
 				if (fileStart < 0) fileStart = path.LastIndexOf(System.IO.Path.AltDirectorySeparatorChar);
-				if (sb.Length > 0) sb.Append(", ");
+				if (sb.Length > 0) sb.Append(separator);
 				sb.Append(path.Substring(fileStart + 1));
 			}
 			return sb.ToString();
 		}
 	}
 
-	public class UnambiguousStringifyAttribute : System.Attribute { }
+	public class StringifyHideTypeAttribute : System.Attribute { }
 }

@@ -1,5 +1,4 @@
 ﻿#if UNITY_EDITOR
-using NonStandard;
 using System;
 using System.IO;
 using UnityEditor;
@@ -10,12 +9,13 @@ using UnityEngine;
 class MyCustomSceneProcessor : IProcessSceneWithReport {
     public int callbackOrder { get { return 0; } }
     public void OnProcessScene(UnityEngine.SceneManagement.Scene scene, BuildReport report) {
-        string path = Show.GetStackFullPath(1, 0)[0];
         char P = Path.DirectorySeparatorChar;
-        path = path.Substring(0, path.LastIndexOf(P)); // NonStandard/Scripts/Utility
-        path = path.Substring(0, path.LastIndexOf(P)); // NonStandard/Scripts
-        path = path.Substring(0, path.LastIndexOf(P)); // NonStandard
-        File.WriteAllText(path + P + "Resources" + P + "app_build_time.txt", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"));
+        string resourcesDir = Application.dataPath + P + "Resources";
+        if (!Directory.Exists(resourcesDir)) {
+            Directory.CreateDirectory(resourcesDir);
+		}
+        string pathToWriteTo = resourcesDir + P + "app_build_time.txt";
+        File.WriteAllText(pathToWriteTo, DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"));
         AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
     }
 }

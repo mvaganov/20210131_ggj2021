@@ -1,4 +1,5 @@
-﻿using NonStandard.Procedure;
+﻿using NonStandard;
+using NonStandard.Procedure;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -34,7 +35,7 @@ public class Instigator : MonoBehaviour
 		}).ThenDecideBestChoice("check k presses",
 			new Strategy("do nothing"),
 
-			Strategy.If(()=>kPresses > 1 && kPresses <= 3 ? 1 : 0, "bad", incident =>{
+			new Strategy(()=>kPresses > 1 && kPresses <= 3 ? 1 : 0, "bad", incident =>{
 				Debug.Log("pathetic.");
 			}).ThenDelay("snark",1000,incident=>{
 				Debug.Log("do better next time."); 
@@ -52,6 +53,7 @@ public class Instigator : MonoBehaviour
 		}).Root();
 		//Debug.Log("doing [" + strat.ListStrategies().JoinToString() + "]");
 		strat.Invoke(new Incident("Instigator started"));
+		GameClock.Instance();
 	}
 
 	void Update() {
@@ -61,6 +63,6 @@ public class Instigator : MonoBehaviour
 		if (Input.GetKeyDown(KeyCode.K)) {
 			Proc.NotifyIncident("K", this, "k");
 		}
-		Proc.Update();
+		//Proc.Update();
 	}
 }

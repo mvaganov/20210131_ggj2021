@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 
 namespace NonStandard.Procedure {
-	public class Processr {
+	/// <summary>
+	/// no vowel at the end to reduce namespace collision
+	/// </summary>
+	[Serializable] public class Processr {
 		public Processr() { }
 
 		/// <summary>
@@ -14,40 +17,46 @@ namespace NonStandard.Procedure {
 		/// </summary>
 		Dictionary<string, int> incidentIdTocode = new Dictionary<string, int>();
 		/// <summary>
-		/// maps the sequential codes of incidents to string identifier
+		/// maps the sequential codes of incidents to string identifier and other meta data
 		/// </summary>
-		List<string> codeToIncidentId = new List<string>();
+		public List<IncidentKind> codeToIncident = new List<IncidentKind>();
 		/// <summary>
-		/// when an Action of some kind is wrapped around another Reaction, this keeps track of the alias
+		/// when an Action of some kind is wrapped around another <see cref="Proc.edure"/>, this keeps track of the alias
 		/// </summary>
 		Dictionary<object, Proc.edure> responseAilias = new Dictionary<object, Proc.edure>();
 		/// <summary>
 		/// used for time-based processing "chronos"
 		/// </summary>
-		TimeKeeper systemClock = new TimeKeeper();
+		public TimeKeeper SystemClock = new TimeKeeper();
 
-		public TimeKeeper SystemClock => systemClock;
+		[Serializable]
+		public class IncidentKind {
+			public string Id;
+			public int Code;
+			public int Count;
+			public IncidentKind(string id, int code) { Id = id; Code = code; Count = 0; }
+		}
 
-		public Proc.edure ConvertR(Proc.edureSimple reaction, bool cacheIfNotFound) {
-			if (!responseAilias.TryGetValue(reaction, out Proc.edure r)) {
-				r = incident => { reaction.Invoke(incident); return Proc.Result.Success; };
-				if (cacheIfNotFound) { responseAilias[reaction] = r; }
+		public Proc.edure ConvertR(Proc.edureSimple procedure, bool cacheIfNotFound) {
+			if (!responseAilias.TryGetValue(procedure, out Proc.edure p)) {
+				p = incident => { procedure.Invoke(incident); return Proc.Result.Success; };
+				if (cacheIfNotFound) { responseAilias[procedure] = p; }
 			}
-			return r;
+			return p;
 		}
 		public Proc.edure ConvertR(Action action, bool cacheIfNotFound) {
-			if (!responseAilias.TryGetValue(action, out Proc.edure r)) {
-				r = unusedIncident => { action.Invoke(); return Proc.Result.Success; };
-				if (cacheIfNotFound) { responseAilias[action] = r; }
+			if (!responseAilias.TryGetValue(action, out Proc.edure p)) {
+				p = unusedIncident => { action.Invoke(); return Proc.Result.Success; };
+				if (cacheIfNotFound) { responseAilias[action] = p; }
 			}
-			return r;
+			return p;
 		}
 		public Proc.edure ConvertR(Strategy strategy, bool cacheIfNotFound) {
-			if (!responseAilias.TryGetValue(strategy, out Proc.edure r)) {
-				r = incident => { return strategy.Invoke(incident); };
-				if (cacheIfNotFound) { responseAilias[strategy] = r; }
+			if (!responseAilias.TryGetValue(strategy, out Proc.edure p)) {
+				p = incident => { return strategy.Invoke(incident); };
+				if (cacheIfNotFound) { responseAilias[strategy] = p; }
 			}
-			return r;
+			return p;
 		}
 
 		public int Code(string identifier, bool createIfNotFound = false) {
@@ -55,19 +64,19 @@ namespace NonStandard.Procedure {
 				if (createIfNotFound) {
 					if (incidentResponseTable.Count == 0) {
 						incidentResponseTable.Add(null);
-						codeToIncidentId.Add(null);
+						codeToIncident.Add(new IncidentKind(null,0));
 					}
 					incidentIdTocode[identifier] = code = incidentResponseTable.Count;
 					//Debug.Log("creating incident type '" + identifier + "': " + code);
 					incidentResponseTable.Add(new List<Proc.edure>());
-					codeToIncidentId.Add(identifier);
+					codeToIncident.Add(new IncidentKind(identifier, code));
 				} else {
 					//Debug.Log("Could not find code for "+identifier+"\n"+NonStandard.Show.Stringify(codes));
 				}
 			}
 			return code;
 		}
-		public void Update() { systemClock.Update(); }
+		public void Update() { SystemClock.Update(); }
 		public void NotifyIncident(string incidentId, object source = null, object detail = null) {
 			NotifyIncident(incidentId, new Incident(SystemClock.GetTime(), incidentId, source, detail));
 		}
@@ -78,65 +87,63 @@ namespace NonStandard.Procedure {
 			NotifyIncident(Code(incidentId, true), incident);
 		}
 		public void NotifyIncident(int incidentCode, Incident incident) {
+			++codeToIncident[incidentCode].Count;
 			// make an array copy of the list because the list might be modified by the execution of elements in the list.
 			Proc.edure[] responses = incidentResponseTable[incidentCode].ToArray();
-			responses.ForEach(reaction => reaction.Invoke(incident));
+			responses.ForEach(response => response.Invoke(incident));
 		}
-		public void OnIncident(string incidentId, Proc.edure reaction, int count = -1) {
-			OnIncident(Code(incidentId, true), reaction, count);
+		public void OnIncident(string incidentId, Proc.edure procedure, int count = -1) {
+			OnIncident(Code(incidentId, true), procedure, count);
 		}
-		public void OnIncident(int incidentCode, Proc.edure reaction, int count = -1) {
+		public void OnIncident(int incidentCode, Proc.edure procedure, int count = -1) {
 			List<Proc.edure> responses = incidentResponseTable[incidentCode];
 			if (count < 0) {
-				responses.Add(reaction);
+				responses.Add(procedure);
 			}
 			if (count > 0) {
-				Proc.edure countLimitedReaction = incident => {
+				Proc.edure countLimitedProcedure = incident => {
 					if (count > 0) {
-						reaction.Invoke(incident);
+						procedure.Invoke(incident);
 						if (--count <= 0) {
-							RemoveIncident(incidentCode, reaction);
+							RemoveIncident(incidentCode, procedure);
 						}
 					} else {
-						RemoveIncident(incidentCode, reaction);
+						RemoveIncident(incidentCode, procedure);
 					}
 					return Proc.Result.Success;
 				};
-				responseAilias[reaction] = countLimitedReaction;
-				responses.Add(countLimitedReaction);
+				responseAilias[procedure] = countLimitedProcedure;
+				responses.Add(countLimitedProcedure);
 			}
 		}
-		public int GetResponseIndex(int incidentCode, Proc.edure reaction) {
+		public int GetResponseIndex(int incidentCode, Proc.edure response) {
 			if (incidentCode <= 0 || incidentCode >= incidentResponseTable.Count) { throw new Exception("bad incident code"); }
-			return incidentResponseTable[incidentCode].IndexOf(reaction);
+			return incidentResponseTable[incidentCode].IndexOf(response);
 		}
 		/// <summary>
 		/// if a non-<see cref="Reaction"/> is used as a response to the incident, this should clear it
 		/// </summary>
-		public void RemoveIncident(int incidentCode, object reaction) {
-			Proc.edure r = reaction as Proc.edure;
+		public void RemoveIncident(int incidentCode, object procedure) {
+			Proc.edure r = procedure as Proc.edure;
 			if (r == null) {
-				if (responseAilias.TryGetValue(reaction, out r)) {
-					responseAilias.Remove(reaction);
+				if (responseAilias.TryGetValue(procedure, out r)) {
+					responseAilias.Remove(procedure);
 				} else {
 					// Debug.LogWarning("the given response is not in the response table");
 				}
 			}
 			RemoveIncident(incidentCode, r);
 		}
-		public void RemoveIncident(int incidentCode, Proc.edure reaction) {
-			if (!incidentResponseTable[incidentCode].Remove(reaction)) {
-				if (responseAilias.TryGetValue(reaction, out Proc.edure alias)) {
+		public void RemoveIncident(int incidentCode, Proc.edure procedure) {
+			if (!incidentResponseTable[incidentCode].Remove(procedure)) {
+				if (responseAilias.TryGetValue(procedure, out Proc.edure alias)) {
+					//RemoveIncident(incidentCode, alias);
 					incidentResponseTable[incidentCode].Remove(alias);
-					responseAilias.Remove(reaction);
+					responseAilias.Remove(procedure);
 				} else {
 					// Debug.LogWarning("the given response is not in the response table");
 				}
 			}
 		}
-		//public Incident Delay(long delay, int incidentCode) { return systemClock.Delay(delay, incidentCode); }
-		//public Incident Delay(long delay, string incidentId) { return systemClock.Delay(delay, incidentId); }
-		//public Incident Delay(long delay, Action action) { return systemClock.Delay(delay, action); }
-		//public Incident Delay(long delay, Proc.edure response) { return systemClock.Delay(delay, response); }
 	}
 }

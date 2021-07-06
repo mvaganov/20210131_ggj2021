@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using NonStandard.Ui;
 using NonStandard;
+using NonStandard.Procedure;
 
 public class UiToggleButton : MonoBehaviour {
     public GameObject uiToControlVisibility;

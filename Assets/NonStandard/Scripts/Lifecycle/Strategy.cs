@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace NonStandard.Procedure {
 	/// <summary>
@@ -9,10 +8,12 @@ namespace NonStandard.Procedure {
 	public class Strategy {
 		public Proc.edure Procedure;
 		public string Identifier;
-		public Strategy Next;
 		public Strategy Prev;
+		public Strategy Next;
 		public bool WaitForUpdate = false;
-		public bool ExecuteEvenWithoutMerit = false;
+		public bool OnlyExecuteOnPositiveMerit = false;
+		public bool IsExceptionHandler = false;
+		public bool IsFinallyHandler = false;
 		/// <summary>
 		/// allows this strategy to have a value for desirability.
 		/// if the merit is less than or equal to zero, it will not be executed
@@ -20,21 +21,27 @@ namespace NonStandard.Procedure {
 		/// </summary>
 		public MeritHeuristicFunctionType MeritHeuristic;
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <returns></returns>
 		public delegate float MeritHeuristicFunctionType();
 		public static float ZeroMeritHeuristic() => 0;
-		public static float MinimumMeritHeuristic() => float.MinValue;
+		public static float MinimumMeritHeuristic() => float.Epsilon;
 		public override string ToString() { return Identifier; }
+
+		public const string ExceptionId = "Exception";
+		public const string IncidentCodeId = "IncidentCode";
+
+		static Strategy() {
+			Proc.RegisterInvoke<Strategy>(InvokeStrategy);
+		}
+		public static Proc.Result InvokeStrategy(object obj, Incident incident) {
+			return ((Strategy)obj).Invoke(incident);
+		}
 
 		public Proc.Result Invoke(Incident incident) {
 			Proc.Result result = Proc.Result.Success;
-			bool allowedToRunOnMerit = ExecuteEvenWithoutMerit || (MeritHeuristic == null || MeritHeuristic.Invoke() > 0);
+			bool allowedToRun = !IsExceptionHandler && (!OnlyExecuteOnPositiveMerit || (MeritHeuristic == null || MeritHeuristic.Invoke() > 0));
 			//Debug.Log("Invoking " + Identifier+ " "+allowedToRunOnMerit+" "+Procedure);
-			if (allowedToRunOnMerit && Procedure != null) {
-				result = Procedure.Invoke(incident);
+			if (allowedToRun && Procedure != null) {
+				result = Invoke_Internal(incident);
 			}
 			if (Next == null || result != Proc.Result.Success) return result;
 			if (!Next.WaitForUpdate) {
@@ -45,13 +52,35 @@ namespace NonStandard.Procedure {
 			return result;
 		}
 
+		internal Proc.Result Invoke_Internal(Incident incident) {
+			Proc.Result result = Proc.Result.Success;
+			if (Procedure == null) return result;
+			try {
+				result = Procedure.Invoke(incident);
+			} catch (Exception e) {
+				Show.Error(e);
+				HandleException(e, incident);
+				return Proc.Result.Halt;
+			}
+			return result;
+		}
+
+		private void HandleException(Exception e, Incident incident) {
+			Incident exceptionIncident = new Incident(ExceptionId, e, incident);
+			Strategy exceptionHandler = NextExceptionHandler();
+			exceptionHandler?.Invoke_Internal(exceptionIncident);
+			Strategy whereToLookForFinallyHandlerFrom = exceptionHandler != null ? exceptionHandler : this;
+			Strategy finallyHandler = whereToLookForFinallyHandlerFrom.NextFinallyHandler();
+			finallyHandler?.Invoke_Internal(exceptionIncident);
+		}
+
 		public Strategy(string identifier, Strategy prev = null)
 			{ Identifier = identifier; Prev = prev; }
-		public Strategy(string identifier, Proc.edure action, Strategy prev)
+		public Strategy(string identifier, Proc.edure action, Strategy prev = null)
 			: this(identifier, prev) { Procedure = action; }
-		public Strategy(string identifier, Action action, Strategy prev)
+		public Strategy(string identifier, Action action, Strategy prev = null)
 			: this(identifier, Proc.ConvertR(action,false), prev) {}
-		public Strategy(string identifier, Proc.edureSimple action, Strategy prev)
+		public Strategy(string identifier, Proc.edureSimple action, Strategy prev = null)
 			: this(identifier, Proc.ConvertR(action, false), prev) { }
 		public Strategy(MeritHeuristicFunctionType merit, string identifier, Proc.edure action, Strategy prev = null)
 			: this(identifier, action, prev) { MeritHeuristic= merit; }
@@ -59,63 +88,67 @@ namespace NonStandard.Procedure {
 			: this(merit, identifier, Proc.ConvertR(action,false), prev) {}
 		public Strategy(MeritHeuristicFunctionType merit, string identifier, Proc.edureSimple action, Strategy prev = null)
 			: this(merit, identifier, Proc.ConvertR(action, false), prev) { }
-		public static Strategy If(MeritHeuristicFunctionType merit, string identifier, Proc.edureSimple action) {
-			Strategy strat = new Strategy(merit, identifier, action, null);
-			return strat;
+		public Strategy ThenImmediately(string identifier, Proc.edure procedure) {
+			return Next = new Strategy(identifier, procedure, this);
 		}
-		public Strategy ThenImmediately(string identifier, Proc.edure reaction) {
-			return Next = new Strategy(identifier, reaction, this);
-		}
-		public Strategy AndThen(string identifier, Proc.edure reaction) {
-			Next = new Strategy(identifier, reaction, this);
+		public Strategy AndThen(string identifier, Proc.edure procedure) {
+			Next = new Strategy(identifier, procedure, this);
 			Next.WaitForUpdate = true;
 			return Next;
 		}
-		public Strategy ThenOnIncident(string incidentId, Proc.edure reaction = null) {
+		public Strategy ThenOnIncident(string incidentId, Proc.edure procedure = null) {
 			Strategy deferringStragegy = null;
 			deferringStragegy = ThenImmediately("(defer)" + incidentId, incident => {
-				Strategy deferredStrategy = new Strategy("(deferred)" + incidentId, reaction, this);
+				Strategy deferredStrategy = new Strategy("(deferred)" + incidentId, procedure, this);
 				deferredStrategy.Next = deferringStragegy.Next;
 				Proc.OnIncident(incidentId, deferredStrategy.Invoke, 1);
 				return Proc.Result.Halt;
 			});
 			return deferringStragegy;
 		}
-		public Strategy ThenDelay(string identifier, int ms, Proc.edure reaction = null) {
+		public Strategy ThenDelay(string identifier, int ms, Proc.edure procedure = null) {
 			Strategy deferringStrategy = null;
 			deferringStrategy = ThenImmediately("(wait)" + identifier, incident => {
-				Strategy deferredStrategy = new Strategy(identifier, reaction, this);
+				Strategy deferredStrategy = new Strategy(identifier, procedure, this);
 				deferredStrategy.Next = deferringStrategy.Next;
 				Proc.Delay(ms, deferredStrategy.Invoke);
 				return Proc.Result.Halt;
 			});
 			return deferringStrategy;
 		}
-		public List<Strategy> Convert(object[] possibleStrategies) {
+		public List<Strategy> ConvertToStrategyList(object[] possibleStrategies) {
 			List<Strategy> strats = new List<Strategy>();
 			for (int i = 0; i < possibleStrategies.Length; ++i) {
-				if (possibleStrategies[i] is Strategy s) {
-					s = s.Root();
-					strats.Add(s);
-				} else {
-					//Debug.Log("non-strategy given in list");
-				}
+				Strategy nextStrat = ConvertToStrategy(possibleStrategies[i]);
+				if(nextStrat != null) strats.Add(nextStrat);
 			}
 			return strats;
 		}
+		public static Strategy ConvertToStrategy(object o) {
+			switch (o) {
+			case Strategy s: return s.Root();
+			case Proc.edure p: return new Strategy(p.Method.Name, p);
+			case Proc.edureSimple ps: return new Strategy(ps.Method.Name, ps);
+			case Action a: return new Strategy(a.Method.Name, a);
+			case int i: return new Strategy(IncidentCodeId, incident => { Proc.NotifyIncident(i, incident); return Proc.Result.Success; });
+			case string s: return new Strategy(IncidentCodeId, incident => { Proc.NotifyIncident(s, incident); return Proc.Result.Success; });
+			}
+			//Debug.Log("non-strategy given in list");
+			return null;
+		}
 		public Strategy ThenDecideBestChoice(string identifier, params object[] possibleStrategies) {
-			return ThenDecideBestChoice(identifier, Convert(possibleStrategies));
+			return ThenDecideBestChoice(identifier, ConvertToStrategyList(possibleStrategies));
 		}
 		public Strategy ThenDecideBestChoice(string identifier, IList<Strategy> possibleStrategies) {
 			Strategy deferringStrategy = null;
 			deferringStrategy = ThenImmediately("(decide)" + identifier, incident => {
-				Strategy choice = Strategy.PickBest(possibleStrategies);
+				Strategy choice = PickBest(possibleStrategies);
 				//Debug.Log("Picked [" + choice.ListStrategies().JoinToString()+"]");
 				if (choice == null) {
 					//Debug.Log("Could not decide");
 					return Proc.Result.Failure;
 				}
-				//Strategy deferredStrategy = new Strategy(identifier, d.Reaction, this);
+				//Strategy deferredStrategy = new Strategy(identifier, d.Procedure, this);
 				choice.Last().Next = deferringStrategy.Next;
 				//Debug.Log("About to invoke [" + choice.ListStrategies().JoinToString() + "]");
 				choice.Invoke(incident);
@@ -125,7 +158,7 @@ namespace NonStandard.Procedure {
 		}
 		public static Strategy PickFirstGreatherThanZero(IList<Strategy> decisions) {
 			for (int i = 0; i < decisions.Count; ++i) {
-				float v = decisions[i].MeritHeuristic?.Invoke() ?? float.MinValue;
+				float v = decisions[i].MeritHeuristic?.Invoke() ?? MinimumMeritHeuristic();
 				if (v > 0) {
 					return decisions[i];
 				}
@@ -136,7 +169,7 @@ namespace NonStandard.Procedure {
 			float bestValue = 0;
 			int best = -1;
 			for (int i = 0; i < decisions.Count; ++i) {
-				float v = decisions[i].MeritHeuristic?.Invoke() ?? float.MinValue;
+				float v = decisions[i].MeritHeuristic?.Invoke() ?? MinimumMeritHeuristic();
 				if (best < 0 || v > bestValue) {
 					best = i;
 					bestValue = v;
@@ -145,7 +178,8 @@ namespace NonStandard.Procedure {
 			if (best >= 0) { return decisions[best]; }
 			return null;
 		}
-
+		public Strategy NextExceptionHandler() { Strategy s = Next; while (s != null && !s.IsExceptionHandler) { s = s.Next; } return s; }
+		public Strategy NextFinallyHandler() { Strategy s = Next; while (s != null && !s.IsExceptionHandler) { s = s.Next; } return s; }
 		public Strategy Last() { Strategy s = this; while (s.Next != null) { s = s.Next; } return s; }
 		public Strategy Root() { Strategy s = this; while (s.Prev != null) { s = s.Prev; } return s; }
 		public List<Strategy> ListStrategies() {
@@ -157,13 +191,23 @@ namespace NonStandard.Procedure {
 			}
 			return strats;
 		}
-		public Strategy ThenImmediately(string identifier, Proc.edureSimple reaction) { return ThenImmediately(identifier, Proc.ConvertR(reaction, true)); }
-		public Strategy ThenImmediately(string identifier, Action reaction) { return ThenImmediately(identifier, Proc.ConvertR(reaction, true)); }
-		public Strategy AndThen(string identifier, Proc.edureSimple reaction) { return AndThen(identifier, Proc.ConvertR(reaction, true)); }
-		public Strategy AndThen(string identifier, Action reaction) { return AndThen(identifier, Proc.ConvertR(reaction, true)); }
-		public Strategy ThenOnIncident(string incidentId, Proc.edureSimple reaction) { return ThenOnIncident(incidentId, Proc.ConvertR(reaction, true)); }
-		public Strategy ThenOnIncident(string incidentId, Action reaction) { return ThenOnIncident(incidentId, Proc.ConvertR(reaction, true)); }
-		public Strategy ThenDelay(string identifier, int ms, Proc.edureSimple reaction) { return ThenDelay(identifier, ms, Proc.ConvertR(reaction, true)); }
-		public Strategy ThenDelay(string identifier, int ms, Action reaction) { return ThenDelay(identifier, ms, Proc.ConvertR(reaction, true)); }
+		public Strategy ThenImmediately(string identifier, Proc.edureSimple procedure) { return ThenImmediately(identifier, Proc.ConvertR(procedure, true)); }
+		public Strategy ThenImmediately(string identifier, Action procedure) { return ThenImmediately(identifier, Proc.ConvertR(procedure, true)); }
+		public Strategy AndThen(string identifier, Proc.edureSimple procedure) { return AndThen(identifier, Proc.ConvertR(procedure, true)); }
+		public Strategy AndThen(string identifier, Action procedure) { return AndThen(identifier, Proc.ConvertR(procedure, true)); }
+		public Strategy ThenOnIncident(string incidentId, Proc.edureSimple procedure) { return ThenOnIncident(incidentId, Proc.ConvertR(procedure, true)); }
+		public Strategy ThenOnIncident(string incidentId, Action procedure) { return ThenOnIncident(incidentId, Proc.ConvertR(procedure, true)); }
+		public Strategy ThenDelay(string identifier, int ms, Proc.edureSimple procedure) { return ThenDelay(identifier, ms, Proc.ConvertR(procedure, true)); }
+		public Strategy ThenDelay(string identifier, int ms, Action procedure) { return ThenDelay(identifier, ms, Proc.ConvertR(procedure, true)); }
+	}
+
+	public static partial class Proc {
+		/// <summary>
+		/// this function adds an entry to a table that might not be removed if it is called from outside <see cref="NonStandard.Procedure"/> algorithms
+		/// </summary>
+		internal static Proc.edure ConvertR(Strategy s, bool cacheIfNotFound) { return Get().ConvertR(s, cacheIfNotFound); }
+		public static Incident Delay(long delay, Strategy strategy) { return SystemClock.Delay(delay, strategy); }
+		public static Incident Enqueue(Strategy strategy) { return SystemClock.Delay(0, strategy); }
+
 	}
 }

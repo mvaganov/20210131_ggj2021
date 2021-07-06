@@ -5,7 +5,7 @@ using UnityEngine.Events;
 
 namespace NonStandard.Data {
 
-	[System.Serializable, UnambiguousStringify]
+	[System.Serializable, StringifyHideType]
 	public class SensitiveHashTable_stringobject : BurlyHashTable<string, object> { }
 	public class DictionaryKeeper : MonoBehaviour {
 		protected SensitiveHashTable_stringobject dict = new SensitiveHashTable_stringobject();

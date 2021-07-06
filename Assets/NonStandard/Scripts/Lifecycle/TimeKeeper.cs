@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace NonStandard.Procedure {
 	[System.Serializable]
-	public class TimeKeeper {
+	public partial class TimeKeeper {
 		public const string ScheduledId = "chrono";
 		public delegate long GetTimeFunction();
 		public GetTimeFunction GetTime = FileSystemTimeNow;
@@ -14,25 +14,32 @@ namespace NonStandard.Procedure {
 		/// <summary>
 		/// how many milliseconds doing scheduled tasks is too long. we don't want to be a blocking bottleneck here.
 		/// </summary>
-		public long MaximumTimeProcessing = 10;
+		public long MaxTimeProcessing = 10;
 		public List<Incident> schedule = new List<Incident>();
 		private List<Incident> _doRightNow = new List<Incident>();
 		public TimeKeeper() { }
 		public TimeKeeper(GetTimeFunction howToGetTime) { GetTime = howToGetTime; }
 		public void Update() {
 			now = GetTime();
+			PopulateIncidentsToExecuteRightNow();
+			Exception error = DoIncidentsRightNow();
+			if (error != null) { throw error; }
+		}
+		private void PopulateIncidentsToExecuteRightNow() {
 			lock (schedule) {
 				int itemsToDo = 0;
-				while(itemsToDo < schedule.Count && schedule[itemsToDo].Timestamp < now) {
-					_doRightNow.Add(schedule[itemsToDo]); 
+				while (itemsToDo < schedule.Count && schedule[itemsToDo].Timestamp < now) {
+					_doRightNow.Add(schedule[itemsToDo]);
 					++itemsToDo;
 				}
 				schedule.RemoveRange(0, itemsToDo);
 			}
-			long tooLong = now + MaximumTimeProcessing;
-			int doneItems = 0;
+		}
+		private Exception DoIncidentsRightNow() {
 			Exception error = null;
-			while(doneItems < _doRightNow.Count) {
+			long tooLong = now + MaxTimeProcessing;
+			int doneItems = 0;
+			while (doneItems < _doRightNow.Count) {
 				Incident incident = _doRightNow[doneItems];
 				++doneItems;
 				error = Do(incident);
@@ -45,28 +52,21 @@ namespace NonStandard.Procedure {
 			} else {
 				_doRightNow.RemoveRange(0, doneItems);
 			}
-			if(error != null) { throw error; }
+			return error;
 		}
 		public Exception Do(Incident incident) {
 			try {
-				switch (incident.Detail) {
-				case int code: Proc.NotifyIncident(code, incident); break;
-				case string id: Proc.NotifyIncident(id, incident); break;
-				case Action act: act.Invoke(); break;
-				case Proc.edure r: r.Invoke(incident); break;
-				case Strategy s: s.Invoke(incident); break;
-				default: throw new Exception("Don't know how to execute '" + incident.Detail + "'");
-				}
+				Proc.Invoke(incident.Detail, incident);
 			}catch(Exception e) {
 				return e;
 			}
 			return null;
 		}
 		public Incident AddToSchedule(long when, object whatIsBeingScheduled) {
-			return AddToSchedule(new Incident(when, ScheduledId, null, whatIsBeingScheduled));
+			return AddToSchedule(new Incident(when, ScheduledId, this, whatIsBeingScheduled));
 		}
 		public Incident AddToSchedule(long when, Action whatIsBeingScheduled) {
-			return AddToSchedule(new Incident(when, ScheduledId, null, whatIsBeingScheduled));
+			return AddToSchedule(new Incident(when, ScheduledId, this, whatIsBeingScheduled));
 		}
 		/// <summary>
 		/// int and string values translate to Incident triggers. <see cref="Action"/>, <see cref="Proc.edure"/>, and <see cref="Strategy"/> values are Invoked
@@ -111,18 +111,18 @@ namespace NonStandard.Procedure {
 		public void Lerp(LerpMethod action, long durationMs = 1000, float calculations = 10, float start = 0, float end = 1) {
 			long started = GetTime();
 			float iterations = 0;
-			void DoIt() {
+			void DoThisLerp() {
 				float delta = end - start;
 				float p = (delta * iterations) / calculations + start;
 				action.Invoke(p);
 				long delay = (long)(durationMs / calculations);
 				if (iterations < calculations) {
 					long nextTime = (long)(durationMs * (iterations + 1) / calculations) + started;
-					Delay(nextTime, DoIt);
+					Delay(nextTime, DoThisLerp);
 				}
 				++iterations;
 			}
-			DoIt();
+			DoThisLerp();
 		}
 	}
 }
