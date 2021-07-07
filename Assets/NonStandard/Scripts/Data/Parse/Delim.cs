@@ -43,10 +43,7 @@ namespace NonStandard.Data.Parse {
 			text = delim; this.name = name; description = desc; this.parseRule = parseRule; extraReq = addReq; this.printable = printable;
 		}
 		public bool IsAt(string str, int index) {
-			if (index + text.Length > str.Length) { return false; }
-			for (int i = 0; i < text.Length; ++i) {
-				if (text[i] != str[index + i]) return false;
-			}
+			if (!str.IsSubstringAt(text, index)) { return false; }
 			if (extraReq != null) { return extraReq.Invoke(str, index); }
 			return true;
 		}
