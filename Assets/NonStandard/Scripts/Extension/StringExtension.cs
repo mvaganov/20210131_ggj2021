@@ -3,22 +3,67 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using NonStandard.Data.Parse;
 
 namespace NonStandard {
 	public static class StringExtension {
+		public static bool IsSubstringAt(this string str, string substring, int index) {
+			if(index < 0 || index+substring.Length > str.Length) { return false; }
+			for(int i = 0; i < substring.Length; ++i) {
+				if(str[index+i] != substring[i]) { return false; }
+			}
+			return true;
+		}
 		public static string RemoveFromFront(this string str, string trimMe) {
 			if (str.StartsWith(trimMe)) { return str.Substring(trimMe.Length); }
 			return str;
 		}
+		public static string DefaultIndentation = "  ";
 
-		public static string Indentation(int depth, string indent = "  ") {
+		/// <param name="indent">if null, use <see cref="DefaultIndentation"/></param>
+		/// <param name="depth"></param>
+		public static string Indentation(int depth, string indent = null) {
+			if (indent == null) { indent = DefaultIndentation; }
 			StringBuilder sb = new StringBuilder();
 			while (depth-- > 0) { sb.Append(indent); }
 			return sb.ToString();
 		}
 
-		public static string IndentLine(this string str, int depth, string indent = "  ") {
-			return Indentation(depth, indent) + str;
+		/// <param name="str">a string with one or more lines, separated by '\n'</param>
+		/// <param name="indent">if null, use <see cref="DefaultIndentation"/></param>
+		/// <param name="depth"></param>
+		public static string Indent(this string str, string indent = null, int depth = 1) {
+			string indentation = Indentation(depth, indent);
+			return ForEachBetween(str, s => indentation + s);
+		}
+
+		/// <param name="str"></param>
+		/// <param name="indent">if null, use <see cref="DefaultIndentation"/></param>
+		/// <param name="depth"></param>
+		public static string Unindent(this string str, string indent = null, int depth = 1) {
+			string indentation = Indentation(depth, indent);
+			return ForEachBetween(str, s => RemoveFromFront(s, indentation));
+		}
+
+		public static string ForEachBetween(this string str, Func<string,string> manipulateSubstring, string delimiter = "\n") {
+			string[] lines = str.Split(delimiter);
+			StringBuilder sb = new StringBuilder();
+			for(int i = 0; i < lines.Length; ++i) {
+				if (i > 0) sb.Append(delimiter);
+				sb.Append(manipulateSubstring(lines[i]));
+			}
+			return sb.ToString();
+		}
+		public static string[] Split(this string str, string delimiter = "\n") {
+			List<int> lineEndings = GenerateIndexTable(delimiter);
+			string[] lines = new string[lineEndings.Count + 1];
+			int lineStart = 0;
+			for (int i = 0; i < lineEndings.Count; ++i) {
+				lines[i] = str.Substring(lineStart, lineEndings[i]);
+				lineStart = lineEndings[i] + delimiter.Length;
+			}
+			lines[lineEndings.Count] = str.Substring(lineStart, str.Length);
+			return lines;
 		}
 
 		/// <summary>
@@ -35,46 +80,21 @@ namespace NonStandard {
 					if (stringStarted != i) { sb.Append(str.Substring(stringStarted, i - stringStarted)); }
 					++i;
 					if (i >= str.Length) { break; }
-					sb.Append(Unescape(str[i]));
+					//sb.Append(str[i].LiteralUnescape());
+					ParseResult parseResult = str.UnescapeStringSequenceAt(i);
+					if (!parseResult.IsError) { sb.Append(parseResult.replacementValue.ToString()); }
+					else { throw new FormatException(parseResult.error.ToString()); }
 					stringStarted = i+1;
 				}
 			}
 			sb.Append(str.Substring(stringStarted, str.Length - stringStarted));
 			return sb.ToString();
 		}
-		public static char Unescape(char c) {
-			switch (c) {
-			case 'a': return '\a';
-			case 'b': return '\b';
-			case 'n': return '\n';
-			case 'r': return '\r';
-			case 'f': return '\f';
-			case 't': return '\t';
-			case 'v': return '\v';
-			}
-			return c;
-		}
-
-		public static string Escape(char c) {
-			switch (c) {
-			case '\a': return ("\\a");
-			case '\b': return ("\\b");
-			case '\n': return ("\\n");
-			case '\r': return ("\\r");
-			case '\f': return ("\\f");
-			case '\t': return ("\\t");
-			case '\v': return ("\\v");
-			case '\'': return ("\\\'");
-			case '\"': return ("\\\"");
-			case '\\': return ("\\\\");
-			}
-			return null;
-		}
 		public static string Escape(this string str) {
 			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < str.Length; ++i) {
 				char c = str[i];
-				string escaped = Escape(c);
+				string escaped = c.LiteralEscape();
 				if (escaped != null) {
 					sb.Append(escaped);
 				} else {
@@ -88,6 +108,108 @@ namespace NonStandard {
 				}
 			}
 			return sb.ToString();
+		}
+		public static int CountNumericCharactersAt(this string str, int index, int numberBase, bool includeNegativeSign, bool includeSingleDecimal) {
+			int numDigits = 0;
+			bool foundDecimal = false;
+			while (index + numDigits < str.Length) {
+				char c = str[index + numDigits];
+				bool stillGood = false;
+				if (c.IsValidNumber(numberBase)) {
+					stillGood = true;
+				} else {
+					if (includeNegativeSign && numDigits == 0 && c == '-') {
+						stillGood = true;
+					} else if (includeSingleDecimal && c == '.' && !foundDecimal) {
+						foundDecimal = true;
+						stillGood = true;
+					}
+				}
+				if (stillGood) { numDigits++; } else break;
+			}
+			return numDigits;
+		}
+		public static ParseResult NumberParse(this string str, int index, int characterCount, int numberBase, bool includeDecimal) {
+			ParseResult pr = new ParseResult(0, null);
+			long sum = 0;
+			char c = str[index];
+			bool isNegative = c == '-';
+			if (isNegative) { ++index; }
+			bool isDecimal = c == '.';
+			int numDigits;
+			if (!isDecimal) {
+				numDigits = str.CountNumericCharactersAt(index, numberBase, false, false);
+				int b = 1, onesPlace = index + numDigits - 1;
+				for (int i = 0; i < numDigits; ++i) {
+					sum += str[onesPlace - i].ToNumericValue() * b;
+					b *= numberBase;
+				}
+				if (isNegative) sum *= -1;
+				pr.replacementValue = (sum < int.MaxValue) ? (int)sum : sum;
+				index += numDigits;
+			}
+			++index;
+			double fraction = 0;
+			if (includeDecimal && index < str.Length && str[index - 1] == '.') {
+				numDigits = str.CountNumericCharactersAt(index, numberBase, false, false);
+				if (numDigits == 0) { pr.SetError("decimal point with no subsequent digits", index, 1, index); }
+				long b = numberBase;
+				for (int i = 0; i < numDigits; ++i) {
+					fraction += str[index + i].ToNumericValue() / (double)b;
+					b *= numberBase;
+				}
+				if (isNegative) fraction *= -1;
+				pr.replacementValue = (sum + fraction);
+			}
+			pr.lengthParsed = characterCount;
+			return pr;
+		}
+		public static ParseResult HexadecimalParse(this string str, int index) { return NumberParse(str, index + 2, 16, false); }
+		public static ParseResult NumericParse(this string str, int index) { return NumberParse(str, index, 10, true); }
+		public static ParseResult IntegerParse(this string str, int index) { return NumberParse(str, index, 10, false); }
+		public static ParseResult NumberParse(this string str, int index, int numberBase, bool includeDecimal) {
+			return str.NumberParse(index, str.CountNumericCharactersAt(index, numberBase, true, true), numberBase, includeDecimal);
+		}
+		public static ParseResult UnescapeStringSequenceAt(this string str, int index) {
+			ParseResult r = new ParseResult(0, null); // by default, nothing happened
+			if (str.Length <= index) { return r.SetError("invalid arguments"); }
+			if (str[index] != '\\') { return r.SetError("expected escape sequence starting with '\\'"); }
+			if (str.Length <= index + 1) { return r.SetError("unable to parse escape sequence at end of string", 1, 0, 1); }
+			char c = str[index + 1];
+			switch (c) {
+			case '\n': return new ParseResult(index + 2, "");
+			case '\r':
+				if (str.Length <= index + 2 || str[index + 2] != '\n') {
+					return new ParseResult(index, "", "expected windows line ending", 2, 0, 2);
+				}
+				return new ParseResult(index + 3, "");
+			case 'a': return new ParseResult(2, "\a");
+			case 'b': return new ParseResult(2, "\b");
+			case 'e': return new ParseResult(2, ((char)27).ToString());
+			case 'f': return new ParseResult(2, "\f");
+			case 'r': return new ParseResult(2, "\r");
+			case 'n': return new ParseResult(2, "\n");
+			case 't': return new ParseResult(2, "\t");
+			case 'v': return new ParseResult(2, "\v");
+			case '\\': return new ParseResult(2, "\\");
+			case '\'': return new ParseResult(2, "\'");
+			case '\"': return new ParseResult(2, "\"");
+			case '?': return new ParseResult(2, "?");
+			case 'x': return str.NumberParse(index + 2, 2, 16, false).AddToLength(2).ForceCharSubstitute();
+			case 'u': return str.NumberParse(index + 2, 4, 16, false).AddToLength(2).ForceCharSubstitute();
+			case 'U': return str.NumberParse(index + 2, 8, 16, false).AddToLength(2).ForceCharSubstitute();
+			case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': {
+				int digitCount = 1;
+				do {
+					if (str.Length <= index + digitCount + 1) break;
+					c = str[index + digitCount + 1];
+					if (c < '0' || c > '7') break;
+					++digitCount;
+				} while (digitCount < 3);
+				return str.NumberParse(index + 1, digitCount, 8, false).AddToLength(1).ForceCharSubstitute();
+			}
+			}
+			return r.SetError("unknown escape sequence", 1, 0, 1);
 		}
 
 		/// <summary>
@@ -221,6 +343,30 @@ namespace NonStandard {
 				return true;
 			}
 			return false;
+		}
+
+		public static bool TryParseEnum<T>(this string value, out T result) where T : struct, IConvertible {
+			try {
+				result = (T)Enum.Parse(typeof(T), value, true);
+				return true;
+			} catch (Exception e) {
+				string[] names = Enum.GetNames(typeof(T));
+				string errorMessage = $"failed conversion \"{value}\" into {typeof(T)}\nvalid values: {names.JoinToString()}\n" + e;
+				Show.Error(errorMessage);
+				//throw new FormatException(errorMessage);
+			}
+			result = default;
+			return false;
+		}
+
+		/// <returns>the indexes of the given substring in this string</returns>
+		public static List<int> GenerateIndexTable(this string haystack, string needle = "\n") {
+			List<int> found = new List<int>();
+			int limit = haystack.Length - needle.Length;
+			for(int i = 0; i < limit; ++i) {
+				if(haystack.IsSubstringAt(needle, i)) { found.Add(i); }
+			}
+			return found;
 		}
 	}
 	public class StringifyHideTypeAttribute : System.Attribute { }

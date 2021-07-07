@@ -27,7 +27,7 @@ namespace NonStandard.Data.Parse {
 		/// <returns></returns>
 		public object GetResolvedToken(int i, object scope = null) { return GetToken(i).Resolve(this, scope); }
 		/// <summary>
-		/// this is probably the method you're looking for
+		/// this is probably the method you're looking for. Get a string from the list of tokens, resolving it if it's a variable.
 		/// </summary>
 		/// <param name="i"></param>
 		/// <param name="scope"></param>
@@ -35,7 +35,8 @@ namespace NonStandard.Data.Parse {
 		public string GetStr(int i, object scope = null) {
 			if (i >= tokens.Count) return null;
 			object o = GetResolvedToken(i, scope);
-			return o != null ? o.ToString() : null; }
+			return o != null ? o.ToString() : null;
+		}
 		public Token PopToken() {
 			if(tokens.Count > 0) {
 				Token r = tokens[0];

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using NonStandard;
 public class NumberSequence {
     public static void GenerateAdvancementOrder2(int[] howManyOfEach, out int[] color, out int[] shape) {
         int totalCount = 0;

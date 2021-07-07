@@ -15,7 +15,7 @@ namespace NonStandard.Data.Parse {
 
 		public static Delim[] _string_delimiter = new Delim[] { new DelimCtx("\"", ctx: "string", s: true, e: true), };
 		public static Delim[] _char_delimiter = new Delim[] { new DelimCtx("\'", ctx: "char", s: true, e: true), };
-		public static Delim[] _char_escape_sequence = new Delim[] { new Delim("\\", parseRule: UnescapeString) };
+		public static Delim[] _char_escape_sequence = new Delim[] { new Delim("\\", parseRule: StringExtension.UnescapeStringSequenceAt) };
 		public static Delim[] _expression_delimiter = new Delim[] { new DelimCtx("(", ctx: "()", s: true), new DelimCtx(")", ctx: "()", e: true) };
 		public static Delim[] _code_body_delimiter = new Delim[] { new DelimCtx("{", ctx: "{}", s: true), new DelimCtx("}", ctx: "{}", e: true) };
 		public static Delim[] _string_code_body_delimiter = new Delim[] {
@@ -54,20 +54,20 @@ namespace NonStandard.Data.Parse {
 			new DelimOp("%", syntax:CodeRules.opinit_mod,resolve:CodeRules.op_mod, order:32),
 			new DelimOp("^^",syntax:CodeRules.opinit_pow,resolve:CodeRules.op_pow, order:20),
 		};
-		public static Delim[] _hex_number_prefix = new Delim[] { new DelimCtx("0x", ctx: "0x", parseRule: HexadecimalParse) };
+		public static Delim[] _hex_number_prefix = new Delim[] { new DelimCtx("0x", ctx: "0x", parseRule: StringExtension.HexadecimalParse) };
 		public static Delim[] _number = new Delim[] {
-			new DelimCtx("-",ctx:"number",parseRule:NumericParse,addReq:IsNextCharacterBase10NumericOrDecimal),
-			new DelimCtx(".",ctx:"number",parseRule:NumericParse,addReq:IsNextCharacterBase10Numeric),
-			new DelimCtx("0",ctx:"number",parseRule:NumericParse),
-			new DelimCtx("1",ctx:"number",parseRule:NumericParse),
-			new DelimCtx("2",ctx:"number",parseRule:NumericParse),
-			new DelimCtx("3",ctx:"number",parseRule:NumericParse),
-			new DelimCtx("4",ctx:"number",parseRule:NumericParse),
-			new DelimCtx("5",ctx:"number",parseRule:NumericParse),
-			new DelimCtx("6",ctx:"number",parseRule:NumericParse),
-			new DelimCtx("7",ctx:"number",parseRule:NumericParse),
-			new DelimCtx("8",ctx:"number",parseRule:NumericParse),
-			new DelimCtx("9",ctx:"number",parseRule:NumericParse) };
+			new DelimCtx("-",ctx:"number",parseRule:StringExtension.NumericParse,addReq:IsNextCharacterBase10NumericOrDecimal),
+			new DelimCtx(".",ctx:"number",parseRule:StringExtension.NumericParse,addReq:IsNextCharacterBase10Numeric),
+			new DelimCtx("0",ctx:"number",parseRule:StringExtension.NumericParse),
+			new DelimCtx("1",ctx:"number",parseRule:StringExtension.NumericParse),
+			new DelimCtx("2",ctx:"number",parseRule:StringExtension.NumericParse),
+			new DelimCtx("3",ctx:"number",parseRule:StringExtension.NumericParse),
+			new DelimCtx("4",ctx:"number",parseRule:StringExtension.NumericParse),
+			new DelimCtx("5",ctx:"number",parseRule:StringExtension.NumericParse),
+			new DelimCtx("6",ctx:"number",parseRule:StringExtension.NumericParse),
+			new DelimCtx("7",ctx:"number",parseRule:StringExtension.NumericParse),
+			new DelimCtx("8",ctx:"number",parseRule:StringExtension.NumericParse),
+			new DelimCtx("9",ctx:"number",parseRule:StringExtension.NumericParse) };
 		public static Delim[] _block_comment_delimiter = new Delim[] { new DelimCtx("/*", ctx: "/**/", s: true), new DelimCtx("*/", ctx: "/**/", e: true) };
 		public static Delim[] _line_comment_delimiter = new Delim[] { new DelimCtx("//", ctx: "//", s: true) };
 		public static Delim[] _XML_line_comment_delimiter = new Delim[] { new DelimCtx("///", ctx: "///", s: true) };
@@ -162,142 +162,18 @@ namespace NonStandard.Data.Parse {
 			//}
 			//Show.Log(sb);
 		}
+		public static bool IsNextCharacterBase10Numeric(string str, int index) {
+			const int numberBase = 10;
+			if (index < -1 || index + 1 >= str.Length) return false;
+			int i = str[index + 1].ToNumericValue(numberBase); return (i >= 0 && i < numberBase);
+		}
 		public static bool IsNextCharacterBase10NumericOrDecimal(string str, int index) {
+			const int numberBase = 10;
 			if (index < -1 || index + 1 >= str.Length) return false;
 			char c = str[index + 1]; if (c == '.') return true;
-			int i = NumericValue(c); return (i >= 0 && i <= 9);
+			int i = c.ToNumericValue(numberBase); return (i >= 0 && i < numberBase);
 		}
-		public static bool IsNextCharacterBase10Numeric(string str, int index) {
-			if (index < -1 || index + 1 >= str.Length) return false;
-			int i = NumericValue(str[index + 1]); return (i >= 0 && i <= 9);
-		}
-		public static ParseResult HexadecimalParse(string str, int index) {
-			return NumberParse(str, index + 2, 16, false);
-		}
-		public static ParseResult NumericParse(string str, int index) {
-			return NumberParse(str, index, 10, true);
-		}
-		public static ParseResult IntegerParse(string str, int index) {
-			return NumberParse(str, index, 10, false);
-		}
-		public static int NumericValue(char c) {
-			if (c >= '0' && c <= '9') return c - '0';
-			if (c >= 'A' && c <= 'Z') return (c - 'A') + 10;
-			if (c >= 'a' && c <= 'z') return (c - 'a') + 10;
-			return -1;
-		}
-		public static bool IsValidNumber(char c, int numberBase) {
-			int h = NumericValue(c);
-			return h >= 0 && h < numberBase;
-		}
-		public static int CountNumericCharactersAt(string str, int index, int numberBase, bool includeNegativeSign, bool includeDecimal) {
-			int numDigits = 0;
-			bool foundDecimal = false;
-			while (index + numDigits < str.Length) {
-				char c = str[index + numDigits];
-				bool stillGood = false;
-				if (IsValidNumber(c, numberBase)) {
-					stillGood = true;
-				} else {
-					if (includeNegativeSign && numDigits == 0 && c == '-') {
-						stillGood = true;
-					} else if (includeDecimal && c == '.' && !foundDecimal) {
-						foundDecimal = true;
-						stillGood = true;
-					}
-				}
-				if (stillGood) { numDigits++; } else break;
-			}
-			return numDigits;
-		}
-		public static ParseResult NumberParse(string str, int index, int numberBase, bool includeDecimal) {
-			return NumberParse(str, index, CountNumericCharactersAt(str, index, numberBase, true, true), numberBase, includeDecimal);
-		}
-		public static ParseResult NumberParse(string str, int index, int characterCount, int numberBase, bool includeDecimal) {
-			ParseResult pr = new ParseResult(0, null);
-			long sum = 0;
-			char c = str[index];
-			bool isNegative = c == '-';
-			if (isNegative) { ++index; }
-			bool isDecimal = c == '.';
-			int numDigits;
-			if (!isDecimal) {
-				numDigits = CountNumericCharactersAt(str, index, numberBase, false, false);
-				int b = 1, onesPlace = index + numDigits - 1;
-				for (int i = 0; i < numDigits; ++i) {
-					sum += NumericValue(str[onesPlace - i]) * b;
-					b *= numberBase;
-				}
-				if (isNegative) sum *= -1;
-				pr.replacementValue = (sum < int.MaxValue) ? (int)sum : sum;
-				index += numDigits;
-			}
-			++index;
-			double fraction = 0;
-			if (includeDecimal && index < str.Length && str[index - 1] == '.') {
-				numDigits = CountNumericCharactersAt(str, index, numberBase, false, false);
-				if (numDigits == 0) { pr.SetError("decimal point with no subsequent digits", index, 1, index); }
-				long b = numberBase;
-				for (int i = 0; i < numDigits; ++i) {
-					fraction += NumericValue(str[index + i]) / (double)b;
-					b *= numberBase;
-				}
-				if (isNegative) fraction *= -1;
-				pr.replacementValue = (sum + fraction);
-			}
-			pr.lengthParsed = characterCount;
-			return pr;
-		}
-		public static ParseResult CommentEscape(string str, int index) { return UnescapeString(str, index); }
-
-		public static ParseResult UnescapeString(string str, int index) {
-			ParseResult r = new ParseResult(0, null); // by default, nothing happened
-			if (str.Length <= index) { return r.SetError("invalid arguments"); }
-			if (str[index] != '\\') { return r.SetError("expected escape sequence starting with '\\'"); }
-			if (str.Length <= index + 1) { return r.SetError("unable to parse escape sequence at end of string", 1, 0, 1); }
-			char c = str[index + 1];
-			switch (c) {
-			case '\n': return new ParseResult(index + 2, "");
-			case '\r':
-				if (str.Length <= index + 2 || str[index + 2] != '\n') {
-					return new ParseResult(index, "", "expected windows line ending", 2, 0, 2);
-				}
-				return new ParseResult(index + 3, "");
-			case 'a': return new ParseResult(2, "\a");
-			case 'b': return new ParseResult(2, "\b");
-			case 'e': return new ParseResult(2, ((char)27).ToString());
-			case 'f': return new ParseResult(2, "\f");
-			case 'r': return new ParseResult(2, "\r");
-			case 'n': return new ParseResult(2, "\n");
-			case 't': return new ParseResult(2, "\t");
-			case 'v': return new ParseResult(2, "\v");
-			case '\\': return new ParseResult(2, "\\");
-			case '\'': return new ParseResult(2, "\'");
-			case '\"': return new ParseResult(2, "\"");
-			case '?': return new ParseResult(2, "?");
-			case 'x': return NumberParse(str, index + 2, 2, 16, false).AddToLength(2).ForceCharSubstitute();
-			case 'u': return NumberParse(str, index + 2, 4, 16, false).AddToLength(2).ForceCharSubstitute();
-			case 'U': return NumberParse(str, index + 2, 8, 16, false).AddToLength(2).ForceCharSubstitute();
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7': {
-				int digitCount = 1;
-				do {
-					if (str.Length <= index + digitCount + 1) break;
-					c = str[index + digitCount + 1];
-					if (c < '0' || c > '7') break;
-					++digitCount;
-				} while (digitCount < 3);
-				return NumberParse(str, index + 1, digitCount, 8, false).AddToLength(1);
-			}
-			}
-			return r.SetError("unknown escape sequence", 1, 0, 1);
-		}
+		public static ParseResult CommentEscape(string str, int index) { return str.UnescapeStringSequenceAt(index); }
 
 		private static void GiveDesc(Delim[] delims, string desc) {
 			for (int i = 0; i < delims.Length; ++i) { if (delims[i].description == null) { delims[i].description = desc; } }
@@ -367,7 +243,7 @@ namespace NonStandard.Data.Parse {
 					value = args;
 					type = args.GetType();
 				}
-				return; 
+				return;
 			}
 			ParseRuleSet.Entry e = token.GetAsContextEntry();
 			if (e != null && e.IsText()) { return; } // data is explicitly meant to be a string, done.
@@ -575,7 +451,7 @@ namespace NonStandard.Data.Parse {
 							return -1;
 						} else {
 							started = i;
-							ParseResult pr = IntegerParse(str, i + 1);
+							ParseResult pr = StringExtension.IntegerParse(str, i + 1);
 							if (pr.IsError) {
 								pr.error.OffsetBy(startI + i, tok.rows);
 								tok.AddError(pr.error);

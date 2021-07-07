@@ -1,10 +1,10 @@
-﻿using NonStandard.Character;
+﻿using NonStandard;
+using NonStandard.Character;
 using NonStandard.Data;
 using NonStandard.Data.Parse;
 using NonStandard.GameUi.Inventory;
 using NonStandard.GameUi.Particles;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 

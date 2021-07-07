@@ -1,4 +1,5 @@
 ﻿using MazeGeneration;
+using NonStandard;
 using NonStandard.Character;
 using System.Collections.Generic;
 using UnityEngine;
