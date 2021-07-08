@@ -628,15 +628,6 @@ MonoBehaviour:
   WorldSpaceSettings:
     screenSize: {x: 0, y: 0}
     textScale: 0.005
-  ColorSet:
-    Background: {r: 0, g: 0, b: 0, a: 0.5}
-    Text: {r: 1, g: 1, b: 1, a: 1}
-    ErrorText: {r: 1, g: 0.5, b: 0.5, a: 1}
-    SpecialText: {r: 1, g: 0.75, b: 0, a: 1}
-    ExceptionText: {r: 1, g: 0.5, b: 1, a: 1}
-    Scrollbar: {r: 1, g: 1, b: 1, a: 0.5}
-    UserInput: {r: 0.75, g: 0.875, b: 0.75, a: 1}
-    UserSelection: {r: 0.5, g: 0.5, b: 1, a: 0.75}
   _tmpInputField: {fileID: 0}
   _togglingVisiblityWithMultitouch: 0
   ActiveOnStart: 0
@@ -792,7 +783,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2136581222}
   m_HandleRect: {fileID: 2136581221}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:

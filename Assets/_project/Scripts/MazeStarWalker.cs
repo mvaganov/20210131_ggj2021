@@ -1,6 +1,7 @@
 ﻿using MazeGeneration;
 using NonStandard;
 using NonStandard.Character;
+using NonStandard.Extension;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = NonStandard.Data.Random;

@@ -2,6 +2,7 @@
 using NonStandard.Character;
 using NonStandard.Data;
 using NonStandard.Data.Parse;
+using NonStandard.Extension;
 using NonStandard.GameUi.Inventory;
 using NonStandard.GameUi.Particles;
 using System;

@@ -1,4 +1,6 @@
 ﻿using NonStandard;
+using NonStandard.Extension;
+
 public class NumberSequence {
     public static void GenerateAdvancementOrder2(int[] howManyOfEach, out int[] color, out int[] shape) {
         int totalCount = 0;
