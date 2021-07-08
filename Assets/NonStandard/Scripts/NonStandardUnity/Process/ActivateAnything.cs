@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace NonStandard.Procedure {
 	/// This class serves as a store for static Utility functions related to 'activating things'.
+	/// TODO make this a partial class. Get it to work with the NonStandard.Process classes too
 	public static class ActivateAnything {
 		/// <summary>'Activates' something, in a ways that is possibly specific to circumstances.</summary>
 		/// <param name="whatToActivate">what needs to be activated. In "The straw that broke the camel's back", this is the "camel's back", which we can assume is breaking (or unbreaking?) during this function.</param>

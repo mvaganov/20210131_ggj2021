@@ -9,6 +9,8 @@ public class Argument {
 	public System.Type type;
 	public int order = -1;
 	public bool required = false;
+	public bool deprecated = false;
+	public bool preview = false;
 }
 
 public class Arguments {

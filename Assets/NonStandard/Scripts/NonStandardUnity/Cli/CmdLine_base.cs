@@ -2,8 +2,10 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using NonStandard.Data;
 
 namespace NonStandard.Cli {
+	// TODO make the base class independent of Unity, and the child class has one of these that it acts as a Unity interface for
 	/// <summary>A Command Line emulation for Unity3D
 	/// <description>Unliscence - This code is Public Domain, don't bother me about it!</description>
 	/// <author email="mvaganov@hotmail.com">Michael Vaganov</author>
@@ -126,7 +128,7 @@ namespace NonStandard.Cli {
 
 		[HideInInspector]
 		/// used to prevent prompt artifact from being written more than once in a row
-		public Vector2Int indexWherePromptWasPrintedRecently = new Vector2Int(-1,-1);
+		public Coord indexWherePromptWasPrintedRecently = new Coord(-1,-1);
 
 		[Tooltip("The TextMeshPro font used. If null, built-in-font should be used.")]
 		public TMPro.TMP_FontAsset textMeshProFont;

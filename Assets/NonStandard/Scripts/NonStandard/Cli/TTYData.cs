@@ -1,6 +1,5 @@
 ﻿using NonStandard.Data;
 using System.Collections.Generic;
-//using UnityEngine;
 
 namespace NonStandard.Cli {
 	public class TTYData {

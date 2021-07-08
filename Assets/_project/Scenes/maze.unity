@@ -633,7 +633,9 @@ MonoBehaviour:
   ActiveOnStart: 0
   AcceptingCommands: 1
   interceptDebugLog: 0
-  indexWherePromptWasPrintedRecently: {x: -1, y: -1}
+  indexWherePromptWasPrintedRecently:
+    row: -1
+    col: -1
   textMeshProFont: {fileID: 0}
   viewscore: 0
   inputvalidator: {fileID: 0}
@@ -783,7 +785,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2136581222}
   m_HandleRect: {fileID: 2136581221}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:

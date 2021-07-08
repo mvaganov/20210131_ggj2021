@@ -1,8 +1,7 @@
-﻿using MazeGeneration;
-using NonStandard.Data;
-using System.Collections;
+﻿using NonStandard.Data;
+using System;
 using System.Collections.Generic;
-using UnityEngine;
+//using UnityEngine;
 
 namespace NonStandard.Cli {
 	public class TTYInput {
@@ -99,7 +98,7 @@ namespace NonStandard.Cli {
 				index = userInput.Length;
 			}
 			// if the user deleted a newline character, update the data about drawing newlines
-			int limit = Mathf.Min(index + count, userInput.Length);
+			int limit = Math.Min(index + count, userInput.Length);
 			int newlinesDeleted = 0;
 			for (int i = index; i < limit; ++i)
 			{
@@ -141,7 +140,7 @@ namespace NonStandard.Cli {
 		{
 			Coord cursor = data.cursorIndex;
 			char letter = data.defaultChar;
-			Color fore = data.defaultForeground, back = data.defaultBackground;
+			ColorRGBA fore = data.defaultForeground, back = data.defaultBackground;
 			for(int i = 0; i < userInput.Length; ++i)
 			{
 				char c = userInput[i];

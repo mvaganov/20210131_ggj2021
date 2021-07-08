@@ -2,7 +2,7 @@
 #if UNITY_2017_1_OR_NEWER
 using UnityEngine;
 #endif
-
+// TODO make this a Non-Unity partial class, which has Coord outputs. create the Unity companion partial class entry
 namespace NonStandard.Ui {
 	[Flags] public enum Direction2D {
 		None = 0, Bottom = 1, Left = 2, Top = 4, Right = 8,

@@ -1,13 +1,13 @@
 ﻿using NonStandard.Extension;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace NonStandard {
 	public interface IReference { object Dereference(); }
 
-#if UNITY_2017_1_OR_NEWER
 	[System.Serializable]
 	public struct ObjectPtr : IReference {
 		public Object data;
@@ -28,7 +28,6 @@ namespace NonStandard {
 			// see EditorGUI_EnumPopup. there needs to be a way to get generalized drop-downs like that.
 		}
 	}
-#endif
 
 #if UNITY_EDITOR
 	// enables the ObjectPtr property, not fully utilized by Timer, but certainly utilized by NonStandardAssets

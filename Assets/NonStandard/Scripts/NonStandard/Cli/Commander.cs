@@ -1,9 +1,9 @@
 ﻿#define CONNECT_TO_REAL_COMMAND_LINE_TERMINAL
-using System.Collections;
+using NonStandard.Data;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace NonStandard.Cli {
+	// TODO replace NonStandard.Cli.Commander with NonStandard.Commands.Commander
 	public class Commander
 	{
 		public CmdLine_base cmdLine;
@@ -23,7 +23,7 @@ namespace NonStandard.Cli {
 			if (AllowSystemAccess) {
 				bash.DoCommand(string.Join(" ", args, 1, args.Length - 1), this, null, cmdLine);
 			} else {
-				cmdLine.HandleLog("Access Denied", "", LogType.Warning);
+				cmdLine.HandleLog("Access Denied", "", CmdLine_base.LogType.Warning);
 			}
 		}
 #endif
@@ -64,7 +64,7 @@ namespace NonStandard.Cli {
 			}
 			return null;
 		}
-		[Tooltip("Easily accessible way of finding out what instruction was executed last")]
+		//[Tooltip("Easily accessible way of finding out what instruction was executed last")]
 		/// <summary>useful for callbacks, for finding out what is going on right now</summary>
 		public Instruction RecentInstruction;
 
@@ -123,7 +123,7 @@ namespace NonStandard.Cli {
 			instructionList.Add(instruction);
 			if (instruction.IsSource(cmdLine.UserRawInput))
 			{
-				cmdLine.indexWherePromptWasPrintedRecently = new Vector2Int(-1,-1); // make sure this command stays visible
+				cmdLine.indexWherePromptWasPrintedRecently = Coord.NegativeOne; // make sure this command stays visible
 			}
 		}
 		public void Dispatch(Instruction instruction)

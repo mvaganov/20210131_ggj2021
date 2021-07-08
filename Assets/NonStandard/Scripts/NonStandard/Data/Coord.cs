@@ -3,6 +3,7 @@
 namespace NonStandard.Data {
 	public interface IPosition { Coord GetPosition(); }
 
+	[Serializable]
 	public partial struct Coord {
 		public short row, col;
 

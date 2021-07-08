@@ -4,7 +4,8 @@ using UnityEngine;
 #endif
 namespace NonStandard {
 #if UNITY_2017_1_OR_NEWER
-	public class Show : MonoBehaviour {
+	// TODO put the Unity specific functionality in a Unity partial class in the parallel Unity tree
+	public partial class Show : MonoBehaviour {
 		public GameObject routeOutputTo;
 		void Awake() {
 			TMPro.TMP_Text tmpText = routeOutputTo.GetComponent<TMPro.TMP_Text>();
@@ -32,21 +33,23 @@ namespace NonStandard {
 			onError += UnityEngine.Debug.LogError;
 			onWarning += UnityEngine.Debug.LogWarning;
 #else
-			onLog += Console.WriteLine;
-			onError += s => {
-				ConsoleColor c = Console.ForegroundColor;
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine(s);
-				Console.ForegroundColor = c;
-			};
-			onWarning += s => {
-				ConsoleColor c = Console.ForegroundColor;
-				Console.ForegroundColor = ConsoleColor.Yellow;
-				Console.WriteLine(s);
-				Console.ForegroundColor = c;
-			};
+			onLog += DefaultLog;
+			onError += DefaultError;
+			onWarning += DefaultWarning;
 #endif
 		}
-
+		public static void DefaultLog(string s) => Console.WriteLine(s);
+		public static void DefaultWarning(string s) {
+			ConsoleColor c = Console.ForegroundColor;
+			Console.ForegroundColor = ConsoleColor.Yellow;
+			Console.WriteLine(s);
+			Console.ForegroundColor = c;
+		}
+		public static void DefaultError(string s) {
+			ConsoleColor c = Console.ForegroundColor;
+			Console.ForegroundColor = ConsoleColor.Red;
+			Console.WriteLine(s);
+			Console.ForegroundColor = c;
+		}
 	}
 }
