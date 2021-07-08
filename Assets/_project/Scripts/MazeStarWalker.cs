@@ -1,6 +1,5 @@
-﻿using MazeGeneration;
-using NonStandard;
-using NonStandard.Character;
+﻿using NonStandard.Character;
+using NonStandard.Data;
 using NonStandard.Extension;
 using System.Collections.Generic;
 using UnityEngine;
@@ -31,7 +30,7 @@ public class MazeStarWalker : MonoBehaviour {
 		case TileSurfaceChoice.Center: break;
 		case TileSurfaceChoice.Random: {
 			Vector3 extents = maze.tileSize / 2; extents.y = 0;
-			Vector3 r = new Vector3(Random.A.NextFloat(-1,1) * extents.x, 0, extents.z * Random.A.NextFloat(-1,1));
+			Vector3 r = new Vector3(Random.NextFloat(-1,1) * extents.x, 0, extents.z * Random.NextFloat(-1,1));
 			// raycasting hits something early quite often, resulting in very high points. not sure what is going on there.
 			r.y = maze.tileSize.y;
 			if (Physics.Raycast(p + r, Vector3.down, out RaycastHit rh, maze.tileSize.y * 2, ~pathingIgnores, QueryTriggerInteraction.Ignore)) {
@@ -126,7 +125,7 @@ public class MazeStarWalker : MonoBehaviour {
 		switch (aiBehavior) {
 		case AiBehavior.RandomLocalEdges:
 			if (!characterMover.IsAutoMoving()) {
-				Coord c = moves[Random.A.Next(moves.Count)];
+				Coord c = moves[Random.Next(moves.Count)];
 				characterMover.SetAutoMovePosition(MoveablePosition(c, p));
 			}
 			break;

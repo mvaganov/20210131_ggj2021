@@ -1,24 +1,21 @@
-﻿using NonStandard;
-using NonStandard.Data;
-using System.Collections;
+﻿using NonStandard.Data;
 using System.Collections.Generic;
-using UnityEngine;
+//using UnityEngine;
 
 namespace NonStandard.Cli {
 	public class TTYData {
 		public string cachedString;
-		[HideInInspector]
 		/// optimization for GetTMProString. Keeps track of changes to text, not changes to cursor movement
-		public bool cacheValid = false;
+		public bool cacheValid { get; set; }
 		/// keeps track of whether or not there is text to display. If clean, this can be assumed to be an empty output.
 		public bool isClean = true;
 		public bool newLineBehavior_columnSameAsStart = false;
 		public char defaultChar = '\0';
 		public char emptySpace = ' ';
-		public Color defaultForeground = Color.white;
-		public Color defaultBackground = Color.clear;
+		public ColorRGBA defaultForeground = ColorRGBA.white;
+		public ColorRGBA defaultBackground = ColorRGBA.clear;
 		public ManageUI.InitialColorSettings colorSettings;
-		struct ColorSpot { public Color f, b; public ColorSpot(Color f, Color b) { this.f = f; this.b = b; } }
+		struct ColorSpot { public ColorRGBA f, b; public ColorSpot(ColorRGBA f, ColorRGBA b) { this.f = f; this.b = b; } }
 		private int lastWrittenLine;
 		/// real time of last change, including changes to the string, and/or the cursor location. color changes have no effect.
 		public long timestamp;
@@ -30,35 +27,35 @@ namespace NonStandard.Cli {
 		ColorSpot[][] colors;
 		bool[] lineOverflow;
 
-		public Vector2Int cursorIndex;
+		public Coord cursorIndex;
 		/// when the output is a single string, this is where the i/o cursor is.
 		public int cursorIndexInString;
-		List<Color> currentF = new List<Color>(), currentB = new List<Color>();
+		List<ColorRGBA> currentF = new List<ColorRGBA>(), currentB = new List<ColorRGBA>();
 
 		public TTYData() {
 			input.data = this;
 		}
 
 		public bool IsClean() { return isClean; }
-		public void SetForeground(Color color) {
+		public void SetForeground(ColorRGBA color) {
 			currentF.Add(color);
 		}
 		public void UnsetForeground() {
 			if (currentF.Count == 0) return;
 			currentF.RemoveAt(currentF.Count-1);
 		}
-		public void SetBackground(Color color) {
+		public void SetBackground(ColorRGBA color) {
 			currentB.Add(color);
 		}
 		public void UnsetBackground() {
 			if (currentB.Count == 0) return;
 			currentB.RemoveAt(currentB.Count - 1);
 		}
-		public Color CurrentForeground() {
+		public ColorRGBA CurrentForeground() {
 			if (currentF.Count == 0) return defaultForeground;
 			return currentF[currentF.Count - 1];
 		}
-		public Color CurrentBackground() {
+		public ColorRGBA CurrentBackground() {
 			if (currentB.Count == 0) return defaultBackground;
 			return currentB[currentB.Count - 1];
 		}
@@ -73,13 +70,13 @@ namespace NonStandard.Cli {
 		public int WriteCharOutput(char c) {
 			return WriteCharOutput(c, CurrentForeground());
 		}
-		public int WriteCharOutput(char c, Color f) {
+		public int WriteCharOutput(char c, ColorRGBA f) {
 			return WriteCharOutput(c, f, CurrentBackground());
 		}
 		private void BackspaceAtCursor() {
 			BackspaceAtCursor(ref this.cursorIndex);
 		}
-		private void BackspaceAtCursor(ref Vector2Int cursorIndex) {
+		private void BackspaceAtCursor(ref Coord cursorIndex) {
 			cursorIndex.x--;
 			if (cursorIndex.x < 0) {
 				if (lineOverflow[cursorIndex.y]) {
@@ -113,7 +110,7 @@ namespace NonStandard.Cli {
 		private void AdvanceLine() {
 			AdvanceLine(ref cursorIndex);
 		}
-		public void AdvanceLine(ref Vector2Int cursorIndex) {
+		public void AdvanceLine(ref Coord cursorIndex) {
 			cursorIndex.y++;
 			cursorIndex.x = 0;
 			if (cursorIndex.y >= buffer.Length) {
@@ -162,7 +159,7 @@ namespace NonStandard.Cli {
 		/// <param name="f">foreground color</param>
 		/// <param name="b">background color</param>
 		/// <returns>how much the cursor should advance in the TMPro string</returns>
-		public int WriteCharOutput(char c, Color f, Color b) {
+		public int WriteCharOutput(char c, ColorRGBA f, ColorRGBA b) {
 			int changed = 0;
 			switch (c) {
 				case '\b':
@@ -197,7 +194,7 @@ namespace NonStandard.Cli {
 
 		/// <param name="cursorIndex"></param>
 		/// <returns>true if the line was advanced vertically (row++)</returns>
-		public bool AdvanceCursor(ref Vector2Int cursorIndex) {
+		public bool AdvanceCursor(ref Coord cursorIndex) {
 			cursorIndex.x++;
 			if (cursorIndex.x >= buffer[cursorIndex.y].Length) {
 				AdvanceLine(ref cursorIndex);
@@ -214,10 +211,10 @@ namespace NonStandard.Cli {
 		}
 		public void SetCursorIndex(int row, int col) {
 			PadEmptyWithSpace(row, col);
-			cursorIndex = new Vector2Int(col, row);
+			cursorIndex = new Coord(col, row);
 			InitTimestamp();
 		}
-		public bool Set(int row, int col, char c, Color f, Color b) {
+		public bool Set(int row, int col, char c, ColorRGBA f, ColorRGBA b) {
 			bool changeHappened = Set(row, col, c, f, b, buffer, colors);
 			if (changeHappened) {
 				cacheValid = false;
@@ -229,7 +226,7 @@ namespace NonStandard.Cli {
 			timestamp = System.Environment.TickCount;
 			return changeHappened;
 		}
-		private static bool Set(int row, int col, char c, Color f, Color b, char[][] buffer, ColorSpot[][] colors)
+		private static bool Set(int row, int col, char c, ColorRGBA f, ColorRGBA b, char[][] buffer, ColorSpot[][] colors)
 		{
 			bool changeHappened = buffer[row][col] != c || colors[row][col].f != f || colors[row][col].b != b;
 			buffer[row][col] = c;
@@ -238,7 +235,7 @@ namespace NonStandard.Cli {
 			return changeHappened;
 		}
 
-		public void Set(int row, int col, char c, Color f)
+		public void Set(int row, int col, char c, ColorRGBA f)
 		{
 			Set(row, col, c, f, CurrentBackground());
 		}
@@ -303,7 +300,7 @@ namespace NonStandard.Cli {
 			for(int row =0; row < buffer.Length; ++row) {
 				ClearLine(row);
 			}
-			cursorIndex = new Vector2Int(0, 0);
+			cursorIndex = new Coord(0, 0);
 			cacheValid = true;
 			isClean = true;
 			InitTimestamp();
@@ -323,7 +320,7 @@ namespace NonStandard.Cli {
 		private void GetWrappedStringStartingAt(ref int row, int col,
 			out System.Text.StringBuilder longString, out List<ColorSpot> colorSequence)
 		{
-			Vector2Int cursor = new Vector2Int(col, row);
+			Coord cursor = new Coord(col, row);
 			longString = new System.Text.StringBuilder();
 			colorSequence = new List<ColorSpot>();
 			int nonEmpty = 0;
@@ -362,7 +359,7 @@ namespace NonStandard.Cli {
 			return cachedString;
 		}
 
-		public bool GetAt(Vector2Int cursor, out char letter, out Color fore, out Color back, bool includingInput = true, string inputBarrier = "")
+		public bool GetAt(Coord cursor, out char letter, out ColorRGBA fore, out ColorRGBA back, bool includingInput = true, string inputBarrier = "")
 		{
 			back = colors[cursor.y][cursor.x].b;
 			fore = colors[cursor.y][cursor.x].f;
@@ -374,13 +371,13 @@ namespace NonStandard.Cli {
 			return false;
 		}
 
-		public string GetTMProString(out int out_cursorStringIndex, string inputBarrier = "", Vector2Int start = default(Vector2Int), int visibleLetterCount = -1)
+		public string GetTMProString(out int out_cursorStringIndex, string inputBarrier = "", Coord start = default(Coord), int visibleLetterCount = -1)
 		{
 			System.Text.StringBuilder result = new System.Text.StringBuilder();
-			Color currentForegroundColor = defaultForeground, currentBackgroundColor = defaultBackground;
+			ColorRGBA currentForegroundColor = defaultForeground, currentBackgroundColor = defaultBackground;
 			char letterHere;
-			Color foregroundColorHere, backgroundColorHere;
-			Vector2Int cursor = start;
+			ColorRGBA foregroundColorHere, backgroundColorHere;
+			Coord cursor = start;
 			int visibleLetters = 0;
 			// figure out which row is the last one that needs to be printed, to probably dramatically reduce the size of the final string
 			int lastRowToWorryAbout = lastWrittenLine;
@@ -470,10 +467,10 @@ namespace NonStandard.Cli {
 			return "</mark>";
 		}
 
-		public static Vector2Int CalculateCoordinateOf(string text, int cursorIndex)
+		public static Coord CalculateCoordinateOf(string text, int cursorIndex)
 		{
 			int lineBegin = 0, lineEnd = -1;
-			Vector2Int coord = new Vector2Int();
+			Coord coord = new Coord();
 			do
 			{
 				lineEnd = text.IndexOf('\n', lineBegin);

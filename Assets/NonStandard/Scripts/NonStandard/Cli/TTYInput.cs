@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using MazeGeneration;
+using NonStandard.Data;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,7 +9,7 @@ namespace NonStandard.Cli {
 		/// raw text input that the user has entered
 		public System.Text.StringBuilder userInput = new System.Text.StringBuilder();
 		/// where in the output area the different lines of user input are located
-		public List<Vector2Int> userInputLineExtraLineLocations = new List<Vector2Int>();
+		public List<Coord> userInputLineExtraLineLocations = new List<Coord>();
 		/// where in the userInput the user is currently writing to (because the user can insert text into the input stream)
 		public int userInputCursor;
 		/// object that manages TTY output
@@ -74,7 +76,7 @@ namespace NonStandard.Cli {
 				int lastLineRow = (userInputLineExtraLineLocations.Count > 0)
 					? userInputLineExtraLineLocations[userInputLineExtraLineLocations.Count - 1].y
 					: data.cursorIndex.y;
-				Vector2Int nextLineStart = new Vector2Int(0, lastLineRow);
+				Coord nextLineStart = new Coord(0, lastLineRow);
 				if (data.newLineBehavior_columnSameAsStart)
 				{
 					nextLineStart.x = data.cursorIndex.x;
@@ -137,7 +139,7 @@ namespace NonStandard.Cli {
 
 		public void FlushInputIntoTTY()
 		{
-			Vector2Int cursor = data.cursorIndex;
+			Coord cursor = data.cursorIndex;
 			char letter = data.defaultChar;
 			Color fore = data.defaultForeground, back = data.defaultBackground;
 			for(int i = 0; i < userInput.Length; ++i)
@@ -149,7 +151,7 @@ namespace NonStandard.Cli {
 			data.WriteCharOutput('\n');
 		}
 
-		public bool GetAt(Vector2Int cursor, ref char letter, ref Color fore, ref Color back, string inputBarrier = "")
+		public bool GetAt(Coord cursor, ref char letter, ref ColorRGBA fore, ref ColorRGBA back, string inputBarrier = "")
 		{
 			if (cursor.y >= data.cursorIndex.y)
 			{
@@ -164,7 +166,7 @@ namespace NonStandard.Cli {
 						int userInputLine = (cursor.y - data.cursorIndex.y);
 						if (userInputLine > 0)
 						{
-							Vector2Int lineLoc = userInputLineExtraLineLocations[userInputLine - 1]; // -1 because line 0 is always cursorIndex, userInputLineExtraLineLocations stores *additional* line locations
+							Coord lineLoc = userInputLineExtraLineLocations[userInputLine - 1]; // -1 because line 0 is always cursorIndex, userInputLineExtraLineLocations stores *additional* line locations
 							int lineStartIndex = GetIndexOfUserInputLine(userInputLine);
 							int lineEndIndex = GetIndexOfUserInputLine(userInputLine + 1);
 							if (lineEndIndex < 0) lineEndIndex = userInput.Length;

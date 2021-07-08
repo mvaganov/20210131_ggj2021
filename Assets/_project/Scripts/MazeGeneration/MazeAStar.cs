@@ -1,4 +1,5 @@
 ﻿using MazeGeneration;
+using NonStandard.Data;
 using System;
 using System.Collections.Generic;
 using Random = NonStandard.Data.Random;
@@ -214,7 +215,7 @@ public class MazeAStar : GenericAStar<Coord, int> {
 
 	public bool RandomVisibleNode(out Coord c, Coord currentNode) {
 		Coord size = Map.GetSize();
-		c = new Coord(Random.A.Next(size.X), Random.A.Next(size.Y));
+		c = new Coord(Random.Next(size.X), Random.Next(size.Y));
 		if (vision[c]) { return true; }
 		return false;
 	}
@@ -222,7 +223,7 @@ public class MazeAStar : GenericAStar<Coord, int> {
 		c = currentNode;
 		List<int> edges = GetEdges(c);
 		if (edges.Count > 0) {
-			c = NextNode(c, edges[Random.A.Next(edges.Count)]);
+			c = NextNode(c, edges[Random.Next(edges.Count)]);
 			return true;
 		}
 		return false;

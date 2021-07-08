@@ -29,12 +29,12 @@ public class Game : MonoBehaviour
     public Text bestTimeLabel;
     public ClickToMove clickToMove;
     public bool testingPickups = false;
-    NonStandard.Data.Random random;
+    NonStandard.Data.Random.NumberGenerator random;
 
     public void Awake() {
         Commander.Instance.SetScope(mainDictionaryKeeper.Dictionary);
         Commander.Instance.AddCommand("claimplayer", ClaimPlayer);
-        random = new NonStandard.Data.Random(GameClock.Time);
+        random = new NonStandard.Data.Random.NumberGenerator(GameClock.Time);
     }
 
     void Start() {

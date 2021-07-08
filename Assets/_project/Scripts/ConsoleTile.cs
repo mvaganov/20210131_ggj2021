@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NonStandard.Data;
+using System;
 
 namespace MazeGeneration {
 	public interface IDrawable {

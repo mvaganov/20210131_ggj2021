@@ -355,7 +355,7 @@ namespace NonStandard.Cli {
 			if (freshnessOfOutput != data.timestamp) {
 				freshnessOfOutput = data.timestamp;
 				if (NeedToRefreshUserPrompt) {
-					if(indexWherePromptWasPrintedRecently != data.cursorIndex) {
+					if(data.cursorIndex != indexWherePromptWasPrintedRecently) {
 						data.WriteOutput(commander.CommandPromptArtifact());
 						indexWherePromptWasPrintedRecently = data.cursorIndex;
 					}

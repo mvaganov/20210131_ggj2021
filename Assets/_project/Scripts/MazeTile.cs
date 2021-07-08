@@ -1,5 +1,5 @@
-﻿using MazeGeneration;
-using NonStandard;
+﻿using NonStandard;
+using NonStandard.Data;
 using UnityEngine;
 
 public class MazeTile : MonoBehaviour
@@ -109,7 +109,7 @@ public class MazeTile : MonoBehaviour
 			t.rotation = Quaternion.Lerp(startRot, endRot, p);
 			c = Color.Lerp(startColor, endColor, p);
 			r.material.color = c;
-			GameClock.Delay(10 + Random.Range(0, 20), AnimateLoop);
+			GameClock.Delay(10 + NonStandard.Data.Random.Range(0, 20), AnimateLoop);
 		}
 		if (r.enabled) { if (c.a == 0) { r.enabled = false; } }
 		else { if(c.a != 0) { r.enabled = true; } }

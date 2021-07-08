@@ -1,5 +1,5 @@
-﻿using MazeGeneration;
-using NonStandard;
+﻿using NonStandard;
+using NonStandard.Data;
 using System;
 using System.Collections;
 

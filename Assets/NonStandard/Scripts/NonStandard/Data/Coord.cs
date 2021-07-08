@@ -13,14 +13,26 @@ namespace NonStandard.Data {
 
 		public int X { get => col; set => col = (short)value; }
 		public int Y { get => row; set => row = (short)value; }
+		public int x { get => col; set => col = (short)value; }
+		public int y { get => row; set => row = (short)value; }
+		public int Area { get { return X * Y; } }
 
 		public static readonly Coord Zero = new Coord(0, 0);
 		public static readonly Coord One = new Coord(1, 1);
+		public static readonly Coord NegativeOne = new Coord(-1, -1);
 		public static readonly Coord Two = new Coord(2, 2);
 		public static readonly Coord Up = new Coord(0, -1);
 		public static readonly Coord Left = new Coord(-1, 0);
 		public static readonly Coord Down = new Coord(0, 1);
 		public static readonly Coord Right = new Coord(1, 0);
+		public static Coord[] CardinalDirs = new Coord[] { Coord.Up, Coord.Left, Coord.Right, Coord.Down };
+		private static Coord[] CardinalDirsAll = new Coord[] {
+			Left+Up  , Up ,  Up+Right,
+			Left,               Right,
+			Left+Down,Down,Down+Right
+		};
+		public enum CardinalDirsEnum { Up = 0, Left = 1, Right = 2, Down = 3 }
+		public enum CardinalDirsAllEnum { UpLeft = 0, Up = 1, UpRight = 2, Left = 3, Right = 4, DownLeft = 5, Down = 6, DownRight = 7 }
 
 		public override string ToString() => "(" + col + "," + row + ")";
 		public override int GetHashCode() => row * 0x00010000 + col;
@@ -49,6 +61,7 @@ namespace NonStandard.Data {
 		/// <param name="max">exclusive limit</param>
 		/// <returns>IsWithin(<see cref="Coord.Zero"/>, max)</returns>
 		public bool IsWithin(Coord max) => IsWithin(Zero, max);
+		public bool Contains(Coord c) => c.IsWithin(Zero, this);
 
 		public bool IsGreaterThan(Coord other) => col > other.col && row > other.row;
 		public bool IsGreaterThanOrEqualTo(Coord other) => col >= other.col && row >= other.row;
@@ -75,6 +88,7 @@ namespace NonStandard.Data {
 			}
 			return true;
 		}
+		public bool Increment(Coord max, short mincol = 0) { return Iterate(max,mincol); }
 		public static void ForEach(Coord min, Coord max, Action<Coord> action) {
 			Coord cursor = min;
 			for (cursor.row = min.row; cursor.row < max.row; ++cursor.row) {
@@ -118,6 +132,7 @@ namespace NonStandard.Data {
 			} while (true);
 		}
 
+		public float GetMagnitude() { return (float)Math.Sqrt(col*col+row*row); }
 		public static int ManhattanDistance(Coord a, Coord b) {
 			Coord delta = b - a;
 			return Math.Abs(delta.col) + Math.Abs(delta.row);

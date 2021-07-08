@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NonStandard.Data;
+using System;
 
 namespace MazeGeneration {
 	public class Map2d : IRect, IDrawable {
@@ -43,7 +44,7 @@ namespace MazeGeneration {
 
 		public void Fill(ConsoleTile fill) { map.Fill(fill); }
 
-		public void Fill(ConsoleTile fill, Rect where) {
+		public void Fill(ConsoleTile fill, CoordRect where) {
 			map.SetAt(where.GetPosition(), where.GetSize(), fill);
 		}
 
@@ -83,7 +84,7 @@ namespace MazeGeneration {
 		public bool IsSize(Coord size) { return Height == size.row && Width == size.col; }
 
 		public void Draw(ConsoleTile[,] drawBuffer, Coord position) {
-			if (!Rect.GetSizeRectIntersect(Coord.Zero, Coord.SizeOf(drawBuffer), position, Coord.SizeOf(map), out Coord min, out Coord size)) {
+			if (!CoordRect.GetSizeRectIntersect(Coord.Zero, Coord.SizeOf(drawBuffer), position, Coord.SizeOf(map), out Coord min, out Coord size)) {
 				return;
 			}
 			Coord cursor, max = min + size;
@@ -154,7 +155,7 @@ namespace MazeGeneration {
 			return sb.ToString();
 		}
 
-		public Rect GetRect() { return new Rect(0, 0, Width, Height); }
+		public CoordRect GetRect() { return new CoordRect(0, 0, Width, Height); }
 
 		public Coord GetPosition() { return Coord.Zero; }
 

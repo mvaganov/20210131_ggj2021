@@ -1,5 +1,6 @@
 ﻿using MazeGeneration;
 using NonStandard;
+using NonStandard.Data;
 using NonStandard.Extension;
 using System;
 using System.Collections;
@@ -57,7 +58,7 @@ public class MazeLevel : MonoBehaviour {
         if (i < 0 || i >= mazeTiles.Count) return null;
         return mazeTiles[i];
     }
-    public void Generate(NonStandard.Data.Random random) {
+    public void Generate(NonStandard.Data.Random.NumberGenerator random) {
         int width = ((stage + 2) * 2) + 1;
         mazeGenerationArguments.size = new Vector2(width, width);
         if (mazeSrc == null) {
