@@ -19,6 +19,7 @@ namespace NonStandard {
 		public PauseEvents pauseEvents = new PauseEvents();
 		bool initialized;
 		public bool isPaused;
+		public bool freezeSimulationTimeOnPause = true;
 
 		public static bool IsPaused => Instance().isPaused;
 		public static TimeKeeper Timer => Instance().timer;
@@ -27,6 +28,17 @@ namespace NonStandard {
 		public static Incident Delay(long delayMs, Action action) {
 			return Instance().timer.Delay(delayMs, action);
 		}
+		public static Incident Delay(long delayMs, Proc.edure procedure) {
+			return Instance().timer.Delay(delayMs, procedure);
+		}
+
+		public static Incident RemoveScheduled(Action action) {
+			return Instance().timer.RemoveScheduled(action);
+		}
+		public static Incident RemoveScheduled(Proc.edure action) {
+			return Instance().timer.RemoveScheduled(action);
+		}
+
 		public static long GetTime() { return Instance().GetGameTimeMs(); }
 
 		[System.Serializable]
@@ -38,11 +50,19 @@ namespace NonStandard {
 			if (initialized) { return; }
 			initialized = true;
 			timer = new TimeKeeper(GetGameTimeMs);
-			mainProcessor = Proc.Get();
+			mainProcessor = Proc.Main;
 		}
 		public void Awake() { Init(); }
-		public void Pause() { isPaused = true; if (pauseEvents.onPause != null) { pauseEvents.onPause.Invoke(); } }
-		public void Unpause() { isPaused = false; if (pauseEvents.onPause != null) { pauseEvents.onUnpause.Invoke(); } }
+		public void Pause() {
+			isPaused = true;
+			if (pauseEvents.onPause != null) { pauseEvents.onPause.Invoke(); }
+			if (freezeSimulationTimeOnPause) { UnityEngine.Time.timeScale = 0; }
+		}
+		public void Unpause() {
+			isPaused = false;
+			if (pauseEvents.onPause != null) { pauseEvents.onUnpause.Invoke(); }
+			if (freezeSimulationTimeOnPause) { UnityEngine.Time.timeScale = 1; }
+		}
 
 		private void IncrementTime() {
 			float deltaTimeMs = (UnityEngine.Time.deltaTime * 1000) + gameTimeRemainder;
@@ -50,7 +70,6 @@ namespace NonStandard {
 			gameTimeRemainder = deltaTimeMs - gameTimeDeltaMs;
 			gameTimeMs += gameTimeDeltaMs;
 		}
-
 		void Update() {
 			Proc.Update();
 			if (!isPaused) {

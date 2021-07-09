@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace NonStandard.Procedure {
 	[System.Serializable]
@@ -8,11 +9,11 @@ namespace NonStandard.Procedure {
 		/// </summary>
 		public readonly long Timestamp;
 		/// <summary>
-		/// what caused this to happen (maybe. or other meta data)
+		/// what caused this to happen (maybe. or other meta data). it could be the subject of an event
 		/// </summary>
 		public object Source;
 		/// <summary>
-		/// additional meta data about what is happening
+		/// additional meta data about what is happening. it could be the verb (function) of an event
 		/// </summary>
 		public object Detail;
 		/// <summary>
@@ -32,13 +33,19 @@ namespace NonStandard.Procedure {
 			Source = source;
 			Detail = detail;
 		}
+		public Incident(long newTimestamp, Incident toCopy) {
+			Timestamp = newTimestamp;
+			Identifier = toCopy.Identifier;
+			Source = toCopy.Source;
+			Detail = toCopy.Detail;
+		}
 
 		public class TimeComparer : IComparer<Incident> {
 			public int Compare(Incident a, Incident b) {
 				int comp = a.Timestamp.CompareTo(b.Timestamp);
 				if (comp != 0) { return comp; }
 				if (a.Identifier != null && b.Identifier != null) {
-					comp = a.Identifier.CompareTo(b.Identifier);
+					comp = String.Compare(a.Identifier, b.Identifier, StringComparison.Ordinal);
 				} else if (a.Identifier == null && b.Identifier != null) {
 					comp = 1;
 				} else if (a.Identifier != null && b.Identifier == null) {

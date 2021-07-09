@@ -80,7 +80,6 @@ namespace NonStandard.Extension {
 			return list;
 		}
 
-		/// TODO move to ReflectionExtension?
 		public static IList<string> GetStackFullPath(int stackDepth = 1, int stackStart = 1) {
 			StackTrace stackTrace = new StackTrace(stackStart + 1, true);
 			int len = Math.Min(stackDepth, stackTrace.FrameCount);
@@ -94,7 +93,6 @@ namespace NonStandard.Extension {
 			}
 			return stack;
 		}
-		/// TODO move to ReflectionExtension?
 		public static string GetStack(int stackDepth = 1, int stackStart = 1, string separator = ", ") {
 			StringBuilder sb = new StringBuilder();
 			IList<string> stack = GetStackFullPath(stackDepth, stackStart);

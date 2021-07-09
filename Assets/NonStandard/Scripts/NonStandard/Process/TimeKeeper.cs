@@ -54,6 +54,9 @@ namespace NonStandard.Procedure {
 			}
 			return error;
 		}
+		/// <summary>
+		/// runs an Incident as though it were an imperative command
+		/// </summary>
 		public Exception Do(Incident incident) {
 			try {
 				Proc.Invoke(incident.Detail, incident);
@@ -77,9 +80,9 @@ namespace NonStandard.Procedure {
 		public Incident Delay(long delay, Action whatIsBeingScheduled) {
 			return AddToSchedule(GetTime() + delay, whatIsBeingScheduled);
 		}
-		public Incident RemoveScheduled(Action actionBeingScheduled) {
+		public Incident RemoveScheduled(Delegate actionBeingScheduled) {
 			for (int i = 0; i < schedule.Count; ++i) {
-				if (schedule[i].Detail is Action a && (a == actionBeingScheduled || a.Method == actionBeingScheduled.Method)) {
+				if (schedule[i].Detail is Delegate a && (a == actionBeingScheduled || a.Method == actionBeingScheduled.Method)) {
 					Incident incident = schedule[i];
 					schedule.RemoveAt(i);
 					return incident;
@@ -97,15 +100,76 @@ namespace NonStandard.Procedure {
 			}
 			return null;
 		}
-		public Incident AddToSchedule(Incident incident) {
-			lock (schedule) {
-				int index = schedule.BinarySearch(incident, Incident.TimeComparer.Instance);
-				if (index < 0) {
-					index = ~index;
+		public Incident RemoveScheduled(Incident incident) {
+			for(int i = 0; i < schedule.Count; ++i) {
+				if(schedule[i] == incident) {
+					schedule.RemoveAt(i);
+					return incident;
 				}
-				schedule.Insert(index, incident);
 			}
+			return RemoveScheduled((object) incident);
+		}
+		public Incident Reschedule(Delegate whatIsBeingScheduled, long newTime) {
+			lock (schedule) {
+				Incident incident = RemoveScheduled(whatIsBeingScheduled);
+				if (incident != null) {
+					return AddToSchedule_Internal(new Incident(newTime, incident));
+				}
+				return AddToSchedule_Internal(newTime, whatIsBeingScheduled);
+			}
+		}
+		public Incident Reschedule(Incident whatIsBeingScheduled, long newTime) {
+			lock (schedule) {
+				Incident incident = RemoveScheduled(whatIsBeingScheduled);
+				if (incident != null) {
+					return AddToSchedule_Internal(new Incident(newTime, incident));
+				}
+				return AddToSchedule_Internal(new Incident(newTime, whatIsBeingScheduled));
+			}
+		}
+		public Incident Reschedule(object whatIsBeingScheduled, long newTime) {
+			lock (schedule) {
+				Incident incident = RemoveScheduled(whatIsBeingScheduled);
+				if (incident != null) {
+					return AddToSchedule(new Incident(newTime, incident));
+				}
+				return AddToSchedule_Internal(newTime, whatIsBeingScheduled);
+			}
+		}
+
+		public Incident AddToSchedule(Incident incident) {
+			lock (schedule) { return AddToSchedule_Internal(incident); }
+		}
+		public Incident AddToSchedule_Internal(long when, object whatIsBeingScheduled) {
+			return AddToSchedule_Internal(new Incident(when, ScheduledId, this, whatIsBeingScheduled));
+		}
+		private Incident AddToSchedule_Internal(Incident incident) {
+			int index = schedule.BinarySearch(incident, Incident.TimeComparer.Instance);
+			if (index < 0) { index = ~index; }
+			schedule.Insert(index, incident);
 			return incident;
+		}
+		private static readonly object ExplicitlyNonBlocking = Proc.Result.Success;
+		/// <summary>
+		/// starts with max unicode character, alphabetically last of all tasks with the same <see cref="Incident.Timestamp"/>
+		/// </summary>
+		private const string BackgroundTaskIdentifierPrefix = "\uffff\uffff";
+		private const string BackgroundTaskIdentifier = BackgroundTaskIdentifierPrefix + "BackgroundTask";
+		public static Incident MarkAsBackgroundTask(Incident enqueuedIncident) {
+			enqueuedIncident.Source = ExplicitlyNonBlocking;
+			enqueuedIncident.Identifier = BackgroundTaskIdentifier;
+			return enqueuedIncident;
+		}
+		public static bool IsBackgroundTask(Incident enqueuedIncident) {
+			return enqueuedIncident.Source == ExplicitlyNonBlocking || enqueuedIncident.Identifier.StartsWith(BackgroundTaskIdentifierPrefix);
+		}
+		public Incident GetWhatNeedsServiceNext() {
+			if (schedule.Count == 0 || schedule[0].Timestamp > Proc.Time) return null;
+			if (!IsBackgroundTask(schedule[0])) return Proc.SystemClock.schedule[0];
+			for (int i = 1; i < schedule.Count; ++i) {
+				if (!IsBackgroundTask(schedule[i])) return schedule[i];
+			}
+			return null;
 		}
 		public delegate void LerpMethod(float progress);
 		public void Lerp(LerpMethod action, long durationMs = 1000, float calculations = 10, float start = 0, float end = 1) {

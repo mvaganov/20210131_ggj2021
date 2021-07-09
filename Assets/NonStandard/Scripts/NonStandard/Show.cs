@@ -1,44 +1,59 @@
 ﻿using System;
-#if UNITY_2017_1_OR_NEWER
-using UnityEngine;
-#endif
-namespace NonStandard {
-#if UNITY_2017_1_OR_NEWER
-	// TODO put the Unity specific functionality in a Unity partial class in the parallel Unity tree
-	public partial class Show : MonoBehaviour {
-		public GameObject routeOutputTo;
-		void Awake() {
-			TMPro.TMP_Text tmpText = routeOutputTo.GetComponent<TMPro.TMP_Text>();
-			if (tmpText != null) { AddListener(s => tmpText.text += s + "\n"); }
-			UnityEngine.UI.Text txt = routeOutputTo.GetComponent<UnityEngine.UI.Text>();
-			if (txt != null) { AddListener(s => txt.text += s + "\n"); }
-		}
-#else
-	public class Show {
-#endif
-		public static Action<string> onLog;
-		public static Action<string> onError;
-		public static Action<string> onWarning;
-		public static void AddListener(Action<string> listener) { onLog += listener; onError += listener; onWarning += listener; }
-		public static void Log(object obj) { onLog.Invoke(obj != null ? obj.ToString() : ""); }
-		public static void Log(string str) { onLog.Invoke(str); }
-		public static void Error(object obj) { onError.Invoke(obj.ToString()); }
-		public static void Error(string str) { onError.Invoke(str); }
-		public static void Warning(object obj) { onWarning.Invoke(obj.ToString()); }
-		public static void Warning(string str) { onWarning.Invoke(str); }
 
-		static Show() {
-#if UNITY_2017_1_OR_NEWER
-			onLog += UnityEngine.Debug.Log;
-			onError += UnityEngine.Debug.LogError;
-			onWarning += UnityEngine.Debug.LogWarning;
-#else
-			onLog += DefaultLog;
-			onError += DefaultError;
-			onWarning += DefaultWarning;
-#endif
-		}
-		public static void DefaultLog(string s) => Console.WriteLine(s);
+namespace NonStandard {
+	public partial class Show {
+        public class Routes {
+            public Action<string> onLog;
+            public Action<string> onError;
+            public Action<string> onWarning;
+            public Action<string> onAnyMessage;
+            public void Log(object obj) { Log(obj != null ? obj.ToString() : ""); }
+            public void Log(string str) {
+                onLog?.Invoke(str);
+                onAnyMessage?.Invoke(str);
+            }
+            public void Error(object obj) { Error(obj != null ? obj.ToString() : ""); }
+            public void Error(string str) {
+                onError?.Invoke(str);
+                onAnyMessage?.Invoke(str);
+            }
+            public void Warning(object obj) { Warning(obj != null ? obj.ToString() : ""); }
+            public void Warning(string str) {
+                onWarning?.Invoke(str);
+                onAnyMessage?.Invoke(str);
+            }
+            public void Assert(bool condition, string format, params object[] args) {
+                if (condition) return;
+                Error(string.Format(format, args));
+            }
+            public Routes() { }
+            public Routes(Routes o) {
+                if (o.onLog != null) onLog = (Action<string>)o.onLog.Clone();
+                if (o.onError != null) onError = (Action<string>)o.onError.Clone();
+                if (o.onWarning != null) onWarning = (Action<string>)o.onWarning.Clone();
+                if (o.onAnyMessage != null) onAnyMessage = (Action<string>)o.onAnyMessage.Clone();
+            }
+        }
+        public static Routes _instance;
+        public static Routes Route {
+            get => _instance != null ? _instance : _instance = DefaultRoutes();
+        }
+        public static Routes DefaultRoutes() {
+            Routes r = new Routes();
+            r.onLog += DefaultLog;
+            r.onError += DefaultError;
+            r.onWarning += DefaultWarning;
+            return r;
+        }
+
+        public static void Log(object o) => Route.Log(o);
+        public static void Log(string s) => Route.Log(s);
+        public static void Error(object o) => Route.Error(o);
+        public static void Error(string s) => Route.Error(s);
+        public static void Warning(object o) => Route.Warning(o);
+        public static void Warning(string s) => Route.Warning(s);
+
+        public static void DefaultLog(string s) => Console.WriteLine(s);
 		public static void DefaultWarning(string s) {
 			ConsoleColor c = Console.ForegroundColor;
 			Console.ForegroundColor = ConsoleColor.Yellow;

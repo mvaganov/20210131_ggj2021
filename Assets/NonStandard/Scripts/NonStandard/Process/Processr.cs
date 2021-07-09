@@ -122,29 +122,37 @@ namespace NonStandard.Procedure {
 			return incidentResponseTable[incidentCode].IndexOf(response);
 		}
 		/// <summary>
-		/// if a non-<see cref="Reaction"/> is used as a response to the incident, this should clear it
+		/// if a non-<see cref="Proc.edure"/> is used as a response to the incident, this should clear it
 		/// </summary>
-		public void RemoveIncident(int incidentCode, object procedure) {
+		public bool RemoveIncident(int incidentCode, object procedure) {
 			Proc.edure r = procedure as Proc.edure;
+			bool removed = false;
 			if (r == null) {
 				if (responseAilias.TryGetValue(procedure, out r)) {
-					responseAilias.Remove(procedure);
+					removed = responseAilias.Remove(procedure);
 				} else {
 					// Debug.LogWarning("the given response is not in the response table");
 				}
 			}
-			RemoveIncident(incidentCode, r);
+			removed |= RemoveIncident(incidentCode, r);
+			return removed;
 		}
-		public void RemoveIncident(int incidentCode, Proc.edure procedure) {
-			if (!incidentResponseTable[incidentCode].Remove(procedure)) {
+		public bool RemoveIncident(int incidentCode, Proc.edure procedure) {
+			bool removed = false;
+			if (incidentCode > 0 && incidentCode < incidentResponseTable.Count
+			&& !incidentResponseTable[incidentCode].Remove(procedure)) {
 				if (responseAilias.TryGetValue(procedure, out Proc.edure alias)) {
 					//RemoveIncident(incidentCode, alias);
 					incidentResponseTable[incidentCode].Remove(alias);
-					responseAilias.Remove(procedure);
+					removed |= responseAilias.Remove(procedure);
 				} else {
 					// Debug.LogWarning("the given response is not in the response table");
 				}
 			}
+			return removed;
 		}
+
+		public Incident RemoveScheduled(Action procedure) { return SystemClock.RemoveScheduled(procedure); }
+		public Incident RemoveScheduled(object procedure) { return SystemClock.RemoveScheduled(procedure); }
 	}
 }
