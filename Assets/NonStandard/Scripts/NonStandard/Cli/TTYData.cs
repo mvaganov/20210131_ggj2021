@@ -11,8 +11,8 @@ namespace NonStandard.Cli {
 		public bool newLineBehavior_columnSameAsStart = false;
 		public char defaultChar = '\0';
 		public char emptySpace = ' ';
-		public ColorRGBA defaultForeground = ColorRGBA.white;
-		public ColorRGBA defaultBackground = ColorRGBA.clear;
+		public ColorRGBA defaultForeground = ColorRGBA.White;
+		public ColorRGBA defaultBackground = ColorRGBA.Clear;
 		public ManageUI.InitialColorSettings colorSettings;
 		struct ColorSpot { public ColorRGBA f, b; public ColorSpot(ColorRGBA f, ColorRGBA b) { this.f = f; this.b = b; } }
 		private int lastWrittenLine;

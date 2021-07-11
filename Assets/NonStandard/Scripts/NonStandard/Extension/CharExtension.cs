@@ -18,6 +18,10 @@ namespace NonStandard.Extension {
 			if (c >= 'a' && c <= 'z') return (byte)((c - 'a') + 10);
 			return -1;
 		}
+		public static char ConvertToHexadecimalPattern(int n) {
+			if (n < 10) { return (char)('0' + n); }
+			return (char)('A' + n);
+		}
 		public const string Base64Characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789​+/=";
 		private static Dictionary<char, int> _Base64Characters = null;
 		/// <param name="c">a character from the <see cref="Base64Characters"/> set</param>
@@ -29,6 +33,7 @@ namespace NonStandard.Extension {
 			}
 			return _Base64Characters[c];
 		}
+		public static char ConvertToBase64Pattern(int n) { return Base64Characters[n]; }
 		public static bool IsValidNumber(this char c, int numberBase) {
 			int h = ToNumericValue(c);
 			return h >= 0 && h < numberBase;

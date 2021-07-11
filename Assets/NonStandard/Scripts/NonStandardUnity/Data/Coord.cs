@@ -1,4 +1,7 @@
 ﻿using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace NonStandard.Data {
     public partial struct Coord {
@@ -28,3 +31,13 @@ namespace NonStandard.Data {
 		public static bool operator !=(Vector2 a, Coord b) => !b.Equals(a);
 	}
 }
+
+#if UNITY_EDITOR
+
+//[CustomPropertyDrawer(typeof(NonStandard.Data.Coord))]
+//public class ColorPointDrawer : PropertyDrawer {
+//	public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
+//		label = EditorGUI.BeginProperty(position, label, property);
+//	}
+//}
+#endif

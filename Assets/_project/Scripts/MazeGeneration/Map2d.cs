@@ -166,7 +166,7 @@ namespace MazeGeneration {
 				if (backBuffer == null || backBuffer[cursor] != c) {
 					Coord position = cursor + offset;
 					if (!position.IsGreaterThanOrEqualTo(Coord.Zero)) continue;
-					position.SetCursorPosition();
+					position.SetConsoleCursorPosition();
 					c.Write();
 				}
 			} while (cursor.Iterate(size));

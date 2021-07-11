@@ -3,7 +3,7 @@
 namespace NonStandard.Data {
 	public interface IPosition { Coord GetPosition(); }
 
-	[Serializable]
+	[System.Serializable]
 	public partial struct Coord {
 		public short row, col;
 
@@ -12,6 +12,8 @@ namespace NonStandard.Data {
 			this.row = (short)row;
 		}
 
+		public int Col { get => col; set => col = (short)value; }
+		public int Row { get => row; set => row = (short)value; }
 		public int X { get => col; set => col = (short)value; }
 		public int Y { get => row; set => row = (short)value; }
 		public int x { get => col; set => col = (short)value; }
@@ -26,6 +28,9 @@ namespace NonStandard.Data {
 		public static readonly Coord Left = new Coord(-1, 0);
 		public static readonly Coord Down = new Coord(0, 1);
 		public static readonly Coord Right = new Coord(1, 0);
+		public static readonly Coord Max = new Coord(short.MaxValue, short.MaxValue);
+		public static readonly Coord Min = new Coord(short.MinValue, short.MinValue);
+
 		public static Coord[] CardinalDirs = new Coord[] { Coord.Up, Coord.Left, Coord.Right, Coord.Down };
 		private static Coord[] CardinalDirsAll = new Coord[] {
 			Left+Up  , Up ,  Up+Right,
@@ -139,7 +144,7 @@ namespace NonStandard.Data {
 			return Math.Abs(delta.col) + Math.Abs(delta.row);
 		}
 
-		public void SetCursorPosition() => Console.SetCursorPosition(col, row);
+		public void SetConsoleCursorPosition() => Console.SetCursorPosition(col, row);
 		public static Coord GetCursorPosition() => new Coord(Console.CursorLeft, Console.CursorTop);
 
 		public short this[int i] {

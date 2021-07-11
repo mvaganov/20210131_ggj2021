@@ -4,9 +4,11 @@ namespace NonStandard.Data {
 	public interface IRect : IPosition { CoordRect GetRect(); }
 
 	// AABB : Axis Aligned Bounding Box
+	[System.Serializable]
 	public struct CoordRect : IPosition, IRect {
 		public Coord min, max;
 
+		public static readonly CoordRect Invalid = new CoordRect(Coord.One, Coord.Zero);
 		public CoordRect(Coord min, Coord max) {
 			this.min = min;
 			this.max = max;
@@ -17,6 +19,8 @@ namespace NonStandard.Data {
 			max = new Coord(x + width, y + height);
 		}
 
+		public Coord Min { get => min; set => min = value; }
+		public Coord Max { get => max; set => max = value; }
 		public int X { get => min.col; set => min.col = (short)value; }
 		public int Y { get => min.row; set => min.row = (short)value; }
 		public int Width { get => max.col - min.col; set => max.col = (short)(min.col + value); }
@@ -26,15 +30,22 @@ namespace NonStandard.Data {
 		public int Left { get => min.col; set => min.col = (short)value; }
 		public int Bottom { get => max.row; set => max.row = (short)value; }
 		public int Right { get => max.col; set => max.col = (short)value; }
+		public Coord Size { get => max - min; set => max = min + value; }
+		public Coord Position { get => min; set { Coord size = Size; min = value; max = min + size; } }
+		public short PositionX { get => min.col; set { int w = Width; min.x = value; max.x = min.x + (short)w; } }
+		public short PositionY { get => min.row; set { int h = Height; min.y = value; max.y = min.y + (short)h; } }
 
-		public Coord GetPosition() => min;
-		public Coord GetSize() => max - min;
+		public Coord GetPosition() => Position;
+		public Coord GetSize() => Size;
 		public CoordRect GetRect() => this;
-		public Coord Size => max - min;
 
 		public CoordRect Intersect(CoordRect r) {
 			GetRectIntersect(min, max, r.min, r.max, out Coord iMin, out Coord iMax);
 			return new CoordRect(iMin, iMax);
+		}
+
+		public bool Contains(Coord coord) {
+			return coord.col >= min.col && coord.col < max.col && coord.row >= min.row && coord.row < max.row;
 		}
 
 		public bool TryGetIntersect(CoordRect r, out CoordRect intersection) => TryGetIntersect(this, r, out intersection);

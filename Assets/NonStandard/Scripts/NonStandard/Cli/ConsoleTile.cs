@@ -5,23 +5,21 @@ namespace NonStandard.Data {
 		void Draw(ConsoleTile[,] screen, Coord offset);
 	}
 	public struct ConsoleTile : IDrawable {
-		public char letter;
+		public char Letter;
 		public byte fore, back;
 
 		public static implicit operator ConsoleTile(char letter) {
-			return new ConsoleTile { letter = letter, fore = DefaultTile.fore, back = DefaultTile.back };
+			return new ConsoleTile { Letter = letter, fore = DefaultTile.fore, back = DefaultTile.back };
 		}
 
-		public static implicit operator char(ConsoleTile tile) => tile.letter;
+		public static implicit operator char(ConsoleTile tile) => tile.Letter;
 
 		public ConsoleTile(char letter, ConsoleColor foreColor, ConsoleColor backColor) {
-			this.letter = letter;
-			fore = (byte)foreColor;
-			back = (byte)backColor;
+			this.Letter = letter; fore = (byte)foreColor; back = (byte)backColor;
 		}
 
 		public ConsoleTile(char letter, ConsoleColor foreColor) {
-			this.letter = letter;
+			this.Letter = letter;
 			fore = (byte)foreColor;
 			back = DefaultTile.back;
 		}
@@ -35,6 +33,10 @@ namespace NonStandard.Data {
 
 		public readonly static ConsoleTile DefaultTile;
 
+		public void Set(char letter, ConsoleColor foreColor, ConsoleColor backColor) {
+			this.Letter = letter; fore = (byte)foreColor; back = (byte)backColor;
+		}
+
 		public bool IsColorCurrent() {
 			return Console.ForegroundColor == (ConsoleColor)fore && Console.BackgroundColor == (ConsoleColor)back;
 		}
@@ -43,19 +45,21 @@ namespace NonStandard.Data {
 
 		public void ApplyColor() { Console.ForegroundColor = Fore; Console.BackgroundColor = Back; }
 
-		public override string ToString() => $"[{letter}]";
-		public override int GetHashCode() => fore * 0x00010000 + back * 0x01000000 + (int)letter;
+		public override string ToString() => $"[{Letter}]";
+		public override int GetHashCode() => fore * 0x00010000 + back * 0x01000000 + (int)Letter;
 		public override bool Equals(object o) {
 			return (o == null || o.GetType() != typeof(ConsoleTile)) ? false : Equals((ConsoleTile)o);
 		}
-		public bool Equals(ConsoleTile ct) => fore == ct.fore && back == ct.back && letter == ct.letter;
+		public bool Equals(ConsoleTile ct) => fore == ct.fore && back == ct.back && Letter == ct.Letter;
 
 		public static bool operator ==(ConsoleTile a, ConsoleTile b) { return a.Equals(b); }
 		public static bool operator !=(ConsoleTile a, ConsoleTile b) { return !a.Equals(b); }
 
-		public void Write() { ApplyColor(); Console.Write(letter); }
+		public void Write() { ApplyColor(); Console.Write(Letter); }
 
 		public void Draw(ConsoleTile[,] screen, Coord offset) { screen.SetAt(offset, this); }
+
+		public ConsoleTile CloneWithLetter(char letter) => new ConsoleTile(letter, Fore, Back);
 	}
 
 }

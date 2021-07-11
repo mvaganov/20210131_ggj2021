@@ -39,25 +39,47 @@ namespace NonStandard.Data {
 			return new ColorRGBA( (byte)(c.r * f).Clamp0(255), (byte)(c.g * f).Clamp0(255), (byte)(c.b * f).Clamp0(255), (byte)(c.a * f).Clamp0(255));
 		}
 
-		public static readonly ColorRGBA red = new ColorRGBA(255, 0, 0);
-		public static readonly ColorRGBA green = new ColorRGBA(0, 255, 0);
-		public static readonly ColorRGBA blue = new ColorRGBA(0, 0, 255);
-		public static readonly ColorRGBA white = new ColorRGBA(255, 255, 255);
-		public static readonly ColorRGBA black = new ColorRGBA(0, 0, 0);
-		public static readonly ColorRGBA yellow = new ColorRGBA(255, 255, 0);
-		public static readonly ColorRGBA cyan = new ColorRGBA(0, 255, 255);
-		public static readonly ColorRGBA magenta = new ColorRGBA(255, 0, 255);
-		public static readonly ColorRGBA gray = new ColorRGBA(128, 128, 128);
-		public static readonly ColorRGBA grey = new ColorRGBA(128, 128, 128);
-		public static readonly ColorRGBA clear = new ColorRGBA(0, 0, 0, 0);
-		public static readonly ColorRGBA darkred = new ColorRGBA(128, 0, 0);
-		public static readonly ColorRGBA darkgreen = new ColorRGBA(0, 128, 0);
-		public static readonly ColorRGBA darkblue = new ColorRGBA(0, 0, 128);
-		public static readonly ColorRGBA lightgray = new ColorRGBA(192, 192, 192);
-		public static readonly ColorRGBA darkgray = new ColorRGBA(64, 64, 64);
-		public static readonly ColorRGBA darkyellow = new ColorRGBA(128, 128, 0);
-		public static readonly ColorRGBA darkcyan = new ColorRGBA(0, 128, 128);
-		public static readonly ColorRGBA darkmagenta = new ColorRGBA(128, 0, 128);
+		public static readonly ColorRGBA Black = new ColorRGBA(0, 0, 0); // #000
+		public static readonly ColorRGBA Darkblue = new ColorRGBA(0, 0, 128); // #008
+		public static readonly ColorRGBA Darkgreen = new ColorRGBA(0, 128, 0); // #080
+		public static readonly ColorRGBA Darkcyan = new ColorRGBA(0, 128, 128); // #088
+		public static readonly ColorRGBA Darkred = new ColorRGBA(128, 0, 0); // #800
+		public static readonly ColorRGBA Darkmagenta = new ColorRGBA(128, 0, 128); // #808
+		public static readonly ColorRGBA Darkyellow = new ColorRGBA(136, 136, 0); // #880
+		public static readonly ColorRGBA Gray = new ColorRGBA(136, 136, 136); // #888
+		public static readonly ColorRGBA Grey = new ColorRGBA(136, 136, 136); // #888
+		public static readonly ColorRGBA Darkgray = new ColorRGBA(68, 68, 68); // #444
+		public static readonly ColorRGBA Blue = new ColorRGBA(0, 0, 255); // #00f
+		public static readonly ColorRGBA Green = new ColorRGBA(0, 255, 0); // #0f0
+		public static readonly ColorRGBA Cyan = new ColorRGBA(0, 255, 255); // #0ff
+		public static readonly ColorRGBA Red = new ColorRGBA(255, 0, 0); // #f00
+		public static readonly ColorRGBA Magenta = new ColorRGBA(255, 0, 255); // #f0f
+		public static readonly ColorRGBA Yellow = new ColorRGBA(255, 255, 0); // #ff0
+		public static readonly ColorRGBA White = new ColorRGBA(255, 255, 255); // #fff
+		public static readonly ColorRGBA Lightgray = new ColorRGBA(204, 204, 204); // #ccc
+		public static readonly ColorRGBA Clear = new ColorRGBA(0, 0, 0, 0); // #0000
+
+		public static ColorRGBA[] defaultColors = {
+			Black,Darkblue,Darkgreen,Darkcyan,Darkred,Darkmagenta,Darkyellow,Lightgray,
+			Gray,Blue,Green,Cyan,Red,Magenta,Yellow,White,Darkgray,Clear };
+
+		public static implicit operator ColorRGBA(ConsoleColor c) { return defaultColors[(int)c]; }
+		public static implicit operator ConsoleColor(ColorRGBA c) { return c.ClosestConsoleColor(); }
+
+		public static int Closest(ColorRGBA needle, ColorRGBA[] haystack) {
+			int best = -1;
+			if (haystack == null || haystack.Length == 0) return best;
+			best = 0;
+			int bestDistance = needle.ManhattanDistance(haystack[0]);
+			for(int i = 1; i < haystack.Length; ++i) {
+				int dist = needle.ManhattanDistance(haystack[i]);
+				if(dist < bestDistance) { bestDistance = dist; best = i; }
+			}
+			return best;
+		}
+		public ConsoleColor ClosestConsoleColor() {
+			return (ConsoleColor)Closest(this, defaultColors);
+		}
 
 		public byte grayscale => (byte)(255 * 0.29899999499321 * r + 0.587000012397766 * g + 57.0 / 500.0 * b);
 
@@ -164,7 +186,7 @@ namespace NonStandard.Data {
 		/// <param name="text">hex: #aaeeff, short hex: aef, number list: (170, 238, 255). 4th alpha value optional</param>
 		/// <param name="color"></param>
 		public static bool TryParseString(string text, out ColorRGBA color) {
-			color = magenta;
+			color = Magenta;
 			if (string.IsNullOrEmpty(text)) return false;
 			if (text[0] == '#') { return TryParseString(text.Substring(1), out color); }
 			float[] numbers = new float[4];
@@ -204,7 +226,7 @@ namespace NonStandard.Data {
 					return true;
 				}
 			}
-			color = black;
+			color = Black;
 			for(int i = 0; i < numbersRead; ++i) {
 				color[i] = (byte)(usingDecimals ? (255 * numbers[i]).Clamp0(255) : numbers[i]);
 			}
@@ -220,7 +242,7 @@ namespace NonStandard.Data {
 			case short n: result = itocBGRA((uint)n); return true;
 			case float n: result = itocBGRA((uint)n); return true;
 			case double n: result = itocBGRA((uint)n); return true;
-			case string s: result = TryParseString(s, out ColorRGBA c) ? c : magenta; return true;
+			case string s: result = TryParseString(s, out ColorRGBA c) ? c : Magenta; return true;
 			}
 			throw new Exception($"cannot convert {o.GetType()} to ColorRGBA");
 		}

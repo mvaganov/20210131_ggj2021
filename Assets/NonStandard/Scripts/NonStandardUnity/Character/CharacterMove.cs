@@ -496,8 +496,7 @@ namespace NonStandard.Character {
 
 		[System.Serializable] public class UnityEvent_Vector3 : UnityEvent<Vector3> { }
 
-		[System.Serializable]
-		public class Callbacks
+		[System.Serializable] public class Callbacks
 		{
 			[Tooltip("when player changes direction, passes the new direction")]
 			public UnityEvent_Vector3 moveDirectionChanged;
