@@ -10,7 +10,7 @@ public class PixelInteraction : MonoBehaviour {
     //public RawImage rimg;
     //public Texture2D tex;
     public Color color = Color.green;
-    //Color32[] pixels;
+    Color32[] pixels;
     void Start() {
         rect = GetComponent<RectTransform>();
         Lines.DrawLine(rect, Vector2.zero, Vector2.zero, Color.clear);
@@ -42,9 +42,29 @@ public class PixelInteraction : MonoBehaviour {
                 Lines.DrawAABB(rect, pressStarted, lastPosition, Color.clear, false);
                 Lines.DrawAABB(rect, pressStarted, currentPress, color);
 			} else {
-                Lines.DrawAABB(rect, pressStarted, currentPress, Color.clear);
+                Clear();
             }
             lastPosition = currentPress;
         }
+    }
+
+    public static bool C32Equals(Color32 a, Color32 b) { return a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a; }
+    /// <param name="rectTransform">rectangle to draw on. should have RawImage (or no Renderer at all)</param>
+    /// <param name="buffer">used to write pixel data</param>
+    /// <param name="color">what color to fill. if no value given, will set entire texture to <see cref="UnityEngine.Color.clear"/></param>
+    public static Texture2D FillTexture(RectTransform rectTransform, ref Color32[] buffer, Color32 color = default(Color32)) {
+        Texture2D tex = Lines.GetRawImageTexture(rectTransform);
+        if (buffer == null) {
+            buffer = new Color32[tex.height * tex.width];
+        }
+        if (!C32Equals(color, default(Color32))) {
+            for (int i = 0; i < buffer.Length; ++i) { buffer[i] = color; }
+        }
+        tex.SetPixels32(buffer);
+        return tex;
+    }
+
+    public void Clear() {
+        FillTexture(rect, ref pixels, Color.clear).Apply();
     }
 }

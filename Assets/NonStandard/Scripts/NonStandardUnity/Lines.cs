@@ -1235,17 +1235,6 @@ namespace NonStandard {
 		}
 
 		/// <param name="rectTransform">rectangle to draw on. should have RawImage (or no Renderer at all)</param>
-		/// <param name="color">what color to fill. if no value given, will set entire texture to <see cref="UnityEngine.Color.clear"/></param>
-		public static void FillTexture(RectTransform rectTransform, Color color = default(Color)) {
-			Texture2D tex = GetRawImageTexture(rectTransform);
-			Color[] colors = new Color[tex.height * tex.width];
-			if (color != default(Color)) {
-				for (int i = 0; i < colors.Length; ++i) { colors[i] = color; }
-			}
-			tex.SetPixels(colors);
-		}
-
-		/// <param name="rectTransform">rectangle to draw on. should have RawImage (or no Renderer at all)</param>
 		/// <param name="start">(0,0) is lower left</param>
 		/// <param name="end"></param>
 		/// <param name="color"></param>

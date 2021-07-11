@@ -1,5 +1,4 @@
 ﻿using NonStandard.Character;
-using NonStandard.Ui;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -59,27 +58,16 @@ public class SelectionUi : MonoBehaviour
 			SetSelection(c2m.characterToMove.Target);
 		}
 		if (Input.GetKey(c2m.key)) {
-			//Debug.Log("click");
-			if (!UiClick.IsMouseOverUi()) {
-				//Debug.Log("on map");
-				Ray ray = c2m._camera.ScreenPointToRay(Input.mousePosition);
-				RaycastHit rh;
-				Physics.Raycast(ray, out rh, float.PositiveInfinity, c2m.validToMove, c2m.moveToTrigger);
-				if (rh.collider != null) {
-					if (selection.Count > 0) {
-						for (int i = 0; i < selection.Count; ++i) {
-							if (selection[i] == null) {
-								selection.RemoveAt(i--);
-								continue;
-							}
-							c2m.ClickFor(selection[i], rh);
-						}
+			c2m.RaycastClick(rh => {
+				if (selection.Count == 0) { return; }
+				for (int i = 0; i < selection.Count; ++i) {
+					if (selection[i] == null) {
+						selection.RemoveAt(i--);
+						continue;
 					}
+					c2m.ClickFor(selection[i], rh);
 				}
-				MouseCursor.Instance.currentSet = c2m.mouseSet_move;
-			} else {
-				MouseCursor.Instance.currentSet = c2m.mouseSet_ui;
-			}
+			});
 		}
 		if (c2m.prefab_waypoint != null && Input.GetKeyUp(c2m.key)) {
 			//if (follower != null) { follower.ShowCurrentWaypoint(); }

@@ -51,5 +51,28 @@ namespace NonStandard.Character {
 		public void DisableAutoMove() { if (target != null) target.DisableAutoMove(); }
 		public float GetJumpProgress() { return target != null ? target.GetJumpProgress() : 0; }
 		public bool IsStableOnGround() { return target != null ? target.IsStableOnGround() : false; }
+
+		public GameObject groundShadow;
+		public void Start() {
+			if (groundShadow) { groundShadow.transform.SetParent(null); }
+		}
+		public void LateUpdate() {
+			if (groundShadow) { UpdateGroundShadow(); }
+		}
+		public void UpdateGroundShadow() {
+			if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit rh, 100)) {
+				groundShadow.transform.position = rh.point;
+				if (rh.normal != Vector3.up) {
+					Vector3 r = Vector3.Cross(rh.normal, Vector3.up);
+					Vector3 f = Vector3.Cross(rh.normal, r);
+					groundShadow.transform.rotation = Quaternion.LookRotation(f, rh.normal);
+				} else {
+					groundShadow.transform.rotation = Quaternion.identity;
+				}
+				groundShadow.SetActive(true);
+			} else {
+				groundShadow.SetActive(false);
+			}
+		}
 	}
 }

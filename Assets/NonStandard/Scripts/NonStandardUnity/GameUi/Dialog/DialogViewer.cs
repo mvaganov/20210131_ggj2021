@@ -45,7 +45,7 @@ namespace NonStandard.GameUi.Dialog {
 				}
 				Dialog.Command cmd = option as Dialog.Command;
 				if (cmd != null) {
-					NonStandard.Show.Log("executing command "+cmd.command);
+					//NonStandard.Show.Log("executing command "+cmd.command);
 					Commander.Instance.ParseCommand(li, cmd.command);
 					break;
 				}

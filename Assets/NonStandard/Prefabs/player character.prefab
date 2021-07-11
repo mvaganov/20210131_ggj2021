@@ -717,7 +717,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2018154531}
   m_HandleRect: {fileID: 2018154530}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -1363,6 +1363,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   routeOutputTo: {fileID: 2654259176783217814}
+  NewlineAfterEachMessage: 1
 --- !u!1 &863121874
 GameObject:
   m_ObjectHideFlags: 0
@@ -1399,7 +1400,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.000045776367, y: -0.000910324}
+  m_AnchoredPosition: {x: 0.0000061300184, y: -0.0000055151067}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &863121878
@@ -2517,7 +2518,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1164979401}
   m_HandleRect: {fileID: 1164979400}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -2641,7 +2642,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1585056158}
   m_HandleRect: {fileID: 1585056157}
   m_Direction: 0
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -3081,7 +3082,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.00002670288, y: -0.000030517578}
+  m_AnchoredPosition: {x: 0.000023326142, y: 0.000042204334}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &2110826547
@@ -3605,13 +3606,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1060579637219368}
-  m_LocalRotation: {x: 0, y: -0.92387956, z: 0.38268343, w: 0}
-  m_LocalPosition: {x: 0, y: 10, z: 10}
+  m_LocalRotation: {x: 0.35355338, y: 0.35355338, z: -0.1464466, w: 0.8535535}
+  m_LocalPosition: {x: -10, y: 10, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4550302886921004}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 45, y: -180, z: 0}
+  m_LocalEulerAnglesHint: {x: 45, y: 45, z: 0}
 --- !u!20 &20710112917179096
 Camera:
   m_ObjectHideFlags: 0
@@ -3638,8 +3639,8 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
-  orthographic: 0
-  orthographic size: 5
+  orthographic: 1
+  orthographic size: 8
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -4549,7 +4550,6 @@ GameObject:
   - component: {fileID: 223573765132663946}
   - component: {fileID: 114197744684682844}
   - component: {fileID: 114818166245953812}
-  - component: {fileID: 4508596893783599409}
   m_Layer: 5
   m_Name: player canvas
   m_TagString: Untagged
@@ -4600,7 +4600,7 @@ Canvas:
   m_OverrideSorting: 0
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
@@ -4643,131 +4643,6 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
---- !u!114 &4508596893783599409
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1525450122027524}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8650aca7ebfc7f649beb6217590399c1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cursors:
-  - name: dark
-    cursors:
-    - name: Cursor
-      texture: {fileID: 2800000, guid: bbc1a7669a6398040b974081108ef08d, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: CursorDrag
-      texture: {fileID: 2800000, guid: 07bce24792611fb4a942dd8b3b90f709, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Pointer
-      texture: {fileID: 2800000, guid: cb1e7dd22d9c5904d9f2c74ea120ca7e, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: No
-      texture: {fileID: 2800000, guid: 62a3845311afd124eab02af1fd57245c, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Horizontal
-      texture: {fileID: 2800000, guid: 7c5e38f9e273e004f8886f9fc1016294, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Vertical
-      texture: {fileID: 2800000, guid: 7bf5f71f656fd684f84b68128ca523fd, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Diagonal
-      texture: {fileID: 2800000, guid: f7299e197b3df4746bd049b8b2060144, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Diagonal2
-      texture: {fileID: 2800000, guid: a9e1493030d66a84db05011006bf6b9f, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Move
-      texture: {fileID: 2800000, guid: ddfc777c9f17e27499c45168b1e46a42, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Move2
-      texture: {fileID: 2800000, guid: a0e975860769b824ba56d782e2480dbb, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Add
-      texture: {fileID: 2800000, guid: 030330cdbf3737948992c3d3cbb47f92, type: 3}
-      hotspot: {x: 0, y: 0}
-    - name: Subtract
-      texture: {fileID: 2800000, guid: a28b69a4f65ca1d40a11a8973c3193f7, type: 3}
-      hotspot: {x: 0, y: 0}
-    - name: ZoomIn
-      texture: {fileID: 2800000, guid: bb24341fd37d3fd4eb0bef4181c12b63, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: ZoomOut
-      texture: {fileID: 2800000, guid: bab904d6f8899774285fe4c5208d16de, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Text
-      texture: {fileID: 2800000, guid: a4ab46fce7aa226489d7e8c99aca684d, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Shortcut
-      texture: {fileID: 2800000, guid: f712b804c36fb2748b36a42128c95a5a, type: 3}
-      hotspot: {x: 0, y: 0}
-    - name: Circle
-      texture: {fileID: 2800000, guid: 90ca0f43c7e4dcc41a9f8164df73106b, type: 3}
-      hotspot: {x: 11, y: 11}
-  - name: light
-    cursors:
-    - name: Cursor
-      texture: {fileID: 2800000, guid: f16447cc03aae5442b93a3c25e2849ae, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: CursorDrag
-      texture: {fileID: 2800000, guid: ea305d946af72be4cbbddfd142701dfc, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Pointer
-      texture: {fileID: 2800000, guid: b267351a4b781654aa5a2bba5519f8a8, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: No
-      texture: {fileID: 2800000, guid: c5fc576d6e690a544bae080bae22403d, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Horizontal
-      texture: {fileID: 2800000, guid: c0fbb009afba0e547bd49648b96cce2b, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Vertical
-      texture: {fileID: 2800000, guid: 788af7245f0366f43a884d940d2fd262, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Diagonal
-      texture: {fileID: 2800000, guid: 8e83acd7172477049982ae1d63b0387f, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Diagonal2
-      texture: {fileID: 2800000, guid: 402acc2e545625e448b6d0a7a93afb84, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Move
-      texture: {fileID: 2800000, guid: ce0bfad0832723b49b17488ae12ad323, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Move2
-      texture: {fileID: 2800000, guid: 48b99b2db48c8b145a5d0c56a3a5a19f, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Add
-      texture: {fileID: 2800000, guid: 2ad1cac1dfa1d264fa8d500ae2fbbafc, type: 3}
-      hotspot: {x: 0, y: 0}
-    - name: Subtract
-      texture: {fileID: 2800000, guid: e8077236bedb5a3489db225c1c4cf245, type: 3}
-      hotspot: {x: 0, y: 0}
-    - name: ZoomIn
-      texture: {fileID: 2800000, guid: 40076168c2d2c5546b88a5a09eac35f9, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: ZoomOut
-      texture: {fileID: 2800000, guid: aeb49550231216d40a791c037ae1a25e, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Text
-      texture: {fileID: 2800000, guid: c2cf4fa0e65eb3a4e812d738d55fd862, type: 3}
-      hotspot: {x: 11, y: 11}
-    - name: Shortcut
-      texture: {fileID: 2800000, guid: 9e673c6a6d693664ab54ab829f49e535, type: 3}
-      hotspot: {x: 0, y: 0}
-    - name: Circle
-      texture: {fileID: 2800000, guid: 6775a332839522e4f840888c77327190, type: 3}
-      hotspot: {x: 11, y: 11}
-  currentCursor: 0
-  _currentSet: 0
-  rotation:
-    Rotating: 0
-    Angle: 0
-    Speed: 90
 --- !u!1 &1611076989366006
 GameObject:
   m_ObjectHideFlags: 0
@@ -5724,6 +5599,7 @@ GameObject:
   - component: {fileID: 114968291233072610}
   - component: {fileID: 1848120938323894431}
   - component: {fileID: 6798206554609130567}
+  - component: {fileID: 8183080712209596551}
   m_Layer: 0
   m_Name: player input
   m_TagString: Untagged
@@ -5995,6 +5871,34 @@ MonoBehaviour:
               m_StringArgument: 
               m_BoolArgument: 0
             m_CallState: 2
+  - name: pause
+    priority: 1000
+    disable: 0
+    eventAlwaysTriggerable: 0
+    keyCombinations:
+    - key: 112
+      modifiers: []
+    keyEvent:
+      onPress:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 399024785}
+            m_MethodName: ClickButton
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+      onHold:
+        m_PersistentCalls:
+          m_Calls: []
+      onRelease:
+        m_PersistentCalls:
+          m_Calls: []
   axisBinds:
   - name: strafe right/left
     disable: 0
@@ -6003,7 +5907,6 @@ MonoBehaviour:
       multiplier: 1
       filteredValue: 0
       stickyInput: 0
-      cachedValue: 0
       modifiers: []
     axisEvent:
       onAxisChange:
@@ -6038,7 +5941,6 @@ MonoBehaviour:
       multiplier: 1
       filteredValue: 0
       stickyInput: 0
-      cachedValue: 0
       modifiers: []
     axisEvent:
       onAxisChange:
@@ -6073,7 +5975,6 @@ MonoBehaviour:
       multiplier: -4
       filteredValue: 0
       stickyInput: 0
-      cachedValue: 0
       modifiers: []
     axisEvent:
       onAxisChange:
@@ -6111,7 +6012,6 @@ MonoBehaviour:
       multiplier: 5
       filteredValue: 0
       stickyInput: 0
-      cachedValue: 0
       modifiers: []
     axisEvent:
       onAxisChange:
@@ -6146,7 +6046,6 @@ MonoBehaviour:
       multiplier: 5
       filteredValue: 0
       stickyInput: 0
-      cachedValue: 0
       modifiers: []
     axisEvent:
       onAxisChange:
@@ -6192,7 +6091,7 @@ MonoBehaviour:
   validToMove:
     serializedVersion: 2
     m_Bits: 4294967295
-  moveToTrigger: 1
+  raycastTriggerColliders: 1
   prefab_waypoint: {fileID: 234466087}
   prefab_middleWaypoint: {fileID: 0}
   mouseSet_move: 1
@@ -6222,6 +6121,131 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 800650e67a83a6a44896beb3977903fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &8183080712209596551
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1888769986504204}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8650aca7ebfc7f649beb6217590399c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cursors:
+  - name: dark
+    cursors:
+    - name: Cursor
+      texture: {fileID: 2800000, guid: bbc1a7669a6398040b974081108ef08d, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: CursorDrag
+      texture: {fileID: 2800000, guid: 07bce24792611fb4a942dd8b3b90f709, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Pointer
+      texture: {fileID: 2800000, guid: cb1e7dd22d9c5904d9f2c74ea120ca7e, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: No
+      texture: {fileID: 2800000, guid: 62a3845311afd124eab02af1fd57245c, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Horizontal
+      texture: {fileID: 2800000, guid: 7c5e38f9e273e004f8886f9fc1016294, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Vertical
+      texture: {fileID: 2800000, guid: 7bf5f71f656fd684f84b68128ca523fd, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Diagonal
+      texture: {fileID: 2800000, guid: f7299e197b3df4746bd049b8b2060144, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Diagonal2
+      texture: {fileID: 2800000, guid: a9e1493030d66a84db05011006bf6b9f, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Move
+      texture: {fileID: 2800000, guid: ddfc777c9f17e27499c45168b1e46a42, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Move2
+      texture: {fileID: 2800000, guid: a0e975860769b824ba56d782e2480dbb, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Add
+      texture: {fileID: 2800000, guid: 030330cdbf3737948992c3d3cbb47f92, type: 3}
+      hotspot: {x: 0, y: 0}
+    - name: Subtract
+      texture: {fileID: 2800000, guid: a28b69a4f65ca1d40a11a8973c3193f7, type: 3}
+      hotspot: {x: 0, y: 0}
+    - name: ZoomIn
+      texture: {fileID: 2800000, guid: bb24341fd37d3fd4eb0bef4181c12b63, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: ZoomOut
+      texture: {fileID: 2800000, guid: bab904d6f8899774285fe4c5208d16de, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Text
+      texture: {fileID: 2800000, guid: a4ab46fce7aa226489d7e8c99aca684d, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Shortcut
+      texture: {fileID: 2800000, guid: f712b804c36fb2748b36a42128c95a5a, type: 3}
+      hotspot: {x: 0, y: 0}
+    - name: Circle
+      texture: {fileID: 2800000, guid: 90ca0f43c7e4dcc41a9f8164df73106b, type: 3}
+      hotspot: {x: 11, y: 11}
+  - name: light
+    cursors:
+    - name: Cursor
+      texture: {fileID: 2800000, guid: f16447cc03aae5442b93a3c25e2849ae, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: CursorDrag
+      texture: {fileID: 2800000, guid: ea305d946af72be4cbbddfd142701dfc, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Pointer
+      texture: {fileID: 2800000, guid: b267351a4b781654aa5a2bba5519f8a8, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: No
+      texture: {fileID: 2800000, guid: c5fc576d6e690a544bae080bae22403d, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Horizontal
+      texture: {fileID: 2800000, guid: c0fbb009afba0e547bd49648b96cce2b, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Vertical
+      texture: {fileID: 2800000, guid: 788af7245f0366f43a884d940d2fd262, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Diagonal
+      texture: {fileID: 2800000, guid: 8e83acd7172477049982ae1d63b0387f, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Diagonal2
+      texture: {fileID: 2800000, guid: 402acc2e545625e448b6d0a7a93afb84, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Move
+      texture: {fileID: 2800000, guid: ce0bfad0832723b49b17488ae12ad323, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Move2
+      texture: {fileID: 2800000, guid: 48b99b2db48c8b145a5d0c56a3a5a19f, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Add
+      texture: {fileID: 2800000, guid: 2ad1cac1dfa1d264fa8d500ae2fbbafc, type: 3}
+      hotspot: {x: 0, y: 0}
+    - name: Subtract
+      texture: {fileID: 2800000, guid: e8077236bedb5a3489db225c1c4cf245, type: 3}
+      hotspot: {x: 0, y: 0}
+    - name: ZoomIn
+      texture: {fileID: 2800000, guid: 40076168c2d2c5546b88a5a09eac35f9, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: ZoomOut
+      texture: {fileID: 2800000, guid: aeb49550231216d40a791c037ae1a25e, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Text
+      texture: {fileID: 2800000, guid: c2cf4fa0e65eb3a4e812d738d55fd862, type: 3}
+      hotspot: {x: 11, y: 11}
+    - name: Shortcut
+      texture: {fileID: 2800000, guid: 9e673c6a6d693664ab54ab829f49e535, type: 3}
+      hotspot: {x: 0, y: 0}
+    - name: Circle
+      texture: {fileID: 2800000, guid: 6775a332839522e4f840888c77327190, type: 3}
+      hotspot: {x: 11, y: 11}
+  currentCursor: 0
+  _currentSet: 0
+  rotation:
+    Rotating: 0
+    Angle: 0
+    Speed: 90
 --- !u!1 &259805251027471395
 GameObject:
   m_ObjectHideFlags: 0
@@ -7214,7 +7238,7 @@ GameObject:
   - component: {fileID: 4757234333020682062}
   - component: {fileID: 6579488468370552462}
   - component: {fileID: 4140649765401044333}
-  - component: {fileID: 510345007}
+  - component: {fileID: 1607385201}
   m_Layer: 5
   m_Name: Content
   m_TagString: Untagged
@@ -7238,7 +7262,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000030517578, y: 0.000061035156}
+  m_AnchoredPosition: {x: 0.0000019603485, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &6579488468370552462
@@ -7263,7 +7287,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_HorizontalFit: 0
   m_VerticalFit: 2
---- !u!114 &510345007
+--- !u!114 &1607385201
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -7272,7 +7296,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2654259176783217814}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
@@ -7282,20 +7306,98 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 14
-    m_FontStyle: 0
-    m_BestFit: 0
-    m_MinSize: 10
-    m_MaxSize: 40
-    m_Alignment: 0
-    m_AlignByGeometry: 0
-    m_RichText: 1
-    m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
-    m_LineSpacing: 1
-  m_Text: 
+  m_text: 
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_outlineColor:
+    serializedVersion: 2
+    rgba: 4278190080
+  m_fontSize: 14
+  m_fontSizeBase: 14
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_textAlignment: 257
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_enableWordWrapping: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_firstOverflowCharacterIndex: -1
+  m_linkedTextComponent: {fileID: 0}
+  m_isLinkedTextComponent: 0
+  m_isTextTruncated: 0
+  m_enableKerning: 1
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_ignoreRectMaskCulling: 0
+  m_ignoreCulling: 1
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_VertexBufferAutoSizeReduction: 1
+  m_firstVisibleCharacter: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_textInfo:
+    textComponent: {fileID: 1607385201}
+    characterCount: 0
+    spriteCount: 0
+    spaceCount: 0
+    wordCount: 0
+    linkCount: 0
+    lineCount: 0
+    pageCount: 0
+    materialCount: 1
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_spriteAnimator: {fileID: 0}
+  m_hasFontAssetChanged: 0
+  m_subTextObjects:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1 &3197068235289641786
 GameObject:
   m_ObjectHideFlags: 0
@@ -8027,7 +8129,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 7413846207896300752}
   m_HandleRect: {fileID: 1563717447998030004}
   m_Direction: 0
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:

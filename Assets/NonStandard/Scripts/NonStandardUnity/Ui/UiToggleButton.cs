@@ -2,7 +2,6 @@
 using UnityEngine.UI;
 using NonStandard.Ui;
 using NonStandard;
-using NonStandard.Procedure;
 
 [RequireComponent(typeof(Button))]
 public class UiToggleButton : MonoBehaviour {
@@ -18,9 +17,11 @@ public class UiToggleButton : MonoBehaviour {
 	}
     public void DoActivateTrigger() {
         //Debug.Log("doactivate " + this);
-        uiToControlVisibility.SetActive(!uiToControlVisibility.activeSelf);
-        if (hideThisWhenUiVisible) {
-            gameObject.SetActive(!uiToControlVisibility.activeSelf);
+        if (uiToControlVisibility) {
+            uiToControlVisibility.SetActive(!uiToControlVisibility.activeSelf);
+            if (hideThisWhenUiVisible) {
+                gameObject.SetActive(!uiToControlVisibility.activeSelf);
+            }
         }
         if (!string.IsNullOrEmpty(alternateText)) {
             string temp = UiText.GetText(gameObject);
