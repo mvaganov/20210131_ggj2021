@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace NonStandard.Procedure {
 	[System.Serializable]
@@ -20,6 +21,8 @@ namespace NonStandard.Procedure {
 		/// book-keeping identifier, used for process introspection and analysis
 		/// </summary>
 		public string Identifier;
+
+		public override string ToString() { return Identifier + "@" + Timestamp; }
 
 		public Incident(long timestamp, string identifier, object source, object detail) {
 			Timestamp = timestamp;

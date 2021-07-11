@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine;
 
 namespace NonStandard.Data.Parse {
 	public class Tokenizer {
@@ -143,10 +144,10 @@ namespace NonStandard.Data.Parse {
 				char c = str[index];
 				Delim delim = currentContext.GetDelimiterAt(str, index);
 				if (delim != null) {
-					FinishToken(index, ref tokenBegin);
+					FinishToken(index, ref tokenBegin); // finish whatever token was being read before this delimeter
 					HandleDelimiter(delim, ref index, contextStack, ref currentContext, a_context);
-				} else if (Array.IndexOf(currentContext.whitespace, c) < 0) {
-					if (tokenBegin < 0) { tokenBegin = index; } // handle non-whitespace
+				} else if (!currentContext.IsWhitespace(c)) {
+					if (tokenBegin < 0) { tokenBegin = index; }
 				} else {
 					FinishToken(index, ref tokenBegin); // handle whitespace
 				}

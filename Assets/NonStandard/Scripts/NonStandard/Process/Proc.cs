@@ -22,6 +22,7 @@ namespace NonStandard.Procedure {
 		public static int Code(string identifier, bool createIfNotFound) { return Main.Code(identifier, createIfNotFound); }
 		public static void NotifyIncident(string incidentId, Incident incident) { Main.NotifyIncident(incidentId, incident); }
 		public static void NotifyIncident(string incidentId, object source = null, object detail = null) { Main.NotifyIncident(incidentId, source, detail); }
+		public static void NotifyIncident(int incidentCode, object source = null, object detail = null) { Main.NotifyIncident(incidentCode, source, detail); }
 		public static void NotifyIncident(int incidentCode, Incident incident) { Main.NotifyIncident(incidentCode, incident); }
 		public static void OnIncident(string incidentId, Proc.edure procedure, int count = -1) { Main.OnIncident(incidentId, procedure, count); }
 		public static void OnIncident(int incidentCode, Proc.edure procedure, int count = -1) { Main.OnIncident(incidentCode, procedure, count); }

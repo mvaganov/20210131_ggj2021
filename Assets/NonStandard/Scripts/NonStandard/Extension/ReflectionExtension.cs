@@ -105,5 +105,19 @@ namespace NonStandard.Extension {
 			}
 			return sb.ToString();
 		}
+		public static IEnumerable<MethodInfo> FindMethodsWithAttribute<T>(this Type typeToSearchIn) where T : Attribute {
+			List<MethodInfo> list = new List<MethodInfo>();
+			MethodInfo[] methods = typeToSearchIn.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+			Type attributeType = typeof(T);
+			for (int i = 0; i < methods.Length; ++i) {
+				MethodInfo m = methods[i];
+				IEnumerable<object> attributes = m.GetCustomAttributes();
+				foreach (object obj in attributes) {
+					bool found = obj.GetType().IsAssignableFrom(attributeType);
+					if(found) { list.Add(m); }
+				}
+			}
+			return list;
+		}
 	}
 }

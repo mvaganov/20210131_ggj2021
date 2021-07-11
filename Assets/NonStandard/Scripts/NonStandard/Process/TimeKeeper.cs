@@ -23,7 +23,9 @@ namespace NonStandard.Procedure {
 			now = GetTime();
 			PopulateIncidentsToExecuteRightNow();
 			Exception error = DoIncidentsRightNow();
-			if (error != null) { throw error; }
+			if (error != null) {
+				Show.Error(error);//throw error;//
+			}
 		}
 		private void PopulateIncidentsToExecuteRightNow() {
 			lock (schedule) {

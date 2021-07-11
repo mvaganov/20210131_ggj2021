@@ -4,6 +4,14 @@ using System.Text;
 
 namespace NonStandard.Extension {
 	public static class IListExtension {
+		public static int IndexOf<T>(this IList<T> list, T value) where T : IComparable {
+			for(int i = 0; i < list.Count; ++i) { if (list[i].CompareTo(value) == 0) return i; }
+			return -1;
+		}
+		public static int IndexOfLast<T>(this IList<T> list, T value) where T : IComparable {
+			for (int i = list.Count-1; i >= 0; --i) { if (list[i].CompareTo(value) == 0) return i; }
+			return -1;
+		}
 		public static int BinarySearchIndexOf<T>(this IList<T> list, T value, IComparer<T> comparer = null) {
 			if (list == null) { throw new ArgumentNullException("list"); }
 			if (comparer == null) { comparer = Comparer<T>.Default; }
@@ -73,24 +81,7 @@ namespace NonStandard.Extension {
 		public static T GetFromNestedIndex<T>(this IList<IList<T>> list, int[] nestedIndex) {
 			return list[nestedIndex[0]][nestedIndex[1]];
 		}
-		public static string JoinToString<T>(this IList<T> source, string separator = ", ", Func<T, string> toString = null) {
-			string[] strings = new string[source.Count];
-			if (toString == null) { toString = o => o != null ? o.ToString() : ""; }
-			for (int i = 0; i < strings.Length; ++i) {
-				strings[i] = toString.Invoke(source[i]);
-			}
-			return string.Join(separator, strings);
-		}
-		public static void JoinToString<T>(this IList<T> source, StringBuilder sb, string separator, Func<T, string> toString = null) {
-			if (toString == null) { toString = o => o.ToString(); }
-			bool somethingPrinted = false;
-			for (int i = 0; i < source.Count; ++i) {
-				if (source[i] != null) {
-					if (somethingPrinted) sb.Append(separator);
-					sb.Append(toString.Invoke(source[i]));
-				}
-			}
-		}
+
 		public static T[] SubList<T>(this IList<T> list, int startIndex) {
 			return SubList(list, startIndex, list.Count - startIndex);
 		}

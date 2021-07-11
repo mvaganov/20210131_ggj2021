@@ -66,8 +66,10 @@ namespace NonStandard.Procedure {
 			return result;
 		}
 
-		private void HandleException(Exception e, Incident incident) {
-			Incident exceptionIncident = new Incident(ExceptionId, e, incident);
+		public void HandleException(Exception e, Incident incident) {
+			string sourceInfo = Identifier;
+			if (incident != null) { sourceInfo += ": " + incident.Identifier; }
+			Incident exceptionIncident = new Incident(e.GetType().Name, sourceInfo, e.ToString());
 			Strategy exceptionHandler = NextExceptionHandler(e.GetType());
 			exceptionHandler?.Invoke_Internal(exceptionIncident);
 			Strategy whereToLookForFinallyHandlerFrom = exceptionHandler != null ? exceptionHandler : this;
@@ -75,6 +77,20 @@ namespace NonStandard.Procedure {
 			finallyHandler?.Invoke_Internal(exceptionIncident);
 		}
 
+		// public void InvokeError(Incident incident, Exception error) {
+		// 	//Show.Warning(ListPromises().JoinToString(", "));
+		// 	Error e = null;
+		// 	Type errorType = error.GetType();
+		// 	e = NextExceptionHandler(errorType);
+		// 	if (e != null) {
+		// 		//Show.Log("error handler for "+e.exceptionType);
+		// 		e.Invoke_Internal(new Incident("error", incident, error));
+		// 		Strategy finalPromise = e.NextFinallyHandler();
+		// 		finalPromise?.Invoke_Internal(incident);
+		// 	} else {
+		// 		Show.Error("broken promise: " + this + " " + incident + " " + error);
+		// 	}
+		// }
 		public Strategy(string identifier, Strategy prev = null)
 			{ Identifier = identifier; Prev = prev; }
 		public Strategy(string identifier, Proc.edure action, Strategy prev = null)
@@ -258,20 +274,6 @@ namespace NonStandard.Procedure {
 			public Error(string name, Type t, Proc.edure action) : base(name, action) {
 				ErrorType = t;
 				IsExceptionHandler = true;
-			}
-		}
-		public void InvokeError(Incident incident, Exception error) {
-			//Show.Warning(ListPromises().JoinToString(", "));
-			Error e = null;
-			Type errorType = error.GetType();
-			e = NextExceptionHandler(errorType);
-			if (e != null) {
-				//Show.Log("error handler for "+e.exceptionType);
-				e.Invoke_Internal(new Incident("error", incident, error));
-				Strategy finalPromise = e.NextFinallyHandler();
-				finalPromise?.Invoke_Internal(incident);
-			} else {
-				Show.Error("broken promise: " + this + " " + incident + " " + error);
 			}
 		}
 	}

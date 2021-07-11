@@ -7,7 +7,7 @@ using System.Text;
 namespace NonStandard.Data {
 	public class CodeConvert {
 		public static string Stringify(object obj) {
-			return StringExtension.Stringify(obj, false, showFirstBoundary: false);
+			return StringifyExtension.Stringify(obj, false, showBoundary: false);
 		}
 		public static bool TryFill<T>(string text, ref T data, object scope, Tokenizer tokenizer = null) {
 			object value = data;

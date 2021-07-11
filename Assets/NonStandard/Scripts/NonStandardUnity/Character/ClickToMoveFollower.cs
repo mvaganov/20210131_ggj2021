@@ -293,7 +293,7 @@ public class ClickToMoveFollower : MonoBehaviour {
 		}
 		if (currentWaypoint != null) {
 			currentWaypoint.transform.position = targetPosition;
-			Interact3dUi.Instance.UpdateItem(currentWaypoint);
+			Interact3dUi.Instance?.UpdateItem(currentWaypoint);
 			currentWaypoint.showing = false; // hide the waypoint button during drag
 		}
 	}
@@ -309,7 +309,7 @@ public class ClickToMoveFollower : MonoBehaviour {
 		if (showIt) {
 			currentWaypoint.showing = true;
 			currentWaypoint.transform.position = targetPosition;
-			Interact3dUi.Instance.UpdateItem(currentWaypoint);
+			Interact3dUi.Instance?.UpdateItem(currentWaypoint);
 		}
 	}
 	public void AddWaypointHere() {

@@ -134,17 +134,17 @@ namespace NonStandard.Data.Parse {
 			CommentLine = new ParseRuleSet("//");
 			CommentBlock = new ParseRuleSet("/**/");
 
-			CodeInString.delimiters = CombineDelims(_string_code_body_delimiter);
-			CodeInString.whitespace = CodeRules.WhitespaceNone;
-			XmlCommentLine.delimiters = CodeRules.XmlCommentDelimiters;
-			CommentLine.delimiters = CodeRules.LineCommentDelimiters;
-			CommentBlock.delimiters = CodeRules.CommentBlockDelimiters;
-			CommentLine.whitespace = CodeRules.WhitespaceNone;
-			String.whitespace = CodeRules.WhitespaceNone;
-			String.delimiters = CodeRules.StringLiteralDelimiters;
+			CodeInString.Delimiters = CombineDelims(_string_code_body_delimiter);
+			CodeInString.Whitespace = CodeRules.WhitespaceNone;
+			XmlCommentLine.Delimiters = CodeRules.XmlCommentDelimiters;
+			CommentLine.Delimiters = CodeRules.LineCommentDelimiters;
+			CommentBlock.Delimiters = CodeRules.CommentBlockDelimiters;
+			CommentLine.Whitespace = CodeRules.WhitespaceNone;
+			String.Whitespace = CodeRules.WhitespaceNone;
+			String.Delimiters = CodeRules.StringLiteralDelimiters;
 			//Char.whitespace = CodeRules.WhitespaceNone;
 			//Char.delimiters = CodeRules.StringLiteralDelimiters;
-			Number.whitespace = CodeRules.WhitespaceNone;
+			Number.Whitespace = CodeRules.WhitespaceNone;
 
 			Type t = typeof(CodeRules);
 			MemberInfo[] mInfo = t.GetMembers();

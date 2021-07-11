@@ -43,6 +43,12 @@ namespace NonStandard.Data.Parse {
 			Func<string, int, bool> addReq = null, bool printable = true) {
 			text = delim; this.name = name; description = desc; this.parseRule = parseRule; extraReq = addReq; this.printable = printable;
 		}
+		/// <summary>
+		/// checks if this delimiter is found in the given string, at the given index
+		/// </summary>
+		/// <param name="str"></param>
+		/// <param name="index"></param>
+		/// <returns></returns>
 		public bool IsAt(string str, int index) {
 			if (!str.IsSubstringAt(text, index)) { return false; }
 			if (extraReq != null) { return extraReq.Invoke(str, index); }

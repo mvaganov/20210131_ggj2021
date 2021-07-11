@@ -33,7 +33,7 @@ namespace NonStandard.Data {
 		}
 		public void AssertNum(object src, Tokenizer tok) {
 			string itemName = tok.GetStr(1, Keeper.Dictionary);
-			//Show.Log("!!!!%^ asserting " + itemName);
+			//Show.Log("!!!!%^ asserting " + itemName+"     ("+tok.str+")");
 			if (itemName != null && Keeper.Dictionary.ContainsKey(itemName)) return;
 			//Show.Log("!!!!%^ getting value ");
 			//Show.Log("!!!!%^ checking "+tok.tokens[2]+" in "+Scope);

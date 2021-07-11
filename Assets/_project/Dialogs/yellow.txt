@@ -1,6 +1,6 @@
 ﻿color	yellow
 textA	"I need more stuff. I will eventually have enough, once I get more!"
 textB	"Oh yeah! Look at all this stuff! It feels good to just look at, you know?"
-textC	"I need a bigger place. I more stuff for my stuff. Wow I need more stuff just to take care of my stuff..."
+textC	"I need a bigger place... more rooms for my stuff. Wow I need more stuff just to take care of my stuff..."
 textD	"I have too much. I can't move, I can't even look at all of it at once. Things were simpler when I had less."
-textE	"I gave it all away. Yeah, I miss having it, but I don't miss keeping it. You're rich once you realize you have enough. Living always for more is waste, and pain."
+textE	"I gave it all away. Yeah, I miss having it, but I don't miss keeping it. You're rich once you realize you have enough. Living always for never-ending more is waste, and pain."

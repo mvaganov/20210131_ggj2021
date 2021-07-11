@@ -24,7 +24,9 @@ namespace NonStandard {
             }
             public void Assert(bool condition, string format, params object[] args) {
                 if (condition) return;
-                Error(string.Format(format, args));
+                string message = format;
+                if(args != null && args.Length != 0) { message = string.Format(format, args); }
+                Error(message);
             }
             public Routes() { }
             public Routes(Routes o) {
@@ -53,6 +55,9 @@ namespace NonStandard {
         public static void Warning(object o) => Route.Warning(o);
         public static void Warning(string s) => Route.Warning(s);
 
+        public static void Assert(bool condition, string format, params object[] args) =>
+            Route.Assert(condition, format, args);
+        public static void Assert(bool condition, string message) => Route.Assert(condition, message);
         public static void DefaultLog(string s) => Console.WriteLine(s);
 		public static void DefaultWarning(string s) {
 			ConsoleColor c = Console.ForegroundColor;

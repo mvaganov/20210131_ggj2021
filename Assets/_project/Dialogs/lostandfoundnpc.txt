@@ -1,8 +1,7 @@
-﻿{n¤ dialog+color o¤[
-	{=Co¤ c¤ "assertnum {0} 0;assertnum {0}Given 0"%(color)}
-	{=Co¤ c¤ "set color "+color}
-	{=Co¤ r¤ color+"Given==0" c¤ "dialog dialog"+color+"A"}
-	{=Co¤ r¤ color+"Given==1" c¤ "dialog dialog"+color+"B"}
+﻿{name "dialog"+color options[
+	{=Command command:"assertnum {0}Given 0;assertnum {0} 0;set color {0}"%(color)}
+	{=Command required:color+"Given==0" command:"dialog dialog"+color+"A"}
+	{=Co¤     r¤       color+"Given==1" c¤      "dialog dialog"+color+"B"}
 	{=Co¤ r¤ color+"Given==2" c¤ "dialog dialog"+color+"C"}
 	{=Co¤ r¤ color+"Given==3" c¤ "dialog dialog"+color+"D"}
 	{=Co¤ r¤ color+"Given==4" c¤ "dialog dialog"+color+"E"}
