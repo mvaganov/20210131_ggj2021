@@ -4,6 +4,7 @@ using NonStandard.Ui;
 using NonStandard;
 using NonStandard.Procedure;
 
+[RequireComponent(typeof(Button))]
 public class UiToggleButton : MonoBehaviour {
     public GameObject uiToControlVisibility;
     public Button uiToggleClose;
@@ -11,6 +12,10 @@ public class UiToggleButton : MonoBehaviour {
     public bool hideThisWhenUiVisible;
     public bool clickMeAfterStart;
     [TextArea(1,5)] public string alternateText;
+    public void ClickButton() {
+        Button b = GetComponent<Button>();
+        b?.onClick.Invoke();
+	}
     public void DoActivateTrigger() {
         //Debug.Log("doactivate " + this);
         uiToControlVisibility.SetActive(!uiToControlVisibility.activeSelf);

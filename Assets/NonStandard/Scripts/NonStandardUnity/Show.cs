@@ -3,7 +3,7 @@
 namespace NonStandard {
     public partial class Show : MonoBehaviour {
         public GameObject routeOutputTo;
-
+        public bool NewlineAfterEachMessage = true;
         static Show() {
             Route.onLog -= DefaultLog;
             Route.onError -= DefaultError;
@@ -19,15 +19,16 @@ namespace NonStandard {
             bool routed = RouteTMP();
             if (!routed) { routed = RouteUiText(); }
         }
+        private string endl => NewlineAfterEachMessage ? "\n" : "";
         private bool RouteTMP() {
             TMPro.TMP_Text tmp = routeOutputTo.GetComponent<TMPro.TMP_Text>();
             if (tmp != null) {
                 if (tmp.richText) {
-                    Route.onLog = s => tmp.text += s + "\n";
-                    Route.onError = s => tmp.text += "<#ff0000>" + s + "</color>\n";
-                    Route.onWarning = s => tmp.text += "<#ffff00>" + s + "</color>\n";
+                    Route.onLog += s => tmp.text += s + endl;
+                    Route.onError += s => tmp.text += "<#ff0000>" + s + "</color>" + endl;
+                    Route.onWarning += s => tmp.text += "<#ffff00>" + s + "</color>" + endl;
                 } else {
-                    Route.onAnyMessage = s => tmp.text += s + "\n";
+                    Route.onAnyMessage += s => tmp.text += s + "\n";
                 }
                 return true;
             }
@@ -41,5 +42,6 @@ namespace NonStandard {
             }
             return false;
         }
+        public void Print(string message) { Log(message); }
     }
 }
