@@ -184,6 +184,9 @@ namespace NonStandard.Inputs {
 		public static Vector3 MousePosition { get { return Input.mousePosition; } }
 		public static Vector3 MousePositionDelta { get { return new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y")); } }
 
+		/// <summary>
+		/// not an array because all elements aren't managed by AppInput. Unity's KeyCode system does most of the work.
+		/// </summary>
 		private static readonly Dictionary<KCode, KState> _pressState = new Dictionary<KCode, KState>();
 
 		public static bool IsOldKeyCode(KCode code) { return Enum.IsDefined(typeof(KeyCode), (int)code); }

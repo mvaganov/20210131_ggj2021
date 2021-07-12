@@ -1,4 +1,7 @@
-﻿using NonStandard.Data;
+﻿using NonStandard;
+using NonStandard.Data;
+using NonStandard.Extension;
+using NonStandard.Inputs;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -22,7 +25,7 @@ public class UnityConsole : MonoBehaviour
     public char BackgroundChar = '\u2588'; // █
 
     public Coord Cursor => body.Cursor;
-
+    public Coord consoleBodySize;
     void Start()
 	{
 		inputField = GetComponentInChildren<TMP_InputField>();
@@ -67,18 +70,25 @@ public class UnityConsole : MonoBehaviour
 			".");
 		body.Cursor = new Coord(4, 2);
 	}
-
-	private void FixedUpdate() {
-        if (Input.GetKeyDown(KeyCode.Return)) {
-            body.Write("TEXT!");
-            RefreshText();
-        }
-        else if (UpdateKey()) {
+	public void Update() {
+        if (UpdateKey()) {
             RefreshText();
         }
     }
 
-	public bool UpdateKey() {
+    List<KCode> keysDown = new List<KCode>();
+    [TextArea(1,5)]
+    public string keysDownStr;
+
+    Dictionary<KCode, int> keysPressedHist = new Dictionary<KCode, int>();
+    [TextArea(1, 5)]
+    public string keysHistogram;
+    public bool UpdateKey() {
+        string txt = GetKeyInput();
+		if (!string.IsNullOrEmpty(txt)) {
+            body.Write(txt);
+            return true;
+		}
         Coord move = Coord.Zero;
         if (Input.GetKey(KeyCode.LeftArrow)) { move = Coord.Left; }
         if (Input.GetKey(KeyCode.RightArrow)) { move = Coord.Right; }
@@ -89,6 +99,83 @@ public class UnityConsole : MonoBehaviour
             return true;
 		}
         return false;
+    }
+    Dictionary<KCode, (char, char)> qwertyKeyMap = new Dictionary<KCode, (char, char)>() {
+        [KCode.BackQuote] = ('`', '~'),
+        [KCode.Alpha0] = ('0', ')'),
+        [KCode.Alpha1] = ('1', '!'),
+        [KCode.Alpha2] = ('2', '@'),
+        [KCode.Alpha3] = ('3', '#'),
+        [KCode.Alpha4] = ('4', '$'),
+        [KCode.Alpha5] = ('5', '%'),
+        [KCode.Alpha6] = ('6', '^'),
+        [KCode.Alpha7] = ('7', '&'),
+        [KCode.Alpha8] = ('8', '*'),
+        [KCode.Alpha9] = ('9', '('),
+        [KCode.Minus] = ('-', '_'),
+        [KCode.Equals] = ('=', '+'),
+        [KCode.Tab] = ('\t', '\t'),
+        [KCode.LeftBracket] = ('[', '{'),
+        [KCode.RightBracket] = (']', '}'),
+        [KCode.Backslash] = ('\\', '|'),
+        [KCode.Semicolon] = (';', ':'),
+        [KCode.Quote] = ('\'', '\"'),
+        [KCode.Comma] = (',', '<'),
+        [KCode.Period] = ('.', '>'),
+        [KCode.Slash] = ('/', '?'),
+        [KCode.Space] = (' ', ' '),
+        [KCode.Backspace] = ('\b', '\b'),
+        [KCode.Return] = ('\n', '\n'),
+        [KCode.A] = ('a', 'A'),
+        [KCode.B] = ('b', 'B'),
+        [KCode.C] = ('c', 'C'),
+        [KCode.D] = ('d', 'D'),
+        [KCode.E] = ('e', 'E'),
+        [KCode.F] = ('f', 'F'),
+        [KCode.G] = ('g', 'G'),
+        [KCode.H] = ('h', 'H'),
+        [KCode.I] = ('i', 'I'),
+        [KCode.J] = ('j', 'J'),
+        [KCode.K] = ('k', 'K'),
+        [KCode.L] = ('l', 'L'),
+        [KCode.M] = ('m', 'M'),
+        [KCode.N] = ('n', 'N'),
+        [KCode.O] = ('o', 'O'),
+        [KCode.P] = ('p', 'P'),
+        [KCode.Q] = ('q', 'Q'),
+        [KCode.R] = ('r', 'R'),
+        [KCode.S] = ('s', 'S'),
+        [KCode.T] = ('t', 'T'),
+        [KCode.U] = ('u', 'U'),
+        [KCode.V] = ('v', 'V'),
+        [KCode.W] = ('w', 'W'),
+        [KCode.X] = ('x', 'X'),
+        [KCode.Y] = ('y', 'Y'),
+        [KCode.Z] = ('z', 'Z'),
+    };
+    public string GetKeyInput() {
+        keysDown.Clear();
+        KCodeExtension.GetDown(keysDown);
+        if (keysDown.Count > 0) {
+            keysDownStr = keysDown.JoinToString();
+            foreach (KCode k in keysDown) {
+                keysPressedHist[k] = 1;
+            }
+            List<KCode> ordered = new List<KCode>();
+            foreach (KeyValuePair<KCode, int> kvp in keysPressedHist) { ordered.Add(kvp.Key); }
+            ordered.Sort();
+            keysHistogram = ordered.JoinToString();
+        } else {
+            keysDownStr = "";
+        }
+        StringBuilder sb = new StringBuilder();
+        bool isShift = KCode.AnyShift.IsHeld();
+        for (int i = 0; i < keysDown.Count; ++i) {
+            if(qwertyKeyMap.TryGetValue(keysDown[i], out (char,char) kodes)) {
+                sb.Append(!isShift ? kodes.Item1 : kodes.Item2);
+			}
+        }
+        return sb.ToString();
     }
 
     public void ScrollRenderWindow(Coord direction) {
@@ -102,6 +189,7 @@ public class UnityConsole : MonoBehaviour
                 renderWindow.PositionX -= (short)(renderWindow.Right - body.Size.col);
             }
 		}
+        vtest = renderWindow.Bottom - body.Size.row;
         if (renderWindow.PositionY < 0) {
             renderWindow.PositionY -= renderWindow.PositionY;
         } else if (renderWindow.Bottom > body.Size.row) {
@@ -112,6 +200,8 @@ public class UnityConsole : MonoBehaviour
             }
         }
     }
+    public int vtest;
+
     public static readonly CoordRect Maximum = new CoordRect(Coord.Zero, Coord.Max);
     public void RefreshText() {
         CoordRect limit = Maximum;
@@ -122,6 +212,7 @@ public class UnityConsole : MonoBehaviour
             GetPrintText(body, limit, out text, out colors, false, BackgroundChar, '_', (byte)(255* backgroundAlpha));
             Assign(text, colors, false);
         }
+        consoleBodySize = body.Size;
     }
 
     public void Write(string text) {
@@ -139,7 +230,7 @@ public class UnityConsole : MonoBehaviour
         for (int row = window.Min.row; row < limit.row; ++row, ++rowsPrinted) {
             if (rowsPrinted > 0) {
                 sb.Append("\n");
-                colors.Add((ColorRGBA)(useForeground?current.Fore:current.Back));
+                colors.Add((ColorRGBA)(useForeground ? current.Fore : current.Back));
             }
             if (row < 0) { continue; }
             List<ConsoleTile> line = body.lines[row];
@@ -158,15 +249,16 @@ public class UnityConsole : MonoBehaviour
                 colorRgba.a = alpha;
                 colors.Add(colorRgba);
             }
-            if (c.row == row && c.col > limit.col && window.Contains(c)) {
+            if (c.row == row && c.col >= limit.col && window.Contains(c)) {
                 int col = limit.col;
                 while(col <= c.col) {
-                    current.Letter = emptyChar;
+                    current.Letter = '.';// emptyChar;
                     if (cursorChar != '\0' && c.col == col && c.row == row) { current.Letter = cursorChar; }
                     sb.Append(current.Letter);
                     ColorRGBA colorRgba = useForeground ? current.Fore : current.Back;
                     colorRgba.a = alpha;
                     colors.Add(colorRgba);
+                    ++col;
                 }
             }
         }

@@ -33,11 +33,21 @@ namespace NonStandard.Data {
 }
 
 #if UNITY_EDITOR
-
-//[CustomPropertyDrawer(typeof(NonStandard.Data.Coord))]
-//public class ColorPointDrawer : PropertyDrawer {
-//	public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
-//		label = EditorGUI.BeginProperty(position, label, property);
-//	}
-//}
+[CustomPropertyDrawer(typeof(NonStandard.Data.Coord))]
+public class ColorPointDrawer : PropertyDrawer {
+	public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
+		//label = EditorGUI.BeginProperty(position, label, property);
+		SerializedProperty colProp = property.FindPropertyRelative("col");
+		SerializedProperty rowProp = property.FindPropertyRelative("row");
+		position = EditorGUI.PrefixLabel(position, GUIUtility.GetControlID(FocusType.Passive), label);
+		Rect colRect = position;
+		colRect.width /= 2;
+		Rect rowRect = colRect;
+		rowRect.position += new Vector2(colRect.width, 0);
+		colProp.intValue = EditorGUI.IntField(colRect, colProp.intValue);
+		rowProp.intValue = EditorGUI.IntField(rowRect, rowProp.intValue);
+		colRect.position += new Vector2(-12, 1); EditorGUI.LabelField(colRect, "X");
+		rowRect.position += new Vector2(-12, 1); EditorGUI.LabelField(rowRect, "Y");
+	}
+}
 #endif
