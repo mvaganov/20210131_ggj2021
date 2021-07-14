@@ -9,7 +9,11 @@ namespace NonStandard.GameUi.Particles {
 		public void AbsorbChildParticles() {
 			ParticleSystem[] kids = GetComponentsInChildren<ParticleSystem>(true);
 			for (int i = 0; i < kids.Length; ++i) {
-				if (kids[i] != null && ps.IndexOf(kids[i]) < 0) { ps.Add(kids[i]); }
+				if (kids[i] != null && ps.IndexOf(kids[i]) < 0) {
+					ParticleSystem.MainModule mm = kids[i].main;
+					mm.simulationSpace = ParticleSystemSimulationSpace.World;
+					ps.Add(kids[i]);
+				}
 			}
 		}
 		void Start() {

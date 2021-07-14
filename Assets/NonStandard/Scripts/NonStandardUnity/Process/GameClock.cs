@@ -43,8 +43,8 @@ namespace NonStandard {
 
 		[System.Serializable]
 		public class PauseEvents {
-			[Tooltip("do this when time is paused")] public UnityEngine.Events.UnityEvent onPause;
-			[Tooltip("do this when time is unpaused")] public UnityEngine.Events.UnityEvent onUnpause;
+			[Tooltip("do this when time is paused")] public UnityEngine.Events.UnityEvent onPause = new UnityEngine.Events.UnityEvent();
+			[Tooltip("do this when time is unpaused")] public UnityEngine.Events.UnityEvent onUnpause = new UnityEngine.Events.UnityEvent();
 		}
 		public void Init() {
 			if (initialized) { return; }

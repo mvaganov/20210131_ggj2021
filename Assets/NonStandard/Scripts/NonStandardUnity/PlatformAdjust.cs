@@ -12,6 +12,8 @@ namespace NonStandard {
 #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IPHONE
 		public UnityEvent onMobileStart;
 #endif
+		public UnityEvent onPause;
+		public UnityEvent onUnpause;
 
 		void Start() {
 #if UNITY_EDITOR
@@ -23,6 +25,8 @@ namespace NonStandard {
 #if UNITY_ANDROID || UNITY_IPHONE
 			onMobileStart.Invoke();
 #endif
+			if (onPause != null) { GameClock.Instance().pauseEvents.onPause.AddListener(onPause.Invoke); }
+			if (onUnpause != null) { GameClock.Instance().pauseEvents.onUnpause.AddListener(onUnpause.Invoke); }
 		}
 		public void Quit() { Exit(); }
 
