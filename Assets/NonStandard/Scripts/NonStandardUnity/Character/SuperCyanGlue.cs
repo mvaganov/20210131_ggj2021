@@ -23,29 +23,35 @@ namespace NonStandard.Character
 
 		bool shouldTriggerJumpAnimation = false;
 		public void Jump(Vector3 dir) {
-			animator.SetTrigger("Land");
-			animator.SetBool("Grounded", true);
+			//Show.Log("jump");
+			//animator.SetTrigger("Land");
+			animator.SetBool("Grounded", false);
 			if (character.IsStableOnGround()) {
 				shouldTriggerJumpAnimation = true;
 			}
 		}
 
 		public void Stand(Vector3 upDir) {
+			//Show.Log("stand");
 			animator.SetTrigger("Land");
 			animator.SetBool("Grounded", true);
 		}
 
 		public void Fall() {
+			//Show.Log("fall");
 			animator.SetBool("Grounded", false);
 		}
 
 		public void Wave(Vector3 location) {
+			//Show.Log("wave");
 			animator.SetTrigger("Wave");
 		}
 
 		public void FixedUpdate() {
-			float speed = character.rb.velocity.magnitude;
-			animator.SetFloat("MoveSpeed", speed);
+			if (animator.GetBool("Grounded")) {
+				float speed = character.rb.velocity.magnitude;
+				animator.SetFloat("MoveSpeed", speed);
+			}
 			if (shouldTriggerJumpAnimation && !animator.IsInTransition(0)) {
 				animator.SetTrigger("Jump");
 				animator.SetBool("Grounded", false);

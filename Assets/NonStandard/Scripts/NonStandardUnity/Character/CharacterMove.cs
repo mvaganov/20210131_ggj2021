@@ -269,7 +269,13 @@ namespace NonStandard.Character {
 				lastJump = Jump;
 			}
 			if (!move.disabled) { move.FixedUpdate(this); }
-			if (jump.enabled) { jump.FixedUpdate(this); }
+			if (jump.enabled) {
+				bool wasJumping = jump.isJumping;
+				jump.FixedUpdate(this);
+				if(jump.isJumping && !wasJumping) {
+					callbacks.jumped.Invoke(Vector3.up);
+				}
+			}
 			if (!move.isStableOnGround && !jump.isJumping && move.groundNormal != Vector3.zero) {
 				move.groundNormal = Vector3.zero;
 				callbacks.fall.Invoke();
