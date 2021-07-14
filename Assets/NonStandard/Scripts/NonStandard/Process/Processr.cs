@@ -39,6 +39,7 @@ namespace NonStandard.Procedure {
 		}
 
 		public Proc.edure ConvertR(Proc.edureSimple procedure, bool cacheIfNotFound) {
+			if (procedure == null) return null;
 			if (!responseAilias.TryGetValue(procedure, out Proc.edure p)) {
 				p = incident => { procedure.Invoke(incident); return Proc.Result.Success; };
 				if (cacheIfNotFound) { responseAilias[procedure] = p; }
@@ -46,6 +47,7 @@ namespace NonStandard.Procedure {
 			return p;
 		}
 		public Proc.edure ConvertR(Action action, bool cacheIfNotFound) {
+			if (action == null) return null;
 			if (!responseAilias.TryGetValue(action, out Proc.edure p)) {
 				p = unusedIncident => { action.Invoke(); return Proc.Result.Success; };
 				if (cacheIfNotFound) { responseAilias[action] = p; }
@@ -53,8 +55,9 @@ namespace NonStandard.Procedure {
 			return p;
 		}
 		public Proc.edure ConvertR(Strategy strategy, bool cacheIfNotFound) {
+			if (strategy == null) return null;
 			if (!responseAilias.TryGetValue(strategy, out Proc.edure p)) {
-				p = incident => { return strategy.Invoke(incident); };
+				p = incident => { return strategy.InvokeChain(incident); };
 				if (cacheIfNotFound) { responseAilias[strategy] = p; }
 			}
 			return p;
@@ -93,29 +96,39 @@ namespace NonStandard.Procedure {
 			++codeToIncident[incidentCode].Count;
 			responses.ForEach(response => response.Invoke(incident));
 		}
-		public void OnIncident(string incidentId, Proc.edure procedure, int count = -1) {
-			OnIncident(Code(incidentId, true), procedure, count);
+		public void OnIncident(string incidentId, Proc.edure procedure, int count = -1, Proc.edure onLast=null) {
+			OnIncident(Code(incidentId, true), procedure, count, onLast);
 		}
-		public void OnIncident(int incidentCode, Proc.edure procedure, int count = -1) {
+		
+		/// <param name="incidentCode">what incident to execute the given procedure on</param>
+		/// <param name="procedure">what to do for each of the count iterations</param>
+		/// <param name="count">how many times to execute the given procedure</param>
+		/// <param name="onLast">special logic to do in addition to the standard procedure on the last iteration</param>
+		/// <exception cref="Exception"></exception>
+		public void OnIncident(int incidentCode, Proc.edure procedure, int count = -1, Proc.edure onLast = null) {
+			if (count == 0) return;
 			List<Proc.edure> responses = incidentResponseTable[incidentCode];
 			if (count < 0) {
 				responses.Add(procedure);
+				return;
 			}
-			if (count > 0) {
-				Proc.edure countLimitedProcedure = incident => {
-					if (count > 0) {
-						procedure.Invoke(incident);
-						if (--count <= 0) {
-							RemoveIncident(incidentCode, procedure);
-						}
-					} else {
-						RemoveIncident(incidentCode, procedure);
-					}
-					return Proc.Result.Success;
-				};
-				responseAilias[procedure] = countLimitedProcedure;
-				responses.Add(countLimitedProcedure);
-			}
+			Proc.edure countLimitedProcedure = incident => {
+				if (count <= 0) {
+					throw new Exception("how was count decremented outside of this function?");
+				}
+				Proc.Result result = procedure.Invoke(incident);
+				--count;
+				if (count > 0) {
+					return result;
+				}
+				if (onLast != null && result == Proc.Result.Success) {
+					result = onLast.Invoke(incident); 
+				}
+				RemoveIncident(incidentCode, procedure);
+				return result;
+			};
+			responseAilias[procedure] = countLimitedProcedure;
+			responses.Add(countLimitedProcedure);
 		}
 		public int GetResponseIndex(int incidentCode, Proc.edure response) {
 			if (incidentCode <= 0 || incidentCode >= incidentResponseTable.Count) { throw new Exception("bad incident code"); }

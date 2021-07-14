@@ -43,11 +43,12 @@ public class ConsoleBody {
 				if (writeCursor.col == line.Count-1) {
 					needToRediscover = writeCursor.col+2 == size.col;
 					line.RemoveAt(line.Count - 1);
-					Show.Log(size.col+" "+ writeCursor.col);
-					if (line.Count == 0 && writeCursor.row == lines.Count - 1) {
-						lines.RemoveAt(lines.Count - 1);
-						size.row = (short)lines.Count;
-					}
+					// TODO FIXME if deleting the last line, remove the last line.
+					//Show.Log(size.col+" "+ writeCursor.col);
+					//if (line.Count == 0 && writeCursor.row == lines.Count - 1) {
+					//	lines.RemoveAt(lines.Count - 1);
+					//	size.row = (short)lines.Count;
+					//}
 				}
 				--writeCursor.col;
 				if (needToRediscover) {

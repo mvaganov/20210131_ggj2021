@@ -34,21 +34,37 @@ namespace NonStandard.Procedure {
 			Proc.RegisterInvoke<Strategy>(InvokeStrategy);
 		}
 		public static Proc.Result InvokeStrategy(object obj, Incident incident) {
-			return ((Strategy)obj).Invoke(incident);
+			return ((Strategy)obj).InvokeChain(incident);
 		}
 
+		/// <summary>
+		/// execute the procedure of this strategy, then continue to the next logical strategy
+		/// </summary>
+		public Proc.Result InvokeChain(Incident incident) {
+			Proc.Result result = Invoke(incident);
+			if (Next == null || result != Proc.Result.Success) return result;
+			return ContinueChain(incident);
+		}
+		/// <summary>
+		/// continue to the next logical strategy (without executing the procedure of this strategy)
+		/// </summary>
+		public Proc.Result ContinueChain(Incident incident) {
+			if (!Next.WaitForUpdate) {
+				return Next.InvokeChain(incident);
+			}
+			Proc.Delay(0, delayedIncident => Next.InvokeChain(incident));
+			return Proc.Result.Success;
+		}
+		/// <summary>
+		/// execute the procedure of this strategy (without continuing to the next logical strategy)
+		/// </summary>
 		public Proc.Result Invoke(Incident incident) {
 			Proc.Result result = Proc.Result.Success;
-			bool allowedToRun = !IsExceptionHandler && (!OnlyExecuteOnPositiveMerit || (MeritHeuristic == null || MeritHeuristic.Invoke() > 0));
+			bool allowedToRun = !IsExceptionHandler &&
+			            (!OnlyExecuteOnPositiveMerit || (MeritHeuristic == null || MeritHeuristic.Invoke() > 0));
 			//Debug.Log("Invoking " + Identifier+ " "+allowedToRunOnMerit+" "+Procedure);
 			if (allowedToRun && Procedure != null) {
 				result = Invoke_Internal(incident);
-			}
-			if (Next == null || result != Proc.Result.Success) return result;
-			if (!Next.WaitForUpdate) {
-				result = Next.Invoke(incident);
-			} else {
-				Proc.Delay(0, delayedIncident => Next.Invoke(incident));
 			}
 			return result;
 		}
@@ -113,16 +129,16 @@ namespace NonStandard.Procedure {
 			Next.WaitForUpdate = true;
 			return Next;
 		}
-		public Strategy ThenOnIncident(string incidentId, Proc.edure procedure = null) {
-			Strategy deferringStragegy = null;
-			deferringStragegy = ThenImmediately("(defer)" + incidentId, incident => {
+		public Strategy ThenOnIncident(string incidentId, Proc.edure procedure = null, int count = 1) {
+			Strategy deferringStrategy = null;
+			deferringStrategy = ThenImmediately("(defer)" + incidentId, incident => {
 				Strategy deferredStrategy = new Strategy("(deferred)" + incidentId, procedure, this);
-				deferredStrategy.Next = deferringStragegy.Next;
+				deferredStrategy.Next = deferringStrategy.Next;
 				deferredStrategy.IsDeferred = true;
-				Proc.OnIncident(incidentId, deferredStrategy.Invoke, 1);
+				Proc.OnIncident(incidentId, deferredStrategy.Invoke, count, deferredStrategy.ContinueChain);
 				return Proc.Result.Halt;
 			});
-			return deferringStragegy;
+			return deferringStrategy;
 		}
 		public Strategy ThenDelay(string identifier, int ms, Proc.edure procedure = null) {
 			Strategy deferringStrategy = null;
@@ -130,7 +146,7 @@ namespace NonStandard.Procedure {
 				Strategy deferredStrategy = new Strategy(identifier, procedure, this);
 				deferredStrategy.Next = deferringStrategy.Next;
 				deferredStrategy.IsDeferred = true;
-				Proc.Delay(ms, deferredStrategy.Invoke);
+				Proc.Delay(ms, deferredStrategy.InvokeChain);
 				return Proc.Result.Halt;
 			});
 			return deferringStrategy;
@@ -170,7 +186,7 @@ namespace NonStandard.Procedure {
 				//Strategy deferredStrategy = new Strategy(identifier, d.Procedure, this);
 				choice.Last().Next = deferringStrategy.Next;
 				//Debug.Log("About to invoke [" + choice.ListStrategies().JoinToString() + "]");
-				choice.Invoke(incident);
+				choice.InvokeChain(incident);
 				return Proc.Result.Halt;
 			});
 			return deferringStrategy;
@@ -227,7 +243,7 @@ namespace NonStandard.Procedure {
 		}
 		public void ClearEvent() {
 			if (IsDeferred) {
-				Proc.RemoveIncident(Identifier, Invoke);
+				Proc.RemoveIncident(Identifier, InvokeChain);
 			}
 		}
 		public void ClearAllEvents() {
@@ -241,8 +257,8 @@ namespace NonStandard.Procedure {
 		public Strategy ThenImmediately(string identifier, Action procedure) { return ThenImmediately(identifier, Proc.ConvertR(procedure, true)); }
 		public Strategy AndThen(string identifier, Proc.edureSimple procedure) { return AndThen(identifier, Proc.ConvertR(procedure, true)); }
 		public Strategy AndThen(string identifier, Action procedure) { return AndThen(identifier, Proc.ConvertR(procedure, true)); }
-		public Strategy ThenOnIncident(string incidentId, Proc.edureSimple procedure) { return ThenOnIncident(incidentId, Proc.ConvertR(procedure, true)); }
-		public Strategy ThenOnIncident(string incidentId, Action procedure) { return ThenOnIncident(incidentId, Proc.ConvertR(procedure, true)); }
+		public Strategy ThenOnIncident(string incidentId, Proc.edureSimple procedure, int count = 1) { return ThenOnIncident(incidentId, Proc.ConvertR(procedure, true), count); }
+		public Strategy ThenOnIncident(string incidentId, Action procedure, int count = 1) { return ThenOnIncident(incidentId, Proc.ConvertR(procedure, true), count); }
 		public Strategy ThenDelay(string identifier, int ms, Proc.edureSimple procedure) { return ThenDelay(identifier, ms, Proc.ConvertR(procedure, true)); }
 		public Strategy ThenDelay(string identifier, int ms, Action procedure) { return ThenDelay(identifier, ms, Proc.ConvertR(procedure, true)); }
 		public Strategy Finally(string name, Proc.edure response) {

@@ -7,7 +7,7 @@ namespace NonStandard.Data.Parse {
 	public class ParseRuleSet {
 		public static Dictionary<string, ParseRuleSet> allContexts = new Dictionary<string, ParseRuleSet>();
 		public string name = "default";
-		protected char[] whitespace = CodeRules.WhitespaceDefault;
+		protected char[] whitespace;// = CodeRules.WhitespaceDefault;
 		protected Delim[] delimiters;// = CodeRules.StandardDelimiters;
 
 		public char[] Whitespace {
@@ -44,7 +44,7 @@ namespace NonStandard.Data.Parse {
 				Delimiters = CodeRules.StandardDelimiters;
 			}
 			if(defaultWhitespace == null) {
-				Whitespace = whitespace;
+				Whitespace = CodeRules.WhitespaceDefault;
 			}
 		}
 		/// <summary>

@@ -24,10 +24,11 @@ namespace NonStandard.Procedure {
 		public static void NotifyIncident(string incidentId, object source = null, object detail = null) { Main.NotifyIncident(incidentId, source, detail); }
 		public static void NotifyIncident(int incidentCode, object source = null, object detail = null) { Main.NotifyIncident(incidentCode, source, detail); }
 		public static void NotifyIncident(int incidentCode, Incident incident) { Main.NotifyIncident(incidentCode, incident); }
-		public static void OnIncident(string incidentId, Proc.edure procedure, int count = -1) { Main.OnIncident(incidentId, procedure, count); }
-		public static void OnIncident(int incidentCode, Proc.edure procedure, int count = -1) { Main.OnIncident(incidentCode, procedure, count); }
+		public static void OnIncident(string incidentId, Proc.edure procedure, int count = -1, Proc.edure onLast=null) { Main.OnIncident(incidentId, procedure, count, onLast); }
+		public static void OnIncident(int incidentCode, Proc.edure procedure, int count = -1, Proc.edure onLast=null) { Main.OnIncident(incidentCode, procedure, count, onLast); }
 		public static int GetResponseIndex(int incidentCode, Proc.edure procedure) { return Main.GetResponseIndex(incidentCode, procedure); }
 		public static bool RemoveIncident(string incidentId, Proc.edure procedure) { return Main.RemoveIncident(Code(incidentId, false), procedure); }
+		public static bool RemoveIncident(string incidentId, Action procedure) { return Main.RemoveIncident(Code(incidentId, false), procedure); }
 		public static bool RemoveIncident(int incidentCode, Proc.edure procedure) { return Main.RemoveIncident(incidentCode, procedure); }
 		public static bool RemoveIncident(int incidentCode, Action procedure) { return Main.RemoveIncident(incidentCode, procedure); }
 		public static bool RemoveIncident(int incidentCode, object procedure) { return Main.RemoveIncident(incidentCode, procedure); }
@@ -51,22 +52,24 @@ namespace NonStandard.Procedure {
 		public static TimeKeeper SystemClock => Main.SystemClock;
 		
 		/// <summary>
+		/// this value gives a numeric code to this moment as defined by milliseconds, unique to this runtime
 		/// use <see cref="Now"/> for unsigned time (Now will never be before 0)
 		/// </summary>
 		public static long Time => SystemClock.GetTime();
 
 		/// <summary>
+		/// this value gives a numeric code to this moment as defined by milliseconds, unique to this runtime
 		/// use <see cref="Time"/> for signed time (the concept of a moment before 0 is valid)
 		/// </summary>
 		public static ulong Now => (ulong)SystemClock.GetTime();
 
 		// functions so we don't need to include "return Procedure.Result.Success;" at the end of each lambda
-		public static void OnIncident(string incidentId, Proc.edureSimple procedure, int count = -1) { Main.OnIncident(incidentId, ConvertR(procedure, true), count); }
-		public static void OnIncident(int incidentCode, Proc.edureSimple procedure, int count = -1) { Main.OnIncident(incidentCode, ConvertR(procedure, true), count); }
+		public static void OnIncident(string incidentId, Proc.edureSimple procedure, int count = -1, Proc.edureSimple onLast = null) { Main.OnIncident(incidentId, ConvertR(procedure, true), count, ConvertR(onLast,false)); }
+		public static void OnIncident(int incidentCode, Proc.edureSimple procedure, int count = -1, Proc.edureSimple onLast = null) { Main.OnIncident(incidentCode, ConvertR(procedure, true), count, ConvertR(onLast, false)); }
 		public static int GetResponseIndex(int incidentCode, Proc.edureSimple procedure) { return Main.GetResponseIndex(incidentCode, ConvertR(procedure, false)); }
 		// functions so we can pass more straight forward Actions instead of more detailed Reactions
-		public static void OnIncident(string incidentId, Action procedure, int count = -1) { Main.OnIncident(incidentId, ConvertR(procedure, true), count); }
-		public static void OnIncident(int incidentCode, Action procedure, int count = -1) { Main.OnIncident(incidentCode, ConvertR(procedure, true), count); }
+		public static void OnIncident(string incidentId, Action procedure, int count = -1, Action onLast = null) { Main.OnIncident(incidentId, ConvertR(procedure, true), count, ConvertR(onLast, false)); }
+		public static void OnIncident(int incidentCode, Action procedure, int count = -1, Action onLast = null) { Main.OnIncident(incidentCode, ConvertR(procedure, true), count, ConvertR(onLast, false)); }
 		public static int GetResponseIndex(int incidentCode, Action procedure) { return Main.GetResponseIndex(incidentCode, ConvertR(procedure, false)); }
 		// singleton
 		private static Processr _instance;

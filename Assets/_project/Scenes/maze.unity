@@ -1324,6 +1324,11 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1563717447998030004, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
+        type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4354382426557991532, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
       propertyPath: m_AnchorMax.x
@@ -3156,7 +3161,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1402369697}
   m_HandleRect: {fileID: 1402369696}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -8982,27 +8987,42 @@ PrefabInstance:
     - target: {fileID: 7302460553941922931, guid: b2b66e02c7e1eee4c8ac9a99048a50bf,
         type: 3}
       propertyPath: m_fontColor.r
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7302460553941922931, guid: b2b66e02c7e1eee4c8ac9a99048a50bf,
         type: 3}
       propertyPath: m_fontColor.g
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7302460553941922931, guid: b2b66e02c7e1eee4c8ac9a99048a50bf,
         type: 3}
       propertyPath: m_fontColor.b
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7302460553941922931, guid: b2b66e02c7e1eee4c8ac9a99048a50bf,
         type: 3}
       propertyPath: m_fontColor32.rgba
-      value: 4278190080
+      value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 7302460553941922931, guid: b2b66e02c7e1eee4c8ac9a99048a50bf,
         type: 3}
       propertyPath: m_text
       value: lost and found
+      objectReference: {fileID: 0}
+    - target: {fileID: 7302460553941922931, guid: b2b66e02c7e1eee4c8ac9a99048a50bf,
+        type: 3}
+      propertyPath: m_textInfo.characterCount
+      value: 14
+      objectReference: {fileID: 0}
+    - target: {fileID: 7302460553941922931, guid: b2b66e02c7e1eee4c8ac9a99048a50bf,
+        type: 3}
+      propertyPath: m_textInfo.spaceCount
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7302460553941922931, guid: b2b66e02c7e1eee4c8ac9a99048a50bf,
+        type: 3}
+      propertyPath: m_textInfo.wordCount
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 8760517608170833259, guid: b2b66e02c7e1eee4c8ac9a99048a50bf,
         type: 3}
