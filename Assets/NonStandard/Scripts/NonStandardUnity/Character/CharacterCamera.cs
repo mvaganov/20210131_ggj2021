@@ -27,10 +27,12 @@ namespace NonStandard.Character {
 		/// <summary>
 		/// user-defined zoom
 		/// </summary>
-		private float userDistance;
+		public float userDistance;
 		private Transform userTarget;
 		/// <summary>for fast access to transform</summary>
 		private Transform t;
+
+		private Camera cam;
 
 		/// <summary>keep track of rotation, so it can be un-rotated and cleanly re-rotated</summary>
 		private float pitch, yaw;
@@ -54,9 +56,23 @@ namespace NonStandard.Character {
 			set { verticalRotateInput = inputMultiplier.y == 1 ? value : inputMultiplier.y * value; }
 		}
 		public float ZoomInput { get { return zoomInput; } set { zoomInput = value; } }
-		public void AddToTargetDistance(float value) { targetDistance += value; }
+		public void AddToTargetDistance(float value) {
+			targetDistance += value;
+			if(targetDistance < 0) { targetDistance = 0; }
+			OrthographicCameraDistanceChangeLogic();
+		}
 
-	#if UNITY_EDITOR
+		public void OrthographicCameraDistanceChangeLogic() {
+			if (cam?.orthographic ?? false) {
+				if (targetDistance < 1f / 128) { targetDistance = 1f / 128; }
+				cam.orthographicSize = targetDistance;
+			}
+		}
+
+		public void ToggleOrthographic() { cam.orthographic = !cam.orthographic; }
+		public void SetCameraOrthographic(bool orthographic) { cam.orthographic = orthographic; }
+	
+#if UNITY_EDITOR
 		/// called when created by Unity Editor
 		void Reset() {
 			if (target == null) {
@@ -86,6 +102,7 @@ namespace NonStandard.Character {
 			targetView.target = userTarget;
 			targetView.rotation = userRotation;
 			targetView.distance = userDistance;
+			cam = GetComponent<Camera>();
 			//for (int i = 0; i < knownCameraViews.Count; ++i) {
 			//	knownCameraViews[i].ResolveLookRotation();
 			//}
@@ -119,9 +136,10 @@ namespace NonStandard.Character {
 			if (zoom != 0) {
 				userDistance = targetDistance;
 				if (targetDistance < 0) { targetDistance = 0; }
-				if (target == null && targetDistance > 0) {
+				if (target == null) {
 					t.position += t.forward * zoom;
 				}
+				OrthographicCameraDistanceChangeLogic();
 			}
 			if (rotH != 0 || rotV != 0) {
 				targetRotation = Quaternion.identity;
@@ -139,8 +157,7 @@ namespace NonStandard.Character {
 				RaycastHit hitInfo;
 				bool usuallyHitsTriggers = Physics.queriesHitTriggers;
 				Physics.queriesHitTriggers = false;
-				if (clipAgainstWalls && Physics.Raycast(target.position, -t.forward, out hitInfo, targetDistance))
-				{
+				if (clipAgainstWalls && Physics.Raycast(target.position, -t.forward, out hitInfo, targetDistance)) {
 					distanceBecauseOfObstacle = hitInfo.distance;
 				} else {
 					distanceBecauseOfObstacle = targetDistance;
@@ -282,6 +299,7 @@ namespace NonStandard.Character {
 					t.rotation = Quaternion.Lerp(rotStart, targetView.rotation, p);
 				}
 			}
+			Show.Log("asdfdsafdsa");
 			targetDistance = (targetView.distance - distStart) * p + distStart;
 			if (targetView.useTransformPositionChanges) {
 				if (targetView.target != null) {

@@ -6,11 +6,14 @@ namespace NonStandard.GameUi.Particles {
 	public class ExpectedParticles : MonoBehaviour {
 		protected List<ParticleSystem> ps = new List<ParticleSystem>();
 		protected ParticleSystem current;
-		void Start() {
+		public void AbsorbChildParticles() {
 			ParticleSystem[] kids = GetComponentsInChildren<ParticleSystem>(true);
 			for (int i = 0; i < kids.Length; ++i) {
 				if (kids[i] != null && ps.IndexOf(kids[i]) < 0) { ps.Add(kids[i]); }
 			}
+		}
+		void Start() {
+			AbsorbChildParticles();
 		}
 		public void SetCurrent(string name) { current = Get(name); }
 		public void SetCurrentPosition(Vector3 position) { current.transform.position = position; }

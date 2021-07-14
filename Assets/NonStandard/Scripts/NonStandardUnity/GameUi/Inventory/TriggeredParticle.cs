@@ -24,13 +24,18 @@ public class TriggeredParticle : MonoBehaviour
 	}
 
 	public static void ShootParticle(ParticleSystem particle, Vector3 src, Vector3 dest, int count = 10, ParticleSystem.EmitParams? para = null) {
-		particle.transform.position = src;
-		particle.transform.LookAt(dest);
+		Transform t = particle.transform;
+		Vector3 originalPosition = t.position;
+		Quaternion originalRotation = t.rotation;
+		t.position = src;
+		t.LookAt(dest);
 		if (para.HasValue) {
 			particle.Emit(para.Value, count);
 		} else {
 			particle.Emit(count);
 		}
+		t.position = originalPosition;
+		t.rotation = originalRotation;
 	}
 	public void ShootParticleFromHereToTarget(GameObject inventoryObject) {
 		Vector3 a = transform.position, b = inventoryObject?.transform.position ?? a + Vector3.up;
