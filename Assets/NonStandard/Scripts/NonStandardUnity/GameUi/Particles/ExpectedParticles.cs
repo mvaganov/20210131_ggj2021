@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace NonStandard.GameUi.Particles {
-	public class ParticleSystems : MonoBehaviour {
+	public class ExpectedParticles : MonoBehaviour {
 		protected List<ParticleSystem> ps = new List<ParticleSystem>();
 		protected ParticleSystem current;
 		void Start() {

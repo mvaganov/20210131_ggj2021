@@ -35,8 +35,8 @@ namespace NonStandard.Character {
 		public float StrafeRightMovement { get { return move.strafeRightMovement; } set { move.strafeRightMovement = value; } }
 		public float MoveForwardMovement { get { return move.moveForwardMovement; } set { move.moveForwardMovement = value; } }
 
-		[System.Serializable]
-		public struct AutoMove {
+		// TODO move to NonStandard.Character.AutoMove
+		[System.Serializable] public struct AutoMove {
 			public Vector3 targetPosition;
 			public System.Action whatToDoWhenTargetIsReached;
 			public float closeEnough;
@@ -97,8 +97,8 @@ namespace NonStandard.Character {
 		}
 
 
-		[System.Serializable]
-		public struct CharacterMoveControls {
+		// TODO move to NonStandard.Character.CharacterMoveControls
+		[System.Serializable] public struct CharacterMoveControls {
 			public float speed;
 			[Tooltip("anything steeper than this cannot be moved on")]
 			public float maxStableAngle;
@@ -309,8 +309,8 @@ namespace NonStandard.Character {
 		}
 
 		public JumpModule jump = new JumpModule();
-		[System.Serializable]
-		public class JumpModule {
+		// TODO move to NonStandard.Character.JumpModule
+		[System.Serializable] public class JumpModule {
 			/// <summary>if true, the jump is intentionally happening and hasn't been interrupted</summary>
 			[HideInInspector] public bool isJumping;
 			/// <summary>if true, the jump has passed it's apex</summary>
@@ -500,8 +500,7 @@ namespace NonStandard.Character {
 		[Tooltip("hooks that allow code execution when character state changes (useful for animation)")]
 		public Callbacks callbacks = new Callbacks();
 
-		[System.Serializable] public class UnityEvent_Vector3 : UnityEvent<Vector3> { }
-
+		// TODO move to Callbacks.cs, in NonStandard.Character
 		[System.Serializable] public class Callbacks
 		{
 			[Tooltip("when player changes direction, passes the new direction")]

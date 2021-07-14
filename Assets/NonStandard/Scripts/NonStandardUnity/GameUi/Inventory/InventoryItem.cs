@@ -1,7 +1,9 @@
-﻿using NonStandard.Utility;
+﻿using NonStandard.GameUi.Particles;
+using NonStandard.Utility;
 using System;
 using UnityEngine;
 using UnityEngine.Events;
+using static UnityEngine.ParticleSystem;
 
 namespace NonStandard.GameUi.Inventory {
 	public class InventoryItem : MonoBehaviour {
@@ -9,7 +11,7 @@ namespace NonStandard.GameUi.Inventory {
 		public Collider _pickupCollider;
 		public Action<Inventory> onAddToInventory;
 		public Action<Inventory> onRemoveFromInventory;
-		public UnityEvent addToInventoryEvent;
+		public UnityEvent_GameObject addToInventoryEvent;
 		public void Start() {
 			if (_pickupCollider == null) { _pickupCollider = GetComponent<Collider>(); }
 			CollisionTrigger trigger = _pickupCollider.gameObject.AddComponent<CollisionTrigger>();
@@ -30,6 +32,9 @@ namespace NonStandard.GameUi.Inventory {
 			trigger.enabled = false;
 			GameClock.Delay(500, () => { if (trigger != null) trigger.enabled = true; });
 			//NonStandard.Clock.setTimeout(() => { if (trigger != null) trigger.enabled = true; }, 500);
+		}
+
+		public void ShootParticleFromHereToInventory(string expectedParticleName) {
 		}
 	}
 }

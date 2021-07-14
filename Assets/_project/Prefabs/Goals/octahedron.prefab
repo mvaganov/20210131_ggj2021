@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: -77030645369481927}
   - component: {fileID: 5396849923631544761}
   - component: {fileID: 7971244974627682699}
+  - component: {fileID: 4150931403189603864}
   m_Layer: 0
   m_Name: octahedron
   m_TagString: Untagged
@@ -142,6 +143,17 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 4150931403189603864}
+        m_MethodName: ShootParticleFromHereToTargetWithThisColor
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &-77030645369481927
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -154,9 +166,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 347a01521cfaa3c4e8125fe409d3b99f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  binders: []
-  homePoint: {x: 0, y: 0, z: 0}
   bindOnStart: 1
+  homePoint: {x: 0, y: 0, z: 0}
+  gameAreaInhabited: []
 --- !u!114 &5396849923631544761
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -186,4 +198,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1371284843b8885479f37ec1d88abcec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  id: 
+  intMetaData: 
+--- !u!114 &4150931403189603864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5309041540611214799}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec89431f98bcef147b4e7080f5473fce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  expectedParticleName: circdir
+  _particleSystem: {fileID: 0}
+  emitCount: 10

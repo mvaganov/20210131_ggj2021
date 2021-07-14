@@ -22,7 +22,6 @@ namespace NonStandard.GameUi.Inventory {
 			InventoryItem item = itemObject.GetComponent<InventoryItem>();
 			itemObject.SetActive(false);
 			item.onAddToInventory?.Invoke(this);
-			item.addToInventoryEvent?.Invoke();
 			Vector3 playerLoc = Global.Get<Character.CharacterMoveProxy>().transform.position;
 			Vector3 localPosition = itemObject.transform.position - playerLoc;
 			itemObject.transform.SetParent(transform);

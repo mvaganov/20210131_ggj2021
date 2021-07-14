@@ -88,7 +88,7 @@ public class Game : MonoBehaviour
             lvl.seed = random.Seed;
             lvl.tokensDistributed = tokenCreator.tokensDistributed;
             if(inventory.GetItems() != null) {
-                lvl.tokenInventory = CodeConvert.Stringify(inventory.GetItems().ConvertAll(go => { TokenId t = go.GetComponent<TokenId>(); return t ? t.id : null; }));
+                lvl.tokenInventory = CodeConvert.Stringify(inventory.GetItems().ConvertAll(go => { TokenMetaData t = go.GetComponent<TokenMetaData>(); return t ? t.intMetaData : null; }));
 			} else {
                 lvl.tokenInventory = "";
             }

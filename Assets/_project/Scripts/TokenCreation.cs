@@ -59,8 +59,8 @@ public class TokenCreation : MonoBehaviour
         Material mat = tokenMaterials[color];
         GameObject originalItem = tokenPrefabs[shape];
         GameObject go = Instantiate(originalItem);
-        TokenId tokId = go.GetComponent<TokenId>();
-        tokId.id = new int[] { color, shape };
+        TokenMetaData tokId = go.GetComponent<TokenMetaData>();
+        tokId.intMetaData = new int[] { color, shape };
         go.name = mat.name;
         Renderer r = go.GetComponent<Renderer>();
         r.material = mat;
