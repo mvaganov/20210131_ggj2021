@@ -140,6 +140,17 @@ namespace NonStandard.Procedure {
 			});
 			return deferringStrategy;
 		}
+		public Strategy ThenWhileIncident(string incidentId, Proc.edure procedure = null) {
+			Strategy deferringStrategy = null;
+			deferringStrategy = ThenImmediately("(defer)" + incidentId, incident => {
+				Strategy deferredStrategy = new Strategy("(deferred)" + incidentId, procedure, this);
+				deferredStrategy.Next = deferringStrategy.Next;
+				deferredStrategy.IsDeferred = true;
+				Proc.WhileIncident(incidentId, deferredStrategy.InvokeChain);
+				return Proc.Result.Halt;
+			});
+			return deferringStrategy;
+		}
 		public Strategy ThenDelay(string identifier, int ms, Proc.edure procedure = null) {
 			Strategy deferringStrategy = null;
 			deferringStrategy = ThenImmediately("(wait)" + identifier, incident => {

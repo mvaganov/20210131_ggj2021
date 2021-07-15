@@ -81,33 +81,32 @@ namespace NonStandard.Procedure {
 			return code;
 		}
 		public void Update() { SystemClock.Update(); }
-		public void NotifyIncident(string incidentId, object source = null, object detail = null) {
-			NotifyIncident(incidentId, new Incident(SystemClock.GetTime(), incidentId, source, detail));
+
+		/// <summary>
+		/// convenience method: creates and <see cref="Incident"/> and passes it to any <see cref="Proc.edure"/>s waiting for it 
+		/// </summary>
+		/// <param name="id"></param>
+		/// <param name="source"></param>
+		/// <param name="detail"></param>
+		/// <param name="identifier"></param>
+		public void NotifyIncident(Proc.Id id, object source = null, object detail = null, string identifier = null) {
+			NotifyIncident(id, new Incident(SystemClock.GetTime(), identifier, source, detail));
 		}
-		public void NotifyIncident(int incidentCode, object source = null, object detail = null, string identifier = null) {
-			NotifyIncident(incidentCode, new Incident(SystemClock.GetTime(), identifier, source, detail));
-		}
-		public void NotifyIncident(string incidentId, Incident incident) {
-			NotifyIncident(Code(incidentId, true), incident);
-		}
-		public void NotifyIncident(int incidentCode, Incident incident) {
+		public void NotifyIncident(Proc.Id id, Incident incident) {
 			// make an array copy of the list because the list might be modified by the execution of elements in the list.
-			Proc.edure[] responses = incidentResponseTable[incidentCode].ToArray();
-			++codeToIncident[incidentCode].Count;
+			Proc.edure[] responses = incidentResponseTable[id.Value].ToArray();
+			++codeToIncident[id.Value].Count;
 			responses.ForEach(response => response.Invoke(incident));
 		}
-		public void OnIncident(string incidentId, Proc.edure procedure, int count = -1, Proc.edure onLast=null) {
-			OnIncident(Code(incidentId, true), procedure, count, onLast);
-		}
 		
-		/// <param name="incidentCode">what incident to execute the given procedure on</param>
+		/// <param name="id">what incident to execute the given procedure on</param>
 		/// <param name="procedure">what to do for each of the count iterations</param>
 		/// <param name="count">how many times to execute the given procedure</param>
 		/// <param name="onLast">special logic to do in addition to the standard procedure on the last iteration</param>
 		/// <exception cref="Exception"></exception>
-		public void OnIncident(int incidentCode, Proc.edure procedure, int count = -1, Proc.edure onLast = null) {
+		public void OnIncident(Proc.Id id, Proc.edure procedure, int count = -1, Proc.edure onLast = null) {
 			if (count == 0) return;
-			List<Proc.edure> responses = incidentResponseTable[incidentCode];
+			List<Proc.edure> responses = incidentResponseTable[id.Value];
 			if (count < 0) {
 				responses.Add(procedure);
 				return;
@@ -124,20 +123,41 @@ namespace NonStandard.Procedure {
 				if (onLast != null && result == Proc.Result.Success) {
 					result = onLast.Invoke(incident); 
 				}
-				RemoveIncident(incidentCode, procedure);
+				RemoveIncident(id.Value, procedure);
 				return result;
 			};
 			responseAilias[procedure] = countLimitedProcedure;
 			responses.Add(countLimitedProcedure);
 		}
-		public int GetResponseIndex(int incidentCode, Proc.edure response) {
-			if (incidentCode <= 0 || incidentCode >= incidentResponseTable.Count) { throw new Exception("bad incident code"); }
-			return incidentResponseTable[incidentCode].IndexOf(response);
+
+		/// <summary>
+		/// keep executing procedure until it returns Proc.Result.Success.
+		/// </summary>
+		/// <param name="id"></param>
+		/// <param name="procedure">incident listener is removed if result is <see cref="Proc.Result.Success"/>. should return <see cref="Proc.Result.Halt"/> until it should stop</param>
+		public void WhileIncident(Proc.Id id, Proc.edure procedure) {
+			List<Proc.edure> responses = incidentResponseTable[id.Value];
+			Proc.edure resultLimitedProcedure = incident => {
+				Proc.Result result = procedure.Invoke(incident);
+				if (result == Proc.Result.Success) {
+					RemoveIncident(id.Value, procedure);
+					return Proc.Result.Success;
+				}
+				return result;
+			};
+			responseAilias[procedure] = resultLimitedProcedure;
+			responses.Add(resultLimitedProcedure);
+		}
+
+		public bool IsValidCode(int code) { return code > 0 && code < incidentResponseTable.Count; }
+		public int GetResponseIndex(Proc.Id id, Proc.edure response) {
+			if (!IsValidCode(id.Value)) { throw new Exception("bad incident code"); }
+			return incidentResponseTable[id.Value].IndexOf(response);
 		}
 		/// <summary>
 		/// if a non-<see cref="Proc.edure"/> is used as a response to the incident, this should clear it
 		/// </summary>
-		public bool RemoveIncident(int incidentCode, object procedure) {
+		public bool RemoveIncident(Proc.Id id, object procedure) {
 			Proc.edure r = procedure as Proc.edure;
 			bool removed = false;
 			if (r == null) {
@@ -147,16 +167,15 @@ namespace NonStandard.Procedure {
 					// Debug.LogWarning("the given response is not in the response table");
 				}
 			}
-			removed |= RemoveIncident(incidentCode, r);
+			removed |= RemoveIncident(id, r);
 			return removed;
 		}
-		public bool RemoveIncident(int incidentCode, Proc.edure procedure) {
+		public bool RemoveIncident(Proc.Id id, Proc.edure procedure) {
 			bool removed = false;
-			if (incidentCode > 0 && incidentCode < incidentResponseTable.Count
-			&& !incidentResponseTable[incidentCode].Remove(procedure)) {
+			if (IsValidCode(id.Value) && !incidentResponseTable[id.Value].Remove(procedure)) {
 				if (responseAilias.TryGetValue(procedure, out Proc.edure alias)) {
 					//RemoveIncident(incidentCode, alias);
-					incidentResponseTable[incidentCode].Remove(alias);
+					incidentResponseTable[id.Value].Remove(alias);
 					removed |= responseAilias.Remove(procedure);
 				} else {
 					// Debug.LogWarning("the given response is not in the response table");

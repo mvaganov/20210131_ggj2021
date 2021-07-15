@@ -6,10 +6,39 @@ namespace NonStandard.Procedure {
 	/// short for "Procedure" or "Process", this class is an interface to sequential process convenience functions
 	/// </summary>
 	public static partial class Proc {
-		public enum Result { Success, Failure, Halt }
+		public enum Result {
+			/// <summary>
+			/// execution ended successfully
+			/// </summary>
+			Success,
+			/// <summary>
+			/// execution did not end successfully (probably cut short by failure)
+			/// </summary>
+			Failure,
+			/// <summary>
+			/// execution halted, do not continue current strategy.
+			/// </summary>
+			Halt
+		}
 		public delegate Result edure(Incident incident);
 		public delegate void edureSimple(Incident incident);
 
+		public struct Id {
+			public int Value;
+			public Id(int value) { Value = value; }
+			public static bool IsValidValue(int code) { return Main.IsValidCode(code); }
+			public bool IsValid() { return IsValidValue(Value); }
+			public static Id CreateIfNotFound(string id) { return new Id(Code(id, true)); }
+			public static implicit operator Id(int code) { return new Id(code); }
+			public static implicit operator Id(string id) {
+				Id result = new Id(Code(id, false));
+				if (!result.IsValid()) { throw new Exception("Invalid Proc.Id "+id); }
+				return result;
+			}
+			public static implicit operator string(Id id) { return Main.codeToIncident[id.Value].Id; }
+			public static implicit operator int(Id id) { return id.Value; }
+		}
+		
 		/// <summary>
 		/// this function adds an entry to a table that might not be removed if it is called from outside <see cref="NonStandard.Procedure"/> algorithms
 		/// </summary>
@@ -20,18 +49,14 @@ namespace NonStandard.Procedure {
 		internal static Proc.edure ConvertR(Action a, bool cacheIfNotFound) { return Main.ConvertR(a, cacheIfNotFound); }
 
 		public static int Code(string identifier, bool createIfNotFound) { return Main.Code(identifier, createIfNotFound); }
-		public static void NotifyIncident(string incidentId, Incident incident) { Main.NotifyIncident(incidentId, incident); }
-		public static void NotifyIncident(string incidentId, object source = null, object detail = null) { Main.NotifyIncident(incidentId, source, detail); }
-		public static void NotifyIncident(int incidentCode, object source = null, object detail = null) { Main.NotifyIncident(incidentCode, source, detail); }
-		public static void NotifyIncident(int incidentCode, Incident incident) { Main.NotifyIncident(incidentCode, incident); }
-		public static void OnIncident(string incidentId, Proc.edure procedure, int count = -1, Proc.edure onLast=null) { Main.OnIncident(incidentId, procedure, count, onLast); }
-		public static void OnIncident(int incidentCode, Proc.edure procedure, int count = -1, Proc.edure onLast=null) { Main.OnIncident(incidentCode, procedure, count, onLast); }
+		public static void NotifyIncident(Proc.Id id, Incident incident) { Main.NotifyIncident(id, incident); }
+		public static void NotifyIncident(Id id, object source = null, object detail = null) { Main.NotifyIncident(id, source, detail); }
+		public static void OnIncident(Proc.Id id, Proc.edure procedure, int count = -1, Proc.edure onLast=null) { Main.OnIncident(id, procedure, count, onLast); }
+		public static void WhileIncident(Proc.Id id, Proc.edure procedure) { Main.WhileIncident(id, procedure); }
 		public static int GetResponseIndex(int incidentCode, Proc.edure procedure) { return Main.GetResponseIndex(incidentCode, procedure); }
-		public static bool RemoveIncident(string incidentId, Proc.edure procedure) { return Main.RemoveIncident(Code(incidentId, false), procedure); }
-		public static bool RemoveIncident(string incidentId, Action procedure) { return Main.RemoveIncident(Code(incidentId, false), procedure); }
-		public static bool RemoveIncident(int incidentCode, Proc.edure procedure) { return Main.RemoveIncident(incidentCode, procedure); }
-		public static bool RemoveIncident(int incidentCode, Action procedure) { return Main.RemoveIncident(incidentCode, procedure); }
-		public static bool RemoveIncident(int incidentCode, object procedure) { return Main.RemoveIncident(incidentCode, procedure); }
+		public static bool RemoveIncident(Proc.Id id, Proc.edure procedure) { return Main.RemoveIncident(id, procedure); }
+		public static bool RemoveIncident(Proc.Id id, Action procedure) { return Main.RemoveIncident(id, procedure); }
+		public static bool RemoveIncident(Proc.Id id, object procedure) { return Main.RemoveIncident(id, procedure); }
 		public static Incident RemoveScheduled(Action action) => Main.RemoveScheduled(action);
 		public static Incident RemoveScheduled(object procedure) => Main.RemoveScheduled(procedure);
 		public static Incident Reschedule(object procedure, long when) => SystemClock.Reschedule(procedure, when);
@@ -46,6 +71,7 @@ namespace NonStandard.Procedure {
 		public static Incident Delay(long delay, Proc.edureSimple response) { return SystemClock.Delay(delay, ConvertR(response, true)); }
 		public static Incident Enqueue(int incidentCode) { return SystemClock.Delay(0, incidentCode); }
 		public static Incident Enqueue(string incidentId) { return SystemClock.Delay(0, incidentId); }
+		public static Incident Enqueue(Proc.Id incidentId) { return SystemClock.Delay(0, incidentId.Value); }
 		public static Incident Enqueue(Action action) { return SystemClock.Delay(0, action); }
 		public static Incident Enqueue(Proc.edure response) { return SystemClock.Delay(0, response); }
 		public static Incident Enqueue(Proc.edureSimple response) { return SystemClock.Delay(0, ConvertR(response, true)); }
