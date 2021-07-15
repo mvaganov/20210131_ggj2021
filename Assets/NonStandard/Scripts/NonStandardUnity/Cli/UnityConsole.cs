@@ -61,7 +61,7 @@ public class UnityConsole : MonoBehaviour
 		body.currentPalette.Fore = ConsoleColor.Blue;
 		Write("!\n");
 		body.currentPalette.Fore = ConsoleColor.Gray;
-		Write("and now I test the very long strings in the command line console. We shall see how the wrapping\n"+
+		Write("and now I test the very long\n"+// strings in the command line console. We shall see how the wrapping\n"+
 			"and multiple\n"+
 			"lines are handled\n"+
 			"by this new,\n"+
@@ -86,18 +86,27 @@ public class UnityConsole : MonoBehaviour
     public bool UpdateKey() {
         string txt = GetKeyInput();
 		if (!string.IsNullOrEmpty(txt)) {
+            Coord oldSize = body.Size;
             body.Write(txt);
+            if(body.Size != oldSize) {
+                //Show.Log("window update");
+                UpdateRenderWindow();
+            }
             return true;
 		}
         Coord move = Coord.Zero;
-        if (Input.GetKey(KeyCode.LeftArrow)) { move = Coord.Left; }
-        if (Input.GetKey(KeyCode.RightArrow)) { move = Coord.Right; }
-        if (Input.GetKey(KeyCode.UpArrow)) { move = Coord.Up; }
-        if (Input.GetKey(KeyCode.DownArrow)) { move = Coord.Down; }
+        if (Input.GetKeyDown(KeyCode.LeftArrow)) { move = Coord.Left; }
+        if (Input.GetKeyDown(KeyCode.RightArrow)) { move = Coord.Right; }
+        if (Input.GetKeyDown(KeyCode.UpArrow)) { move = Coord.Up; }
+        if (Input.GetKeyDown(KeyCode.DownArrow)) { move = Coord.Down; }
         if (move != Coord.Zero) {
-            ScrollRenderWindow(move);
+            if (KCode.AnyShift.IsHeld()) {
+                ScrollRenderWindow(move);
+            } else {
+                body.Cursor += move;
+			}
             return true;
-		}
+        }
         return false;
     }
     Dictionary<KCode, (char, char)> qwertyKeyMap = new Dictionary<KCode, (char, char)>() {
@@ -180,6 +189,9 @@ public class UnityConsole : MonoBehaviour
 
     public void ScrollRenderWindow(Coord direction) {
         renderWindow.Position += direction;
+        UpdateRenderWindow();
+    }
+    void UpdateRenderWindow() {
         if(renderWindow.PositionX < 0) {
             renderWindow.PositionX -= renderWindow.PositionX;
         } else if (renderWindow.Right > body.Size.col) {
@@ -223,7 +235,7 @@ public class UnityConsole : MonoBehaviour
     public static void GetPrintText(ConsoleBody body, CoordRect window, out string text, out Color32[] color, bool useForeground, char emptyChar, char cursorChar, byte alpha) {
         ConsoleTile current = body.startingPalette;
         StringBuilder sb = new StringBuilder();
-        Coord limit = new Coord(window.Max.col, Math.Min(window.Max.row, body.lines.Count));
+        Coord limit = new Coord(window.Max.col, Math.Min(window.Max.row, Math.Max(body.lines.Count, body.Cursor.row+1)));
         int rowsPrinted = 0;
         Coord c = body.Cursor;
         List<Color32> colors = new List<Color32>();
@@ -233,26 +245,28 @@ public class UnityConsole : MonoBehaviour
                 colors.Add((ColorRGBA)(useForeground ? current.Fore : current.Back));
             }
             if (row < 0) { continue; }
-            List<ConsoleTile> line = body.lines[row];
-            limit.col = Math.Min(window.Max.col, (short)line.Count);
-            for (int col = window.Min.col; col < limit.col; ++col) {
-                if (col >= 0) {
-                    ConsoleTile tile = line[col];
-                    current = tile;
-					if (!useForeground) { current.Letter = emptyChar; }
-                } else if (line.Count > 0) {
-                    current.Letter = emptyChar;
+            if (row < body.lines.Count) {
+                List<ConsoleTile> line = body.lines[row];
+                limit.col = Math.Min(window.Max.col, (short)line.Count);
+                for (int col = window.Min.col; col < limit.col; ++col) {
+                    if (col >= 0) {
+                        ConsoleTile tile = line[col];
+                        current = tile;
+                        if (!useForeground) { current.Letter = emptyChar; }
+                    } else if (line.Count > 0) {
+                        current.Letter = emptyChar;
+                    }
+                    if (cursorChar != '\0' && c.col == col && c.row == row) { current.Letter = cursorChar; }
+                    sb.Append(current.Letter);
+                    ColorRGBA colorRgba = useForeground ? current.Fore : current.Back;
+                    colorRgba.a = alpha;
+                    colors.Add(colorRgba);
                 }
-                if(cursorChar != '\0' && c.col == col && c.row == row) { current.Letter = cursorChar; }
-                sb.Append(current.Letter);
-                ColorRGBA colorRgba = useForeground ? current.Fore : current.Back;
-                colorRgba.a = alpha;
-                colors.Add(colorRgba);
             }
             if (c.row == row && c.col >= limit.col && window.Contains(c)) {
                 int col = limit.col;
                 while(col <= c.col) {
-                    current.Letter = '.';// emptyChar;
+                    current.Letter = emptyChar;
                     if (cursorChar != '\0' && c.col == col && c.row == row) { current.Letter = cursorChar; }
                     sb.Append(current.Letter);
                     ColorRGBA colorRgba = useForeground ? current.Fore : current.Back;

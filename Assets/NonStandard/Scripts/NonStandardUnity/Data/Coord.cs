@@ -44,10 +44,15 @@ public class ColorPointDrawer : PropertyDrawer {
 		colRect.width /= 2;
 		Rect rowRect = colRect;
 		rowRect.position += new Vector2(colRect.width, 0);
+		const short labelWidth = 12;
+		if (EditorGUI.indentLevel == 0) {
+			colRect.xMin += labelWidth;
+			rowRect.xMin += labelWidth;
+		}
 		colProp.intValue = EditorGUI.IntField(colRect, colProp.intValue);
 		rowProp.intValue = EditorGUI.IntField(rowRect, rowProp.intValue);
-		colRect.position += new Vector2(-12, 1); EditorGUI.LabelField(colRect, "X");
-		rowRect.position += new Vector2(-12, 1); EditorGUI.LabelField(rowRect, "Y");
+		colRect.position += new Vector2(-labelWidth, 0); EditorGUI.LabelField(colRect, "X");
+		rowRect.position += new Vector2(-labelWidth, 0); EditorGUI.LabelField(rowRect, "Y");
 	}
 }
 #endif

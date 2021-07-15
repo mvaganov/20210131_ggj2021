@@ -19,10 +19,16 @@ public class ConsoleBody {
 	public List<List<ConsoleTile>> lines = new List<List<ConsoleTile>>();
 	protected Coord writeCursor;
 	protected Coord size;
-
+	public bool CursorAllowedInEmptyAreaInRow = false;
 	public Coord Cursor {
 		get => writeCursor;
-		set => writeCursor = value;
+		set {
+			writeCursor = value;
+			Coord limit = size;
+			writeCursor.row = writeCursor.row.Clamp((short)0, (short)(limit.row-1));
+			if (!CursorAllowedInEmptyAreaInRow) { limit.col = (short)(writeCursor.row < lines.Count ? lines[writeCursor.row].Count : 0); }
+			writeCursor.col = writeCursor.col.Clamp((short)0, limit.col);
+		}
 	}
 	public Coord Size {
 		get => size;
@@ -36,19 +42,23 @@ public class ConsoleBody {
 		List<ConsoleTile> line;
 		for (int i = 0; i < text.Length; ++i) {
 			char c = text[i];
+			bool printC = true;
 			switch (c) {
 			case '\b':
 				line = lines[writeCursor.row];
 				bool needToRediscover = false;
-				if (writeCursor.col == line.Count-1) {
-					needToRediscover = writeCursor.col+2 == size.col;
-					line.RemoveAt(line.Count - 1);
-					// TODO FIXME if deleting the last line, remove the last line.
-					//Show.Log(size.col+" "+ writeCursor.col);
-					//if (line.Count == 0 && writeCursor.row == lines.Count - 1) {
-					//	lines.RemoveAt(lines.Count - 1);
-					//	size.row = (short)lines.Count;
-					//}
+				//Show.Log(writeCursor.col+" "+ line.Count + "         max:"+size.col);
+				if (writeCursor.col == line.Count) {
+					needToRediscover = writeCursor.col+1 >= size.col;
+					printC = false; // don't print, that will add a character, we're removing a character
+					if (line.Count == 0) {
+						if (writeCursor.row == lines.Count - 1) {
+							lines.RemoveAt(lines.Count - 1);
+							size.row = (short)lines.Count;
+						}
+					} else {
+						line.RemoveAt(line.Count - 1);
+					}
 				}
 				--writeCursor.col;
 				if (needToRediscover) {
@@ -58,16 +68,23 @@ public class ConsoleBody {
 					if (writeCursor.row <= 0) { writeCursor.col = writeCursor.row = 0; break; }
 					--writeCursor.row;
 					line = lines[writeCursor.row];
-					writeCursor.col += (short)line.Count;
+					writeCursor.col += (short)(line.Count+1);
+					printC = false; // don't print, that will add a character to the end of the previous line
 				} break;
-			case '\n': ++writeCursor.row; writeCursor.col = 0; continue;
+			case '\n':
+				++writeCursor.row;
+				writeCursor.col = 0;
+				printC = false; // don't print, that will add a character to the end of the line
+				break;
 			}
-			ConsoleTile thisLetter = GetPrintable(c, out short letterWidth);
 			while (writeCursor.row >= lines.Count) { lines.Add(new List<ConsoleTile>()); }
-			line = lines[writeCursor.row];
-			while (writeCursor.col + letterWidth > line.Count) { line.Add(currentPalette); }
-			line[writeCursor.col] = thisLetter;
-			writeCursor.col += letterWidth;
+			if (printC) {
+				ConsoleTile thisLetter = GetPrintable(c, out short letterWidth);
+				line = lines[writeCursor.row];
+				while (writeCursor.col + letterWidth > line.Count) { line.Add(currentPalette); }
+				line[writeCursor.col] = thisLetter;
+				writeCursor.col += letterWidth;
+			}
 			if (writeCursor.col >= size.col) { size.col = (short)(writeCursor.col+1); }
 		}
 		size.row = (short)Math.Max(lines.Count, Cursor.row+1);

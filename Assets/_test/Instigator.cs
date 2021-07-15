@@ -9,7 +9,7 @@ public class Instigator : MonoBehaviour
 {
 	void Start() {
 		Proc.Delay(200, () => { Debug.Log("HELLO!"); });
-		Proc.OnIncident("Jump", occasion => {
+		Proc.OnIncident(Proc.Id.CreateIfNotFound("Jump"), occasion => {
 			Debug.Log(occasion.Stringify());
 		}, 3);
 		Proc.Delay(100, () => { Debug.Log("...."); });
