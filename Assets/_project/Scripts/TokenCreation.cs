@@ -76,8 +76,11 @@ public class TokenCreation : MonoBehaviour
             ii.itemName = floatyTextString;
         }
         ii.onAddToInventory += inv => {
-            FloatyText ft = FloatyTextManager.Create(go.transform.position + (Vector3.up * game.maze.tileSize.y * game.maze.wallHeight), floatyTextString);
-            ft.TmpText.faceColor = mat.color;
+            Vector3 p = ii.transform.position;
+            GameClock.Delay(0, () => { // make sure object creation happens on the main thread
+                FloatyText ft = FloatyTextManager.Create(p + (Vector3.up * game.maze.tileSize.y * game.maze.wallHeight), floatyTextString);
+                ft.TmpText.faceColor = mat.color;
+            });
             // find which NPC wants this, and make them light up
             ParticleSystem ps = null;
             CharacterMove npc = game.npcCreator.npcs.Find(n => {

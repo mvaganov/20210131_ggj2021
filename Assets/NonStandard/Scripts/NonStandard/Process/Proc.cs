@@ -24,6 +24,7 @@ namespace NonStandard.Procedure {
 		public delegate void edureSimple(Incident incident);
 
 		public struct Id {
+			public static bool CreateFromStringIfNotFoundByDefault = true;
 			public int Value;
 			public Id(int value) { Value = value; }
 			public static bool IsValidValue(int code) { return Main.IsValidCode(code); }
@@ -31,12 +32,13 @@ namespace NonStandard.Procedure {
 			public static Id CreateIfNotFound(string id) { return new Id(Code(id, true)); }
 			public static implicit operator Id(int code) { return new Id(code); }
 			public static implicit operator Id(string id) {
-				Id result = new Id(Code(id, false));
-				if (!result.IsValid()) { throw new Exception("Invalid Proc.Id "+id); }
+				Id result = new Id(Code(id, CreateFromStringIfNotFoundByDefault));
+				if (!CreateFromStringIfNotFoundByDefault && !result.IsValid()) { throw new Exception("Invalid "+typeof(Id)+" "+id); }
 				return result;
 			}
-			public static implicit operator string(Id id) { return Main.codeToIncident[id.Value].Id; }
+			public static implicit operator string(Id id) { return id.ToString(); }
 			public static implicit operator int(Id id) { return id.Value; }
+			public override string ToString() { return Main.codeToIncident[Value].Id; }
 		}
 		
 		/// <summary>
@@ -50,9 +52,8 @@ namespace NonStandard.Procedure {
 
 		public static int Code(string identifier, bool createIfNotFound) { return Main.Code(identifier, createIfNotFound); }
 		public static void NotifyIncident(Proc.Id id, Incident incident) { Main.NotifyIncident(id, incident); }
-		public static void NotifyIncident(Proc.Id id, object source = null, object detail = null) { Main.NotifyIncident(id, source, detail); }
-		public static void OnIncident(Proc.Id id, Proc.edure procedure, int count = -1, Proc.edure onLast=null) { Main.OnIncident(id, procedure, count, onLast); }
-		public static void WhileIncident(Proc.Id id, Proc.edure procedure) { Main.WhileIncident(id, procedure); }
+		public static void NotifyIncident(Id id, object source = null, object detail = null) { Main.NotifyIncident(id, source, detail); }
+		public static void WhileIncident(Proc.Id id, Proc.edure procedure, Proc.edure onFinish) { Main.WhileIncident(id, procedure, onFinish); }
 		public static int GetResponseIndex(int incidentCode, Proc.edure procedure) { return Main.GetResponseIndex(incidentCode, procedure); }
 		public static bool RemoveIncident(Proc.Id id, Proc.edure procedure) { return Main.RemoveIncident(id, procedure); }
 		public static bool RemoveIncident(Proc.Id id, Action procedure) { return Main.RemoveIncident(id, procedure); }
@@ -90,10 +91,12 @@ namespace NonStandard.Procedure {
 		public static ulong Now => (ulong)SystemClock.GetTime();
 
 		// functions so we don't need to include "return Procedure.Result.Success;" at the end of each lambda
+		public static void OnIncident(Proc.Id id, Proc.edure procedure, int count = -1, Proc.edure onLast = null) { Main.OnIncident(id, procedure, count, onLast); }
 		public static void OnIncident(Proc.Id id, Proc.edureSimple procedure, int count = -1, Proc.edureSimple onLast = null) { Main.OnIncident(id, ConvertR(procedure, true), count, ConvertR(onLast,false)); }
 		public static int GetResponseIndex(int incidentCode, Proc.edureSimple procedure) { return Main.GetResponseIndex(incidentCode, ConvertR(procedure, false)); }
-		/// function so we can pass more straight forward Actions instead of more detailed <see cref="Proc.edure"/>s
+		// functions so we can pass more straight forward Actions instead of more detailed Reactions
 		public static void OnIncident(Proc.Id id, Action procedure, int count = -1, Action onLast = null) { Main.OnIncident(id, ConvertR(procedure, true), count, ConvertR(onLast, false)); }
+
 		public static int GetResponseIndex(int incidentCode, Action procedure) { return Main.GetResponseIndex(incidentCode, ConvertR(procedure, false)); }
 		// singleton
 		private static Processr _instance;

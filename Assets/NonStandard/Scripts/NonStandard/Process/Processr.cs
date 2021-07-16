@@ -135,12 +135,14 @@ namespace NonStandard.Procedure {
 		/// </summary>
 		/// <param name="id"></param>
 		/// <param name="procedure">incident listener is removed if result is <see cref="Proc.Result.Success"/>. should return <see cref="Proc.Result.Halt"/> until it should stop</param>
-		public void WhileIncident(Proc.Id id, Proc.edure procedure) {
+		/// <param name="onFinish"></param>
+		public void WhileIncident(Proc.Id id, Proc.edure procedure, Proc.edure onFinish) {
 			List<Proc.edure> responses = incidentResponseTable[id.Value];
 			Proc.edure resultLimitedProcedure = incident => {
 				Proc.Result result = procedure.Invoke(incident);
-				if (result == Proc.Result.Success) {
-					RemoveIncident(id.Value, procedure);
+				if (result == Proc.Result.Success || result == Proc.Result.Failure) {
+					RemoveIncident(id, procedure);
+					onFinish.Invoke(incident);
 					return Proc.Result.Success;
 				}
 				return result;

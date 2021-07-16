@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NonStandard.Procedure {
 	/// <summary>
@@ -86,11 +87,24 @@ namespace NonStandard.Procedure {
 			string sourceInfo = Identifier;
 			if (incident != null) { sourceInfo += ": " + incident.Identifier; }
 			Incident exceptionIncident = new Incident(e.GetType().Name, sourceInfo, e.ToString());
+			Strategy finallyHandler = NextFinallyHandler();
 			Strategy exceptionHandler = NextExceptionHandler(e.GetType());
+			if (finallyHandler != null && finallyHandler.HasFutureStrategy(exceptionHandler)) {
+				finallyHandler.Invoke_Internal(exceptionIncident);
+			}
 			exceptionHandler?.Invoke_Internal(exceptionIncident);
 			Strategy whereToLookForFinallyHandlerFrom = exceptionHandler != null ? exceptionHandler : this;
-			Strategy finallyHandler = whereToLookForFinallyHandlerFrom.NextFinallyHandler();
+			finallyHandler = whereToLookForFinallyHandlerFrom.NextFinallyHandler();
 			finallyHandler?.Invoke_Internal(exceptionIncident);
+		}
+
+		public bool HasFutureStrategy(Strategy s) {
+			Strategy cursor = Next;
+			while (cursor != null) {
+				if (cursor == s) return true;
+				cursor = cursor.Next;
+			}
+			return false;
 		}
 
 		// public void InvokeError(Incident incident, Exception error) {
@@ -129,24 +143,29 @@ namespace NonStandard.Procedure {
 			Next.WaitForUpdate = true;
 			return Next;
 		}
-		public Strategy ThenOnIncident(string incidentId, Proc.edure procedure = null, int count = 1) {
+		public Strategy ThenOnIncident(Proc.Id id, Proc.edure procedure = null, int count = 1) {
 			Strategy deferringStrategy = null;
-			deferringStrategy = ThenImmediately("(defer)" + incidentId, incident => {
-				Strategy deferredStrategy = new Strategy("(deferred)" + incidentId, procedure, this);
+			deferringStrategy = ThenImmediately("(defer)" + id, incident => {
+				Strategy deferredStrategy = new Strategy("(deferred)" + id, procedure, this);
 				deferredStrategy.Next = deferringStrategy.Next;
 				deferredStrategy.IsDeferred = true;
-				Proc.OnIncident(incidentId, deferredStrategy.Invoke, count, deferredStrategy.ContinueChain);
+				Proc.OnIncident(id, deferredStrategy.Invoke, count, deferredStrategy.ContinueChain);
 				return Proc.Result.Halt;
 			});
 			return deferringStrategy;
 		}
-		public Strategy ThenWhileIncident(string incidentId, Proc.edure procedure = null) {
+		/// <summary>
+		/// keep executing procedure until it returns Proc.Result.Success.
+		/// </summary>
+		/// <param name="id"></param>
+		/// <param name="procedure">incident listener is removed if result is <see cref="Proc.Result.Success"/>. should return <see cref="Proc.Result.Halt"/> until it should stop</param>
+		public Strategy ThenWhileIncident(Proc.Id id, Proc.edure procedure = null) {
 			Strategy deferringStrategy = null;
-			deferringStrategy = ThenImmediately("(defer)" + incidentId, incident => {
-				Strategy deferredStrategy = new Strategy("(deferred)" + incidentId, procedure, this);
+			deferringStrategy = ThenImmediately("(defer)" + id, incident => {
+				Strategy deferredStrategy = new Strategy("(deferred)" + id, procedure, this);
 				deferredStrategy.Next = deferringStrategy.Next;
 				deferredStrategy.IsDeferred = true;
-				Proc.WhileIncident(incidentId, deferredStrategy.InvokeChain);
+				Proc.WhileIncident(id, deferredStrategy.Invoke, deferringStrategy.ContinueChain);
 				return Proc.Result.Halt;
 			});
 			return deferringStrategy;
@@ -187,7 +206,7 @@ namespace NonStandard.Procedure {
 		}
 		public Strategy ThenDecideBestChoice(string identifier, IList<Strategy> possibleStrategies) {
 			Strategy deferringStrategy = null;
-			deferringStrategy = ThenImmediately("(decide)" + identifier, incident => {
+			deferringStrategy = ThenImmediately("(auto decide)" + identifier, incident => {
 				Strategy choice = PickBest(possibleStrategies);
 				//Debug.Log("Picked [" + choice.ListStrategies().JoinToString()+"]");
 				if (choice == null) {
@@ -198,6 +217,39 @@ namespace NonStandard.Procedure {
 				choice.Last().Next = deferringStrategy.Next;
 				//Debug.Log("About to invoke [" + choice.ListStrategies().JoinToString() + "]");
 				choice.InvokeChain(incident);
+				return Proc.Result.Halt;
+			});
+			return deferringStrategy;
+		}
+
+		public Strategy ThenDoFirstIncident(string identifier, (Proc.Id, Proc.edure) option0) {
+			return ThenDoFirstIncident(identifier, new []{option0});
+		}
+		public Strategy ThenDoFirstIncident(string identifier, (Proc.Id, Proc.edure) option0, (Proc.Id, Proc.edure) option1) {
+			return ThenDoFirstIncident(identifier, new []{option0,option1});
+		}
+		public Strategy ThenDoFirstIncident(string identifier, (Proc.Id, Proc.edure) option0, (Proc.Id, Proc.edure) option1, (Proc.Id, Proc.edure) option2) {
+			return ThenDoFirstIncident(identifier, new []{option0,option1,option2});
+		}
+		public Strategy ThenDoFirstIncident(string identifier, (Proc.Id, Proc.edure) option0, (Proc.Id, Proc.edure) option1, (Proc.Id, Proc.edure) option2, (Proc.Id, Proc.edure) option3) {
+			return ThenDoFirstIncident(identifier, new []{option0,option1,option2,option3});
+		}
+
+		public Strategy ThenDoFirstIncident(string identifier, (Proc.Id, Proc.edure)[] options) {
+			Strategy deferringStrategy = null;
+			bool finished = false;
+			Proc.Result DoneWithOptionsAndContinue(Incident incident) {
+				if (finished) return Proc.Result.Halt;
+				finished = true;
+				for (int i = 0; i < options.Length; ++i) {
+					Proc.RemoveIncident(options[i].Item1, options[i].Item2);
+				}
+				return deferringStrategy.ContinueChain(incident);
+			}
+			deferringStrategy = ThenImmediately("(incident decide)" + identifier, incident => {
+				for (int i = 0; i < options.Length; ++i) {
+					Proc.OnIncident(options[i].Item1, options[i].Item2, 1, DoneWithOptionsAndContinue);
+				}
 				return Proc.Result.Halt;
 			});
 			return deferringStrategy;
@@ -224,7 +276,6 @@ namespace NonStandard.Procedure {
 			if (best >= 0) { return decisions[best]; }
 			return null;
 		}
-
 		public Error NextExceptionHandler(Type exceptionType) {
 			Strategy s = Next;
 			bool exceptionBlockStarted = false;
@@ -268,8 +319,8 @@ namespace NonStandard.Procedure {
 		public Strategy ThenImmediately(string identifier, Action procedure) { return ThenImmediately(identifier, Proc.ConvertR(procedure, true)); }
 		public Strategy AndThen(string identifier, Proc.edureSimple procedure) { return AndThen(identifier, Proc.ConvertR(procedure, true)); }
 		public Strategy AndThen(string identifier, Action procedure) { return AndThen(identifier, Proc.ConvertR(procedure, true)); }
-		public Strategy ThenOnIncident(string incidentId, Proc.edureSimple procedure, int count = 1) { return ThenOnIncident(incidentId, Proc.ConvertR(procedure, true), count); }
-		public Strategy ThenOnIncident(string incidentId, Action procedure, int count = 1) { return ThenOnIncident(incidentId, Proc.ConvertR(procedure, true), count); }
+		public Strategy ThenOnIncident(Proc.Id id, Proc.edureSimple procedure, int count = 1) { return ThenOnIncident(id, Proc.ConvertR(procedure, true), count); }
+		public Strategy ThenOnIncident(Proc.Id id, Action procedure, int count = 1) { return ThenOnIncident(id, Proc.ConvertR(procedure, true), count); }
 		public Strategy ThenDelay(string identifier, int ms, Proc.edureSimple procedure) { return ThenDelay(identifier, ms, Proc.ConvertR(procedure, true)); }
 		public Strategy ThenDelay(string identifier, int ms, Action procedure) { return ThenDelay(identifier, ms, Proc.ConvertR(procedure, true)); }
 		public Strategy Finally(string name, Proc.edure response) {

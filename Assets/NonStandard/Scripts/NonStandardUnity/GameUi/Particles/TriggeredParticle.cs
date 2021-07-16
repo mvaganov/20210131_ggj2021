@@ -8,8 +8,10 @@ namespace NonStandard.GameUi.Particles {
 		public int emitCount = 10;
 
 		public void Start() {
-			ParticleSystem.MainModule mm = _particleSystem.main;
-			mm.simulationSpace = ParticleSystemSimulationSpace.World;
+			if (_particleSystem) {
+				ParticleSystem.MainModule mm = _particleSystem.main;
+				mm.simulationSpace = ParticleSystemSimulationSpace.World;
+			}
 		}
 
 		/// <summary>
