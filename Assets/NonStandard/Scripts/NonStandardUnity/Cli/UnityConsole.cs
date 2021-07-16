@@ -88,7 +88,8 @@ public class UnityConsole : MonoBehaviour
 		if (!string.IsNullOrEmpty(txt)) {
             Coord oldSize = body.Size;
             body.Write(txt);
-            if(body.Size != oldSize) {
+            renderWindow.MoveToContain(body.Cursor);
+            if (body.Size != oldSize) {
                 //Show.Log("window update");
                 UpdateRenderWindow();
             }
@@ -103,7 +104,11 @@ public class UnityConsole : MonoBehaviour
             if (KCode.AnyShift.IsHeld()) {
                 ScrollRenderWindow(move);
             } else {
+                bool cursorInWindow = renderWindow.Contains(body.Cursor);
                 body.Cursor += move;
+                if(cursorInWindow && !renderWindow.Contains(body.Cursor)) {
+                    renderWindow.MoveToContain(body.Cursor);
+				}
 			}
             return true;
         }

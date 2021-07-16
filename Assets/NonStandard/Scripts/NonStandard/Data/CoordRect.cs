@@ -39,6 +39,8 @@ namespace NonStandard.Data {
 		public Coord GetSize() => Size;
 		public CoordRect GetRect() => this;
 
+		public override string ToString() { return "[" + Left + "," + Top + "," + Right + "," + Bottom + "]"; }
+
 		public CoordRect Intersect(CoordRect r) {
 			GetRectIntersect(min, max, r.min, r.max, out Coord iMin, out Coord iMax);
 			return new CoordRect(iMin, iMax);
@@ -46,6 +48,17 @@ namespace NonStandard.Data {
 
 		public bool Contains(Coord coord) {
 			return coord.col >= min.col && coord.col < max.col && coord.row >= min.row && coord.row < max.row;
+		}
+
+		public bool MoveToContain(Coord coord) {
+			if (Contains(coord)) return false;
+			Coord moveplz = Coord.Zero;
+			if (coord.X < Left) moveplz.X = coord.x-Left;
+			if (coord.Y < Top)  moveplz.Y = coord.y-Top;
+			if (coord.X>= Right)moveplz.X = Right- coord.x + 1;
+			if (coord.Y>=Bottom)moveplz.Y =Bottom- coord.y + 1;
+			Position += moveplz;
+			return true;
 		}
 
 		public bool TryGetIntersect(CoordRect r, out CoordRect intersection) => TryGetIntersect(this, r, out intersection);
