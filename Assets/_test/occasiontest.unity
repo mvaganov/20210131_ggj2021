@@ -420,8 +420,8 @@ MonoBehaviour:
   m_outlineColor:
     serializedVersion: 2
     rgba: 4278190080
-  m_fontSize: 14
-  m_fontSizeBase: 14
+  m_fontSize: 8
+  m_fontSizeBase: 8
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -596,6 +596,7 @@ GameObject:
   - component: {fileID: 404899391}
   - component: {fileID: 404899390}
   - component: {fileID: 404899389}
+  - component: {fileID: 404899392}
   - component: {fileID: 404899388}
   m_Layer: 5
   m_Name: InputField (TMP)
@@ -679,7 +680,7 @@ MonoBehaviour:
   m_HideSoftKeyboard: 0
   m_CharacterValidation: 0
   m_RegexValue: 
-  m_GlobalPointSize: 14
+  m_GlobalPointSize: 8
   m_CharacterLimit: 0
   m_OnEndEdit:
     m_PersistentCalls:
@@ -744,11 +745,10 @@ MonoBehaviour:
   backgroundAlpha: 0.5
   EmptyChar: 32
   BackgroundChar: 9608
+  CursorChar: 95
   consoleBodySize:
     row: 0
     col: 0
-  keysDownStr: 
-  keysHistogram: 
   vtest: 0
 --- !u!114 &404899390
 MonoBehaviour:
@@ -787,6 +787,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 404899386}
   m_CullTransparentMesh: 0
+--- !u!114 &404899392
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 404899386}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f984944117881142a44a49fc0663206, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keysDownStr: 
+  keysHistogram: 
 --- !u!1 &745309403
 GameObject:
   m_ObjectHideFlags: 0
@@ -1202,31 +1216,31 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4550302886921004, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 3.5
       objectReference: {fileID: 0}
     - target: {fileID: 4550302886921004, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -8
       objectReference: {fileID: 0}
     - target: {fileID: 4550302886921004, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 9.5
       objectReference: {fileID: 0}
     - target: {fileID: 4550302886921004, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0.000000035439523
       objectReference: {fileID: 0}
     - target: {fileID: 4550302886921004, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: 0.38268346
       objectReference: {fileID: 0}
     - target: {fileID: 4550302886921004, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: 0.0000000146795305
       objectReference: {fileID: 0}
     - target: {fileID: 4550302886921004, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0.92387956
       objectReference: {fileID: 0}
     - target: {fileID: 4550302886921004, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_RootOrder
@@ -6203,11 +6217,10 @@ MonoBehaviour:
   backgroundAlpha: 0.5
   EmptyChar: 32
   BackgroundChar: 35
+  CursorChar: 95
   consoleBodySize:
     row: 0
     col: 0
-  keysDownStr: 
-  keysHistogram: 
   vtest: 0
 --- !u!114 &1794688011
 MonoBehaviour:

@@ -1,7 +1,6 @@
 ﻿using NonStandard.Data;
 using System.Collections.Generic;
 using NonStandard.Extension;
-using NonStandard;
 using System;
 
 public class ConsoleBody {
@@ -30,6 +29,8 @@ public class ConsoleBody {
 			writeCursor.col = writeCursor.col.Clamp((short)0, limit.col);
 		}
 	}
+	public int CursorLeft { get => writeCursor.X; set => writeCursor.X = value; }
+	public int CursorTop { get => writeCursor.Y; set => writeCursor.Y = value; }
 	public Coord Size {
 		get => size;
 	}
