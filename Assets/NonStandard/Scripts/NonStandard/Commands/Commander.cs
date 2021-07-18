@@ -2,23 +2,23 @@
 using NonStandard.Extension;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace NonStandard.Commands {
-	public class Commander {
-		Dictionary<string, Action<object, Tokenizer>> commandListing = null;
+	public partial class Commander {
+		public Dictionary<string, Command> commandLookup = new Dictionary<string, Command>();
+
 		public Action<List<ParseError>> errorListeners;
-		/// <summary>every command can be executed by a different user, and might work differently based on user</summary>
-		[System.Serializable]
-		public class Instruction {
+		/// <summary>every command can be executed by a different user/command-source, and might work differently based on the source</summary>
+		[System.Serializable] public class Instruction {
 			public string text; public object source;
 			public bool IsSource(object a_source) { return source == a_source; }
-			public override string ToString() { return "(Instruction){text:\"" + text + "\"}"; }
+			public override string ToString() { return "{=CommanderInstruction text:\"" + text + "\"}"; }
 		}
 		/// <summary>queue of instructions that this command line needs to execute.</summary>
 		private List<Instruction> instructionList = new List<Instruction>();
 		/// <summary>useful for callbacks, for finding out what is going on right now</summary>
 		public Instruction RecentInstruction;
-
 
 		private static Commander _instance;
 		public static Commander Instance { get { return (_instance != null) ? _instance : _instance = new Commander(); } }
@@ -26,11 +26,17 @@ namespace NonStandard.Commands {
 		public object _scope;
 		public void SetScope(object scope) { _scope = scope; }
 		public object GetScope() { return _scope; }
-		private Commander() { InitializeCommands(); }
-		public void ParseCommand(Instruction instruction) { ParseCommand(instruction.source, instruction.text); }
-		public void ParseCommand(object source, string command) {
+		public Commander() {
+			if (_instance != null) { Show.Warning("multiple commanders exist"); }
+			InitializeCommands();
+		}
+		public void ParseCommand(Instruction instruction, Show.PrintFunc print) { ParseCommand(instruction.text, instruction.source, print); }
+		public void ParseCommand(string command, object source, Show.PrintFunc print) {
 			Tokenizer cmdTok = new Tokenizer();
 			cmdTok.Tokenize(command);
+			ParseCommand(cmdTok, source, print);
+		}
+		public void ParseCommand(Tokenizer cmdTok, object source, Show.PrintFunc print) {
 			if(cmdTok.errors.Count > 0) {
 				Show.Error(cmdTok.ErrorString());
 				return;
@@ -39,11 +45,11 @@ namespace NonStandard.Commands {
 			int iter = 0;
 			do {
 				string cmd = cmdTok.GetResolvedToken(0, GetScope()).ToString();
-				ExecuteCommand(source, cmd, cmdTok);
+				ExecuteCommand(source, cmd, cmdTok, print);
 				++iter;
-			} while (RemoveFirstCommand(cmdTok));
+			} while (RemoveTokensTillSemicolon(cmdTok));
 		}
-		public bool RemoveFirstCommand(Tokenizer cmdTok) {
+		public bool RemoveTokensTillSemicolon(Tokenizer cmdTok) {
 			for (int i = 0; i < cmdTok.TokenCount; ++i) {
 				Token t = cmdTok.GetToken(i);
 				Delim d = t.GetAsDelimiter();
@@ -54,32 +60,54 @@ namespace NonStandard.Commands {
 			}
 			return false;
 		}
-		public void ExecuteCommand(object source, string command, Tokenizer tok) {
-			//Show.Log(command+": "+tok.DebugPrint());
-			Action<object,Tokenizer> commandToExecute;
-			if (commandListing.TryGetValue(command, out commandToExecute)) {
-				commandToExecute.Invoke(source, tok);
+		public void ExecuteCommand(object source, string commandName, Tokenizer tok, Show.PrintFunc print) {
+			Command commandToExecute;
+			if (commandLookup.TryGetValue(commandName, out commandToExecute)) {
+				//Show.Log("found " + commandToExecute.Name + " " + commandToExecute.help);
+				commandToExecute.handler.Invoke(tok, source, print);
 			} else {
-				tok.AddError("unknown command \'" + command + "\'");
+				//Show.Error("could not find " + commandName);
+				tok.AddError("unknown command \'" + commandName + "\'");
 			}
 			if (tok.errors.Count > 0 && errorListeners != null) {
 				errorListeners.Invoke(tok.errors);
 				tok.errors.Clear();
 			}
 		}
-		public void AddCommands(Dictionary<string, Action<object, Tokenizer>> commands) {
-			foreach(KeyValuePair<string, Action<object, Tokenizer>> kvp in commands) {
+		public void AddCommands(Dictionary<string, Command.Handler> commands) {
+			foreach(KeyValuePair<string, Command.Handler> kvp in commands) {
 				AddCommand(kvp.Key, kvp.Value);
 			}
 		}
-		public void AddCommand(string command, Action<object, Tokenizer> commandAction) {
-			commandListing[command] = commandAction;
+		public void AddCommands(IList<Command> commands) {
+			foreach (Command cmd in commands) { AddCommand(cmd); }
+		}
+		public void AddCommand(string command, Command.Handler commandHandler) {
+			AddCommand(new Command(command, commandHandler));
+		}
+		public void AddCommand(Command command) {
+			commandLookup[command.Name] = command;
 		}
 		private void InitializeCommands() {
-			if (commandListing != null) return; 
-			commandListing = new Dictionary<string, Action<object,Tokenizer>>() {
-				["exit"] = (s,t) => PlatformAdjust.Exit(),
-			};
+			//Show.Log("initializing...");
+			AddCommandsFrom(this);
+			AddCommandsFrom(type:typeof(MoreCommands));
+		}
+		public void AddCommandsFrom(object obj) { AddCommandsFrom(obj, null); }
+		public void AddCommandsFrom(Type type) { AddCommandsFrom(null, type); }
+		private void AddCommandsFrom(object obj, Type type) {
+			if(obj != null && type == null) type = obj.GetType();
+			IEnumerable<MethodInfo> methods = type.FindMethodsWithAttribute<CommandMakerAttribute>();
+			//Show.Log(type.Name+" has candidates");
+			object[] noparams = Array.Empty<object>();
+			foreach (MethodInfo m in methods) {
+				//Show.Log(m.Name);
+				try {
+					Command cmd = m.Invoke(obj, noparams) as Command;
+					//Show.Log("adding \'"+cmd.Name+"\' from "+m.Name);
+					AddCommand(cmd);
+				} catch (Exception) { }
+			}
 		}
 
 		public Instruction PopInstruction() {
@@ -94,4 +122,8 @@ namespace NonStandard.Commands {
 		/// <param name="instruction">Command string, with arguments.</param>
 		public void EnqueueRun(Instruction instruction) { instructionList.Add(instruction); }
 	}
+
+	public partial class MoreCommands { }
+
+	public class CommandMakerAttribute : Attribute { }
 }

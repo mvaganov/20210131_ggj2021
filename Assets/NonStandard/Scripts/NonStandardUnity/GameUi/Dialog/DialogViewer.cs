@@ -6,6 +6,7 @@ using NonStandard.Ui;
 using NonStandard.Commands;
 using UnityEngine.Events;
 using NonStandard.Procedure;
+using System.Text;
 
 namespace NonStandard.GameUi.Dialog {
 	public class DialogViewer : MonoBehaviour {
@@ -28,13 +29,24 @@ namespace NonStandard.GameUi.Dialog {
 			Destroy(prefab_textUi.GetComponent<Button>());
 			Destroy(prefab_textUi.GetComponent<Image>());
 		}
+		public void Print(string text) { Print_commandOutput.Append(text); }
+		private void PossiblyAddParseCommandOutputToDialog(Dialog.DialogOption option) {
+			if (Print_commandOutput.Length == 0) return;
+			string str = Print_commandOutput.ToString();
+			ListItemUi li = listUi.AddItem(option, str, null, prefab_textUi);
+			Print_commandOutput.Clear();
+		}
+		private StringBuilder Print_commandOutput = new StringBuilder();
 		public ListItemUi AddDialogOption(Dialog.DialogOption option, bool scrollAllTheWayDown) {
 			if (!initialized) { Init(); }
 			ListItemUi li = null;
 			do {
 				Dialog.Choice c = option as Dialog.Choice;
 				if (c != null) {
-					li = listUi.AddItem(option, DialogManager.Instance.GetScriptScope().Format(c.text), () => Commander.Instance.ParseCommand(li, c.command), prefab_buttonUi);
+					li = listUi.AddItem(option, DialogManager.Instance.GetScriptScope().Format(c.text), () => {
+						Commander.Instance.ParseCommand(c.command, li, Print);
+						PossiblyAddParseCommandOutputToDialog(option);
+					}, prefab_buttonUi);
 					currentChoices.Add(li);
 					break;
 				}
@@ -46,7 +58,8 @@ namespace NonStandard.GameUi.Dialog {
 				Dialog.Command cmd = option as Dialog.Command;
 				if (cmd != null) {
 					//NonStandard.Show.Log("executing command "+cmd.command);
-					Commander.Instance.ParseCommand(li, cmd.command);
+					Commander.Instance.ParseCommand(cmd.command, option, Print);
+					PossiblyAddParseCommandOutputToDialog(option);
 					break;
 				}
 			}

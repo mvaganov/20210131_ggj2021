@@ -30,7 +30,7 @@ namespace NonStandard.GameUi.Dialog {
         }
         private void Awake() {
             Commander.Instance.AddCommands(
-                new Dictionary<string, System.Action<object, Tokenizer>>() {
+                new Dictionary<string, Command.Handler>() {
                     ["dialog"] = SetDialog,
                     ["start"] = StartDialog,
                     ["continue"] = ContinueDialog,
@@ -91,11 +91,11 @@ namespace NonStandard.GameUi.Dialog {
         public void Hide() { ActiveDialog.Hide(); }
         public void Show() { ActiveDialog.Show(); }
 
-        public void SetDialog(object src, Tokenizer tok) { ActiveDialog.SetDialog(src, tok, tok.GetStr(1)); }
-        public void StartDialog(object src, Tokenizer tok) { ActiveDialog.StartDialog(src, tok, tok.GetStr(1)); }
-        public void ContinueDialog(object src, Tokenizer tok) { ActiveDialog.ContinueDialog(src, tok, tok.GetStr(1)); }
-        public void Done(object src, Tokenizer tok) { ActiveDialog.Done(); }
-        public void Hide(object src, Tokenizer tok) { ActiveDialog.Hide(); }
-        public void _Show(object src, Tokenizer tok) { ActiveDialog.Show(); }
+        public void SetDialog(Tokenizer tok, object src, Show.PrintFunc print) { ActiveDialog.SetDialog(src, tok, tok.GetStr(1)); }
+        public void StartDialog(Tokenizer tok, object src, Show.PrintFunc print) { ActiveDialog.StartDialog(src, tok, tok.GetStr(1)); }
+        public void ContinueDialog(Tokenizer tok, object src, Show.PrintFunc print) { ActiveDialog.ContinueDialog(src, tok, tok.GetStr(1)); }
+        public void Done(Tokenizer tok, object src, Show.PrintFunc print) { ActiveDialog.Done(); }
+        public void Hide(Tokenizer tok, object src, Show.PrintFunc print) { ActiveDialog.Hide(); }
+        public void _Show(Tokenizer tok, object src, Show.PrintFunc print) { ActiveDialog.Show(); }
     }
 }

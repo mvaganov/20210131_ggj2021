@@ -179,7 +179,7 @@ public class Game : MonoBehaviour
         return d;
     }
 
-    public void ClaimPlayer(object src, Tokenizer tok) {
+    public void ClaimPlayer(Tokenizer tok, object src, Show.PrintFunc print) {
         GameObject npc = DialogManager.Instance.dialogWithWho;
         Global.Get<Team>().AddMember(npc);
         MazeLevel ml = Global.Get<MazeLevel>();

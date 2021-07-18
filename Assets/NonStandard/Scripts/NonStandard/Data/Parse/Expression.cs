@@ -13,8 +13,8 @@ namespace NonStandard.Data.Parse {
 			return ParseRuleSet.Entry.PrintAll(tokens);
 		}
 		public string Stringify() { return ToString(); }
-		public string DebugPrint(int depth = 0, string indent = "  ") {
-			return Tokenizer.DebugPrint(tokens, depth, indent);
+		public string DebugPrint(int depth = 0, string indent = "  ", string separator = ", ") {
+			return Tokenizer.DebugPrint(tokens, depth, indent, separator);
 		}
 		public List<object> Resolve(Tokenizer tok, object scope = null) {
 			List<object> results = new List<object>();

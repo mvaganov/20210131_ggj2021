@@ -7,7 +7,7 @@ using UnityEngine;
 namespace NonStandard.Data {
 	public class DictionaryKeeperManager : MonoBehaviour {
 		public void Awake() {
-			Commander.Instance.AddCommands(new Dictionary<string, Action<object, Tokenizer>>() {
+			Commander.Instance.AddCommands(new Dictionary<string, Command.Handler>() {
 				["assertnum"] = AssertNum,
 				["++"] = Increment,
 				["--"] = Decrement,
@@ -19,10 +19,10 @@ namespace NonStandard.Data {
 		public void Register(DictionaryKeeper keeper) { keepers.Add(keeper); if (Keeper == null) Keeper = keeper; }
 		public void Increment(string name) { Keeper.AddTo(name, 1); }
 		public void Decrement(string name) { Keeper.AddTo(name, -1); }
-		public void Increment(object src, Tokenizer tok) { Increment(tok.GetStr(1)); }
-		public void Decrement(object src, Tokenizer tok) { Decrement(tok.GetStr(1)); }
-		public void SetVariable(object src, Tokenizer tok) {
-			if(tok.tokens.Count <= 1) { tok.AddError("set missing variable name"); return; }
+		public void Increment(Tokenizer tok, object src, Show.PrintFunc print) { Increment(tok.GetStr(1)); }
+		public void Decrement(Tokenizer tok, object src, Show.PrintFunc print) { Decrement(tok.GetStr(1)); }
+		public void SetVariable(Tokenizer tok, object src, Show.PrintFunc print) {
+			if (tok.tokens.Count <= 1) { tok.AddError("set missing variable name"); return; }
 			string key = tok.GetStr(1, Keeper.Dictionary);
 			if (tok.tokens.Count <= 2) { tok.AddError("set missing variable value"); return; }
 			object value = tok.GetResolvedToken(2, Keeper.Dictionary);
@@ -31,7 +31,7 @@ namespace NonStandard.Data {
 			if (vStr != null && float.TryParse(vStr, out f)) { value = f; }
 			Keeper.Dictionary.Set(key, value);
 		}
-		public void AssertNum(object src, Tokenizer tok) {
+		public void AssertNum(Tokenizer tok, object src, Show.PrintFunc print) {
 			string itemName = tok.GetStr(1, Keeper.Dictionary);
 			//Show.Log("!!!!%^ asserting " + itemName+"     ("+tok.str+")");
 			if (itemName != null && Keeper.Dictionary.ContainsKey(itemName)) return;

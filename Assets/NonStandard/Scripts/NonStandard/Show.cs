@@ -2,11 +2,12 @@
 
 namespace NonStandard {
 	public partial class Show {
+        public delegate void PrintFunc(string text);
         public class Routes {
-            public Action<string> onLog;
-            public Action<string> onError;
-            public Action<string> onWarning;
-            public Action<string> onAnyMessage;
+            public PrintFunc onLog;
+            public PrintFunc onError;
+            public PrintFunc onWarning;
+            public PrintFunc onAnyMessage;
             public void Log(object obj) { Log(obj != null ? obj.ToString() : ""); }
             public void Log(string str) {
                 onLog?.Invoke(str);
@@ -30,10 +31,10 @@ namespace NonStandard {
             }
             public Routes() { }
             public Routes(Routes o) {
-                if (o.onLog != null) onLog = (Action<string>)o.onLog.Clone();
-                if (o.onError != null) onError = (Action<string>)o.onError.Clone();
-                if (o.onWarning != null) onWarning = (Action<string>)o.onWarning.Clone();
-                if (o.onAnyMessage != null) onAnyMessage = (Action<string>)o.onAnyMessage.Clone();
+                if (o.onLog != null) onLog = (PrintFunc)o.onLog.Clone();
+                if (o.onError != null) onError = (PrintFunc)o.onError.Clone();
+                if (o.onWarning != null) onWarning = (PrintFunc)o.onWarning.Clone();
+                if (o.onAnyMessage != null) onAnyMessage = (PrintFunc)o.onAnyMessage.Clone();
             }
         }
         public static Routes _instance;

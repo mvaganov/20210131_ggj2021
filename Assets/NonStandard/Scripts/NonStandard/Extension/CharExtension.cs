@@ -15,12 +15,12 @@ namespace NonStandard.Extension {
 		public static int GetDigitValueHexadecimalPattern(this char c) {
 			if (c >= '0' && c <= '9') return (byte)(c - '0');
 			if (c >= 'A' && c <= 'Z') return (byte)((c - 'A') + 10);
-			if (c >= 'a' && c <= 'z') return (byte)((c - 'a') + 10);
+			if (c >= 'a') return (byte)((c - 'a') + 10);
 			return -1;
 		}
 		public static char ConvertToHexadecimalPattern(int n) {
 			if (n < 10) { return (char)('0' + n); }
-			return (char)('A' + n);
+			return (char)('a' + (n-10));
 		}
 		public const string Base64Characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789​+/=";
 		private static Dictionary<char, int> _Base64Characters = null;

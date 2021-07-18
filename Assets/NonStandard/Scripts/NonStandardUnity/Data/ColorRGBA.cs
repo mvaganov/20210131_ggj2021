@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 
 namespace NonStandard.Data {
+	[System.Serializable]
 	partial struct ColorRGBA {
 		public ColorRGBA(UnityEngine.Color c) : this((byte)(c.r*255), (byte)(c.g * 255), (byte)(c.b * 255), (byte)(c.a * 255)) { }
 		public ColorRGBA(UnityEngine.Color32 c) : this(c.r,c.g,c.b,c.a) { }

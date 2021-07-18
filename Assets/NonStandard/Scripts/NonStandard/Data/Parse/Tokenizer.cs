@@ -76,26 +76,34 @@ namespace NonStandard.Data.Parse {
 		public ParseError AddError(Token token, string message) { return AddError(token.index, message); }
 		public void AddError(ParseError error) { errors.Add(error); }
 		public string ErrorString() { return errors.JoinToString("\n"); }
-		public bool ShowErrorTo(Action<string> show) {
+		public bool ShowErrorTo(Show.PrintFunc show) {
 			if (errors.Count == 0) return false;
 			show.Invoke(ErrorString()); return true;
 		}
-		public void Tokenize(string str, ParseRuleSet context = null) {
+		public void Tokenize(string str, ParseRuleSet parsingRules = null) {
 			this.str = str;
 			errors.Clear();
 			tokens.Clear();
 			rows.Clear();
-			Tokenize(context, 0);
+			Tokenize(parsingRules, 0);
 		}
-		public string DebugPrint(int depth = 0, string indent = "  ") {
-			return DebugPrint(tokens, depth, indent);
+		public static Tokenizer Tokenize(string str) {
+			Tokenizer t = new Tokenizer();
+			t.Tokenize(str, null);
+			return t;
 		}
-		public static string DebugPrint(IList<Token> tokens, int depth = 0, string indent = "  ") {
+		public string DebugPrint(int depth = 0, string indent = "  ", string separator = ", ") {
+			return DebugPrint(tokens, depth, indent, separator);
+		}
+		public static string DebugPrint(IList<Token> tokens, int depth = 0, string indent = "  ", string separator = ", ") {
 			StringBuilder sb = new StringBuilder();
-			DebugPrint(tokens, depth, indent, sb);
+			DebugPrint(tokens, depth, indent, separator, sb);
 			return sb.ToString();
 		}
-		public static void DebugPrint(IList<Token> tokens, int depth = 0, string indent = "  ", StringBuilder sb = null, List<Token> path = null) {
+		public override string ToString() {
+			return "["+DebugPrint(indent:null)+"]";
+		}
+		public static void DebugPrint(IList<Token> tokens, int depth = 0, string indent = "  ", string separator = ", ", StringBuilder sb = null, List<Token> path = null) {
 			if(path == null) { path = new List<Token>(); }
 			for(int i = 0; i < tokens.Count; ++i) {
 				Token t = tokens[i];
@@ -115,20 +123,32 @@ namespace NonStandard.Data.Parse {
 					//} else
 					if (e.tokens != tokens) {
 						ParseRuleSet.Entry prevEntry = i > 0 ? tokens[i - 1].GetAsContextEntry() : null;
-						if (prevEntry != null && prevEntry.tokens != tokens) {
-							sb.Append(indent);
-						} else {
-							sb.Append("\n").Append(StringExtension.Indentation(depth + 1, indent));
+						if (indent != null) {
+							if (prevEntry != null && prevEntry.tokens != tokens) {
+								sb.Append(indent);
+							} else {
+								sb.Append("\n").Append(StringExtension.Indentation(depth + 1, indent));
+							}
 						}
-						DebugPrint(e.tokens, depth + 1, indent, sb, path);
-						sb.Append("\n").Append(StringExtension.Indentation(depth, indent));
+						if (separator != null && i > 0) { sb.Append(separator); }
+						DebugPrint(e.tokens, depth + 1, indent, separator, sb, path);
+						if (indent != null) {
+							sb.Append("\n").Append(StringExtension.Indentation(depth, indent));
+						}
 					} else {
-						if (i == 0) { sb.Append(e.beginDelim); }
-						else if (i == tokens.Count-1) { sb.Append(e.endDelim); }
+						if (i == 0) {
+							if (separator != null && i > 0) { sb.Append(separator); }
+							sb.Append("(").Append(e.beginDelim.ToString().StringifySmall());
+						}
+						else if (i == tokens.Count-1) {
+							if (separator != null && i > 0) { sb.Append(separator); }
+							sb.Append(e.endDelim.ToString().StringifySmall()).Append(")");
+						}
 						else { sb.Append(" ").Append(e.sourceMeta).Append(" "); }
 					}
 				} else {
-					sb.Append("'").Append(tokens[i].GetAsSmallText()).Append("'");
+					if (separator != null && i > 0) { sb.Append(separator); }
+					sb.Append(tokens[i].GetAsSmallText().StringifySmall());
 				}
 			}
 		}

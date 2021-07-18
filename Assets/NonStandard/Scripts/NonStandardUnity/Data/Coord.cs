@@ -34,7 +34,7 @@ namespace NonStandard.Data {
 
 #if UNITY_EDITOR
 [CustomPropertyDrawer(typeof(NonStandard.Data.Coord))]
-public class ColorPointDrawer : PropertyDrawer {
+public class CoordDrawer : PropertyDrawer {
 	public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
 		//label = EditorGUI.BeginProperty(position, label, property);
 		SerializedProperty colProp = property.FindPropertyRelative("col");
@@ -44,11 +44,9 @@ public class ColorPointDrawer : PropertyDrawer {
 		colRect.width /= 2;
 		Rect rowRect = colRect;
 		rowRect.position += new Vector2(colRect.width, 0);
-		const short labelWidth = 12;
-		if (EditorGUI.indentLevel == 0) {
-			colRect.xMin += labelWidth;
-			rowRect.xMin += labelWidth;
-		}
+		const short labelWidth = 14;
+		colRect.xMin += labelWidth * (1 - EditorGUI.indentLevel);
+		rowRect.xMin += labelWidth * (1 - EditorGUI.indentLevel);
 		colProp.intValue = EditorGUI.IntField(colRect, colProp.intValue);
 		rowProp.intValue = EditorGUI.IntField(rowRect, rowProp.intValue);
 		colRect.position += new Vector2(-labelWidth, 0); EditorGUI.LabelField(colRect, "X");

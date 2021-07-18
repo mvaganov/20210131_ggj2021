@@ -15,11 +15,11 @@ namespace NonStandard.GameUi.Inventory {
 		public void SetMainInventory(string inventoryName) {
 			main = inventories.Find(i => i.name == inventoryName);
 		}
-		public void SetMainInventory(object src, Tokenizer tok) {
+		public void SetMainInventory(Tokenizer tok, object src, Show.PrintFunc print) {
 			string n = tok.GetStr(1, Commander.Instance.GetScope());
 			SetMainInventory(n);
 		}
-		public void GiveInventory(object src, Tokenizer tok) {
+		public void GiveInventory(Tokenizer tok, object src, Show.PrintFunc print) {
 			string itemName = tok.GetStr(1, Commander.Instance.GetScope());
 			Inventory inv = main;
 			GameObject itemObj = inv.RemoveItem(itemName);
