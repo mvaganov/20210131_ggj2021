@@ -15,20 +15,20 @@ namespace NonStandard.GameUi.Inventory {
 		public void SetMainInventory(string inventoryName) {
 			main = inventories.Find(i => i.name == inventoryName);
 		}
-		public void SetMainInventory(Tokenizer tok, object src, Show.PrintFunc print) {
-			string n = tok.GetStr(1, Commander.Instance.GetScope());
+		public void SetMainInventory(Command.Exec e) {
+			string n = e.tok.GetStr(1, Commander.Instance.GetScope());
 			SetMainInventory(n);
 		}
-		public void GiveInventory(Tokenizer tok, object src, Show.PrintFunc print) {
-			string itemName = tok.GetStr(1, Commander.Instance.GetScope());
+		public void GiveInventory(Command.Exec e) {
+			string itemName = e.tok.GetStr(1, Commander.Instance.GetScope());
 			Inventory inv = main;
 			GameObject itemObj = inv.RemoveItem(itemName);
 			if (itemObj != null) {
-				if (tok.TokenCount == 2 || tok.GetToken(2).ToString() == ";") {
+				if (e.tok.TokenCount == 2 || e.tok.GetToken(2).ToString() == ";") {
 					UnityEngine.Object.Destroy(itemObj);
 					//Show.Log("giving to nobody... destroying");
 				} else {
-					Token recieptiant = tok.GetToken(2);
+					Token recieptiant = e.tok.GetToken(2);
 					Show.Log("TODO give " + itemObj + " to " + recieptiant);
 				}
 			}

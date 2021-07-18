@@ -19,25 +19,25 @@ namespace NonStandard.Data {
 		public void Register(DictionaryKeeper keeper) { keepers.Add(keeper); if (Keeper == null) Keeper = keeper; }
 		public void Increment(string name) { Keeper.AddTo(name, 1); }
 		public void Decrement(string name) { Keeper.AddTo(name, -1); }
-		public void Increment(Tokenizer tok, object src, Show.PrintFunc print) { Increment(tok.GetStr(1)); }
-		public void Decrement(Tokenizer tok, object src, Show.PrintFunc print) { Decrement(tok.GetStr(1)); }
-		public void SetVariable(Tokenizer tok, object src, Show.PrintFunc print) {
-			if (tok.tokens.Count <= 1) { tok.AddError("set missing variable name"); return; }
-			string key = tok.GetStr(1, Keeper.Dictionary);
-			if (tok.tokens.Count <= 2) { tok.AddError("set missing variable value"); return; }
-			object value = tok.GetResolvedToken(2, Keeper.Dictionary);
+		public void Increment(Command.Exec e) { Increment(e.tok.GetStr(1)); }
+		public void Decrement(Command.Exec e) { Decrement(e.tok.GetStr(1)); }
+		public void SetVariable(Command.Exec e) {
+			if (e.tok.tokens.Count <= 1) { e.tok.AddError("set missing variable name"); return; }
+			string key = e.tok.GetStr(1, Keeper.Dictionary);
+			if (e.tok.tokens.Count <= 2) { e.tok.AddError("set missing variable value"); return; }
+			object value = e.tok.GetResolvedToken(2, Keeper.Dictionary);
 			string vStr = value as string;
 			float f;
 			if (vStr != null && float.TryParse(vStr, out f)) { value = f; }
 			Keeper.Dictionary.Set(key, value);
 		}
-		public void AssertNum(Tokenizer tok, object src, Show.PrintFunc print) {
-			string itemName = tok.GetStr(1, Keeper.Dictionary);
+		public void AssertNum(Command.Exec exec) {
+			string itemName = exec.tok.GetStr(1, Keeper.Dictionary);
 			//Show.Log("!!!!%^ asserting " + itemName+"     ("+tok.str+")");
 			if (itemName != null && Keeper.Dictionary.ContainsKey(itemName)) return;
 			//Show.Log("!!!!%^ getting value ");
 			//Show.Log("!!!!%^ checking "+tok.tokens[2]+" in "+Scope);
-			object itemValue = tok.GetResolvedToken(2, Keeper.Dictionary);
+			object itemValue = exec.tok.GetResolvedToken(2, Keeper.Dictionary);
 			//Show.Log("!!!!%^ value is " + itemValue);
 			Keeper.Dictionary.Set(itemName, itemValue);
 		}

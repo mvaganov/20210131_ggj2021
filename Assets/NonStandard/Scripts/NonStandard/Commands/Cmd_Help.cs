@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace NonStandard.Commands {
 	public partial class Commander {
-		public static void Cmd_Help_Handler(Tokenizer tokenizer, object whosAsking, Show.PrintFunc print, Dictionary<string,Command> commandTable) {
+		public static void Cmd_Help_Handler(Command.Exec e, Dictionary<string,Command> commandTable) {
 			byte command = (byte)ConsoleColor.Magenta;
 			byte argument = (byte)ConsoleColor.Yellow;
 			byte preview = (byte)ConsoleColor.DarkMagenta;
@@ -27,16 +27,17 @@ namespace NonStandard.Commands {
 				Command cmd = commands[i];
 				string colorTxt = cmd.deprecated ? colorDeprecated : cmd.preview ? colorPreview : colorCommand;
 				string line = $"{colorTxt}{cmd.Name}{colorStd} : {colorDescription}{cmd.help}{colorStd}\n";
-				print.Invoke(line);
+				e.print.Invoke(line);
 			}
 			string extraInstructions = $"for more information, type {colorCommand}help{colorArgument} nameOfCommand{colorStd}\n";
-			print.Invoke(extraInstructions);
+			e.print.Invoke(extraInstructions);
 		}
-		protected void Cmd_Help_Handler(Tokenizer tokenizer, object whosAsking, Show.PrintFunc print) {
-			Cmd_Help_Handler(tokenizer, whosAsking, print, commandLookup);
+		protected void Cmd_Help_Handler(Command.Exec e) {
+			Cmd_Help_Handler(e, commandLookup);
 		}
 		[CommandMaker] protected Command GenerateHelpCommand() {
 			return new Command("help", Cmd_Help_Handler, new Argument[] {
+				new Argument("c", "command", "which specific command to get help info for", type:typeof(string), order:1),
 			}, "prints this help text");
 		}
 	}

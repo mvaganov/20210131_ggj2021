@@ -91,11 +91,11 @@ namespace NonStandard.GameUi.Dialog {
         public void Hide() { ActiveDialog.Hide(); }
         public void Show() { ActiveDialog.Show(); }
 
-        public void SetDialog(Tokenizer tok, object src, Show.PrintFunc print) { ActiveDialog.SetDialog(src, tok, tok.GetStr(1)); }
-        public void StartDialog(Tokenizer tok, object src, Show.PrintFunc print) { ActiveDialog.StartDialog(src, tok, tok.GetStr(1)); }
-        public void ContinueDialog(Tokenizer tok, object src, Show.PrintFunc print) { ActiveDialog.ContinueDialog(src, tok, tok.GetStr(1)); }
-        public void Done(Tokenizer tok, object src, Show.PrintFunc print) { ActiveDialog.Done(); }
-        public void Hide(Tokenizer tok, object src, Show.PrintFunc print) { ActiveDialog.Hide(); }
-        public void _Show(Tokenizer tok, object src, Show.PrintFunc print) { ActiveDialog.Show(); }
+        public void SetDialog(Command.Exec e) { ActiveDialog.SetDialog(e.src, e.tok, e.tok.GetStr(1)); }
+        public void StartDialog(Command.Exec e) { ActiveDialog.StartDialog(e.src, e.tok, e.tok.GetStr(1)); }
+        public void ContinueDialog(Command.Exec e) { ActiveDialog.ContinueDialog(e.src, e.tok, e.tok.GetStr(1)); }
+        public void Done(Command.Exec e) { ActiveDialog.Done(); }
+        public void Hide(Command.Exec e) { ActiveDialog.Hide(); }
+        public void _Show(Command.Exec e) { ActiveDialog.Show(); }
     }
 }

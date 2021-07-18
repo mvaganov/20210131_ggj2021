@@ -15,6 +15,7 @@ namespace NonStandard.Commands {
 			public bool IsSource(object a_source) { return source == a_source; }
 			public override string ToString() { return "{=CommanderInstruction text:\"" + text + "\"}"; }
 		}
+
 		/// <summary>queue of instructions that this command line needs to execute.</summary>
 		private List<Instruction> instructionList = new List<Instruction>();
 		/// <summary>useful for callbacks, for finding out what is going on right now</summary>
@@ -61,10 +62,10 @@ namespace NonStandard.Commands {
 			return false;
 		}
 		public void ExecuteCommand(object source, string commandName, Tokenizer tok, Show.PrintFunc print) {
-			Command commandToExecute;
-			if (commandLookup.TryGetValue(commandName, out commandToExecute)) {
-				//Show.Log("found " + commandToExecute.Name + " " + commandToExecute.help);
-				commandToExecute.handler.Invoke(tok, source, print);
+			Command command;
+			if (commandLookup.TryGetValue(commandName, out command)) {
+				//Show.Log("found " + command.Name + " " + command.help);
+				command.handler.Invoke(new Command.Exec(command, tok, source, print));
 			} else {
 				//Show.Error("could not find " + commandName);
 				tok.AddError("unknown command \'" + commandName + "\'");

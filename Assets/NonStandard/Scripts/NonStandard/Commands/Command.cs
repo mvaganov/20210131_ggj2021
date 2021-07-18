@@ -3,12 +3,32 @@
 namespace NonStandard.Commands {
 	public class Command {
 		/// <summary>
-		/// 
+		/// an execution context: what is being executed, with what arguments, from what source, and where is realtime output going
 		/// </summary>
-		/// <param name="tokens">parsed tokens from a command string. use <see cref="Tokenizer.Tokenize"/></param>
-		/// <param name="whosAsking"></param>
-		/// <param name="printFunction"></param>
-		public delegate void Handler(Tokenizer tokens, object whosAsking, Show.PrintFunc printFunction);
+		public class Exec {
+			/// <summary>
+			/// what command is executing this handler
+			/// </summary>
+			public Command cmd;
+			/// <summary>
+			/// parsed tokens from a command string. use <see cref="Tokenizer.Tokenize"/>
+			/// </summary>
+			public Tokenizer tok;
+			public object src;
+			public Show.PrintFunc print;
+			/// <param name="cmd">what command is executing this handler</param>
+			/// <param name="tokenizer">parsed tokens from a command string. use <see cref="Tokenizer.Tokenize"/></param>
+			/// <param name="source"></param>
+			/// <param name="printFunction"></param>
+			public Exec(Command cmd, Tokenizer tokenizer, object source, Show.PrintFunc printFunction) {
+				this.cmd = cmd;
+				this.tok = tokenizer;
+				this.src = source;
+				this.print = printFunction;
+			}
+		}
+
+		public delegate void Handler(Exec executionContext);
 
 		public readonly string Name;
 		public Handler handler;

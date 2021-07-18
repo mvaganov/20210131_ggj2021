@@ -22,21 +22,15 @@ namespace NonStandard.Cli {
 			public UnityEvent action;
 		}
 		public List<Command> commands = new List<Command>();
-		public Command ExecuteCommand(string command) {
+		public Command DoCommand(string command) {
 			Tokenizer t = Tokenizer.Tokenize(command);
-			Show.Log(t.GetStr(0)+" : "+t.ToString());
+			//Show.Log(t.GetStr(0)+" : "+t.ToString());
 			commander.ParseCommand(t, this, console.Write);
 			if(t.errors.Count > 0) {
 				console.PushForeColor(ConsoleColor.Red);
 				console.Write(t.ErrorString());
 				console.PopForeColor();
 			}
-			////t.ToString()
-			////commander.AddCommands;
-			//for (int i = 0; i < commands.Count; ++i) {
-			//	Command c = commands[i];
-			//	if (command.StartsWith(c.command)) { c.action.Invoke(); return c; }
-			//}
 			return null;
 		}
 
@@ -152,13 +146,13 @@ namespace NonStandard.Cli {
 			currentLine.Append(txt);
 			if (txt.Contains("\n")) {
 				string completeInput = GetInputSoFar();
-				Show.Log(completeInput);
+				//Show.Log(completeInput);
 				if (IsListeningToLine()) {
 					lineInputListeners.ForEach(action => action.Invoke(completeInput));
 					lineInputListeners.Clear();
 				}
 				currentLine.Clear();
-				ExecuteCommand(completeInput);
+				DoCommand(completeInput);
 				return true;
 			}
 			return false;
