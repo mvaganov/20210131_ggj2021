@@ -37,7 +37,7 @@ namespace NonStandard.Commands {
 		}
 		[CommandMaker] protected Command GenerateHelpCommand() {
 			return new Command("help", Cmd_Help_Handler, new Argument[] {
-				new Argument("c", "command", "which specific command to get help info for", type:typeof(string), order:1),
+				new Argument("-c", "command", "which specific command to get help info for", type:typeof(string), order:1),
 			}, "prints this help text");
 		}
 	}

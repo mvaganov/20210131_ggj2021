@@ -2,11 +2,13 @@
 using NonStandard.Data;
 using NonStandard.Data.Parse;
 using NonStandard.Inputs;
+using NonStandard.Extension;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Events;
+using static NonStandard.Commands.Commander;
 
 namespace NonStandard.Cli {
 	[RequireComponent(typeof(UnityConsole))]
@@ -25,11 +27,24 @@ namespace NonStandard.Cli {
 			public void AddToCommander(Commands.Commander cmdr) { cmdr.AddCommand(new Command(name, Invoke, help: description)); }
 		}
 		public List<CommandEntry> commands = new List<CommandEntry>();
-		public CommandEntry DoCommand(string command) {
-			Tokenizer t = Tokenizer.Tokenize(command);
-			//Show.Log(t.GetStr(0)+" : "+t.ToString());
-			commander.ParseCommand(t, this, console.Write);
-			if(t.errors.Count > 0) {
+		public CommandEntry DoCommand(string text) {
+			//// guess what Command's tokenizer to use based on the first word
+			//Tokenizer t = null;
+			//Command command = null;
+			//string firstWord = text.Trim().SubstringUntilFirst();
+			//if (firstWord != null) {
+			//	command = commander.GetCommand(firstWord);
+			//	if (command != null) {
+			//		t = command.Tokenize(text);
+			//	}
+			//}
+			//if (t == null) {
+			//	t = Tokenizer.Tokenize(text);
+			//}
+			////Show.Log(t.GetStr(0)+" : "+t.ToString());
+			//commander.ParseCommand(t, this, console.Write);
+			commander.ParseCommand(new Instruction { source=this, text=text }, console.Write, out Tokenizer t);
+			if (t?.errors?.Count > 0) {
 				console.PushForeColor(ConsoleColor.Red);
 				console.Write(t.ErrorString());
 				console.PopForeColor();

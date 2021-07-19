@@ -18,8 +18,31 @@ namespace NonStandard.Extension {
 			if (str.StartsWith(trimMe)) { return str.Substring(trimMe.Length); }
 			return str;
 		}
-		public static string DefaultIndentation = "  ";
 
+		public static readonly string[] whitespace = new string[] { " ", "\t", "\n", "\r" };
+		public static int IndexOfFirst(this string str, string[] delimiter, out int firstDelimeter) {
+			int firstIndex = -1;
+			firstDelimeter = -1;
+			for(int i = 0; i < delimiter.Length; ++i) {
+				int index = str.IndexOf(delimiter[i]);
+				if(index >= 0 && (firstIndex < 0 || index < firstIndex)) {
+					firstIndex = index;
+					firstDelimeter = i;
+				}
+			}
+			return firstIndex;
+		}
+		public static string SubstringUntilWhitespace(this string str) {
+			return SubstringUntilFirst(str, whitespace);
+		}
+		public static string SubstringUntilFirst(this string str, string[] delimiter) {
+			if(delimiter == null) { delimiter = whitespace; }
+			int index = IndexOfFirst(str, delimiter, out int which);
+			if(index >= 0) { return str.Substring(0, index); }
+			return null;
+		}
+
+		public static string DefaultIndentation = "  ";
 		/// <param name="indent">if null, use <see cref="DefaultIndentation"/></param>
 		/// <param name="depth"></param>
 		public static string Indentation(int depth, string indent = null) {

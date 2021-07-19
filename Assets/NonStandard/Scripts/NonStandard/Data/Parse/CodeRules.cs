@@ -29,6 +29,7 @@ namespace NonStandard.Data.Parse {
 		public static Delim[] _triangle_brace_delimiter = new Delim[] { new DelimCtx("<", ctx: "<>", s: true), new DelimCtx(">", ctx: "<>", e: true) };
 		public static Delim[] _ternary_operator_delimiter = new Delim[] { "?", ":", "??" };
 		public static Delim[] _instruction_finished_delimiter = new Delim[] { ";" };
+		public static Delim[] _instruction_finished_delimiter_ignore_rest = new Delim[] { new Delim(";", parseRule: IgnoreTheRestOfThis) };
 		public static Delim[] _list_item_delimiter = new Delim[] { "," };
 		public static Delim[] _membership_operator = new Delim[] { new Delim(".", "member"), new Delim("->", "pointee"), new Delim("::", "scope resolution"), new Delim("?.", "null conditional") };
 		public static Delim[] _prefix_unary_operator = new Delim[] { "++", "--", "!", "-", "~" };
@@ -211,6 +212,7 @@ namespace NonStandard.Data.Parse {
 			tok.ExtractContextAsSubTokenList(e);
 			return e;
 		}
+		public static ParseResult IgnoreTheRestOfThis(string str, int index) { return new ParseResult(str.Length - index, null); }
 		public static ParseRuleSet.Entry opinit_add(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "sum"); }
 		public static ParseRuleSet.Entry opinit_dif(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "difference"); }
 		public static ParseRuleSet.Entry opinit_mul(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "product"); }

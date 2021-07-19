@@ -7,6 +7,7 @@ using NonStandard.Commands;
 using UnityEngine.Events;
 using NonStandard.Procedure;
 using System.Text;
+using static NonStandard.Commands.Commander;
 
 namespace NonStandard.GameUi.Dialog {
 	public class DialogViewer : MonoBehaviour {
@@ -40,11 +41,14 @@ namespace NonStandard.GameUi.Dialog {
 		public ListItemUi AddDialogOption(Dialog.DialogOption option, bool scrollAllTheWayDown) {
 			if (!initialized) { Init(); }
 			ListItemUi li = null;
+			Tokenizer tok;
 			do {
 				Dialog.Choice c = option as Dialog.Choice;
 				if (c != null) {
 					li = listUi.AddItem(option, DialogManager.Instance.GetScriptScope().Format(c.text), () => {
-						Commander.Instance.ParseCommand(c.command, li, Print);
+						Commander.Instance.ParseCommand(c.command, li, Print); // TODO obsolete this, and use code commented below
+						//Commander.Instance.ParseCommand(new Instruction { text = c.command, source = li }, Print, out tok);
+						//if (tok?.errors?.Count > 0) { Print(tok.ErrorString()); }
 						PossiblyAddParseCommandOutputToDialog(option);
 					}, prefab_buttonUi);
 					currentChoices.Add(li);
@@ -58,7 +62,9 @@ namespace NonStandard.GameUi.Dialog {
 				Dialog.Command cmd = option as Dialog.Command;
 				if (cmd != null) {
 					//NonStandard.Show.Log("executing command "+cmd.command);
-					Commander.Instance.ParseCommand(cmd.command, option, Print);
+					Commander.Instance.ParseCommand(cmd.command, option, Print); // TODO obsolete this, and use code commented below
+					//Commander.Instance.ParseCommand(new Instruction { text = cmd.command, source = option }, Print, out tok);
+					//if (tok?.errors?.Count > 0) { Print(tok.ErrorString()); }
 					PossiblyAddParseCommandOutputToDialog(option);
 					break;
 				}

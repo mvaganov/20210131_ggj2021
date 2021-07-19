@@ -55,6 +55,13 @@ namespace NonStandard.Data.Parse {
 			}
 			return null;
 		}
+		public int IndexOf(Delim delimiter) {
+			for(int i = 0; i < tokens.Count; ++i) {
+				Delim d = tokens[i].GetAsDelimiter();
+				if (d == delimiter) { return i; }
+			}
+			return -1;
+		}
 		public Tokenizer() { }
 		public void FilePositionOf(Token token, out int row, out int col) {
 			ParseError.FilePositionOf(token, rows, out row, out col);
@@ -152,20 +159,20 @@ namespace NonStandard.Data.Parse {
 				}
 			}
 		}
-		protected void Tokenize(ParseRuleSet a_context = null, int index = 0) {
+		protected void Tokenize(ParseRuleSet parseRules = null, int index = 0) {
 			tokenStrings.Clear();
 			if (string.IsNullOrEmpty(str)) return;
 			List<ParseRuleSet.Entry> contextStack = new List<ParseRuleSet.Entry>();
-			if (a_context == null) a_context = CodeRules.Default;
-			else { contextStack.Add(a_context.GetEntry(tokens, -1, null)); }
+			if (parseRules == null) parseRules = CodeRules.Default;
+			else { contextStack.Add(parseRules.GetEntry(tokens, -1, null)); }
 			int tokenBegin = -1;
-			ParseRuleSet currentContext = a_context;
+			ParseRuleSet currentContext = parseRules;
 			while (index < str.Length) {
 				char c = str[index];
 				Delim delim = currentContext.GetDelimiterAt(str, index);
 				if (delim != null) {
 					FinishToken(index, ref tokenBegin); // finish whatever token was being read before this delimeter
-					HandleDelimiter(delim, ref index, contextStack, ref currentContext, a_context);
+					HandleDelimiter(delim, ref index, contextStack, ref currentContext, parseRules);
 				} else if (!currentContext.IsWhitespace(c)) {
 					if (tokenBegin < 0) { tokenBegin = index; }
 				} else {

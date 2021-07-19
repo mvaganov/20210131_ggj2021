@@ -31,13 +31,57 @@ namespace NonStandard.Commands {
 			if (_instance != null) { Show.Warning("multiple commanders exist"); }
 			InitializeCommands();
 		}
+		public Command GetCommand(string commandName) {
+			commandLookup.TryGetValue(commandName, out Command command);
+			return command;
+		}
+		private string[] endOfCommandDelimiter = new string[] { " ", ";", "\n", "\t" };
+		public void ParseCommand(Instruction instruction, Show.PrintFunc print, out Tokenizer tokenizer) {
+			tokenizer = null;
+			string trimmed = instruction.text?.Trim();
+			if (string.IsNullOrEmpty(trimmed)) return;
+			string firstWord = trimmed.SubstringUntilFirst(endOfCommandDelimiter);
+			//Show.Log("1stword " + firstWord.StringifySmall());
+			if (firstWord == null) firstWord = trimmed;
+			Command command = GetCommand(firstWord);
+			if (command != null) {
+				tokenizer = command.Tokenize(trimmed);
+				Show.Log(tokenizer);
+				if (tokenizer.errors.Count > 0) { return; }
+				command.handler.Invoke(new Command.Exec(command, tokenizer, instruction.source, print));
+			} else {
+				print.Invoke("unknown command \'" + firstWord + "\'\n");
+				tokenizer = new Tokenizer();
+				tokenizer.Tokenize(trimmed, Command.BaseArgumentParseRules);
+			}
+			if (tokenizer.errors.Count > 0) { return; }
+			Instruction next = NextInstruction(tokenizer, instruction.source);
+			if (next == null) { return; }
+			ParseCommand(next, print, out tokenizer); // make this a do-while loop instead of tail recursion?
+		}
+		private Instruction NextInstruction(Tokenizer tokenizer, object source) {
+			// check if there is an end-command semicolon delimiter. if so, run this function again starting from that position in the text
+			Delim semicolonDelim = CodeRules._instruction_finished_delimiter_ignore_rest[0];
+			int semicolonIndex = tokenizer.IndexOf(semicolonDelim);
+			if (semicolonIndex >= 0) {
+				int startIndex = tokenizer.tokens[semicolonIndex].index + semicolonDelim.text.Length;
+				Show.Log("found next instruction at " + startIndex);
+				string nextText = tokenizer.str.Substring(startIndex);
+				Show.Log(nextText);
+				return new Instruction { source = source, text = nextText };
+			}
+			return null;
+		}
+		// TODO obsolete
 		public void ParseCommand(Instruction instruction, Show.PrintFunc print) { ParseCommand(instruction.text, instruction.source, print); }
+		// TODO obsolete
 		public void ParseCommand(string command, object source, Show.PrintFunc print) {
 			Tokenizer cmdTok = new Tokenizer();
 			ParseRuleSet rules = null; // TODO make rules that change delimiters based on the first argument
 			cmdTok.Tokenize(command, null);
 			ParseCommand(cmdTok, source, print);
 		}
+		// TODO obsolete
 		public void ParseCommand(Tokenizer cmdTok, object source, Show.PrintFunc print) {
 			if(cmdTok.errors.Count > 0) {
 				Show.Error(cmdTok.ErrorString());
@@ -51,6 +95,7 @@ namespace NonStandard.Commands {
 				++iter;
 			} while (RemoveTokensTillSemicolon(cmdTok));
 		}
+		// TODO obsolete
 		public bool RemoveTokensTillSemicolon(Tokenizer cmdTok) {
 			for (int i = 0; i < cmdTok.TokenCount; ++i) {
 				Token t = cmdTok.GetToken(i);
@@ -62,9 +107,10 @@ namespace NonStandard.Commands {
 			}
 			return false;
 		}
+		// TODO obsolete
 		public void ExecuteCommand(object source, string commandName, Tokenizer tok, Show.PrintFunc print) {
-			Command command;
-			if (commandLookup.TryGetValue(commandName, out command)) {
+			Command command = GetCommand(commandName);
+			if (command != null) {
 				//Show.Log("found " + command.Name + " " + command.help);
 				command.handler.Invoke(new Command.Exec(command, tok, source, print));
 			} else {
