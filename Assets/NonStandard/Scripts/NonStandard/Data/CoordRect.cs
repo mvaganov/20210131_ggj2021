@@ -52,12 +52,12 @@ namespace NonStandard.Data {
 
 		public bool MoveToContain(Coord coord) {
 			if (Contains(coord)) return false;
-			Coord moveplz = Coord.Zero;
-			if (coord.X < Left) moveplz.X = coord.x-Left;
-			if (coord.Y < Top)  moveplz.Y = coord.y-Top;
-			if (coord.X>= Right)moveplz.X = Right- coord.x + 1;
-			if (coord.Y>=Bottom)moveplz.Y =Bottom- coord.y + 1;
-			Position += moveplz;
+			Coord boundry = coord;
+			if (coord.X < Left) { boundry.x = Left; }
+			if (coord.Y < Top) { boundry.y = Top; }
+			if (coord.X >= Right) { boundry.x = Right-1; }
+			if (coord.Y >= Bottom) { boundry.y = Bottom-1; }
+			Position += coord - boundry;
 			return true;
 		}
 

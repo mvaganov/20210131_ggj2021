@@ -36,8 +36,13 @@ namespace NonStandard.Commands {
 		public string help;
 		public bool deprecated = false;
 		public bool preview = false;
-		public Command(string command, Handler handler, Argument[] arguments = null, string help = null) {
-			this.Name = command; this.handler = handler; this.arguments = arguments; this.help = help;
+		public Command(string command, Handler handler, Argument[] arguments = null, string help = null, bool deprecated = false, bool preview = false) {
+			this.Name = command;
+			this.handler = handler;
+			this.arguments = arguments;
+			this.help = help;
+			this.deprecated = deprecated;
+			this.preview = preview;
 		}
 	}
 }

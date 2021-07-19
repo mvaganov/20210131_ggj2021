@@ -7,8 +7,9 @@ namespace NonStandard.Data.Parse {
 	public class ParseRuleSet {
 		public static Dictionary<string, ParseRuleSet> allContexts = new Dictionary<string, ParseRuleSet>();
 		public string name = "default";
-		protected char[] whitespace;// = CodeRules.WhitespaceDefault;
-		protected Delim[] delimiters;// = CodeRules.StandardDelimiters;
+		protected char[] whitespace;
+		protected Delim[] delimiters;
+		private List<ParseRuleSet> delimiterFallback = new List<ParseRuleSet>();
 
 		public char[] Whitespace {
 			get => whitespace;
@@ -73,7 +74,6 @@ namespace NonStandard.Data.Parse {
 			}
 		}
 		public int IndexOfDelimeterAt(string str, int index) {
-			//if (maxDelim < minDelim) { SetDelimiters(delimiters); }
 			char c = str[index];
 			if (c < minDelim || c > maxDelim) return -1;
 			int i = textLookup[c - minDelim];
@@ -87,8 +87,39 @@ namespace NonStandard.Data.Parse {
 		}
 		public Delim GetDelimiterAt(string str, int index) {
 			int i = IndexOfDelimeterAt(str, index);
-			if (i < 0) return null;
+			if (i < 0) {
+				if (delimiterFallback != null) {
+					for(i = 0; i < delimiterFallback.Count; ++i) {
+						Delim d = delimiterFallback[i].GetDelimiterAt(str, index);
+						if (d != null) {
+							return d;
+						}
+					}
+				}
+				return null;
+			}
 			return delimiters[i];
+		}
+		public void AddDelimiterFallback(ParseRuleSet ruleSet) {
+			delimiterFallback.Add(ruleSet);
+			List<ParseRuleSet> stack = new List<ParseRuleSet>();
+			if (RecursionFound(stack)) {
+				delimiterFallback.Remove(ruleSet);
+				throw new Exception("can't add " + ruleSet.name + " as fallback to " + name + ", recursion: " +
+					stack.JoinToString("->", rs => rs.name));
+			}
+		}
+		private bool RecursionFound(List<ParseRuleSet> stack = null) {
+			if (stack == null) { stack = new List<ParseRuleSet>(); }
+			if (stack.Contains(this)) { return true; }
+			if (delimiterFallback != null && delimiterFallback.Count > 0) {
+				stack.Add(this);
+				for (int i = 0; i < delimiterFallback.Count; ++i) {
+					if (delimiterFallback[i].RecursionFound(stack)) { return true; }
+				}
+				stack.Remove(this);
+			}
+			return false;
 		}
 		public Entry GetEntry(List<Token> tokens, int startTokenIndex, object meta, ParseRuleSet.Entry parent = null) {
 			Entry e = new Entry { context = this, tokens = tokens, tokenStart = startTokenIndex, sourceMeta = meta, parent = parent };

@@ -239,13 +239,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   inputColor: {r: 0, g: 1, b: 0.030314207, a: 1}
   commands:
-  - command: exit
+  - name: hide
+    description: make this console go away!
     action:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 70103815}
-          m_MethodName: Quit
-          m_Mode: 1
+        - m_Target: {fileID: 70103808}
+          m_MethodName: SetActive
+          m_Mode: 6
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine

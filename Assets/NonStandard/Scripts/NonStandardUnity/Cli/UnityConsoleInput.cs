@@ -1,6 +1,6 @@
-﻿using NonStandard.Data;
+﻿using NonStandard.Commands;
+using NonStandard.Data;
 using NonStandard.Data.Parse;
-using NonStandard.Extension;
 using NonStandard.Inputs;
 using System;
 using System.Collections.Generic;
@@ -17,12 +17,15 @@ namespace NonStandard.Cli {
 
 		public Commands.Commander commander = new Commands.Commander();
 
-		[System.Serializable] public class Command {
-			public string command;
+		[System.Serializable] public class CommandEntry {
+			public string name;
+			public string description;
 			public UnityEvent action;
+			public void Invoke(Command.Exec e) { action.Invoke(); }
+			public void AddToCommander(Commands.Commander cmdr) { cmdr.AddCommand(new Command(name, Invoke, help: description)); }
 		}
-		public List<Command> commands = new List<Command>();
-		public Command DoCommand(string command) {
+		public List<CommandEntry> commands = new List<CommandEntry>();
+		public CommandEntry DoCommand(string command) {
 			Tokenizer t = Tokenizer.Tokenize(command);
 			//Show.Log(t.GetStr(0)+" : "+t.ToString());
 			commander.ParseCommand(t, this, console.Write);
@@ -178,7 +181,7 @@ namespace NonStandard.Cli {
 				if (KCode.AnyShift.IsHeld()) {
 					console.ScrollRenderWindow(move);
 				} else {
-					console.MoveCursor(move);
+					console.Cursor += move;
 				}
 				return true;
 			}
@@ -188,9 +191,12 @@ namespace NonStandard.Cli {
 		private void Awake() { console = GetComponent<UnityConsole>(); }
 		private void Start() {
 			inputColorCode = console.AddConsoleColor(inputColor);
+			commands.ForEach(c => c.AddToCommander(commander));
 		}
 		void Update() {
-			if (UpdateKey()) { console.RefreshText(); }
+			if (UpdateKey()) {
+				// do something if a key is pressed?
+			}
 		}
 	}
 }

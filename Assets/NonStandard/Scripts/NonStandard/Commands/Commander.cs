@@ -34,7 +34,8 @@ namespace NonStandard.Commands {
 		public void ParseCommand(Instruction instruction, Show.PrintFunc print) { ParseCommand(instruction.text, instruction.source, print); }
 		public void ParseCommand(string command, object source, Show.PrintFunc print) {
 			Tokenizer cmdTok = new Tokenizer();
-			cmdTok.Tokenize(command);
+			ParseRuleSet rules = null; // TODO make rules that change delimiters based on the first argument
+			cmdTok.Tokenize(command, null);
 			ParseCommand(cmdTok, source, print);
 		}
 		public void ParseCommand(Tokenizer cmdTok, object source, Show.PrintFunc print) {
