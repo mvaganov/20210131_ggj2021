@@ -87,17 +87,22 @@ namespace NonStandard.Data.Parse {
 			if (errors.Count == 0) return false;
 			show.Invoke(ErrorString()); return true;
 		}
-		public void Tokenize(string str, ParseRuleSet parsingRules = null) {
+		public void Tokenize(string str, ParseRuleSet parsingRules = null, Func<Tokenizer, bool> condition=null) {
 			this.str = str;
 			errors.Clear();
 			tokens.Clear();
 			rows.Clear();
-			Tokenize(parsingRules, 0);
+			Tokenize(parsingRules, 0, condition);
 		}
 		public static Tokenizer Tokenize(string str) {
-			Tokenizer t = new Tokenizer();
-			t.Tokenize(str, null);
-			return t;
+			Tokenizer t = new Tokenizer(); t.Tokenize(str, null); return t;
+		}
+		public static Tokenizer TokenizeWhile(string str, Func<Tokenizer,bool> condition) {
+			Tokenizer t = new Tokenizer(); t.Tokenize(str, null, condition); return t;
+		}
+		public static string FirstWord(string str) {
+			Tokenizer tokenizer = TokenizeWhile(str, t => t.tokens.Count == 0);
+			return (tokenizer?.tokens.Count > 0) ? tokenizer.GetStr(0) : null;
 		}
 		public string DebugPrint(int depth = 0, string indent = "  ", string separator = ", ") {
 			return DebugPrint(tokens, depth, indent, separator);
@@ -159,7 +164,7 @@ namespace NonStandard.Data.Parse {
 				}
 			}
 		}
-		protected void Tokenize(ParseRuleSet parseRules = null, int index = 0) {
+		protected void Tokenize(ParseRuleSet parseRules = null, int index = 0, Func<Tokenizer, bool> condition = null) {
 			tokenStrings.Clear();
 			if (string.IsNullOrEmpty(str)) return;
 			List<ParseRuleSet.Entry> contextStack = new List<ParseRuleSet.Entry>();
@@ -167,7 +172,7 @@ namespace NonStandard.Data.Parse {
 			else { contextStack.Add(parseRules.GetEntry(tokens, -1, null)); }
 			int tokenBegin = -1;
 			ParseRuleSet currentContext = parseRules;
-			while (index < str.Length) {
+			while (index < str.Length && (condition == null || condition.Invoke(this))) {
 				char c = str[index];
 				Delim delim = currentContext.GetDelimiterAt(str, index);
 				if (delim != null) {

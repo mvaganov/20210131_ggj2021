@@ -14,6 +14,8 @@ namespace NonStandard.Commands {
 			public string text; public object source;
 			public bool IsSource(object a_source) { return source == a_source; }
 			public override string ToString() { return "{=CommanderInstruction text:\"" + text + "\"}"; }
+			public Instruction() {}
+			public Instruction(string text, object source) { this.text = text; this.source = source; }
 		}
 
 		/// <summary>queue of instructions that this command line needs to execute.</summary>
@@ -35,18 +37,17 @@ namespace NonStandard.Commands {
 			commandLookup.TryGetValue(commandName, out Command command);
 			return command;
 		}
-		private string[] endOfCommandDelimiter = new string[] { " ", ";", "\n", "\t" };
 		public void ParseCommand(Instruction instruction, Show.PrintFunc print, out Tokenizer tokenizer) {
 			tokenizer = null;
 			string trimmed = instruction.text?.Trim();
 			if (string.IsNullOrEmpty(trimmed)) return;
-			string firstWord = trimmed.SubstringUntilFirst(endOfCommandDelimiter);
+			string firstWord = Tokenizer.FirstWord(trimmed);
+			if (firstWord == null) { firstWord = trimmed; }
 			//Show.Log("1stword " + firstWord.StringifySmall());
-			if (firstWord == null) firstWord = trimmed;
 			Command command = GetCommand(firstWord);
 			if (command != null) {
 				tokenizer = command.Tokenize(trimmed);
-				Show.Log(tokenizer);
+				//Show.Log(tokenizer);
 				if (tokenizer.errors.Count > 0) { return; }
 				command.handler.Invoke(new Command.Exec(command, tokenizer, instruction.source, print));
 			} else {
@@ -65,73 +66,15 @@ namespace NonStandard.Commands {
 			int semicolonIndex = tokenizer.IndexOf(semicolonDelim);
 			if (semicolonIndex >= 0) {
 				int startIndex = tokenizer.tokens[semicolonIndex].index + semicolonDelim.text.Length;
-				Show.Log("found next instruction at " + startIndex);
+				//Show.Log("found next instruction at " + startIndex);
 				string nextText = tokenizer.str.Substring(startIndex);
-				Show.Log(nextText);
-				return new Instruction { source = source, text = nextText };
+				//Show.Log(nextText);
+				return new Instruction(nextText, source);
 			}
 			return null;
 		}
-		// TODO obsolete
-		public void ParseCommand(Instruction instruction, Show.PrintFunc print) { ParseCommand(instruction.text, instruction.source, print); }
-		// TODO obsolete
-		public void ParseCommand(string command, object source, Show.PrintFunc print) {
-			Tokenizer cmdTok = new Tokenizer();
-			ParseRuleSet rules = null; // TODO make rules that change delimiters based on the first argument
-			cmdTok.Tokenize(command, null);
-			ParseCommand(cmdTok, source, print);
-		}
-		// TODO obsolete
-		public void ParseCommand(Tokenizer cmdTok, object source, Show.PrintFunc print) {
-			if(cmdTok.errors.Count > 0) {
-				Show.Error(cmdTok.ErrorString());
-				return;
-			}
-			if(cmdTok.TokenCount == 0) { return; }
-			int iter = 0;
-			do {
-				string cmd = cmdTok.GetResolvedToken(0, GetScope()).ToString();
-				ExecuteCommand(source, cmd, cmdTok, print);
-				++iter;
-			} while (RemoveTokensTillSemicolon(cmdTok));
-		}
-		// TODO obsolete
-		public bool RemoveTokensTillSemicolon(Tokenizer cmdTok) {
-			for (int i = 0; i < cmdTok.TokenCount; ++i) {
-				Token t = cmdTok.GetToken(i);
-				Delim d = t.GetAsDelimiter();
-				if (d != null && d.text == ";") {
-					cmdTok.PopTokens(i + 1);
-					return true;
-				}
-			}
-			return false;
-		}
-		// TODO obsolete
-		public void ExecuteCommand(object source, string commandName, Tokenizer tok, Show.PrintFunc print) {
-			Command command = GetCommand(commandName);
-			if (command != null) {
-				//Show.Log("found " + command.Name + " " + command.help);
-				command.handler.Invoke(new Command.Exec(command, tok, source, print));
-			} else {
-				//Show.Error("could not find " + commandName);
-				tok.AddError("unknown command \'" + commandName + "\'");
-			}
-			if (tok.errors.Count > 0 && errorListeners != null) {
-				errorListeners.Invoke(tok.errors);
-				tok.errors.Clear();
-			}
-		}
-		public void AddCommands(Dictionary<string, Command.Handler> commands) {
-			foreach(KeyValuePair<string, Command.Handler> kvp in commands) {
-				AddCommand(kvp.Key, kvp.Value);
-			}
-		}
 		public void AddCommands(IList<Command> commands) {
 			foreach (Command cmd in commands) { AddCommand(cmd); }
-		}
-		public void AddCommand(string command, Command.Handler commandHandler) {
-			AddCommand(new Command(command, commandHandler));
 		}
 		public void AddCommand(Command command) {
 			commandLookup[command.Name] = command;

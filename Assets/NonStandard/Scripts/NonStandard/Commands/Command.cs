@@ -57,16 +57,15 @@ namespace NonStandard.Commands {
 			CodeRules._square_brace_delimiter);
 		public static ParseRuleSet BaseArgumentParseRules = new ParseRuleSet("Cmd_DefaultArgument", BaseArgumentParseDelimiters);
 		Delim[] GenerateArgumentDelims() {
-			if (arguments == null || arguments.Length == 0) return Array.Empty<Delim>();
-			List<Delim> delims = new List<Delim>();
-			for(int i = 0; i < arguments.Length; ++i) {
+			List<Delim> delims = new List<Delim>(BaseArgumentParseDelimiters);
+			if (arguments == null || arguments.Length == 0) return delims.ToArray();
+			for (int i = 0; i < arguments.Length; ++i) {
 				Argument arg = arguments[i];
 				delims.Add(new Delim(arg.id, arg.name, arg.description));
 				if(arg.name != null) {
 					delims.Add(new Delim(arg.name, arg.id, arg.description));
 				}
 			}
-			delims.AddRange(BaseArgumentParseDelimiters);
 			return delims.ToArray();
 		}
 		void GenerateArgumentParsingRuleset() {

@@ -29,15 +29,20 @@ namespace NonStandard.GameUi.Dialog {
             return asset != null ? asset.text : null;
         }
         private void Awake() {
-            Commander.Instance.AddCommands(
-                new Dictionary<string, Command.Handler>() {
-                    ["dialog"] = SetDialog,
-                    ["start"] = StartDialog,
-                    ["continue"] = ContinueDialog,
-                    ["done"] = Done,
-                    ["hide"] = Hide,
-                    ["show"] = _Show,
-                });
+            Commander.Instance.AddCommands( new Command[] {
+                new Command("dialog", SetDialog, new Argument[] {
+                    new Argument("-n","nameOfDialog","the name of the dialog to set",type:typeof(string),order:1,required:true)
+                }, help:"sets a dialog, disabling any previous dialog options"),
+                new Command("start", StartDialog, new Argument[] {
+                    new Argument("-n","nameOfDialog","the name of the dialog to start",type:typeof(string),order:1,required:true)
+                }, help:"sets and starts a dialog, clearing previous dialog"),
+                new Command("continue", ContinueDialog, new Argument[] {
+                    new Argument("-n","nameOfDialog","the name of the dialog to continue",type:typeof(string),order:1,required:true)
+                }, help:"continues a dialog without clearing or disabling previous dialogs"),
+                new Command("done", Done, help:"brings up button to deactivate dialog"),
+                new Command("hide", Hide, help:"hides current dialog"),
+                new Command("show", this._Show, help:"shows dialog")
+            });
             Commander.Instance.errorListeners = OnCommanderError;
         }
 

@@ -2,7 +2,6 @@
 using NonStandard.Data;
 using NonStandard.Data.Parse;
 using NonStandard.Inputs;
-using NonStandard.Extension;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -28,22 +27,7 @@ namespace NonStandard.Cli {
 		}
 		public List<CommandEntry> commands = new List<CommandEntry>();
 		public CommandEntry DoCommand(string text) {
-			//// guess what Command's tokenizer to use based on the first word
-			//Tokenizer t = null;
-			//Command command = null;
-			//string firstWord = text.Trim().SubstringUntilFirst();
-			//if (firstWord != null) {
-			//	command = commander.GetCommand(firstWord);
-			//	if (command != null) {
-			//		t = command.Tokenize(text);
-			//	}
-			//}
-			//if (t == null) {
-			//	t = Tokenizer.Tokenize(text);
-			//}
-			////Show.Log(t.GetStr(0)+" : "+t.ToString());
-			//commander.ParseCommand(t, this, console.Write);
-			commander.ParseCommand(new Instruction { source=this, text=text }, console.Write, out Tokenizer t);
+			commander.ParseCommand(new Instruction(text,this), console.Write, out Tokenizer t);
 			if (t?.errors?.Count > 0) {
 				console.PushForeColor(ConsoleColor.Red);
 				console.Write(t.ErrorString());

@@ -9,8 +9,13 @@ namespace NonStandard.GameUi.Inventory {
 		public static Inventory main;
 		public void Register(Inventory inv) { inventories.Add(inv); if (main == null) { main = inv; } }
 		public void Awake() {
-			Commander.Instance.AddCommand("give", GiveInventory);
-			Commander.Instance.AddCommand("useinv", SetMainInventory);
+			Commander.Instance.AddCommand(new Command("give", GiveInventory, new Argument[] {
+				new Argument("-i","itemName","unique item name",type:typeof(string),order:1,required:true),
+				new Argument("-t","target","inventory to give the item to",type:typeof(string),order:2),
+			}, help:"removes the given item from the main inventory, possibly adding it to the target inventory"));
+			Commander.Instance.AddCommand(new Command("useinv", SetMainInventory, new Argument[] {
+				new Argument("-i","inventoryName","which inventory to mark as the main one",type:typeof(string),order:1,required:true),
+			}, help:"identifies which inventory should be considered the main inventory for following inventory operations"));
 		}
 		public void SetMainInventory(string inventoryName) {
 			main = inventories.Find(i => i.name == inventoryName);

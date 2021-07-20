@@ -7,11 +7,21 @@ using UnityEngine;
 namespace NonStandard.Data {
 	public class DictionaryKeeperManager : MonoBehaviour {
 		public void Awake() {
-			Commander.Instance.AddCommands(new Dictionary<string, Command.Handler>() {
-				["assertnum"] = AssertNum,
-				["++"] = Increment,
-				["--"] = Decrement,
-				["set"] = SetVariable,
+			Commander.Instance.AddCommands(new Command[] {
+				new Command("assertnum", AssertNum, new Argument[]{
+					new Argument("-n","variableName","name of the variable",type:typeof(string),order:1,required:true),
+					new Argument("-v","variableValue","initial value to assign to the variable if it doesn't exist",type:typeof(object),order:2,required:true)
+				}, "Ensures the given variable exists. If it didn't, it does now, with the given value."),
+				new Command("++", Increment, new Argument[]{
+					new Argument("-n","variableName","name of the variable",type:typeof(string),order:1,required:true),
+				},"Increments a variable"),
+				new Command("--", Decrement, new Argument[]{
+					new Argument("-n","variableName","name of the variable",type:typeof(string),order:1,required:true),
+				},"Decrements a variable"),
+				new Command("set", SetVariable, new Argument[]{
+					new Argument("-n","variableName","name of the variable",type:typeof(string),order:1,required:true),
+					new Argument("-v","variableValue","value to assign the variable",type:typeof(object),order:2,required:true)
+				}, "Ensures the given variable exists with the given value."),
 			});
 		}
 		public List<DictionaryKeeper> keepers = new List<DictionaryKeeper>();

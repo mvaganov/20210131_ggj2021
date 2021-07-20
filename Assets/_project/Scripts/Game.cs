@@ -33,7 +33,7 @@ public class Game : MonoBehaviour
 
     public void Awake() {
         Commander.Instance.SetScope(mainDictionaryKeeper.Dictionary);
-        Commander.Instance.AddCommand("claimplayer", ClaimPlayer);
+        Commander.Instance.AddCommand(new Command("claimplayer", ClaimPlayer, help:"adds currently dialoging NPC to player's team"));
         random = new NonStandard.Data.Random.NumberGenerator(GameClock.Time);
     }
 
