@@ -34,6 +34,22 @@ namespace NonStandard.Data {
 			//Show.Log(tokenizer.DebugPrint(-1));
 			return TryParseTokens(type, tokenizer.tokens, ref data, scope, tokenizer);
 		}
+		/// <summary>
+		/// for converting parsing just one already parsed token from a tokenizer
+		/// </summary>
+		/// <param name="type"></param>
+		/// <param name="tokenizer"></param>
+		/// <param name="tokenIndex"></param>
+		/// <param name="data"></param>
+		/// <param name="scope"></param>
+		/// <returns></returns>
+		public static bool TryParseTokens(Type type, Tokenizer tokenizer, int tokenIndex, ref object data, object scope) {
+			Tokenizer t = new Tokenizer();
+			t.str = tokenizer.str;
+			t.tokens.Add(tokenizer.tokens[tokenIndex]);
+			t.rows = tokenizer.rows;
+			return TryParseTokens(type, t.tokens, ref data, scope, t);
+		}
 		public static bool TryParseTokens(Type type, List<Token> tokens, ref object data, object scope, Tokenizer tokenizer) {
 			bool result = false;
 			Parser p = new Parser();
@@ -41,7 +57,7 @@ namespace NonStandard.Data {
 			try {
 				result = p.TryParse();
 				data = p.result;
-			}catch(Exception e) {
+			} catch (Exception e) {
 				tokenizer.AddError("TryParseTokens:" + e + "\n" + p.GetCurrentTokenIndex().JoinToString(", ") + "\n" + tokenizer.DebugPrint());
 			}
 			return result;

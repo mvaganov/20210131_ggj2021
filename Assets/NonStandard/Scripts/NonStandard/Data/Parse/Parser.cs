@@ -105,6 +105,10 @@ namespace NonStandard.Data.Parse {
 				listData = new List<object>();
 			} else {
 				try {
+					// TODO deal with primitive types here. they don't need to be allocated till the value is known.see TryGetValue()
+					if (resultType.IsPrimitive || resultType == typeof(string)) {
+						Show.Error("need to parse primitive! see TryGetValue()?");
+					}
 					if (result == null && !resultType.IsAbstract) { result = type.GetNewInstance(); }
 				} catch (Exception e) {
 					AddError("failed to create " + type + "\n" + e.ToString());
@@ -148,19 +152,23 @@ namespace NonStandard.Data.Parse {
 			}
 			return null;
 		}
-		public bool TryParse() {
+		public bool TryParse(Type targetType = null) {
 			Token token = Current.Token;
 			ParseRuleSet.Entry e = token.GetAsContextEntry();
 			if (e != null && e.tokens == Current.tokens) { Increment(); } // skip past the opening bracket
+			if(targetType != null) { SetResultType(targetType); }
 			FindInternalType(); // first, check if this has a more correct internal type defined
 			if (result == null && listData == null) {
-				AddError("need specific " + resultType + ", eg: \"" +resultType.GetSubClasses().JoinToString("\", \"")+"\"");
+				AddError("need specific " + resultType + ", eg: \"" + resultType.GetSubClasses().JoinToString("\", \"") + "\"");
 				return false;
 			}
+			return TryParse_internal();
+		}
+		internal bool TryParse_internal() {
 			if (!SkipComments()) { return true; }
 			while (state.Count > 0 && Current.tokenIndex < Current.tokens.Count) {
-				token = Current.Token;
-				e = token.GetAsContextEntry();
+				Token token = Current.Token;
+				ParseRuleSet.Entry e = token.GetAsContextEntry();
 				if(e != null && e.tokens == Current.tokens) {
 					if (!token.IsContextEnding()) { AddError("unexpected state. we should never see this. ever."); }
 					break;

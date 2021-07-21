@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using NonStandard;
 using NonStandard.Commands;
+using NonStandard.Data;
 using NonStandard.Data.Parse;
 using NonStandard.Extension;
 
@@ -80,9 +82,9 @@ public class Argument {
 }
 
 public class Arguments {
-	public static Arguments Parse(string text, Command command) {
+	public static Arguments Parse(Command command, Tokenizer tokenizer, object scriptVariables) {
 		Arguments args = new Arguments(command);
-		args.ParseText(text);
+		args.Parse(tokenizer, scriptVariables);
 		return args;
 	}
 
@@ -90,19 +92,64 @@ public class Arguments {
 	/// <summary>
 	/// if there is a list of named or id'd arguments in the Command, this dicitonary will be populated
 	/// </summary>
-	public Dictionary<string, object> namedValues;
+	public Dictionary<string, object> namedValues = new Dictionary<string, object>();
 	/// <summary>
 	/// if there are unnamed values, this list has them in order. argument zero is null
 	/// </summary>
-	public List<object> orderedValues;
+	public List<object> orderedValues = new List<object>();
+
+	public override string ToString() {
+		return "Arguments<"+command.Name+">{"+namedValues.Stringify()+","+orderedValues.Stringify()+"}";
+	}
 
 	public Arguments(Command command) {
 		this.command = command;
 	}
 
-	public void ParseText(string text) {
-		Tokenizer tokenizer = new Tokenizer();
-		tokenizer.Tokenize(text);
-		Show.Log(tokenizer.tokens.Stringify());
+	public static int GetArgumentIndex(Command command, string text) {
+		Argument[] args = command.arguments;
+		for (int i = 0; i < args.Length; ++i) {
+			if(args[i].id == text) { return i; }
+		}
+		for (int i = 0; i < args.Length; ++i) {
+			if (args[i].name == text) { return i; }
+		}
+		return -1;
+	}
+
+	public void Parse(Tokenizer tokenizer, object scriptVariables = null) {
+		Show.Log(tokenizer);
+		//tokenizer = command.Tokenize(text);
+		List<Token> tokens = tokenizer.tokens;
+		orderedValues.Add(tokenizer.GetStr(0));
+		for(int i = 1; i < tokens.Count; ++i) {
+			Token tArg = tokens[i];
+			Show.Log(tArg+" "+tArg.IsSimpleString+" "+tArg.IsDelim);
+			int argIndex = tArg.IsSimpleString || tArg.IsDelim ? GetArgumentIndex(command, tArg.ToString()) : -1;
+			if (argIndex >= 0) {
+				Argument arg = command.arguments[argIndex];
+				if (arg.flag) {
+					namedValues[arg.id] = true;
+				} else {
+					++i;
+					if (i < tokens.Count) {
+						Token tValue = tokens[i];
+						Type type = arg.valueType;
+						object result = null;
+						// TODO find out why this isn't parsing correctly with "help-chelp 0"
+						if (CodeConvert.TryParseTokens(type, tokens.GetRange(i, 1), ref result, scriptVariables, tokenizer)) {
+						//if (CodeConvert.TryParseTokens(type, tokenizer, i, ref result, scriptVariables)) {
+							namedValues[arg.id] = result;
+						} else {
+							tokenizer.AddError(tValue.index, "Could not cast (" + type.Name + ") from " + tValue.ToString());
+						}
+					} else {
+						tokenizer.AddError(tArg.index, "expected value for argument \"" + tArg.ToString() + "\"");
+					}
+				}
+			} else {
+				orderedValues.Add(tokenizer.GetResolvedToken(i, scriptVariables));
+			}
+		}
 	}
 }

@@ -61,6 +61,9 @@ namespace NonStandard.Data.Parse {
 			return false;
 		}
 		public bool IsValid { get { return index >= 0 && length >= 0; } }
+		public bool IsSimpleString { get { return index >= 0 && length >= 0 && 
+					(meta is string || meta is ParseRuleSet.Entry pce && pce.TextRaw != null); } }
+		public bool IsDelim { get { return meta is Delim; } }
 		public void Invalidate() { length = -1; }
 		public bool Equals(Token other) { return index == other.index && length == other.length && meta == other.meta; }
 		public override bool Equals(object obj) { if (obj is Token) return Equals((Token)obj); return false; }

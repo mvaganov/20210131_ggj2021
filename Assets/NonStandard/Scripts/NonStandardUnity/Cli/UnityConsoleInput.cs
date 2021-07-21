@@ -31,6 +31,7 @@ namespace NonStandard.Cli {
 			if (t?.errors?.Count > 0) {
 				console.PushForeColor(ConsoleColor.Red);
 				console.Write(t.ErrorString());
+				Show.Log(t.ErrorString());
 				console.PopForeColor();
 			}
 			return null;

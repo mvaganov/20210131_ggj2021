@@ -32,6 +32,8 @@ namespace NonStandard.Commands {
 			e.print.Invoke(extraInstructions);
 		}
 		protected void Cmd_Help_Handler(Command.Exec e) {
+			Arguments args = Arguments.Parse(e.cmd, e.tok, e.src);
+			Show.Log(args);
 			Cmd_Help_Handler(e, commandLookup);
 		}
 		[CommandMaker] protected Command GenerateHelpCommand() {
