@@ -238,7 +238,7 @@ namespace NonStandard.Data.Parse {
 		/// <param name="value"></param>
 		/// <param name="type"></param>
 		/// <param name="simplify">if true, and the result is a list with one item, the list is stripped away and the single item is returned</param>
-		public static void op_ResolveToken(Tokenizer tok, Token token, object scope, out object value, out Type type, bool simplify=true) {
+		public static void op_ResolveToken(TokenErrLog tok, Token token, object scope, out object value, out Type type, bool simplify=true) {
 			value = token.Resolve(tok, scope, simplify);
 			type = (value != null) ? value.GetType() : null;
 			if (scope == null || type == null) { return; } // no scope, or no data, easy. we're done.
@@ -351,7 +351,7 @@ namespace NonStandard.Data.Parse {
 				}
 			}
 		}
-		public static void op_BinaryArgs(Tokenizer tok, ParseRuleSet.Entry e, object scope, out object left, out object right, out Type lType, out Type rType) {
+		public static void op_BinaryArgs(TokenErrLog tok, ParseRuleSet.Entry e, object scope, out object left, out object right, out Type lType, out Type rType) {
 			op_ResolveToken(tok, e.tokens[0], scope, out left, out lType);
 			op_ResolveToken(tok, e.tokens[2], scope, out right, out rType);
 			// upcast to double. all the math operations expect doubles only, for algorithm simplicity
@@ -362,8 +362,8 @@ namespace NonStandard.Data.Parse {
 				CodeConvert.TryConvert(ref right, typeof(double)); rType = typeof(double);
 			}
 		}
-		public static object op_asn(Tokenizer tok, ParseRuleSet.Entry e, object scope) { return "="; }
-		public static object op_mul(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_asn(TokenErrLog tok, ParseRuleSet.Entry e, object scope) { return "="; }
+		public static object op_mul(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			do {
@@ -404,7 +404,7 @@ namespace NonStandard.Data.Parse {
 			tok.AddError(e.tokens[1], "unable to multiply " + lType + " and " + rType);
 			return e;
 		}
-		public static object op_add(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_add(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			if (lType == typeof(string) || rType == typeof(string)) { return left.ToString() + right.ToString(); }
@@ -416,7 +416,7 @@ namespace NonStandard.Data.Parse {
 			tok.AddError(e.tokens[1], "unable to add " + lType + " and " + rType + " : " + left + " + " + right);
 			return e;
 		}
-		public static object op_dif(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_dif(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			do {
@@ -430,7 +430,7 @@ namespace NonStandard.Data.Parse {
 			tok.AddError(e.tokens[1], "unable to subtract " + lType + " and " + rType + " : " + left + " - " + right);
 			return e;
 		}
-		public static object op_div(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_div(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			do {
@@ -444,7 +444,7 @@ namespace NonStandard.Data.Parse {
 			tok.AddError(e.tokens[1], "unable to divide " + lType + " and " + rType + " : " + left + " / " + right);
 			return e;
 		}
-		public static int FindEndOfNextToken(Tokenizer tok, int startI, string str, int index, out int started, out int tokenId) {
+		public static int FindEndOfNextToken(TokenErrLog tok, int startI, string str, int index, out int started, out int tokenId) {
 			started = -1;
 			tokenId = -1;
 			for (int i = index; i < str.Length; ++i) {
@@ -465,7 +465,7 @@ namespace NonStandard.Data.Parse {
 							started = i;
 							ParseResult pr = StringExtension.IntegerParse(str, i + 1);
 							if (pr.IsError) {
-								pr.error.OffsetBy(startI + i, tok.rows);
+								pr.error.OffsetBy(startI + i, tok.TextRows());
 								tok.AddError(pr.error);
 							} else {
 								tokenId = (int)(long)pr.replacementValue;
@@ -492,7 +492,7 @@ namespace NonStandard.Data.Parse {
 			}
 			return -1;
 		}
-		public static string Format(string format, List<object> args, object scope, Tokenizer tok, int tIndex) {
+		public static string Format(string format, List<object> args, object scope, TokenErrLog tok, int tIndex) {
 			StringBuilder sb = new StringBuilder();
 			int index = 0, start, end, tokenId;
 			do {
@@ -516,7 +516,7 @@ namespace NonStandard.Data.Parse {
 			} while (index < format.Length);
 			return sb.ToString();
 		}
-		public static object op_mod(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_mod(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			do {
@@ -541,7 +541,7 @@ namespace NonStandard.Data.Parse {
 			tok.AddError(e.tokens[1], "unable to modulo " + lType + " and " + rType + " : " + left + " % " + right);
 			return e;
 		}
-		public static object op_pow(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_pow(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			do {
@@ -562,18 +562,18 @@ namespace NonStandard.Data.Parse {
 			double d = (double)obj;
 			return d != 0;
 		}
-		public static object op_and(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_and(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			return op_reduceToBoolean(left, lType) && op_reduceToBoolean(right, rType);
 		}
-		public static object op_or_(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_or_(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			return op_reduceToBoolean(left, lType) || op_reduceToBoolean(right, rType);
 		}
 		// spaceship operator
-		public static bool op_Compare(Tokenizer tok, ParseRuleSet.Entry e, object scope, out int compareValue) {
+		public static bool op_Compare(TokenErrLog tok, ParseRuleSet.Entry e, object scope, out int compareValue) {
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			if (lType == rType) { return lType.TryCompare(left, right, out compareValue); }
@@ -581,27 +581,27 @@ namespace NonStandard.Data.Parse {
 			tok.AddError(e.tokens[1].index, "can't operate ("+lType+")"+left+" "+e.tokens[1]+" ("+rType+")"+right);
 			return false;
 		}
-		public static object op_equ(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_equ(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {
 			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp == 0; }
 			return e;
 		}
-		public static object op_neq(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_neq(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {
 			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp != 0; }
 			return e;
 		}
-		public static object op_lt_(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_lt_(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {
 			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp < 0; }
 			return e;
 		}
-		public static object op_gt_(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_gt_(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {
 			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp > 0; }
 			return e;
 		}
-		public static object op_lte(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_lte(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {
 			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp <= 0; }
 			return e;
 		}
-		public static object op_gte(Tokenizer tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_gte(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {
 			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp >= 0; }
 			return e;
 		}

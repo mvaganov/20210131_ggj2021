@@ -4,25 +4,25 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace NonStandard.Data.Parse {
-	public interface TokenizationErrorLog {
+	public interface TokenErrLog {
 		void AddError(ParseError error);
 		string ErrorString();
 		IList<int> TextRows();
 	}
 	public static class TokenizationErrorStorageExtension {
-		public static ParseError AddError(this TokenizationErrorLog self, int index, string message) {
+		public static ParseError AddError(this TokenErrLog self, int index, string message) {
 			ParseError e = new ParseError(index, self.TextRows(), message); self.AddError(e); return e;
 		}
-		public static ParseError AddError(this TokenizationErrorLog self, Token token, string message) {
+		public static ParseError AddError(this TokenErrLog self, Token token, string message) {
 			return AddError(self, token.index, message);
 		}
-		public static bool ShowErrorTo(this TokenizationErrorLog self, Show.PrintFunc show) {
+		public static bool ShowErrorTo(this TokenErrLog self, Show.PrintFunc show) {
 			string errStr = self.ErrorString();
 			if (string.IsNullOrEmpty(errStr)) return false;
 			show.Invoke(errStr); return true;
 		}
 	}
-	public class Tokenizer : TokenizationErrorLog {
+	public class Tokenizer : TokenErrLog {
 		internal string str;
 		internal List<Token> tokens = new List<Token>(); // actually a tree. each token can point to more token lists
 		/// <summary>

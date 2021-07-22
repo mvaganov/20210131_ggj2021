@@ -21,7 +21,7 @@ namespace NonStandard.Data {
 			data = (T)value;
 			return result;
 		}
-		public static bool TryParse(Token token, Tokenizer tokenizer, object scriptVariables, out object result) {
+		public static bool TryParse(Token token, TokenErrLog tokenizer, object scriptVariables, out object result) {
 			CodeRules.op_ResolveToken(tokenizer, token, scriptVariables, out result, out Type resultType, false);
 			return resultType != null;
 		}

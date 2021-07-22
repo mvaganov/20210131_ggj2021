@@ -122,34 +122,53 @@ public class Arguments {
 		//tokenizer = command.Tokenize(text);
 		List<Token> tokens = tokenizer.tokens;
 		orderedValues.Add(tokenizer.GetStr(0));
-		for(int i = 1; i < tokens.Count; ++i) {
+		Argument[] args = command.arguments;
+		// add arguments to the dictionary
+		for (int i = 1; i < tokens.Count; ++i) {
 			Token tArg = tokens[i];
-			Show.Log(tArg+" "+tArg.IsSimpleString+" "+tArg.IsDelim);
+			//Show.Log(tArg+" "+tArg.IsSimpleString+" "+tArg.IsDelim);
 			int argIndex = tArg.IsSimpleString || tArg.IsDelim ? GetArgumentIndex(command, tArg.ToString()) : -1;
 			if (argIndex >= 0) {
-				Argument arg = command.arguments[argIndex];
-				if (arg.flag) {
-					namedValues[arg.id] = true;
-				} else {
-					++i;
-					if (i < tokens.Count) {
-						Token tValue = tokens[i];
-						CodeConvert.TryParse(tokens[i], tokenizer, scriptVariables, out object result);
-						Type type = arg.valueType;
-						//Show.Log(resultType + " : " + result.StringifySmall());
-						if (result != null && result.GetType() == type) {
-							namedValues[arg.id] = result;
-						} else {
-							tokenizer.AddError(tValue.index, "Could not cast (" + type.Name + ") from (" + 
-								(result?.GetType().ToString() ?? "null") + ")");
-						}
-					} else {
-						tokenizer.AddError(tArg.index, "expected value for argument \"" + tArg.ToString() + "\"");
-					}
+				bool argumentHasValidValue = AddArg(args[argIndex], ref i, tokens, tokenizer, scriptVariables);
+				if (!argumentHasValidValue) {
+					tokenizer.AddError(tArg.index, "expected value for argument \"" + tArg.ToString() + "\"");
 				}
 			} else {
 				orderedValues.Add(tokenizer.GetResolvedToken(i, scriptVariables));
 			}
 		}
+		// put ordered arguments into the dictionary, include default values if needed, recognize required flag
+		for (int i = 0; i < args.Length; ++i) {
+			Argument arg = args[i];
+			if (arg.order > 0 && orderedValues.Count > arg.order) {
+				namedValues[arg.id] = orderedValues;
+			}
+			bool hasArg = namedValues.ContainsKey(arg.id);
+			if (arg.defaultValue != null && !hasArg) {
+				namedValues[arg.id] = arg.defaultValue;
+				hasArg = true;
+			}
+			if (arg.required && !hasArg) {
+				tokenizer.AddError("missing required argument \"" + arg.id + "\" (" + arg.name + ")");
+			}
+		}
+	}
+	bool AddArg(Argument arg, ref int i, List<Token> tokens, Tokenizer tokenizer, object scriptVariables) {
+		if (arg.flag) {
+			namedValues[arg.id] = true;
+			return true;
+		}
+		if (++i >= tokens.Count) { return false; }
+		Token tValue = tokens[i];
+		CodeConvert.TryParse(tokens[i], tokenizer, scriptVariables, out object result);
+		Type type = arg.valueType;
+		//Show.Log(resultType + " : " + result.StringifySmall());
+		if (result != null && result.GetType() == type) {
+			namedValues[arg.id] = result;
+		} else {
+			tokenizer.AddError(tValue.index, "Could not cast (" + type.Name + ") from (" +
+				(result?.GetType().ToString() ?? "null") + ")");
+		}
+		return true;
 	}
 }

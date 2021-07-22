@@ -24,7 +24,7 @@ namespace NonStandard.Data.Parse {
 			}
 			return Resolve(null,null).ToString();
 		}
-		public object Resolve(Tokenizer tok, object scope, bool simplify=true) {
+		public object Resolve(TokenErrLog tok, object scope, bool simplify=true) {
 			if (index == -1 && length == -1) return meta;
 			if (meta == null) throw new NullReferenceException();
 			if (meta is string) {

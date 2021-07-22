@@ -163,7 +163,7 @@ namespace NonStandard.Data.Parse {
 				}
 			}
 			public string GetText() { return Unescape(); }
-			public object Resolve(Tokenizer tok, object scope, bool simplify = true) {
+			public object Resolve(TokenErrLog tok, object scope, bool simplify = true) {
 				DelimOp op = sourceMeta as DelimOp;
 				if(op != null) { 
 					return op.resolve.Invoke(tok, this, scope);
@@ -179,12 +179,12 @@ namespace NonStandard.Data.Parse {
 					found.Add(i);
 				}
 			}
-			public static List<object> ResolveTerms(Tokenizer tok, object scope, List<Token> tokens) {
+			public static List<object> ResolveTerms(TokenErrLog tok, object scope, List<Token> tokens) {
 				List<object> results = new List<object>();
 				ResolveTerms(tok, scope, tokens, 0, tokens.Count, results);
 				return results;
 			}
-			public static void ResolveTerms(Tokenizer tok, object scope, List<Token> tokens, int start, int length, List<object> results) {
+			public static void ResolveTerms(TokenErrLog tok, object scope, List<Token> tokens, int start, int length, List<object> results) {
 				List<int> found = new List<int>();
 				FindTerms(tokens, start, length, found);
 				for (int i = 0; i < found.Count; ++i) {
@@ -192,7 +192,7 @@ namespace NonStandard.Data.Parse {
 					results.Add(t.Resolve(tok, scope));
 				}
 			}
-			public static object Resolve(Tokenizer tok, object scope, List<Token> tokens, bool simplify = true) {
+			public static object Resolve(TokenErrLog tok, object scope, List<Token> tokens, bool simplify = true) {
 				List<object> result = ResolveTerms(tok, scope, tokens);
 				if (simplify) { switch (result.Count) { case 0: return null; case 1: return result[0]; } }
 				return result;
