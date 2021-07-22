@@ -118,11 +118,11 @@ namespace NonStandard.Data.Parse {
 			return false;
 		}
 		public Entry GetEntry(List<Token> tokens, int startTokenIndex, object meta, ParseRuleSet.Entry parent = null) {
-			Entry e = new Entry { context = this, tokens = tokens, tokenStart = startTokenIndex, sourceMeta = meta, parent = parent };
+			Entry e = new Entry { parseRules = this, tokens = tokens, tokenStart = startTokenIndex, sourceMeta = meta, parent = parent };
 			return e;
 		}
 		public class Entry {
-			public ParseRuleSet context = null;
+			public ParseRuleSet parseRules = null;
 			public Entry parent = null;
 			public List<Token> tokens;
 			public int tokenStart, tokenCount = -1;
@@ -199,9 +199,9 @@ namespace NonStandard.Data.Parse {
 			}
 
 			//public int FindTerms() { return CountTerms(tokens, tokenStart, tokenCount); }
-			public bool IsText() { return context == CodeRules.String || context == CodeRules.Char; }
-			public bool IsEnclosure { get { return context == CodeRules.Expression || context == CodeRules.CodeBody || context == CodeRules.SquareBrace; } }
-			public bool IsComment() { return context == CodeRules.CommentLine || context == CodeRules.XmlCommentLine || context == CodeRules.CommentBlock; }
+			public bool IsText() { return parseRules == CodeRules.String || parseRules == CodeRules.Char; }
+			public bool IsEnclosure { get { return parseRules == CodeRules.Expression || parseRules == CodeRules.CodeBody || parseRules == CodeRules.SquareBrace; } }
+			public bool IsComment() { return parseRules == CodeRules.CommentLine || parseRules == CodeRules.XmlCommentLine || parseRules == CodeRules.CommentBlock; }
 			public Token GetBeginToken() { return tokens[tokenStart]; }
 			public Token GetEndToken() { return tokens[tokenStart + tokenCount - 1]; }
 			public int GetIndexBegin() { return GetBeginToken().GetBeginIndex(); }
@@ -211,7 +211,7 @@ namespace NonStandard.Data.Parse {
 			public bool IsBeginOrEnd(Token t) { return t == GetBeginToken() || t == GetEndToken(); }
 			public int Length { get { return GetIndexEnd() - GetIndexBegin(); } }
 			public string Unescape() {
-				if (context != CodeRules.String && context != CodeRules.Char) { return TextRaw.Substring(GetIndexBegin(), Length); }
+				if (parseRules != CodeRules.String && parseRules != CodeRules.Char) { return TextRaw.Substring(GetIndexBegin(), Length); }
 				StringBuilder sb = new StringBuilder();
 				for (int i = tokenStart + 1; i < tokenStart + tokenCount - 1; ++i) {
 					sb.Append(tokens[i].ToString());

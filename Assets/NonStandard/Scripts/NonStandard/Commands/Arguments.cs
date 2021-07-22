@@ -134,14 +134,14 @@ public class Arguments {
 					++i;
 					if (i < tokens.Count) {
 						Token tValue = tokens[i];
+						CodeConvert.TryParse(tokens[i], tokenizer, scriptVariables, out object result);
 						Type type = arg.valueType;
-						object result = null;
-						// TODO find out why this isn't parsing correctly with "help-chelp 0"
-						if (CodeConvert.TryParseTokens(type, tokens.GetRange(i, 1), ref result, scriptVariables, tokenizer)) {
-						//if (CodeConvert.TryParseTokens(type, tokenizer, i, ref result, scriptVariables)) {
+						//Show.Log(resultType + " : " + result.StringifySmall());
+						if (result != null && result.GetType() == type) {
 							namedValues[arg.id] = result;
 						} else {
-							tokenizer.AddError(tValue.index, "Could not cast (" + type.Name + ") from " + tValue.ToString());
+							tokenizer.AddError(tValue.index, "Could not cast (" + type.Name + ") from (" + 
+								(result?.GetType().ToString() ?? "null") + ")");
 						}
 					} else {
 						tokenizer.AddError(tArg.index, "expected value for argument \"" + tArg.ToString() + "\"");

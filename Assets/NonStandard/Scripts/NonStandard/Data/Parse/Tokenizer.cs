@@ -2,10 +2,27 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using UnityEngine;
 
 namespace NonStandard.Data.Parse {
-	public class Tokenizer {
+	public interface TokenizationErrorLog {
+		void AddError(ParseError error);
+		string ErrorString();
+		IList<int> TextRows();
+	}
+	public static class TokenizationErrorStorageExtension {
+		public static ParseError AddError(this TokenizationErrorLog self, int index, string message) {
+			ParseError e = new ParseError(index, self.TextRows(), message); self.AddError(e); return e;
+		}
+		public static ParseError AddError(this TokenizationErrorLog self, Token token, string message) {
+			return AddError(self, token.index, message);
+		}
+		public static bool ShowErrorTo(this TokenizationErrorLog self, Show.PrintFunc show) {
+			string errStr = self.ErrorString();
+			if (string.IsNullOrEmpty(errStr)) return false;
+			show.Invoke(errStr); return true;
+		}
+	}
+	public class Tokenizer : TokenizationErrorLog {
 		internal string str;
 		internal List<Token> tokens = new List<Token>(); // actually a tree. each token can point to more token lists
 		/// <summary>
@@ -17,6 +34,7 @@ namespace NonStandard.Data.Parse {
 		/// the indexes of where rows end (newline characters), in order.
 		/// </summary>
 		internal List<int> rows = new List<int>();
+		public IList<int> TextRows() => rows;
 		public int TokenCount { get { return tokens.Count; } }
 		/// <param name="i"></param>
 		/// <returns>raw token data</returns>
@@ -150,11 +168,11 @@ namespace NonStandard.Data.Parse {
 					} else {
 						if (i == 0) {
 							if (separator != null && i > 0) { sb.Append(separator); }
-							sb.Append("(").Append(e.beginDelim.ToString().StringifySmall());
+							sb.Append("(").Append(e.beginDelim.ToString().Stringify(showBoundary:false)).Append("(");
 						}
 						else if (i == tokens.Count-1) {
 							if (separator != null && i > 0) { sb.Append(separator); }
-							sb.Append(e.endDelim.ToString().StringifySmall()).Append(")");
+							sb.Append(")").Append(e.endDelim.ToString().Stringify(showBoundary: false)).Append(")");
 						}
 						else { sb.Append(" ").Append(e.sourceMeta).Append(" "); }
 					}
@@ -231,7 +249,7 @@ namespace NonStandard.Data.Parse {
 					endedContext.tokenCount = (tokens.Count - endedContext.tokenStart) + 1;
 					contextStack.RemoveAt(contextStack.Count - 1);
 					if (contextStack.Count > 0) {
-						currentContext = contextStack[contextStack.Count - 1].context;
+						currentContext = contextStack[contextStack.Count - 1].parseRules;
 					} else {
 						currentContext = defaultContext;
 					}
@@ -256,7 +274,7 @@ namespace NonStandard.Data.Parse {
 				if (e != null && e.tokenCount < 0) {
 					e.tokenCount = tokens.Count - e.tokenStart;
 					ExtractContextAsSubTokenList(e);
-					if (e.context != CodeRules.CommentLine) { // this is an error, unless it's a comment
+					if (e.parseRules != CodeRules.CommentLine) { // this is an error, unless it's a comment
 						errors.Add(new ParseError(tokens[i], rows, "missing closing token"));
 					}
 					// close any unfinished contexts inside of this context too!

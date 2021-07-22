@@ -21,6 +21,10 @@ namespace NonStandard.Data {
 			data = (T)value;
 			return result;
 		}
+		public static bool TryParse(Token token, Tokenizer tokenizer, object scriptVariables, out object result) {
+			CodeRules.op_ResolveToken(tokenizer, token, scriptVariables, out result, out Type resultType, false);
+			return resultType != null;
+		}
 		public static bool TryParseType(Type type, string text, ref object data, object scope, Tokenizer tokenizer = null) {
 			try {
 				if (tokenizer == null) { tokenizer = new Tokenizer(); }
@@ -33,22 +37,6 @@ namespace NonStandard.Data {
 			//Show.Log(Show.GetStack(4));
 			//Show.Log(tokenizer.DebugPrint(-1));
 			return TryParseTokens(type, tokenizer.tokens, ref data, scope, tokenizer);
-		}
-		/// <summary>
-		/// for converting parsing just one already parsed token from a tokenizer
-		/// </summary>
-		/// <param name="type"></param>
-		/// <param name="tokenizer"></param>
-		/// <param name="tokenIndex"></param>
-		/// <param name="data"></param>
-		/// <param name="scope"></param>
-		/// <returns></returns>
-		public static bool TryParseTokens(Type type, Tokenizer tokenizer, int tokenIndex, ref object data, object scope) {
-			Tokenizer t = new Tokenizer();
-			t.str = tokenizer.str;
-			t.tokens.Add(tokenizer.tokens[tokenIndex]);
-			t.rows = tokenizer.rows;
-			return TryParseTokens(type, t.tokens, ref data, scope, t);
 		}
 		public static bool TryParseTokens(Type type, List<Token> tokens, ref object data, object scope, Tokenizer tokenizer) {
 			bool result = false;

@@ -191,8 +191,8 @@ namespace NonStandard.Data.Parse {
 			Token t = tokens[index];
 			ParseRuleSet.Entry e = tokens[index].GetAsContextEntry();
 			if (e != null) {
-				if (e.context.name != contextName) { throw new Exception(tok.AddError(t,
-					"expected context: "+contextName+", found "+e.context.name).ToString()); }
+				if (e.parseRules.name != contextName) { throw new Exception(tok.AddError(t,
+					"expected context: "+contextName+", found "+e.parseRules.name).ToString()); }
 				return e;
 			}
 			if (index - 1 < 0) { tok.AddError(t, "missing left operand"); return null; }
@@ -229,8 +229,17 @@ namespace NonStandard.Data.Parse {
 		public static ParseRuleSet.Entry opinit_lte(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "less than or equal"); }
 		public static ParseRuleSet.Entry opinit_gte(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "greater than or equal"); }
 
-		public static void op_ResolveToken(Tokenizer tok, Token token, object scope, out object value, out Type type) {
-			value = token.Resolve(tok, scope);
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="tok"></param>
+		/// <param name="token"></param>
+		/// <param name="scope"></param>
+		/// <param name="value"></param>
+		/// <param name="type"></param>
+		/// <param name="simplify">if true, and the result is a list with one item, the list is stripped away and the single item is returned</param>
+		public static void op_ResolveToken(Tokenizer tok, Token token, object scope, out object value, out Type type, bool simplify=true) {
+			value = token.Resolve(tok, scope, simplify);
 			type = (value != null) ? value.GetType() : null;
 			if (scope == null || type == null) { return; } // no scope, or no data, easy. we're done.
 			string name = value as string;

@@ -220,7 +220,7 @@ namespace NonStandard.Data.Parse {
 					if (e.IsText()) {
 						memberId = e.GetText();
 					} else {
-						AddError("unable to parse member ("+e.context.name+") as member name for " + resultType);
+						AddError("unable to parse member ("+e.parseRules.name+") as member name for " + resultType);
 					}
 				} else {
 					memberId = e.Resolve(tok, scope);// "dictionary member value will be resolved later";
@@ -354,6 +354,17 @@ namespace NonStandard.Data.Parse {
 			}
 			AddError("unable to parse token with meta data " + meta);
 			return false;
+		}
+
+		public static bool TryConvert(Type memberType, List<Token> tokens, ParseRuleSet.Entry context, object scope, Tokenizer tok, ref object memberValue) {
+			if (CodeConvert.IsConvertable(memberType)) {
+				//Show.Log(memberId + " :: " + memberValue);
+				memberValue = context.Resolve(tok, scope);
+			} else {
+				//Show.Log(memberId+" : "+memberValue);
+				if (!CodeConvert.TryParseTokens(memberType, tokens, ref memberValue, scope, tok)) { return false; }
+			}
+			return true;
 		}
 
 		protected void AddError(string message) { tok.AddError(Current.Token, message); }

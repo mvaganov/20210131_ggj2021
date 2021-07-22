@@ -16,7 +16,7 @@ namespace NonStandard.Data.Parse {
 				Delim d = pce.sourceMeta as Delim;
 				if(d != null) { return d.ToString(); }
 				if(IsValid) return ToString(pce.TextRaw);
-				string output = pce.context.name;
+				string output = pce.parseRules.name;
 				if (pce.IsText()) {
 					output += "(" + pce.GetText() + ")";
 				}
@@ -24,7 +24,7 @@ namespace NonStandard.Data.Parse {
 			}
 			return Resolve(null,null).ToString();
 		}
-		public object Resolve(Tokenizer tok, object scope) {
+		public object Resolve(Tokenizer tok, object scope, bool simplify=true) {
 			if (index == -1 && length == -1) return meta;
 			if (meta == null) throw new NullReferenceException();
 			if (meta is string) {
@@ -33,7 +33,7 @@ namespace NonStandard.Data.Parse {
 			}
 			TokenSubstitution ss = meta as TokenSubstitution; if (ss != null) return ss.value;
 			Delim d = meta as Delim; if (d != null) return d.text;
-			ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry; if (pce != null) return pce.Resolve(tok, scope);
+			ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry; if (pce != null) return pce.Resolve(tok, scope, simplify);
 			throw new DecoderFallbackException();
 		}
 		public string GetAsSmallText() {
