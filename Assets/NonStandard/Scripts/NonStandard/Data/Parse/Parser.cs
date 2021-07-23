@@ -190,26 +190,35 @@ namespace NonStandard.Data.Parse {
 			return true;
 		}
 		protected void FinalParseDataCompile() {
-			if (listData != null) {
-				if (resultType.IsArray) {
-					try {
-						Array a = Array.CreateInstance(memberType, listData.Count);
-						for (int i = 0; i < listData.Count; ++i) { a.SetValue(listData[i], i); }
-						result = a;
-					} catch (Exception e) {
-						Show.Error("array creation:" + e);
-					}
-				} else {
-					try {
-						result = resultType.GetNewInstance();
-						IList ilist = result as IList;
-						for (int i = 0; i < listData.Count; ++i) { ilist.Add(listData[i]); }
-					} catch (Exception e) {
-						Show.Error("List creation:" + e);
-					}
-				}
+			if (listData == null) { return; }
+			//result = ConvertIList(listData, resultType, memberType);
+			object ilist = listData;
+			if (!CodeConvert.TryConvertIList(ref ilist, resultType, memberType)) {
+				throw new Exception("convert failed");
 			}
+			result = ilist;
 		}
+		//public static object ConvertIList(IList listData, Type resultListType, Type resultListElementType) {
+		//	if (resultListType.IsArray) {
+		//		try {
+		//			Array a = Array.CreateInstance(resultListElementType, listData.Count);
+		//			for (int i = 0; i < listData.Count; ++i) { a.SetValue(listData[i], i); }
+		//			return a;
+		//		} catch (Exception e) {
+		//			Show.Error("array creation:" + e);
+		//		}
+		//	} else {
+		//		try {
+		//			object result = resultListType.GetNewInstance();
+		//			IList ilist = result as IList;
+		//			for (int i = 0; i < listData.Count; ++i) { ilist.Add(listData[i]); }
+		//			return ilist;
+		//		} catch (Exception e) {
+		//			Show.Error("List creation:" + e);
+		//		}
+		//	}
+		//	return null;
+		//}
 		protected bool GetMemberNameAndAssociatedType() {
 			memberToken = Current.Token;
 			if (SkipStructuredDelimiters(memberToken.GetAsDelimiter())) { memberToken.Invalidate(); return true; }

@@ -1,6 +1,7 @@
 ﻿using NonStandard.Data.Parse;
 using NonStandard.Extension;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
@@ -71,6 +72,7 @@ namespace NonStandard.Data {
 			return typeToGet.IsEnum;
 		}
 		public static bool TryConvert(ref object value, Type typeToGet) {
+			if (value != null && value.GetType() == typeToGet) return true;
 			try {
 				if (typeToGet.IsEnum) {
 					string str = value as string;
@@ -90,9 +92,49 @@ namespace NonStandard.Data {
 				case TypeCode.UInt64: value = Convert.ToUInt64(value); break;
 				case TypeCode.Double: value = Convert.ToDouble(value); break;
 				case TypeCode.String: value = Convert.ToString(value); break;
-				default: return false;
+				default:
+					if (TryConvertIList(ref value, typeToGet)) { 
+						return true;
+					}
+					return false;
 				}
 			} catch { return false; }
+			return true;
+		}
+		public static bool TryConvertIList(ref object value, Type resultListType, Type resultElementType = null) {
+			Type outputListElementType = resultElementType != null ? resultElementType : resultListType.GetIListType();
+			if (outputListElementType == null) { return false; }
+			IList ilist = (IList)value;
+			if (resultListType.IsArray) {
+				try {
+					Array oArray = Array.CreateInstance(outputListElementType, ilist.Count);
+					for (int i = 0; i < ilist.Count; ++i) {
+						object element = ilist[i];
+						if (outputListElementType.IsAssignableFrom(element.GetType()) || TryConvert(ref element, outputListElementType)) {
+							oArray.SetValue(element, i);
+						}
+					}
+					value = oArray;
+				} catch (Exception e) {
+					Show.Error("array creation:" + e);
+					return false;
+				}
+			} else if (resultListType.IsGenericType) {
+				try {
+					object result = resultListType.GetNewInstance();
+					IList olist = result as IList;
+					for (int i = 0; i < ilist.Count; ++i) {
+						object element = ilist[i];
+						if (outputListElementType.IsAssignableFrom(element.GetType()) || TryConvert(ref element, outputListElementType)) {
+							olist.Add(element);
+						}
+					}
+					value = olist;
+				} catch (Exception e) {
+					Show.Error("List creation:" + e);
+					return false;
+				}
+			}
 			return true;
 		}
 		public static bool TryConvertEnumWildcard(Type typeToGet, string str, out object value, char wildcard = Parser.Wildcard) {

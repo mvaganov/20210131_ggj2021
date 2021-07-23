@@ -14,7 +14,7 @@ public class Argument {
 	/// <summary>
 	/// a full name for the argument
 	/// </summary>
-	public string name;
+	public string Name;
 	/// <summary>
 	/// description of what the argument does or what it is for
 	/// </summary>
@@ -63,7 +63,7 @@ public class Argument {
 	public Argument(string id, string name = null, string description = null, object defaultValue = null, System.Type type = null, int order = -1,
 		bool required = false, bool deprecated = false, bool preview = false, bool flag = false) {
 		this.id = id;
-		this.name = name;
+		this.Name = name;
 		this.description = description;
 		this.defaultValue = defaultValue;
 		this.valueType = type;
@@ -112,7 +112,7 @@ public class Arguments {
 			if(args[i].id == text) { return i; }
 		}
 		for (int i = 0; i < args.Length; ++i) {
-			if (args[i].name == text) { return i; }
+			if (args[i].Name == text) { return i; }
 		}
 		return -1;
 	}
@@ -129,9 +129,10 @@ public class Arguments {
 			//Show.Log(tArg+" "+tArg.IsSimpleString+" "+tArg.IsDelim);
 			int argIndex = tArg.IsSimpleString || tArg.IsDelim ? GetArgumentIndex(command, tArg.ToString()) : -1;
 			if (argIndex >= 0) {
-				bool argumentHasValidValue = AddArg(args[argIndex], ref i, tokens, tokenizer, scriptVariables);
+				Argument arg = args[argIndex];
+				bool argumentHasValidValue = AddArg(arg, ref i, tokens, tokenizer, scriptVariables);
 				if (!argumentHasValidValue) {
-					tokenizer.AddError(tArg.index, "expected value for argument \"" + tArg.ToString() + "\"");
+					tokenizer.AddError(tArg.index, "expected <"+arg.valueType+"> for argument \"" + tArg.ToString() + "\"");
 				}
 			} else {
 				orderedValues.Add(tokenizer.GetResolvedToken(i, scriptVariables));
@@ -149,7 +150,7 @@ public class Arguments {
 				hasArg = true;
 			}
 			if (arg.required && !hasArg) {
-				tokenizer.AddError("missing required argument \"" + arg.id + "\" (" + arg.name + ")");
+				tokenizer.AddError("missing required argument \"" + arg.id + "\" (" + arg.Name + ")");
 			}
 		}
 	}
@@ -163,12 +164,32 @@ public class Arguments {
 		CodeConvert.TryParse(tokens[i], tokenizer, scriptVariables, out object result);
 		Type type = arg.valueType;
 		//Show.Log(resultType + " : " + result.StringifySmall());
-		if (result != null && result.GetType() == type) {
-			namedValues[arg.id] = result;
-		} else {
+		bool goodArgument = false;
+		if (result != null){
+			if (!(goodArgument = result.GetType() == type)) {
+				goodArgument = CodeConvert.TryConvert(ref result, type);
+			}
+			if (goodArgument) {
+				namedValues[arg.id] = result;
+			}
+		}
+		if(!goodArgument) {
 			tokenizer.AddError(tValue.index, "Could not cast (" + type.Name + ") from (" +
 				(result?.GetType().ToString() ?? "null") + ")");
 		}
-		return true;
+		return goodArgument;
+	}
+
+	public bool TryGet<T>(string argId, out T value) {
+		value = default(T);
+		if (!namedValues.TryGetValue(argId, out object obj)) { return false; }
+		if (obj != null && typeof(T) != obj.GetType()) {
+			CodeConvert.TryConvert(ref obj, typeof(T));
+		}
+		if (typeof(T) == obj?.GetType()) {
+			value = (T)obj;
+			return true;
+		}
+		return false;
 	}
 }

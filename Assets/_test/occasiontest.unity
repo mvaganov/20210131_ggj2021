@@ -270,15 +270,19 @@ MonoBehaviour:
   cursor:
     cursorVisible: 1
     cursor: {fileID: 167637150}
+    position:
+      row: 0
+      col: 0
   window:
+    followCursor: 1
     UseWindow: 1
     rect:
       min:
         row: 0
         col: 0
       max:
-        row: 5
-        col: 20
+        row: 8
+        col: 30
   colorSettings:
     foregroundAlpha: 1
     backgroundAlpha: 0.5
@@ -6517,7 +6521,11 @@ MonoBehaviour:
   cursor:
     cursorVisible: 1
     cursor: {fileID: 0}
+    position:
+      row: 0
+      col: 0
   window:
+    followCursor: 1
     UseWindow: 1
     rect:
       min:

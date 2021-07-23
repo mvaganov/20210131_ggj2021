@@ -61,9 +61,9 @@ namespace NonStandard.Commands {
 			if (arguments == null || arguments.Length == 0) return delims.ToArray();
 			for (int i = 0; i < arguments.Length; ++i) {
 				Argument arg = arguments[i];
-				delims.Add(new Delim(arg.id, arg.name, arg.description));
-				if(arg.name != null) {
-					delims.Add(new Delim(arg.name, arg.id, arg.description));
+				delims.Add(new Delim(arg.id, arg.Name, arg.description));
+				if(arg.Name != null) {
+					delims.Add(new Delim(arg.Name, arg.id, arg.description));
 				}
 			}
 			return delims.ToArray();
