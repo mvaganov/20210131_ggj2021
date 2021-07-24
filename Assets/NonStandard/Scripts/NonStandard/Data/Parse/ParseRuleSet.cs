@@ -41,8 +41,10 @@ namespace NonStandard.Data.Parse {
 		public ParseRuleSet(string name, Delim[] defaultDelimiters = null, char[] defaultWhitespace = null) {
 			this.name = name;
 			allContexts[name] = this;
+			if (defaultDelimiters != null && !defaultDelimiters.IsSorted()) { Array.Sort(defaultDelimiters); }
+			if (defaultWhitespace != null && !defaultWhitespace.IsSorted()) { Array.Sort(defaultWhitespace); }
 			Delimiters = (defaultDelimiters == null) ? CodeRules.StandardDelimiters : defaultDelimiters;
-			Whitespace = (defaultWhitespace == null) ? CodeRules.WhitespaceDefault : defaultWhitespace;
+			Whitespace = (defaultWhitespace == null) ? CodeRules.StandardWhitespace : defaultWhitespace;
 		}
 		/// <summary>
 		/// set the delimiters of this Context, also calculating a simple lookup table

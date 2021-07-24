@@ -309,7 +309,7 @@ namespace NonStandard.Inputs {
 			/// <param name="kind"></param>
 			/// <returns></returns>
 			public bool UpdateKeyBinding(KBind kBind, KBindChange kind) {
-				if (kind == KBindChange.Add && !putInList(kBind)) return false;
+				if (kind == KBindChange.Add && putInList != null && !putInList.Invoke(kBind)) { return false; }
 				bool changeHappened = false;
 				int index = keyBindList.IndexOf(kBind);
 				switch (kind) {

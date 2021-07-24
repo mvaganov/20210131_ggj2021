@@ -90,7 +90,7 @@ namespace NonStandard.Data.Parse {
 			"ushort", "using", "virtual", "void", "volatile", "while"
 		};
 		public static Delim[] None = new Delim[] { };
-		public static char[] WhitespaceDefault = new char[] { ' ', '\t', '\n', '\r' };
+		public static char[] StandardWhitespace = new char[] { ' ', '\t', '\n', '\r' };
 		public static char[] WhitespaceNone = new char[] { };
 
 		public static Delim[] CharLiteralDelimiters = CombineDelims(_char_escape_sequence, _char_delimiter);

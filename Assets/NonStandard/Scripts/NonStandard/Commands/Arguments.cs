@@ -118,7 +118,7 @@ public class Arguments {
 	}
 
 	public void Parse(Tokenizer tokenizer, object scriptVariables = null) {
-		Show.Log(tokenizer);
+		//Show.Log(tokenizer);
 		//tokenizer = command.Tokenize(text);
 		List<Token> tokens = tokenizer.tokens;
 		orderedValues.Add(tokenizer.GetStr(0));
@@ -141,15 +141,16 @@ public class Arguments {
 		// put ordered arguments into the dictionary, include default values if needed, recognize required flag
 		for (int i = 0; i < args.Length; ++i) {
 			Argument arg = args[i];
-			if (arg.order > 0 && orderedValues.Count > arg.order) {
-				namedValues[arg.id] = orderedValues;
-			}
 			bool hasArg = namedValues.ContainsKey(arg.id);
-			if (arg.defaultValue != null && !hasArg) {
+			if (!hasArg && arg.order > 0 && arg.order < orderedValues.Count) {
+				namedValues[arg.id] = orderedValues[arg.order];
+				hasArg = true;
+			}
+			if (!hasArg && arg.defaultValue != null) {
 				namedValues[arg.id] = arg.defaultValue;
 				hasArg = true;
 			}
-			if (arg.required && !hasArg) {
+			if (!hasArg && arg.required) {
 				tokenizer.AddError("missing required argument \"" + arg.id + "\" (" + arg.Name + ")");
 			}
 		}

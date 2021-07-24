@@ -28,6 +28,14 @@ namespace NonStandard.Extension {
 			}
 			return ~lower;
 		}
+		public static bool IsSorted<T>(this IList<T> list, IComparer<T> comparer = null) {
+			if (list == null) { throw new ArgumentNullException("list"); }
+			if (comparer == null) { comparer = Comparer<T>.Default; }
+			for(int i = 1; i < list.Count; ++i) {
+				if (comparer.Compare(list[i - 1], list[i]) > 0) return false;
+			}
+			return true;
+		}
 		public static void ForEach<T>(this IList<T> source, Action<T> action) { ForEach(source, action, 0, source.Count); }
 		public static void ForEach<T>(this IList<T> source, Action<T> action, int index, int length) {
 			for (int i = 0; i < length; ++i) { action.Invoke(source[index + i]); }

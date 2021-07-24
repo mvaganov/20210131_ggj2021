@@ -21,24 +21,45 @@ namespace NonStandard.Extension {
 
 		public static readonly string[] whitespace = new string[] { " ", "\t", "\n", "\r" };
 		public static int IndexOfFirst(this string str, string[] delimiter, out int firstDelimeter) {
-			int firstIndex = -1;
 			firstDelimeter = -1;
-			for(int i = 0; i < delimiter.Length; ++i) {
-				int index = str.IndexOf(delimiter[i]);
-				if(index >= 0 && (firstIndex < 0 || index < firstIndex)) {
-					firstIndex = index;
-					firstDelimeter = i;
+			for(int i = 0; i < str.Length; ++i) {
+				for(int j = 0; j < delimiter.Length; ++j) {
+					if (str.IsSubstringAt(delimiter[j], i)) {
+						firstDelimeter = j;
+						return i;
+					}
 				}
 			}
-			return firstIndex;
+			return -1;
 		}
-		public static string SubstringUntilWhitespace(this string str) {
-			return SubstringUntilFirst(str, whitespace);
+		public static int IndexOfLast(this string str, string[] delimiter, out int firstDelimeter) {
+			firstDelimeter = -1;
+			for (int i = str.Length-1; i >= 0; --i) {
+				for (int j = 0; j < delimiter.Length; ++j) {
+					if (str.IsSubstringAt(delimiter[j], i)) {
+						firstDelimeter = j;
+						return i;
+					}
+				}
+			}
+			return -1;
 		}
-		public static string SubstringUntilFirst(this string str, string[] delimiter) {
+		public static string SubstringBeforeWhitespace(this string str) {
+			return SubstringBeforeFirst(str, whitespace);
+		}
+		public static string SubstringBeforeFirst(this string str, string[] delimiter) {
 			if(delimiter == null) { delimiter = whitespace; }
 			int index = IndexOfFirst(str, delimiter, out int which);
 			if(index >= 0) { return str.Substring(0, index); }
+			return null;
+		}
+		public static string SubstringAfterLast(this string str, string delimiter) {
+			return SubstringAfterLast(str, new string[] { delimiter });
+		}
+		public static string SubstringAfterLast(this string str, string[] delimiter) {
+			if (delimiter == null) { delimiter = whitespace; }
+			int index = IndexOfLast(str, delimiter, out int which);
+			if (index >= 0) { return str.Substring(index + delimiter[which].Length); }
 			return null;
 		}
 
