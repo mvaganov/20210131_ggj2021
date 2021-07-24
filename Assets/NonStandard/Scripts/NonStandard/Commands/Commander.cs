@@ -116,5 +116,6 @@ namespace NonStandard.Commands {
 
 	public partial class MoreCommands { }
 
-	public class CommandMakerAttribute : Attribute { }
+
+	[AttributeUsage(AttributeTargets.Method)] public class CommandMakerAttribute : Attribute { }
 }

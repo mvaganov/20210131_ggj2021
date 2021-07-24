@@ -37,12 +37,13 @@ namespace NonStandard.Cli {
 		}
 		public CursorSettings cursor = new CursorSettings();
 		[System.Serializable] public class DisplayWindowSettings {
-			public enum FollowBehavior { None, Yes }
-			public FollowBehavior followCursor = FollowBehavior.Yes;
+			public Coord bufferSize;
 			public static readonly CoordRect Maximum = new CoordRect(Coord.Zero, Coord.Max);
 			[Tooltip("only render characters contained in the render window")]
 			public bool UseWindow = true;
 			public CoordRect rect = new CoordRect(Coord.Zero, new Coord(20, 5));
+			public enum FollowBehavior { None, Yes }
+			public FollowBehavior followCursor = FollowBehavior.Yes;
 			public CoordRect Limit => UseWindow ? rect : Maximum;
 			public Coord WindowSize {
 				get => UseWindow ? rect.Size : Maximum.Size;
@@ -72,7 +73,6 @@ namespace NonStandard.Cli {
 			window.ScrollRenderWindow(direction, body);
 			textNeedsRefresh = true;
 		}
-		protected int cursorSize = 1;
 		internal ConsoleBody body = new ConsoleBody();
 		[System.Serializable] public class ColorSettings {
 			[Range(0, 1)] public float foregroundAlpha = 1f;
@@ -137,11 +137,14 @@ namespace NonStandard.Cli {
 		public ConsoleColor BackgroundColor { get => body.currentColors.Back; set => body.currentColors.Back = value; }
 		public byte ForeColor { get => body.currentColors.fore; set => body.currentColors.fore = value; }
 		public byte BackColor { get => body.currentColors.back; set => body.currentColors.back = value; }
-		public int BufferHeight => body.Size.Y;
-		public int BufferWidth => body.Size.Y;
+		public int BufferHeight => window.bufferSize.Y;
+		public int BufferWidth => window.bufferSize.X;
 		public int CursorLeft { get => body.CursorLeft; set => body.CursorLeft = value; }
 		public int CursorTop { get => body.CursorTop; set => body.CursorTop = value; }
-		public int CursorSize { get => cursorSize; set => cursorSize = value; } // value ignored.
+		public int CursorSize {
+			get { return (int)(cursor.cursor.transform.localScale.MagnitudeManhattan() / 3); }
+			set { cursor.cursor.transform.localScale = Vector3.one * (value / 100f); }
+		}
 		public bool CursorVisible { get => cursor.cursorVisible; set => cursor.cursorVisible = value; }
 
 		public void PushForeColor(ConsoleColor c) { _colorStack.Add(ForeColor); ForegoundColor = c; }
