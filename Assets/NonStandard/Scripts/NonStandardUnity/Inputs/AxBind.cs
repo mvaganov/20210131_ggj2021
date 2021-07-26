@@ -248,12 +248,12 @@ namespace NonStandard.Inputs {
 		public bool stickyInput = false;
 		public float cachedValue { get; set; }
 
-		public KCombination.Modifier[] modifiers;
+		public KModifier[] modifiers;
 
 		public Axis(string name, float multiplier = 1) { this.name = name; this.multiplier = multiplier; }
 
 		public bool IsValueChanged() {
-			bool isAllowed = modifiers == null || modifiers.Length == 0 || KCombination.IsSatisfiedHeld(modifiers);
+			bool isAllowed = modifiers == null || modifiers.Length == 0 || KCombo.IsSatisfiedHeld(modifiers);
 			if (!isAllowed) {
 				if (!stickyInput) { cachedValue = 0; }
 			} else {
@@ -271,6 +271,6 @@ namespace NonStandard.Inputs {
 
 		public void Init() { }
 
-		public override string ToString() { return KCombination.ToString(modifiers)+name; }
+		public override string ToString() { return KCombo.ToString(modifiers)+name; }
 	}
 }

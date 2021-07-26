@@ -1,6 +1,7 @@
 ﻿// http://codegiraffe.com/unity/NonStandardPlayer.unitypackage
 using NonStandard.Inputs;
 using NonStandard.Procedure;
+using NonStandard.Utility;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -527,33 +528,33 @@ namespace NonStandard.Character {
 			if(camera == null) { camera = GetComponentInParent<CharacterCamera>(); }
 			UserInput mouseLook = userInput.AddComponent<UserInput>();
 			if(camera != null) {
-				mouseLook.axisBinds.Add(new AxBind(new Axis("Mouse X", 5), "mouselook X",
+				mouseLook.AxisBinds.Add(new AxBind(new Axis("Mouse X", 5), "mouselook X",
 					camera, "set_HorizontalRotateInput"));
-				mouseLook.axisBinds.Add(new AxBind(new Axis("Mouse Y", 5), "mouselook Y",
+				mouseLook.AxisBinds.Add(new AxBind(new Axis("Mouse Y", 5), "mouselook Y",
 					camera, "set_VerticalRotateInput"));
 			}
 			mouseLook.enabled = false;
 			UserInput userMoves = userInput.AddComponent<UserInput>();
 			KBind rightClick = new KBind(KCode.Mouse1, "use mouselook",
-				pressFunc: KBind.Func(mouseLook, "set_enabled", true),
-				releaseFunc: KBind.Func(mouseLook, "set_enabled", false));
+				pressFunc: new EventBind(mouseLook, "set_enabled", true),
+				releaseFunc: new EventBind(mouseLook, "set_enabled", false));
 			rightClick.keyEvent.AddPress(camera, "SetMouseCursorLock", true);
 			rightClick.keyEvent.AddRelease(camera, "SetMouseCursorLock", false);
-			userMoves.keyBinds.Add(rightClick);
-			userMoves.keyBinds.Add(new KBind(KCode.PageUp, "zoom in",
-				pressFunc: KBind.Func(camera, "set_ZoomInput", -5f),
-				releaseFunc: KBind.Func(camera, "set_ZoomInput", 0f)));
-			userMoves.keyBinds.Add(new KBind(KCode.PageDown, "zoom out",
-				pressFunc: KBind.Func(camera, "set_ZoomInput", 5f),
-				releaseFunc: KBind.Func(camera, "set_ZoomInput", 0f)));
-			userMoves.keyBinds.Add(new KBind(KCode.Space, "jump",
-				pressFunc: KBind.Func(this, "set_Jump", 1f),
-				releaseFunc: KBind.Func(this, "set_Jump", 0f)));
-			userMoves.axisBinds.Add(new AxBind(new Axis("Horizontal"), "strafe right/left",
+			userMoves.KeyBinds.Add(rightClick);
+			userMoves.KeyBinds.Add(new KBind(KCode.PageUp, "zoom in",
+				pressFunc: new EventBind(camera, "set_ZoomInput", -5f),
+				releaseFunc: new EventBind(camera, "set_ZoomInput", 0f)));
+			userMoves.KeyBinds.Add(new KBind(KCode.PageDown, "zoom out",
+				pressFunc: new EventBind(camera, "set_ZoomInput", 5f),
+				releaseFunc: new EventBind(camera, "set_ZoomInput", 0f)));
+			userMoves.KeyBinds.Add(new KBind(KCode.Space, "jump",
+				pressFunc: new EventBind(this, "set_Jump", 1f),
+				releaseFunc: new EventBind(this, "set_Jump", 0f)));
+			userMoves.AxisBinds.Add(new AxBind(new Axis("Horizontal"), "strafe right/left",
 				this, "set_StrafeRightMovement"));
-			userMoves.axisBinds.Add(new AxBind(new Axis("Vertical"), "move forward/backward",
+			userMoves.AxisBinds.Add(new AxBind(new Axis("Vertical"), "move forward/backward",
 				this, "set_MoveForwardMovement"));
-			userMoves.axisBinds.Add(new AxBind(new Axis("Mouse ScrollWheel", -4), "zoom in/out",
+			userMoves.AxisBinds.Add(new AxBind(new Axis("Mouse ScrollWheel", -4), "zoom in/out",
 				camera, "AddToTargetDistance"));
 		}
 	}

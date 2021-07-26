@@ -56,69 +56,69 @@ namespace NonStandard.Inputs {
 
 		public static bool HasKeyBind(string name) {
 			if (string.IsNullOrEmpty(name)) return false;
-			int index = Instance.keyBinds.FindIndex(kb => kb.name == name);
+			int index = Instance.KeyBinds.FindIndex(kb => kb.name == name);
 			return index >= 0;
 		}
 
 		public static bool HasAxisBind(string name) {
 			if (string.IsNullOrEmpty(name)) return false;
-			int index = Instance.axisBinds.FindIndex(kb => kb.name == name);
+			int index = Instance.AxisBinds.FindIndex(kb => kb.name == name);
 			return index >= 0;
 		}
 
 		public static bool HasKeyBind(KBind kBind) {
-			int index = kBind != null ? Instance.keyBinds.IndexOf(kBind) : -1;
+			int index = kBind != null ? Instance.KeyBinds.IndexOf(kBind) : -1;
 			return index >= 0;
 		}
 
 		public static bool HasAxisBind(AxBind axBind) {
-			int index = axBind != null ? Instance.axisBinds.IndexOf(axBind) : -1;
+			int index = axBind != null ? Instance.AxisBinds.IndexOf(axBind) : -1;
 			return index >= 0;
 		}
 
 		public bool RemoveKeyBind(string name) {
-			int index = keyBinds.FindIndex(kb => kb.name == name);
+			int index = KeyBinds.FindIndex(kb => kb.name == name);
 			if (index < 0) return false;
-			return RemoveListener(keyBinds[index], index);
+			return RemoveListener(KeyBinds[index], index);
 		}
 
 		public bool RemoveKeyBind(KBind kBind) {
-			int index = keyBinds.IndexOf(kBind);
+			int index = KeyBinds.IndexOf(kBind);
 			if (index < 0) return false;
 			return RemoveListener(kBind, index);
 		}
 
 		public bool RemoveAxisBind(AxBind axBind) {
-			int index = axisBinds.IndexOf(axBind);
+			int index = AxisBinds.IndexOf(axBind);
 			if (index < 0) return false;
 			axBind.DoAxis(0);
-			axisBinds.RemoveAt(index);
+			AxisBinds.RemoveAt(index);
 			if (updateText) { UpdateCurrentKeyBindText(); }
 			return true;
 		}
 
 		private bool RemoveListener(KBind kBind, int kBindIndex) {
-			keyBinds.RemoveAt(kBindIndex);
+			KeyBinds.RemoveAt(kBindIndex);
 			UpdateKeyBindGroups(kBind, KBindChange.Remove);
 			return true;
 		}
 
 		public bool AddKeyBind(KBind kBind) {
-			int index = (!string.IsNullOrEmpty(kBind.name)) ? keyBinds.FindIndex(kb => kb.name == kBind.name) : -1;
+			int index = (!string.IsNullOrEmpty(kBind.name)) ? KeyBinds.FindIndex(kb => kb.name == kBind.name) : -1;
 			KBindChange kindOfChange = KBindChange.Add;
 			if (index >= 0) {
 				kindOfChange = KBindChange.Update; // will cause lists to Remove then re-Add
 				return false;
 			} else {
-				keyBinds.Add(kBind);
+				KeyBinds.Add(kBind);
 			}
 			return UpdateKeyBindGroups(kBind, kindOfChange);
 		}
 
 		public bool AddAxisBind(AxBind axisBind) {
-			int index = (!string.IsNullOrEmpty(axisBind.name)) ? keyBinds.FindIndex(kb => kb.name == axisBind.name) : -1;
+			int index = (!string.IsNullOrEmpty(axisBind.name)) ? KeyBinds.FindIndex(kb => kb.name == axisBind.name) : -1;
 			if (index < 0) {
-				axisBinds.Add(axisBind);
+				AxisBinds.Add(axisBind);
 				if (updateText) { UpdateCurrentKeyBindText(); }
 				return true;
 			}
@@ -194,8 +194,11 @@ namespace NonStandard.Inputs {
 		private static bool GetKey_internal(KCode key) {
 			bool v = false;
 			switch (key) {
+			case KCode.NoShift: v = !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift); break;
+			case KCode.NoCtrl: v = !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl); break;
+			case KCode.NoAlt: v = !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt); break;
 			case KCode.AnyAlt: v = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt); break;
-			case KCode.AnyControl: v = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl); break;
+			case KCode.AnyCtrl: v = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl); break;
 			case KCode.AnyShift: v = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift); break;
 			case KCode.MouseWheelUp: v = Input.GetAxis("Mouse ScrollWheel") > 0; break;
 			case KCode.MouseWheelDown: v = Input.GetAxis("Mouse ScrollWheel") < 0; break;
@@ -260,7 +263,8 @@ namespace NonStandard.Inputs {
 		bool IsKeyBindAmbiguousWithTextInput(KBind kBind) {
 			for (int i = 0; i < kBind.keyCombinations.Length; ++i) {
 				bool isSimpleKeyPress = kBind.keyCombinations[i].modifiers == null || kBind.keyCombinations[i].modifiers.Length == 0;
-				bool shiftModified = !isSimpleKeyPress && kBind.keyCombinations[i].modifiers[0].key == KCode.LeftShift;
+				//bool shiftModified = !isSimpleKeyPress && kBind.keyCombinations[i].modifiers[0].key == KCode.LeftShift;
+				bool shiftModified = !isSimpleKeyPress && kBind.keyCombinations[i].modifiers[0] == KModifier.AnyShift;
 				bool isFunctionKey = (kBind.keyCombinations[i].key >= KCode.F1 && kBind.keyCombinations[i].key <= KCode.F15);
 				bool couldInterfereWithKeyboardInput = (isSimpleKeyPress && !isFunctionKey) || (shiftModified && !isFunctionKey);
 				if (couldInterfereWithKeyboardInput) return true;
@@ -276,7 +280,7 @@ namespace NonStandard.Inputs {
 			/// <summary>
 			/// could be <see cref="KBind.GetDown"/>, <see cref="KBind.GetHeld"/>, or <see cref="KBind.GetUp"/>
 			/// </summary>
-			public Func<KBind, KCombination> trigger;
+			public Func<KBind, KCombo> trigger;
 			/// <summary>
 			/// should return true if the action was successful (prevents other key events with the same keycode from triggering)
 			/// </summary>
@@ -287,14 +291,14 @@ namespace NonStandard.Inputs {
 			public Func<KBind, bool> putInList;
 
 			/// <summary>
-			/// we want to know what <see cref="KBind"/> was triggered, including which specific <see cref="KCombination"/> did the triggerings
+			/// we want to know what <see cref="KBind"/> was triggered, including which specific <see cref="KCombo"/> did the triggerings
 			/// </summary>
 			public struct KeyTrigger : IComparable<KeyTrigger> {
 				public KBind kb;
 				/// <summary>
 				/// which (of the possibly many) keypress triggered the key mapping to activate
 				/// </summary>
-				public KCombination kp;
+				public KCombo kp;
 				/// sort by keypress
 				public int CompareTo(KeyTrigger other) { return kp.CompareTo(other.kp); }
 			}
@@ -335,7 +339,7 @@ namespace NonStandard.Inputs {
 			/// <param name="list">where to mark if this is indeed triggered</param>
 			/// <param name="additionalFilter">an additional gate that might prevent this particluar keybind from triggering. possibly heavy method, so only checked if the key is triggered</param>
 			bool KeyCheck(KBind kb, List<KeyTrigger> list, Func<KBind, bool> additionalFilter = null) {
-				KCombination kp = trigger(kb);
+				KCombo kp = trigger(kb);
 				if (kp != null && (additionalFilter == null || !additionalFilter.Invoke(kb))) {
 					list.Add(new KeyTrigger { kb = kb, kp = kp });
 					return true;
@@ -435,8 +439,8 @@ namespace NonStandard.Inputs {
 				Array.ForEach(keyBindGroups, ks => ks.Update(IsKeyBindAmbiguousWithTextInput));
 			}
 			Array.ForEach(keyBindGroups, ks => ks.Resolve(debugPrintPossibleKeyConflicts, debugPrintActivatedEvents));
-			for (int i = 0; i < axisBinds.Count; ++i) {
-				axisBinds[i].Update();
+			for (int i = 0; i < AxisBinds.Count; ++i) {
+				AxisBinds[i].Update();
 			}
 			++updates;
 		}
@@ -453,13 +457,13 @@ namespace NonStandard.Inputs {
 					bool needsPriority = true;
 					bool hasKeys = true;
 					if (kb.keyCombinations.Length != 0 && (kb.keyCombinations.Length != 1 || kb.keyCombinations[0].key != KCode.None)) {
-						KCombination theseKeys = kb.keyCombinations[0];
+						KCombo theseKeys = kb.keyCombinations[0];
 						bool hasPrev = i > 0;
 						bool hasNext = i < ks.keyBindList.Count - 1;
 						KBind prev = (hasPrev) ? ks.keyBindList[i - 1] : null;
 						KBind next = (hasNext) ? ks.keyBindList[i + 1] : null;
-						KCombination prevKeys = hasPrev && prev.keyCombinations.Length > 0 ? prev.keyCombinations[0] : null;
-						KCombination nextKeys = hasNext && next.keyCombinations.Length > 0 ? next.keyCombinations[0] : null;
+						KCombo prevKeys = hasPrev && prev.keyCombinations.Length > 0 ? prev.keyCombinations[0] : null;
+						KCombo nextKeys = hasNext && next.keyCombinations.Length > 0 ? next.keyCombinations[0] : null;
 						needsPriority = (prevKeys != null && prevKeys.CompareTo(theseKeys) == 0 ||
 							nextKeys != null && nextKeys.CompareTo(theseKeys) == 0);
 					} else {
@@ -477,10 +481,10 @@ namespace NonStandard.Inputs {
 					sb.Append("\n");
 				}
 			}
-			if (axisBinds.Count > 0) {
+			if (AxisBinds.Count > 0) {
 				sb.Append("[Axis]\n");
-				for (int i = 0; i < axisBinds.Count; ++i) {
-					AxBind ab = axisBinds[i];
+				for (int i = 0; i < AxisBinds.Count; ++i) {
+					AxBind ab = AxisBinds[i];
 					sb.Append(ab.ShortDescribe(" | "));
 					sb.Append(" :: ");
 					sb.Append(ab.name);

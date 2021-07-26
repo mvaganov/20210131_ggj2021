@@ -1,6 +1,4 @@
-﻿using NonStandard.Commands;
-using NonStandard.Data;
-using NonStandard.Data.Parse;
+﻿using NonStandard.Data;
 using NonStandard.Extension;
 using NonStandard.Inputs;
 using NonStandard.Utility;
@@ -12,10 +10,10 @@ using UnityEngine.Events;
 
 namespace NonStandard.Cli {
 	[RequireComponent(typeof(UnityConsole))]
-	public class UnityConsoleInput : MonoBehaviour {
+	public class UnityConsoleInput : UserInput {
 		protected StringBuilder currentLine = new StringBuilder();
 		protected List<KCode> keysDown = new List<KCode>();
-		protected string _pastedText;
+		internal string _pastedText;
 		/// <summary>
 		/// this is an 'any key' listener, added to by the <see cref="Read(Action{KCode})"/> function
 		/// </summary>
@@ -24,40 +22,19 @@ namespace NonStandard.Cli {
 		/// added to by the <see cref="ReadLine(Show.PrintFunc)"/> function
 		/// </summary>
 		protected List<Show.PrintFunc> tempLineInputListeners = new List<Show.PrintFunc>();
+		/// <summary>
+		/// if false, typing (and pasting) will not add characters to the current input, or to the console
+		/// </summary>
+		public bool textInput = true;
+		public bool clipboardPaste = true;
 
-		public string promptArtifact = "$"; // TODO implement
-		public Color inputColor = new Color(1, 1, 0, 0.5f);
+		public Color inputColor = new Color(1, 1, 0);
 		int inputColorCode = -1;
 		private UnityConsole console;
 
-		public Commands.Commander commander = new Commands.Commander();
-		public bool acceptCommand = true;
-		public bool clipboardPaste = true;
-		public bool interceptDebugLog = false; // TODO
+		public UnityEvent_string inputListener;
 
-		[System.Serializable] public class CommandEvents {
-			[TextArea(1, 10)] public string firstCommands;
-			public UnityEvent_string WhenCommandRuns;
-		}
-		public CommandEvents commandEvents = new CommandEvents();
-
-		[System.Serializable] public class CommandEntry {
-			public string name;
-			public string description;
-			public UnityEvent action;
-			public void Invoke(Command.Exec e) { action.Invoke(); }
-			public void AddToCommander(Commands.Commander cmdr) { cmdr.AddCommand(new Command(name, Invoke, help: description)); }
-		}
-		public List<CommandEntry> newCommands = new List<CommandEntry>();
-		public void DoCommand(string text) {
-			commander.ParseCommand(new Commands.Commander.Instruction(text,this), console.Write, out Tokenizer t);
-			if (t?.errors?.Count > 0) {
-				console.PushForeColor(ConsoleColor.Red);
-				console.Write(t.ErrorString());
-				Show.Log(t.ErrorString());
-				console.PopForeColor();
-			}
-		}
+		// TODO remove the ctrl option, since it should be in the KeyBinds dictionary
 		private struct KMap {
 			public object normal, shift, ctrl;
 			public KMap(object n, object s=null, object c=null) { normal = n;shift = s;ctrl = c; }
@@ -89,9 +66,10 @@ namespace NonStandard.Cli {
 			[KCode.Slash] = new KMap('/', '?'),
 			[KCode.Space] = new KMap(' ', ' '),
 			[KCode.Backspace] = new KMap('\b', '\b'),
-			[KCode.Return] = new KMap('\n', '\n'),
+			[KCode.Return] = new KMap(null, '\n'),
 			[KCode.A] = new KMap('a', 'A'),
 			[KCode.B] = new KMap('b', 'B'),
+			// TODO add CopyToClipboard to KeyBinds in the Reset function
 			[KCode.C] = new KMap('c', 'C', new Action(CopyToClipboard)),
 			[KCode.D] = new KMap('d', 'D'),
 			[KCode.E] = new KMap('e', 'E'),
@@ -111,14 +89,19 @@ namespace NonStandard.Cli {
 			[KCode.S] = new KMap('s', 'S'),
 			[KCode.T] = new KMap('t', 'T'),
 			[KCode.U] = new KMap('u', 'U'),
+			// TODO add PasteFromClipboard to KeyBinds in the Reset function
 			[KCode.V] = new KMap('v', 'V', new Action(PasteFromClipboard)),
 			[KCode.W] = new KMap('w', 'W'),
 			[KCode.X] = new KMap('x', 'X'),
 			[KCode.Y] = new KMap('y', 'Y'),
 			[KCode.Z] = new KMap('z', 'Z'),
+			// TODO add this to KeyBinds in the Reset function
 			[KCode.UpArrow] = new KMap(new Action(() => MovCur(Coord.Up)), new Action(() => MovWin(Coord.Up))),
+			// TODO add this to KeyBinds in the Reset function
 			[KCode.LeftArrow] = new KMap(new Action(() => MovCur(Coord.Left)), new Action(() => MovWin(Coord.Left))),
+			// TODO add this to KeyBinds in the Reset function
 			[KCode.DownArrow] = new KMap(new Action(() => MovCur(Coord.Down)), new Action(() => MovWin(Coord.Down))),
+			// TODO add this to KeyBinds in the Reset function
 			[KCode.RightArrow] = new KMap(new Action(() => MovCur(Coord.Right)), new Action(() => MovWin(Coord.Right))),
 		};
 		private void MovCur(Coord dir) { console.Cursor += dir; }
@@ -147,10 +130,10 @@ namespace NonStandard.Cli {
 		public void Read(Action<KCode> kCodeListener) { tempKeyCodeListeners.Add(kCodeListener); }
 		public void ReadLine(Show.PrintFunc lineInputListener) { tempLineInputListeners.Add(lineInputListener); }
 		public string ResolveInput(bool alsoResolveNonText) {
-			StringBuilder sb = new StringBuilder();
+			StringBuilder sb = textInput ? new StringBuilder() : null;
 			AddPastedTextToInput(sb);
 			AddKeysToInput(sb, alsoResolveNonText);
-			return sb.ToString();
+			return sb?.ToString() ?? null;
 		}
 		void AddPastedTextToInput(StringBuilder sb) {
 			if (_pastedText == null) { return; }
@@ -164,7 +147,7 @@ namespace NonStandard.Cli {
 				keysDown.ForEach(keyDown => tempKeyCodeListeners.ForEach(action => action.Invoke(keyDown)));
 				tempKeyCodeListeners.Clear();
 			}
-			bool isCtrl = KCode.AnyControl.IsHeld(), isShift = KCode.AnyShift.IsHeld();
+			bool isCtrl = KCode.AnyCtrl.IsHeld(), isShift = KCode.AnyShift.IsHeld();
 			for (int i = 0; i < keysDown.Count; ++i) {
 				if (_keyMap.TryGetValue(keysDown[i], out KMap kmap)) {
 					if (isCtrl) { DoTheThing(kmap.ctrl); } else if (isShift) { DoTheThing(kmap.shift); } else { DoTheThing(kmap.normal); }
@@ -187,7 +170,7 @@ namespace NonStandard.Cli {
 						finalString.Remove(finalString.Length - 1, 1);
 					}
 					break;
-				case '\n': return finalString.ToString();
+				//case '\n': return finalString.ToString();
 				case '\r': break;
 				case '\\':
 					if (++i < currentLine.Length) { c = currentLine[i]; }
@@ -198,29 +181,39 @@ namespace NonStandard.Cli {
 			return finalString.ToString();
 		}
 		bool IsListeningToLine() { return tempLineInputListeners != null && tempLineInputListeners.Count > 0; }
-		public bool CommandLineUpdate(string txt) {
+		public void CommandLineUpdate(string txt) {
 			currentLine.Append(txt);
-			if (!txt.Contains("\n")) { return false; }
+		}
+		public void FinishCurrentInput() {
 			string processedInput = ProcessInput(currentLine.ToString());
+			Show.Log(currentLine.ToString().StringifySmall()+" -> "+processedInput.StringifySmall());
 			currentLine.Clear();
-			//Show.Log(completeInput);
+			console.Write("\n");
+			if (string.IsNullOrEmpty(processedInput)) { return; }
+			inputListener.Invoke(processedInput);
 			if (IsListeningToLine()) {
 				tempLineInputListeners.ForEach(action => action.Invoke(processedInput));
 				tempLineInputListeners.Clear();
 			}
-			if (acceptCommand) {
-				DoCommand(processedInput);
-				commandEvents?.WhenCommandRuns?.Invoke(processedInput);
+		}
+		void IncreaseFontSize() { console.AddToFontSize(1); }
+		private void Reset() {
+			UnityConsole console = GetComponent<UnityConsole>();
+			UnityConsoleCommander conCom = GetComponent<UnityConsoleCommander>();
+			if (conCom != null) {
+				EventBind invokeSet = new EventBind(conCom, nameof(conCom.DoCommand), "blarg");
+				invokeSet.Bind(inputListener);
 			}
-			return true;
+			KeyBinds.Add(new KBind(new KCombo(KCode.Equals, KModifier.AnyCtrl), "+ console font", 
+				pressFunc: new EventBind(console, nameof(console.AddToFontSize), 1f)));
+			KeyBinds.Add(new KBind(new KCombo(KCode.Minus, KModifier.AnyCtrl), "- console font", 
+				pressFunc: new EventBind(console, nameof(console.AddToFontSize), -1f)));
+			KeyBinds.Add(new KBind(new KCombo(KCode.Return, KModifier.NoShift), "submit console input",
+				pressFunc: new EventBind(this, nameof(FinishCurrentInput), null)));
 		}
 		private void Awake() { console = GetComponent<UnityConsole>(); }
 		private void Start() {
 			inputColorCode = console.AddConsoleColor(inputColor);
-			newCommands.ForEach(c => c.AddToCommander(commander));
-			if (!string.IsNullOrEmpty(commandEvents.firstCommands)) {
-				_pastedText = commandEvents.firstCommands;
-			}
 		}
 		public void WriteInputText(string txt) {
 			if (inputColorCode > 0) { console.PushForeColor((byte)inputColorCode); }

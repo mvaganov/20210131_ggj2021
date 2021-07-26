@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.Events;
 using System.Text;
+using NonStandard.Utility;
 #if UNITY_EDITOR
 using UnityEditor.Events;
 #endif
@@ -20,7 +21,7 @@ namespace NonStandard.Inputs {
 		/// </summary>
 		public bool eventAlwaysTriggerable;
 
-		public KCombination[] keyCombinations = new KCombination[1];
+		public KCombo[] keyCombinations = new KCombo[1];
 
 		[Serializable]
 		public class EventSet {
@@ -40,12 +41,12 @@ namespace NonStandard.Inputs {
 			public void AddPress(Func<bool> a) { if (actionPress != null) { actionPress += a; } else { actionPress = a; } }
 			public void AddHold(Func<bool> a) { if (actionHold != null) { actionHold += a; } else { actionHold = a; } }
 			public void AddRelease(Func<bool> a) { if (actionRelease != null) { actionRelease += a; } else { actionRelease = a; } }
-			public void AddPress(object target, string setMethodName, object value) { AddPress(new InvokeSet(target, setMethodName, value)); }
-			public void AddHold(object target, string setMethodName, object value) { AddHold(new InvokeSet(target, setMethodName, value)); }
-			public void AddRelease(object target, string setMethodName, object value) { AddRelease(new InvokeSet(target, setMethodName, value)); }
-			public void AddPress(InvokeSet a) { if (onPress == null) { onPress = new UnityEvent(); } a.Bind(onPress); }
-			public void AddHold(InvokeSet a) { if (onHold == null) { onHold = new UnityEvent(); } a.Bind(onHold); }
-			public void AddRelease(InvokeSet a) { if (onRelease == null) { onRelease = new UnityEvent(); } a.Bind(onRelease); }
+			public void AddPress(object target, string setMethodName, object value) { AddPress(new EventBind(target, setMethodName, value)); }
+			public void AddHold(object target, string setMethodName, object value) { AddHold(new EventBind(target, setMethodName, value)); }
+			public void AddRelease(object target, string setMethodName, object value) { AddRelease(new EventBind(target, setMethodName, value)); }
+			public void AddPress(EventBind a) { if (onPress == null) { onPress = new UnityEvent(); } a.Bind(onPress); }
+			public void AddHold(EventBind a) { if (onHold == null) { onHold = new UnityEvent(); } a.Bind(onHold); }
+			public void AddRelease(EventBind a) { if (onRelease == null) { onRelease = new UnityEvent(); } a.Bind(onRelease); }
 			public bool DoPress() { if(onPress != null)onPress.Invoke(); return (actionPress!=null?actionPress.Invoke() : false); }
 			public bool DoHold() { if(onHold!=null) onHold.Invoke(); return (actionHold!= null?actionHold.Invoke() : false);  }
 			public bool DoRelease() { if(onRelease!=null)onRelease.Invoke(); return (actionRelease!=null?actionRelease.Invoke() : false);  }
@@ -54,7 +55,7 @@ namespace NonStandard.Inputs {
 			public void RemoveReleases() { onRelease.RemoveAllListeners(); actionRelease = null;}
 
 			public void AddEvents(Func<bool> onPressEvent = null, Func<bool> onHoldEvent = null, Func<bool> onReleaseEvent = null,
-				InvokeSet pressFunc = null, InvokeSet holdFunc = null, InvokeSet releaseFunc = null) {
+				EventBind pressFunc = null, EventBind holdFunc = null, EventBind releaseFunc = null) {
 				if (onPressEvent != null) { AddPress(onPressEvent); }
 				if (onHoldEvent != null) { AddHold(onHoldEvent); }
 				if (onReleaseEvent != null) { AddRelease(onReleaseEvent); }
@@ -120,82 +121,30 @@ namespace NonStandard.Inputs {
 		/// </summary>
 		public KBind(KCode key, Func<bool> onPressEvent, string name = null):this(key, name, onPressEvent) { }
 
-		public static InvokeSet Func(object target, string setMethodName, object value = null) {
-			return new InvokeSet(target, setMethodName, value);
-		}
-
-		public class InvokeSet {
-			public object target;
-			public string setMethodName;
-			public object value;
-			public InvokeSet(object target, string setMethodName, object value = null) {
-				this.target = target; this.setMethodName = setMethodName; this.value = value;
-			}
-			public UnityAction<T> GetAction<T>(object target, string setMethodName) {
-				System.Reflection.MethodInfo targetinfo = UnityEvent.GetValidMethodInfo(target, setMethodName, new Type[] { typeof(T) });
-				if (targetinfo == null) { Debug.LogError("no method " + setMethodName + "("+typeof(T).Name+") in " + target.ToString()); }
-				return Delegate.CreateDelegate(typeof(UnityAction<T>), target, targetinfo, false) as UnityAction<T>;
-			}
-			public void Bind(UnityEvent @event) {
-#if UNITY_EDITOR
-				if (value == null) {
-					System.Reflection.MethodInfo targetinfo = UnityEvent.GetValidMethodInfo(target, setMethodName, new Type[0]);
-					if (targetinfo == null) { Debug.LogError("no method " + setMethodName + "() in " + target.ToString()); }
-					UnityAction action = Delegate.CreateDelegate(typeof(UnityAction), target, targetinfo, false) as UnityAction;
-					UnityEventTools.AddVoidPersistentListener(@event, action);
-				} else if(value is int) {
-					UnityEventTools.AddIntPersistentListener(@event, GetAction<int>(target, setMethodName), (int)value);
-				} else if (value is float) {
-					UnityEventTools.AddFloatPersistentListener(@event, GetAction<float>(target, setMethodName), (float)value);
-				} else if (value is string) {
-					UnityEventTools.AddStringPersistentListener(@event, GetAction<string>(target, setMethodName), (string)value);
-				} else if (value is bool) {
-					UnityEventTools.AddBoolPersistentListener(@event, GetAction<bool>(target, setMethodName), (bool)value);
-				} else if (value is GameObject) { Bind<GameObject>(@event);
-				} else if (value is Transform) { Bind<Transform>(@event);
-				} else {
-					Debug.LogError("unable to assign " + value.GetType());
-				}
-#else
-				System.Reflection.MethodInfo targetinfo = UnityEvent.GetValidMethodInfo(target, setMethodName, new Type[0]);
-				@event.AddListener(() => targetinfo.Invoke(target, new object[] { value }));
-#endif
-			}
-#if UNITY_EDITOR
-			public void Bind<T>(UnityEvent @event) where T : UnityEngine.Object {
-				if (value is T) {
-					UnityEventTools.AddObjectPersistentListener(@event, GetAction<T>(target, setMethodName), (T)value);
-				} else {
-					Debug.LogError("unable to assign " + value.GetType());
-				}
-			}
-#endif
-		}
-
 		/// <summary>
 		/// describes functions to execute when a specific key is pressed/held/released
 		/// </summary>
 		public KBind(KCode key, string name = null, Func<bool> onPressEvent = null, Func<bool> onHoldEvent = null,
 			Func<bool> onReleaseEvent = null, Func<bool> additionalRequirement = null, 
-			bool eventAlwaysTriggerable = false, InvokeSet pressFunc=null, InvokeSet holdFunc=null, InvokeSet releaseFunc=null)
-			: this(new KCombination(key), name, onPressEvent, onHoldEvent, onReleaseEvent, additionalRequirement, eventAlwaysTriggerable,pressFunc,holdFunc,releaseFunc) {
+			bool eventAlwaysTriggerable = false, EventBind pressFunc =null, EventBind holdFunc =null, EventBind releaseFunc =null)
+			: this(new KCombo(key), name, onPressEvent, onHoldEvent, onReleaseEvent, additionalRequirement, eventAlwaysTriggerable,pressFunc,holdFunc,releaseFunc) {
 		}
 
 		/// <summary>
 		/// describes functions to execute when a specific key-combination is pressed/held/released
 		/// </summary>
-		public KBind(KCombination kCombo, string name = null, Func<bool> onPressEvent = null, Func<bool> onHoldEvent = null,
+		public KBind(KCombo kCombo, string name = null, Func<bool> onPressEvent = null, Func<bool> onHoldEvent = null,
 			Func<bool> onReleaseEvent = null, Func<bool> additionalRequirement = null, 
-			bool eventAlwaysTriggerable = false, InvokeSet pressFunc = null, InvokeSet holdFunc = null, InvokeSet releaseFunc = null)
+			bool eventAlwaysTriggerable = false, EventBind pressFunc = null, EventBind holdFunc = null, EventBind releaseFunc = null)
 			: this(new[] {kCombo}, name, onPressEvent, onHoldEvent, onReleaseEvent, additionalRequirement, eventAlwaysTriggerable,pressFunc,holdFunc,releaseFunc) {
 		}
     
 		/// <summary>
 		/// describes functions to execute when any of the specified key-combinations are pressed/held/released
 		/// </summary>
-		public KBind(KCombination[] kCombos, string name = null, Func<bool> onPressEvent = null, Func<bool> onHoldEvent = null,
+		public KBind(KCombo[] kCombos, string name = null, Func<bool> onPressEvent = null, Func<bool> onHoldEvent = null,
 			Func<bool> onReleaseEvent = null, Func<bool> additionalRequirement = null, 
-			bool eventAlwaysTriggerable = false, InvokeSet pressFunc = null, InvokeSet holdFunc = null, InvokeSet releaseFunc = null) {
+			bool eventAlwaysTriggerable = false, EventBind pressFunc = null, EventBind holdFunc = null, EventBind releaseFunc = null) {
 			keyCombinations = kCombos;
 			Init();
 			Array.Sort(keyCombinations); Array.Reverse(keyCombinations); // put least complex key bind first, backwards from usual processing
@@ -209,9 +158,9 @@ namespace NonStandard.Inputs {
 
 		public void Init() { Array.ForEach(keyCombinations, k => k.Init()); }
 
-		public void AddComplexKeyPresses(KCombination[] keysToUse) {
+		public void AddComplexKeyPresses(KCombo[] keysToUse) {
 			if (keyCombinations.Length == 0 || keyCombinations[0].key == KCode.None) { keyCombinations = keysToUse; } else {
-				List<KCombination> currentKeys = new List<KCombination>(keyCombinations);
+				List<KCombo> currentKeys = new List<KCombo>(keyCombinations);
 				currentKeys.AddRange(keysToUse);
 				// remove duplicates
 				for (int a = 0; a < currentKeys.Count; ++a) {
@@ -227,15 +176,15 @@ namespace NonStandard.Inputs {
 			Array.Sort(keyCombinations); Array.Reverse(keyCombinations); // put least complex key bind first (reverse of usual processing)
 		}
     
-		public void AddKeyCombinations(KCombination[] keyCombo, string nameToUse, Func<bool> onPress = null, Func<bool> onHold = null, Func<bool> onRelease = null,
-			InvokeSet setPress = null, InvokeSet setHold = null, InvokeSet setRelease = null) {
+		public void AddKeyCombinations(KCombo[] keyCombo, string nameToUse, Func<bool> onPress = null, Func<bool> onHold = null, Func<bool> onRelease = null,
+			EventBind setPress = null, EventBind setHold = null, EventBind setRelease = null) {
 			if (keyCombo != null) { AddComplexKeyPresses(keyCombo); }
 			if (string.IsNullOrEmpty(name)) { name = nameToUse; }
 			keyEvent.AddEvents(onPress, onHold, onRelease, setPress, setHold, setRelease);
 		}
 
 		public void AddKeyBinding(KCode keyToUse, string nameToUse, Func<bool> onPress = null, Func<bool> onHold = null, Func<bool> onRelease = null) {
-			AddKeyCombinations(new KCombination[]{new KCombination(keyToUse)}, nameToUse, onPress, onHold, onRelease);
+			AddKeyCombinations(new KCombo[]{new KCombo(keyToUse)}, nameToUse, onPress, onHold, onRelease);
 		}
 		public string ShortDescribe(string betweenKeyPresses = "\n") {
 			if (keyCombinations == null || keyCombinations.Length == 0) return "";
@@ -270,7 +219,7 @@ namespace NonStandard.Inputs {
 		/// <returns>if the action succeeded (which may remove other actions from queue, due to priority)</returns>
 		public bool DoRelease() { return keyEvent.DoRelease(); }
 
-		public KCombination GetDown() {
+		public KCombo GetDown() {
 			if (disable) return null;
 			bool allowedChecked = false;
 			for (int i = 0; i < keyCombinations.Length; ++i) {
@@ -283,7 +232,7 @@ namespace NonStandard.Inputs {
 		}
 		public bool IsDown() { return GetDown() != null; }
 
-		public KCombination GetHeld() {
+		public KCombo GetHeld() {
 			if (disable) return null;
 			bool allowedChecked = false;
 			for (int i = 0; i < keyCombinations.Length; ++i) {
@@ -296,7 +245,7 @@ namespace NonStandard.Inputs {
 		}
 		public bool IsHeld() { return GetHeld() != null; }
 
-		public KCombination GetUp() {
+		public KCombo GetUp() {
 			if (disable) return null;
 			bool allowedChecked = false;
 			for (int i = 0; i < keyCombinations.Length; ++i) {
@@ -316,19 +265,23 @@ namespace NonStandard.Inputs {
 		}
 	}
 
+	public enum KModifier {
+		None = KCode.None, AnyShift = KCode.AnyShift, AnyCtrl = KCode.AnyCtrl, AnyAlt = KCode.AnyAlt,
+		NoShift = KCode.NoShift, NoCtrl = KCode.NoCtrl, NoAlt = KCode.NoAlt
+	}
 	[Serializable]
-	public class KCombination : IComparable<KCombination> {
+	public class KCombo : IComparable<KCombo> {
+		public KModifier[] modifiers;
 		/// <summary>
 		/// the key that triggers this complex keypress
 		/// </summary>
 		public KCode key;
-		public Modifier[] modifiers;
 
-		public KCombination() { }
+		public KCombo() { }
 
 		public bool IsNone() { return key == KCode.None && (modifiers == null || modifiers.Length == 0); }
     
-		public KCombination(KCode key) {
+		public KCombo(KCode key) {
 			this.key = key;
 			modifiers = null;
 		}
@@ -336,23 +289,23 @@ namespace NonStandard.Inputs {
 		public void Init() {
 			key = key.Normalized();
 			if (modifiers == null) return;
-			for (int i = 0; i < modifiers.Length; ++i) { modifiers[i] = modifiers[i].Init(); }
+			//for (int i = 0; i < modifiers.Length; ++i) { modifiers[i] = modifiers[i].Init(); }
 		}
 
-		public KCombination(KCode key, KCode modifier) : this(key) {
+		public KCombo(KCode key, KModifier modifier) : this(key) {
 			AddModifier(modifier);
 		}
 
-		public KCombination(KCode key, params KCode[] modifiers) : this(key) {
+		public KCombo(KCode key, params KModifier[] modifiers) : this(key) {
 			Array.ForEach(modifiers, m => AddModifier(m));
 		}
 
 		public int GetComplexity() { return modifiers != null ? modifiers.Length : 0; }
     
-		public bool AddModifier(KCode kCode) {
-			Modifier mod = new Modifier(kCode);
+		public bool AddModifier(KModifier kCode) {
+			KModifier mod = (KModifier)kCode; //new Modifier(kCode);
 			if (HasModifier(mod)) { return false; }
-			List<Modifier> mods = new List<Modifier>();
+			List<KModifier> mods = new List<KModifier>();
 			if(modifiers != null) {mods.AddRange(modifiers);}
 			mods.Add(mod);
 			mods.Sort();
@@ -360,7 +313,7 @@ namespace NonStandard.Inputs {
 			return true;
 		}    
 
-		public bool HasModifiers(Modifier[] mods) {
+		public bool HasModifiers(KModifier[] mods) {
 			if (modifiers == null || modifiers.Length != mods.Length) return false;
 			for (int i = 0; i < mods.Length; ++i) {
 				if (!HasModifier(mods[i])) return false;
@@ -368,45 +321,44 @@ namespace NonStandard.Inputs {
 			return true;
 		}
 
-		public bool HasModifier(Modifier m) {
+		public bool HasModifier(KModifier m) {
 			if (modifiers == null || modifiers.Length == 0) return false;
 			for (int i = 0; i < modifiers.Length; ++i) {
 				if (modifiers[i].Equals(m)) return true;
 			}
 			return false;
 		}
-    
-		[Serializable]
-		public struct Modifier : IComparable<Modifier> {
-			public KCode key;
-			/// <param name="key"></param>
-			public Modifier(KCode key) { this.key = key; }
+
+		//[Serializable] public struct Modifier : IComparable<Modifier> {
+		//	public KCode key;
+		//	/// <param name="key"></param>
+		//	public Modifier(KCode key) { this.key = key; }
         
-			public override string ToString() { return key.NormalName(); }
+		//	public override string ToString() { return key.NormalName(); }
 
-			public int CompareTo(Modifier other) { return key.CompareTo(other.key); }
+		//	public int CompareTo(Modifier other) { return key.CompareTo(other.key); }
 
-			public override bool Equals(object obj) {
-				if (obj == null) return false;
-				Modifier mod = (Modifier) obj;
-				return mod.key == key;
-			}
+		//	public override bool Equals(object obj) {
+		//		if (obj == null) return false;
+		//		Modifier mod = (Modifier) obj;
+		//		return mod.key == key;
+		//	}
 
-			public bool Equals(Modifier other) { return key == other.key; }
+		//	public bool Equals(Modifier other) { return key == other.key; }
 
-			public override int GetHashCode() { return (int) key; }
+		//	public override int GetHashCode() { return (int) key; }
 
-			public Modifier Init() { key = key.Normalized(); return this; }
-		}
+		//	public Modifier Init() { key = key.Normalized(); return this; }
+		//}
     
-		public int CompareTo(KCombination other) {
+		public int CompareTo(KCombo other) {
 			int comp = key.CompareTo(other.key);
 			if (comp != 0) return comp;
 			if (modifiers != null && other.modifiers != null) {
 				for (int i = 0; i < modifiers.Length && i < other.modifiers.Length; ++i) {
 					if (i >= other.modifiers.Length) return -1;
 					if (i >= modifiers.Length) return 1;
-					comp = modifiers[i].key.CompareTo(other.modifiers[i].key);
+					comp = modifiers[i].CompareTo(other.modifiers[i]);//modifiers[i].key.CompareTo(other.modifiers[i].key);
 					if (comp != 0) return comp;
 				}
 			} else {
@@ -421,7 +373,7 @@ namespace NonStandard.Inputs {
 			return ToString(modifiers)+ key.NormalName();
 		}
 
-		public static string ToString(Modifier[] modifiers) {
+		public static string ToString(KModifier[] modifiers) {
 			StringBuilder text = new StringBuilder();
 			if (modifiers != null) {
 				for (int i = 0; i < modifiers.Length; ++i) {
@@ -431,24 +383,25 @@ namespace NonStandard.Inputs {
 			return text.ToString();
 		}
 
-		public static KCombination FromString(string s) {
+		public static KCombo FromString(string s) {
 			string[] keys = s.Split('+');
 			int numMods = keys.Length - 1;
-			KCombination kp = new KCombination();
+			KCombo kp = new KCombo();
 			if (numMods > 0) {
-				kp.modifiers = new Modifier[numMods];
+				kp.modifiers = new KModifier[numMods];
 				for (int i = 0; i < numMods; ++i) {
 					string k = keys[i].Trim();
-					kp.modifiers[i].key = k.ToEnum<KCode>();
+					//kp.modifiers[i].key = k.ToEnum<KCode>();
+					kp.modifiers[i] = k.ToEnum<KModifier>();
 				}
 				kp.key = keys[keys.Length-1].Trim().ToEnum<KCode>();
 			}
 			return kp;
 		}
 
-		public static bool IsSatisfiedDown(Modifier[] modifiers, ref bool aKeyWasJustPressed) {
+		public static bool IsSatisfiedDown(KModifier[] modifiers, ref bool aKeyWasJustPressed) {
 			for (int i = 0; i < modifiers.Length; ++i) {
-				KState ks = modifiers[i].key.GetState();
+				KState ks = ((KCode)modifiers[i]).GetState();//modifiers[i].key.GetState();
 				if (ks == KState.KeyReleased) {
 					return false;
 				}
@@ -458,15 +411,16 @@ namespace NonStandard.Inputs {
 			}
 			return true;
 		}
-		public static bool IsSatisfiedHeld(Modifier[] modifiers) {
+		public static bool IsSatisfiedHeld(KModifier[] modifiers) {
 			for (int i = 0; i < modifiers.Length; ++i) {
-				if (!modifiers[i].key.IsHeld()) { return false; }
+				//if (!modifiers[i].key.IsHeld()) { return false; }
+				if (!((KCode)modifiers[i]).IsHeld()) { return false; }
 			}
 			return true;
 		}
-		public static bool IsSatisfiedUp(Modifier[] modifiers, ref bool anyKeyIsBeingReleased) {
+		public static bool IsSatisfiedUp(KModifier[] modifiers, ref bool anyKeyIsBeingReleased) {
 			for (int i = 0; i < modifiers.Length; ++i) {
-				KState ks = modifiers[i].key.GetState();
+				KState ks = ((KCode)modifiers[i]).GetState();//modifiers[i].key.GetState();
 				if (ks == KState.KeyReleased) {
 					return false;
 				}

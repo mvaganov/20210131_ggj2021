@@ -7,6 +7,9 @@ using NonStandard.Extension;
 
 namespace NonStandard.Cli {
 	public class UnityConsole : MonoBehaviour {
+		public TMP_InputField inputField;
+		TMP_Text text;
+		TMP_Text charBack;
 		[System.Serializable] public class CursorSettings {
 			public bool cursorVisible = true;
 			public GameObject cursor;
@@ -93,9 +96,15 @@ namespace NonStandard.Cli {
 			}
 		}
 		public ColorSettings colorSettings = new ColorSettings();
-		TMP_InputField inputField;
-		TMP_Text text;
-		TMP_Text charBack;
+
+		public float FontSize {
+			get => inputField.pointSize;
+			set { inputField.pointSize = charBack.fontSize = value; }
+		}
+		public void AddToFontSize(float value) {
+			FontSize += value;
+			if (FontSize < 1) { FontSize = 1; }
+		}
 
 		[System.Serializable] public class CharSettings {
 			public char EmptyChar = ' ';
@@ -172,7 +181,7 @@ namespace NonStandard.Cli {
 		public TMP_Text Text => inputField?.textComponent ?? text;
 
 		void Start() {
-			inputField = GetComponentInChildren<TMP_InputField>();
+			if (inputField == null) { inputField = GetComponentInChildren<TMP_InputField>(); }
 			if (!inputField) {
 				text = GetComponentInChildren<TMP_Text>();
 			} else {
@@ -236,6 +245,8 @@ namespace NonStandard.Cli {
 			//Show.Log(body.Cursor);
 		}
 
+		public void Write(char c) { Write(c.ToString()); }
+		public void Write(object o) { Write(o.ToString()); }
 		public void Write(string text) {
 			Coord oldSize = body.Size;
 			body.Write(text);

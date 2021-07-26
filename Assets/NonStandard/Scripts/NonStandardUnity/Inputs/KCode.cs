@@ -8,7 +8,7 @@ namespace NonStandard.Inputs {
 			case KCode.LeftShift: case KCode.RightShift: return KCode.AnyShift;
 			case KCode.LeftApple: case KCode.RightApple: return KCode.LeftApple;
 			case KCode.LeftWindows: case KCode.RightWindows: return KCode.LeftWindows;
-			case KCode.LeftControl: case KCode.RightControl: return KCode.AnyControl;
+			case KCode.LeftControl: case KCode.RightControl: return KCode.AnyCtrl;
 			}
 			return k;
 		}
@@ -26,7 +26,7 @@ namespace NonStandard.Inputs {
 			case KCode.AnyShift: case KCode.LeftShift: case KCode.RightShift: return "Shift";
 			case KCode.LeftApple: case KCode.RightApple: return "Apple";
 			case KCode.LeftWindows: case KCode.RightWindows: return "Windows";
-			case KCode.AnyControl: case KCode.LeftControl: case KCode.RightControl: return "Ctrl";
+			case KCode.AnyCtrl: case KCode.LeftControl: case KCode.RightControl: return "Ctrl";
 			case KCode.Mouse0: return "Left Click";
 			case KCode.Mouse1: return "Right Click";
 			case KCode.Mouse2: return "Middle Click";
@@ -476,9 +476,22 @@ namespace NonStandard.Inputs {
 		// UNUSED = 155, // 0x0000009B
 		// UNUSED = 156, // 0x0000009C
 		// UNUSED = 157, // 0x0000009D
-		// UNUSED = 158, // 0x0000009E
-		// UNUSED = 159, // 0x0000009F
-		// UNUSED = 160, // 0x000000A0
+		/// <summary>
+		/// shift keys is explicitly not pressed
+		/// </summary>
+		NoShift = 158, // 0x0000000E
+		/// <summary>
+		/// ctrl keys are explicitly not pressed
+		/// </summary>
+		NoCtrl = 159, // 0x0000000F
+		/// <summary>
+		/// alt keys are explicitly not pressed
+		/// </summary>
+		NoAlt = 160, // 0x00000010
+		/// <summary>
+		/// alt keys are explicitly not pressed
+		/// </summary>
+		NoOption = 160, // 0x00000010
 
 		/// <summary>
 		/// Numeric keypad 0
@@ -660,7 +673,7 @@ namespace NonStandard.Inputs {
 		/// <summary>
 		/// any Control key
 		/// </summary>
-		AnyControl = 299, // 0x0000012B
+		AnyCtrl = 299, // 0x0000012B
 
 		/// <summary>
 		/// Numlock key

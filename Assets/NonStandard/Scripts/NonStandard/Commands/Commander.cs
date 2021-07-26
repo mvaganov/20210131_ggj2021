@@ -79,6 +79,9 @@ namespace NonStandard.Commands {
 		public void AddCommand(Command command) {
 			commandLookup[command.Name] = command;
 		}
+		public bool RemoveCommand(Command command) {
+			return commandLookup.Remove(command.Name);
+		}
 		private void InitializeCommands() {
 			//Show.Log("initializing...");
 			AddCommandsFrom(this);
