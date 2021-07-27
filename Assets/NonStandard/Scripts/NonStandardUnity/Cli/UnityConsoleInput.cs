@@ -179,6 +179,7 @@ namespace NonStandard.Cli {
 			Show.Log(currentLine.ToString().StringifySmall()+" -> "+processedInput.StringifySmall());
 			currentLine.Clear();
 			console.Write("\n");
+			console.body.RestartWriteCursor();
 			if (string.IsNullOrEmpty(processedInput)) { return; }
 			inputListener.Invoke(processedInput);
 			if (IsListeningToLine()) {
@@ -198,10 +199,10 @@ namespace NonStandard.Cli {
 			KeyBind(KCode.Return, KModifier.NoShift, "submit console input", nameof(FinishCurrentInput));
 			KeyBind(KCode.C, KModifier.AnyCtrl, "copy from command console", nameof(CopyToClipboard));
 			KeyBind(KCode.V, KModifier.AnyCtrl, "paste into command console", nameof(PasteFromClipboard));
-			KeyBind(KCode.UpArrow, KModifier.NoShift, "move cursor up", nameof(MoveCursorUp));
-			KeyBind(KCode.LeftArrow, KModifier.NoShift, "move cursor left", nameof(MoveCursorLeft));
-			KeyBind(KCode.DownArrow, KModifier.NoShift, "move cursor down", nameof(MoveCursorDown));
-			KeyBind(KCode.RightArrow, KModifier.NoShift, "move cursor right", nameof(MoveCursorRight));
+			KeyBind(KCode.UpArrow, KModifier.AnyAlt, "move cursor up", nameof(MoveCursorUp));
+			KeyBind(KCode.LeftArrow, KModifier.AnyAlt, "move cursor left", nameof(MoveCursorLeft));
+			KeyBind(KCode.DownArrow, KModifier.AnyAlt, "move cursor down", nameof(MoveCursorDown));
+			KeyBind(KCode.RightArrow, KModifier.AnyAlt, "move cursor right", nameof(MoveCursorRight));
 			KeyBind(KCode.UpArrow, KModifier.AnyShift, "shift window up", nameof(ShiftWindowUp));
 			KeyBind(KCode.LeftArrow, KModifier.AnyShift, "shift window left", nameof(ShiftWindowLeft));
 			KeyBind(KCode.DownArrow, KModifier.AnyShift, "shift window down", nameof(ShiftWindowDown));
@@ -219,9 +220,9 @@ namespace NonStandard.Cli {
 		private void Start() {
 			inputColorCode = console.AddConsoleColor(inputColor);
 		}
-		public void WriteInputText(string txt) {
+		public void WriteInputText(string inputText) {
 			if (inputColorCode > 0) { console.PushForeColor((byte)inputColorCode); }
-			console.Write(txt);
+			console.Write(inputText, true);
 			if (inputColorCode > 0) { console.PopForeColor(); }
 		}
 		void Update() {

@@ -5,8 +5,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-// TODO rename UnityConsoleUiToggle
-public class UnityConsoleMainUi : MonoBehaviour
+// TODO Reset shouild generate Activate and Deactivate key bindings
+public class UnityConsoleUiToggle : UserInput
 {
 	public bool isMain = true; // TODO
 	public bool activeOnStart = false; // TODO

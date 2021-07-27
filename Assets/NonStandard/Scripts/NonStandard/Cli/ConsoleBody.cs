@@ -4,7 +4,7 @@ using NonStandard.Extension;
 using System;
 
 namespace NonStandard.Cli {
-	public class ConsoleBody {
+	[Serializable] public class ConsoleBody {
 		public int spacesPerTab = 4;
 		public ConsoleTile defaultColors = new ConsoleTile(' ', ConsoleColor.Gray, ConsoleColor.Black);
 		public ConsoleTile currentColors = new ConsoleTile(' ', ConsoleColor.Gray, ConsoleColor.Black);
@@ -17,19 +17,30 @@ namespace NonStandard.Cli {
 		/// </summary>
 		public Dictionary<char, char> printableCharacters = new Dictionary<char, char>();
 		public List<List<ConsoleTile>> lines = new List<List<ConsoleTile>>();
-		protected Coord writeCursor;
-		protected Coord size;
+		public Coord writeCursor;
+		public Coord size;
 		public bool CursorAllowedInEmptyAreaInRow = false;
+		/// <summary>
+		/// if not negative one, the cursor cannot move before this coordinate
+		/// </summary>
+		public Coord WriteCursorStartingPoint = Coord.NegativeOne;
 		public Coord Cursor {
 			get => writeCursor;
 			set {
 				writeCursor = value;
 				Coord limit = size;
 				writeCursor.row = writeCursor.row.Clamp((short)0, (short)(limit.row - 1));
-				if (!CursorAllowedInEmptyAreaInRow) { limit.col = (short)(writeCursor.row < lines.Count ? lines[writeCursor.row].Count : 0); }
+				if (!CursorAllowedInEmptyAreaInRow) {
+					limit.col = (short)(writeCursor.row < lines.Count ? lines[writeCursor.row].Count : 0);
+				}
 				writeCursor.col = writeCursor.col.Clamp((short)0, limit.col);
 			}
 		}
+		public bool IsAtOrBeforeStartingPoint() {
+			return writeCursor.row < WriteCursorStartingPoint.row ||
+				writeCursor.row == WriteCursorStartingPoint.row && writeCursor.col <= WriteCursorStartingPoint.col;
+		}
+		public void RestartWriteCursor() { WriteCursorStartingPoint = Cursor; }
 		public int CursorLeft { get => writeCursor.X; set => writeCursor.X = value; }
 		public int CursorTop { get => writeCursor.Y; set => writeCursor.Y = value; }
 		public Coord Size {
@@ -57,6 +68,7 @@ namespace NonStandard.Cli {
 			i += amountToAdvance;
 		}
 		public void Write(string text) {
+			//StringBuilder whatWasWritten = new StringBuilder();
 			List<ConsoleTile> line;
 			for (int i = 0; i < text.Length; ++i) {
 				char c = text[i];
@@ -69,18 +81,21 @@ namespace NonStandard.Cli {
 					continue;
 				case '\b':
 					line = lines[writeCursor.row];
+					// TODO check if there is a bunch of empty space and a tab. if so, delete all the way to the tab, including the tab
 					bool needToRediscover = false;
 					//Show.Log(writeCursor.col+" "+ line.Count + "         max:"+size.col);
 					if (writeCursor.col == line.Count) {
 						needToRediscover = writeCursor.col + 1 >= size.col;
 						printC = false; // don't print, that will add a character, we're removing a character
-						if (line.Count == 0) {
-							if (writeCursor.row == lines.Count - 1) {
-								lines.RemoveAt(lines.Count - 1);
-								size.row = (short)lines.Count;
+						if (!IsAtOrBeforeStartingPoint()) {
+							if (line.Count == 0) {
+								if (writeCursor.row == lines.Count - 1) {
+									lines.RemoveAt(lines.Count - 1);
+									size.row = (short)lines.Count;
+								}
+							} else {
+								line.RemoveAt(line.Count - 1);
 							}
-						} else {
-							line.RemoveAt(line.Count - 1);
 						}
 					}
 					--writeCursor.col;
@@ -94,6 +109,11 @@ namespace NonStandard.Cli {
 						writeCursor.col += (short)(line.Count + 1);
 						printC = false; // don't print, that will add a character to the end of the previous line
 					}
+					if (IsAtOrBeforeStartingPoint()) {
+						printC = false;
+						//Show.Log("there's probably a better algorithm for this. "+ writeCursor+" should be at "+ WriteCursorStartingPoint);
+						writeCursor = WriteCursorStartingPoint;
+					}
 					break;
 				case '\n':
 					++writeCursor.row;
@@ -103,9 +123,15 @@ namespace NonStandard.Cli {
 				}
 				while (writeCursor.row >= lines.Count) { lines.Add(new List<ConsoleTile>()); }
 				if (printC) {
-					ConsoleTile thisLetter = GetPrintable(c, out short letterWidth);
+					ConsoleTile thisLetter = GetPrintable(c, out short letterWidth, out short cursorSkip);
 					line = lines[writeCursor.row];
+					int endOfChange = writeCursor.col + letterWidth + cursorSkip;
+					for (int s = writeCursor.col; s < endOfChange; ++s) {
+						if (s < line.Count) { line[s] = currentColors; }
+						if (s >= line.Count) { line.Add(currentColors); }
+					}
 					while (writeCursor.col + letterWidth > line.Count) { line.Add(currentColors); }
+					writeCursor.col += cursorSkip;
 					line[writeCursor.col] = thisLetter;
 					writeCursor.col += letterWidth;
 				}
@@ -128,8 +154,13 @@ namespace NonStandard.Cli {
 			Cursor = next;
 			return true;
 		}
-		public ConsoleTile GetPrintable(char c, out short letterWidth) {
+		/// <param name="c">character to print</param>
+		/// <param name="letterWidth">how far to move after printing the <see cref="ConsoleTile"/></param>
+		/// <param name="cursorSkip">how far to move before printing the <see cref="ConsoleTile"/></param>
+		/// <returns></returns>
+		public ConsoleTile GetPrintable(char c, out short letterWidth, out short cursorSkip) {
 			ConsoleTile thisLetter = currentColors;
+			cursorSkip = 0;
 			switch (c) {
 			case '\b':
 				thisLetter.Set(' ', currentColors.Fore, currentColors.Back);
@@ -137,7 +168,8 @@ namespace NonStandard.Cli {
 				return thisLetter;
 			case '\t':
 				thisLetter.Set('t', currentColors.Back, currentColors.Fore);
-				letterWidth = (short)(spacesPerTab - (writeCursor.col % spacesPerTab));
+				letterWidth = (short)(spacesPerTab - (writeCursor.col % spacesPerTab));//1;//
+				//cursorSkip = (short)(spacesPerTab - (writeCursor.col % spacesPerTab) - 1);
 				return thisLetter;
 			default:
 				letterWidth = 1;

@@ -218,10 +218,8 @@ namespace NonStandard.Cli {
 			Write("and now I test the very long\n" +// strings in the command line console. We shall see how the wrapping\n"+
 				"and multiple\n" +
 				"lines are handled\n" +
-				"by this new,\n" +
-				"fledgling command-\n" +
-				"line implementation\n" +
-				".");
+				"....");
+			body.RestartWriteCursor();
 		}
 		public void Update() {
 			if(cursor.position != body.Cursor) {
@@ -249,10 +247,14 @@ namespace NonStandard.Cli {
 
 		public void Write(char c) { Write(c.ToString()); }
 		public void Write(object o) { Write(o.ToString()); }
-		public void Write(string text) {
+		public void Write(string text) { Write(text, false); }
+		public void Write(string text, bool isInput) {
 			Coord oldSize = body.Size;
 			body.Write(text);
 			Cursor = body.Cursor;
+			if (!isInput) {
+				body.RestartWriteCursor();
+			}
 			//window.rect.MoveToContain(body.Cursor);
 			if (body.Size != oldSize) {
 				//Show.Log("window update");
