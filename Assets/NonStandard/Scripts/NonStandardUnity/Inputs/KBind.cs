@@ -293,7 +293,7 @@ namespace NonStandard.Inputs {
 		}
 
 		public KCombo(KCode key, KModifier modifier) : this(key) {
-			AddModifier(modifier);
+			if (modifier != KModifier.None) { AddModifier(modifier); }
 		}
 
 		public KCombo(KCode key, params KModifier[] modifiers) : this(key) {
@@ -329,28 +329,6 @@ namespace NonStandard.Inputs {
 			return false;
 		}
 
-		//[Serializable] public struct Modifier : IComparable<Modifier> {
-		//	public KCode key;
-		//	/// <param name="key"></param>
-		//	public Modifier(KCode key) { this.key = key; }
-        
-		//	public override string ToString() { return key.NormalName(); }
-
-		//	public int CompareTo(Modifier other) { return key.CompareTo(other.key); }
-
-		//	public override bool Equals(object obj) {
-		//		if (obj == null) return false;
-		//		Modifier mod = (Modifier) obj;
-		//		return mod.key == key;
-		//	}
-
-		//	public bool Equals(Modifier other) { return key == other.key; }
-
-		//	public override int GetHashCode() { return (int) key; }
-
-		//	public Modifier Init() { key = key.Normalized(); return this; }
-		//}
-    
 		public int CompareTo(KCombo other) {
 			int comp = key.CompareTo(other.key);
 			if (comp != 0) return comp;

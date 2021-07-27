@@ -14,10 +14,24 @@ namespace NonStandard.Utility {
 		public EventBind(object target, string setMethodName, object value = null) {
 			this.target = target; this.setMethodName = setMethodName; this.value = value;
 		}
+		public EventBind(object target, string setMethodName) {
+			this.target = target; this.setMethodName = setMethodName; value = null;
+		}
 		public UnityAction<T> GetAction<T>(object target, string setMethodName) {
 			System.Reflection.MethodInfo targetinfo = UnityEvent.GetValidMethodInfo(target, setMethodName, new Type[] { typeof(T) });
 			if (targetinfo == null) { Debug.LogError("no method " + setMethodName + "(" + typeof(T).Name + ") in " + target.ToString()); }
 			return Delegate.CreateDelegate(typeof(UnityAction<T>), target, targetinfo, false) as UnityAction<T>;
+		}
+		public static void On<T>(UnityEvent<T> @event, object target, string methodName) {
+			new EventBind(target, methodName).Bind(@event);
+		}
+		public void Bind<T>(UnityEvent<T> @event) {
+#if UNITY_EDITOR
+			UnityEventTools.AddPersistentListener(@event, GetAction<T>(target, setMethodName));
+#else
+			System.Reflection.MethodInfo targetinfo = UnityEvent.GetValidMethodInfo(target, setMethodName, new Type[]{typeof(T)});
+			@event.AddListener((val) => targetinfo.Invoke(target, new object[] { val }));
+#endif
 		}
 		public void Bind(UnityEvent_string @event) {
 #if UNITY_EDITOR

@@ -186,6 +186,8 @@ namespace NonStandard.Cli {
 				text = GetComponentInChildren<TMP_Text>();
 			} else {
 				text = inputField.textComponent;
+				inputField.readOnly = true;
+				inputField.richText = false;
 			}
 			TMP_Text pTmp = Text;
 			GameObject backgroundObject = Instantiate(Text.gameObject);

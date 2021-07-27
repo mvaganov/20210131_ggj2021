@@ -827,12 +827,6 @@ GameObject:
   - component: {fileID: 404899391}
   - component: {fileID: 404899390}
   - component: {fileID: 404899388}
-  - component: {fileID: 404899395}
-  - component: {fileID: 404899394}
-  - component: {fileID: 404899397}
-  - component: {fileID: 404899393}
-  - component: {fileID: 404899392}
-  - component: {fileID: 404899389}
   m_Layer: 5
   m_Name: InputField (TMP)
   m_TagString: Untagged
@@ -951,25 +945,11 @@ MonoBehaviour:
   m_RichText: 0
   m_GlobalFontAsset: {fileID: 11400000, guid: e8bc52215b3823540b5191bf14d30460, type: 2}
   m_OnFocusSelectAll: 1
-  m_ResetOnDeActivation: 1
+  m_ResetOnDeActivation: 0
   m_RestoreOriginalTextOnEscape: 1
   m_isRichTextEditingAllowed: 0
   m_LineLimit: 0
   m_InputValidator: {fileID: 0}
---- !u!114 &404899389
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 404899386}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad42cc2eeaef6ad49853a2a5922cdff4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  newCommands: []
-  whenToUse: 0
 --- !u!114 &404899390
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1007,235 +987,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 404899386}
   m_CullTransparentMesh: 0
---- !u!114 &404899392
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 404899386}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 93fe5d38b9a8c354fb4a082f250a34fd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  workingTransform: {fileID: 0}
---- !u!114 &404899393
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 404899386}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2b067f2105dd3be4fb6bfa3e487bd833, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isMain: 1
-  activeOnStart: 0
-  selectableAsMain: 1
-  keyUsedTo:
-    Activate: 96
-    Deactivate: 27
-  callbacks:
-    enable: 1
-    WhenThisActivates:
-      m_PersistentCalls:
-        m_Calls: []
-    WhenThisDeactivates:
-      m_PersistentCalls:
-        m_Calls: []
-  _screenSpaceCanvas: {fileID: 1109693648}
---- !u!114 &404899394
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 404899386}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9f984944117881142a44a49fc0663206, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  KeyBinds:
-  - name: + console font
-    priority: 1000
-    disable: 0
-    eventAlwaysTriggerable: 0
-    keyCombinations:
-    - modifiers: 2b010000
-      key: 61
-    keyEvent:
-      onPress:
-        m_PersistentCalls:
-          m_Calls:
-          - m_Target: {fileID: 404899395}
-            m_MethodName: AddToFontSize
-            m_Mode: 4
-            m_Arguments:
-              m_ObjectArgument: {fileID: 0}
-              m_ObjectArgumentAssemblyTypeName: 
-              m_IntArgument: 0
-              m_FloatArgument: 1
-              m_StringArgument: 
-              m_BoolArgument: 0
-            m_CallState: 2
-      onHold:
-        m_PersistentCalls:
-          m_Calls: []
-      onRelease:
-        m_PersistentCalls:
-          m_Calls: []
-  - name: '- console font'
-    priority: 1000
-    disable: 0
-    eventAlwaysTriggerable: 0
-    keyCombinations:
-    - modifiers: 2b010000
-      key: 45
-    keyEvent:
-      onPress:
-        m_PersistentCalls:
-          m_Calls:
-          - m_Target: {fileID: 404899395}
-            m_MethodName: AddToFontSize
-            m_Mode: 4
-            m_Arguments:
-              m_ObjectArgument: {fileID: 0}
-              m_ObjectArgumentAssemblyTypeName: 
-              m_IntArgument: 0
-              m_FloatArgument: -1
-              m_StringArgument: 
-              m_BoolArgument: 0
-            m_CallState: 2
-      onHold:
-        m_PersistentCalls:
-          m_Calls: []
-      onRelease:
-        m_PersistentCalls:
-          m_Calls: []
-  - name: submit console input
-    priority: 1000
-    disable: 0
-    eventAlwaysTriggerable: 0
-    keyCombinations:
-    - modifiers: 9e000000
-      key: 13
-    keyEvent:
-      onPress:
-        m_PersistentCalls:
-          m_Calls:
-          - m_Target: {fileID: 404899394}
-            m_MethodName: FinishCurrentInput
-            m_Mode: 1
-            m_Arguments:
-              m_ObjectArgument: {fileID: 0}
-              m_ObjectArgumentAssemblyTypeName: 
-              m_IntArgument: 0
-              m_FloatArgument: 0
-              m_StringArgument: 
-              m_BoolArgument: 0
-            m_CallState: 2
-      onHold:
-        m_PersistentCalls:
-          m_Calls: []
-      onRelease:
-        m_PersistentCalls:
-          m_Calls: []
-  AxisBinds: []
-  textInput: 1
-  clipboardPaste: 1
-  inputColor: {r: 1, g: 1, b: 0, a: 1}
-  inputListener:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 404899397}
-        m_MethodName: DoCommand
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
---- !u!114 &404899395
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 404899386}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cea709c4b85ff4a46a9d176e01580ec3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  inputField: {fileID: 0}
-  cursor:
-    cursorVisible: 1
-    cursor: {fileID: 167637150}
-    position:
-      row: 0
-      col: 0
-  window:
-    bufferSize:
-      row: 0
-      col: 0
-    UseWindow: 1
-    rect:
-      min:
-        row: 0
-        col: 0
-      max:
-        row: 8
-        col: 30
-    followCursor: 1
-  colorSettings:
-    foregroundAlpha: 1
-    backgroundAlpha: 0.5
-    ConsoleColorPalette:
-    - {r: 0, g: 0, b: 0, a: 1}
-    - {r: 0, g: 0, b: 0.5019608, a: 1}
-    - {r: 0, g: 0.5019608, b: 0, a: 1}
-    - {r: 0, g: 0.5019608, b: 0.5019608, a: 1}
-    - {r: 0.5019608, g: 0, b: 0, a: 1}
-    - {r: 0.5019608, g: 0, b: 0.5019608, a: 1}
-    - {r: 0.53333336, g: 0.53333336, b: 0, a: 1}
-    - {r: 0.8, g: 0.8, b: 0.8, a: 1}
-    - {r: 0.53333336, g: 0.53333336, b: 0.53333336, a: 1}
-    - {r: 0, g: 0, b: 1, a: 1}
-    - {r: 0, g: 1, b: 0, a: 1}
-    - {r: 0, g: 1, b: 1, a: 1}
-    - {r: 1, g: 0, b: 0, a: 1}
-    - {r: 1, g: 0, b: 1, a: 1}
-    - {r: 1, g: 1, b: 0, a: 1}
-    - {r: 1, g: 1, b: 1, a: 1}
-    - {r: 0.26666668, g: 0.26666668, b: 0.26666668, a: 1}
-    - {r: 0, g: 0, b: 0, a: 0}
-  charSettings:
-    EmptyChar: 32
-    BackgroundChar: 9608
---- !u!114 &404899397
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 404899386}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 04d22b82a813ed843aeff346816b7605, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  commandEvents:
-    firstCommands: 
-    WhenCommandRuns:
-      m_PersistentCalls:
-        m_Calls: []
 --- !u!1 &745309403
 GameObject:
   m_ObjectHideFlags: 0
@@ -6749,6 +6500,12 @@ GameObject:
   m_Component:
   - component: {fileID: 1566316589}
   - component: {fileID: 1566316588}
+  - component: {fileID: 1566316595}
+  - component: {fileID: 1566316594}
+  - component: {fileID: 1566316593}
+  - component: {fileID: 1566316592}
+  - component: {fileID: 1566316591}
+  - component: {fileID: 1566316590}
   m_Layer: 0
   m_Name: Console
   m_TagString: Untagged
@@ -6782,6 +6539,501 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1566316590
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1566316587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad42cc2eeaef6ad49853a2a5922cdff4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  newCommands: []
+  whenToUse: 0
+--- !u!114 &1566316591
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1566316587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93fe5d38b9a8c354fb4a082f250a34fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  workingTransform: {fileID: 0}
+--- !u!114 &1566316592
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1566316587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b067f2105dd3be4fb6bfa3e487bd833, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isMain: 1
+  activeOnStart: 0
+  selectableAsMain: 1
+  keyUsedTo:
+    Activate: 96
+    Deactivate: 27
+  callbacks:
+    enable: 1
+    WhenThisActivates:
+      m_PersistentCalls:
+        m_Calls: []
+    WhenThisDeactivates:
+      m_PersistentCalls:
+        m_Calls: []
+  _screenSpaceCanvas: {fileID: 1109693648}
+--- !u!114 &1566316593
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1566316587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04d22b82a813ed843aeff346816b7605, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  commandEvents:
+    firstCommands: 
+    WhenCommandRuns:
+      m_PersistentCalls:
+        m_Calls: []
+--- !u!114 &1566316594
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1566316587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f984944117881142a44a49fc0663206, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  KeyBinds:
+  - name: + console font
+    priority: 1000
+    disable: 0
+    eventAlwaysTriggerable: 0
+    keyCombinations:
+    - modifiers: 2b010000
+      key: 61
+    keyEvent:
+      onPress:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 1566316595}
+            m_MethodName: AddToFontSize
+            m_Mode: 4
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: 
+              m_IntArgument: 0
+              m_FloatArgument: 1
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+      onHold:
+        m_PersistentCalls:
+          m_Calls: []
+      onRelease:
+        m_PersistentCalls:
+          m_Calls: []
+  - name: '- console font'
+    priority: 1000
+    disable: 0
+    eventAlwaysTriggerable: 0
+    keyCombinations:
+    - modifiers: 2b010000
+      key: 45
+    keyEvent:
+      onPress:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 1566316595}
+            m_MethodName: AddToFontSize
+            m_Mode: 4
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: 
+              m_IntArgument: 0
+              m_FloatArgument: -1
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+      onHold:
+        m_PersistentCalls:
+          m_Calls: []
+      onRelease:
+        m_PersistentCalls:
+          m_Calls: []
+  - name: submit console input
+    priority: 1000
+    disable: 0
+    eventAlwaysTriggerable: 0
+    keyCombinations:
+    - modifiers: 9e000000
+      key: 13
+    keyEvent:
+      onPress:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 1566316594}
+            m_MethodName: FinishCurrentInput
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: 
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+      onHold:
+        m_PersistentCalls:
+          m_Calls: []
+      onRelease:
+        m_PersistentCalls:
+          m_Calls: []
+  - name: paste into command console
+    priority: 1000
+    disable: 0
+    eventAlwaysTriggerable: 0
+    keyCombinations:
+    - modifiers: 2b010000
+      key: 118
+    keyEvent:
+      onPress:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 1566316594}
+            m_MethodName: PasteFromClipboard
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: 
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+      onHold:
+        m_PersistentCalls:
+          m_Calls: []
+      onRelease:
+        m_PersistentCalls:
+          m_Calls: []
+  - name: move cursor up
+    priority: 1000
+    disable: 0
+    eventAlwaysTriggerable: 0
+    keyCombinations:
+    - modifiers: 9e000000
+      key: 273
+    keyEvent:
+      onPress:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 1566316594}
+            m_MethodName: MoveCursorUp
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: 
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+      onHold:
+        m_PersistentCalls:
+          m_Calls: []
+      onRelease:
+        m_PersistentCalls:
+          m_Calls: []
+  - name: move cursor left
+    priority: 1000
+    disable: 0
+    eventAlwaysTriggerable: 0
+    keyCombinations:
+    - modifiers: 9e000000
+      key: 276
+    keyEvent:
+      onPress:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 1566316594}
+            m_MethodName: MoveCursorLeft
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: 
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+      onHold:
+        m_PersistentCalls:
+          m_Calls: []
+      onRelease:
+        m_PersistentCalls:
+          m_Calls: []
+  - name: move cursor down
+    priority: 1000
+    disable: 0
+    eventAlwaysTriggerable: 0
+    keyCombinations:
+    - modifiers: 9e000000
+      key: 274
+    keyEvent:
+      onPress:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 1566316594}
+            m_MethodName: MoveCursorDown
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: 
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+      onHold:
+        m_PersistentCalls:
+          m_Calls: []
+      onRelease:
+        m_PersistentCalls:
+          m_Calls: []
+  - name: move cursor right
+    priority: 1000
+    disable: 0
+    eventAlwaysTriggerable: 0
+    keyCombinations:
+    - modifiers: 9e000000
+      key: 275
+    keyEvent:
+      onPress:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 1566316594}
+            m_MethodName: MoveCursorRight
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: 
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+      onHold:
+        m_PersistentCalls:
+          m_Calls: []
+      onRelease:
+        m_PersistentCalls:
+          m_Calls: []
+  - name: shift window up
+    priority: 1000
+    disable: 0
+    eventAlwaysTriggerable: 0
+    keyCombinations:
+    - modifiers: 29010000
+      key: 273
+    keyEvent:
+      onPress:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 1566316594}
+            m_MethodName: ShiftWindowUp
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: 
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+      onHold:
+        m_PersistentCalls:
+          m_Calls: []
+      onRelease:
+        m_PersistentCalls:
+          m_Calls: []
+  - name: shift window left
+    priority: 1000
+    disable: 0
+    eventAlwaysTriggerable: 0
+    keyCombinations:
+    - modifiers: 29010000
+      key: 276
+    keyEvent:
+      onPress:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 1566316594}
+            m_MethodName: ShiftWindowLeft
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: 
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+      onHold:
+        m_PersistentCalls:
+          m_Calls: []
+      onRelease:
+        m_PersistentCalls:
+          m_Calls: []
+  - name: shift window down
+    priority: 1000
+    disable: 0
+    eventAlwaysTriggerable: 0
+    keyCombinations:
+    - modifiers: 29010000
+      key: 274
+    keyEvent:
+      onPress:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 1566316594}
+            m_MethodName: ShiftWindowDown
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: 
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+      onHold:
+        m_PersistentCalls:
+          m_Calls: []
+      onRelease:
+        m_PersistentCalls:
+          m_Calls: []
+  - name: shift window right
+    priority: 1000
+    disable: 0
+    eventAlwaysTriggerable: 0
+    keyCombinations:
+    - modifiers: 29010000
+      key: 275
+    keyEvent:
+      onPress:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 1566316594}
+            m_MethodName: ShiftWindowRight
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: 
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+      onHold:
+        m_PersistentCalls:
+          m_Calls: []
+      onRelease:
+        m_PersistentCalls:
+          m_Calls: []
+  AxisBinds: []
+  textInput: 1
+  clipboardPaste: 1
+  inputColor: {r: 0, g: 1, b: 0, a: 1}
+  inputListener:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1566316593}
+        m_MethodName: DoCommand
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &1566316595
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1566316587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cea709c4b85ff4a46a9d176e01580ec3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inputField: {fileID: 404899388}
+  cursor:
+    cursorVisible: 1
+    cursor: {fileID: 167637150}
+    position:
+      row: 0
+      col: 0
+  window:
+    bufferSize:
+      row: 0
+      col: 0
+    UseWindow: 1
+    rect:
+      min:
+        row: 0
+        col: 0
+      max:
+        row: 8
+        col: 30
+    followCursor: 1
+  colorSettings:
+    foregroundAlpha: 1
+    backgroundAlpha: 0.5
+    ConsoleColorPalette:
+    - {r: 0, g: 0, b: 0, a: 1}
+    - {r: 0, g: 0, b: 0.5019608, a: 1}
+    - {r: 0, g: 0.5019608, b: 0, a: 1}
+    - {r: 0, g: 0.5019608, b: 0.5019608, a: 1}
+    - {r: 0.5019608, g: 0, b: 0, a: 1}
+    - {r: 0.5019608, g: 0, b: 0.5019608, a: 1}
+    - {r: 0.53333336, g: 0.53333336, b: 0, a: 1}
+    - {r: 0.8, g: 0.8, b: 0.8, a: 1}
+    - {r: 0.53333336, g: 0.53333336, b: 0.53333336, a: 1}
+    - {r: 0, g: 0, b: 1, a: 1}
+    - {r: 0, g: 1, b: 0, a: 1}
+    - {r: 0, g: 1, b: 1, a: 1}
+    - {r: 1, g: 0, b: 0, a: 1}
+    - {r: 1, g: 0, b: 1, a: 1}
+    - {r: 1, g: 1, b: 0, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    - {r: 0.26666668, g: 0.26666668, b: 0.26666668, a: 1}
+    - {r: 0, g: 0, b: 0, a: 0}
+  charSettings:
+    EmptyChar: 32
+    BackgroundChar: 9608
 --- !u!1 &1794688009
 GameObject:
   m_ObjectHideFlags: 0

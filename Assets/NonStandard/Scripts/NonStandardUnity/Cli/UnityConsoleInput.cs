@@ -28,16 +28,15 @@ namespace NonStandard.Cli {
 		public bool textInput = true;
 		public bool clipboardPaste = true;
 
-		public Color inputColor = new Color(1, 1, 0);
+		public Color inputColor = new Color(0, 1, 0);
 		int inputColorCode = -1;
 		private UnityConsole console;
 
 		public UnityEvent_string inputListener;
 
-		// TODO remove the ctrl option, since it should be in the KeyBinds dictionary
 		private struct KMap {
-			public object normal, shift, ctrl;
-			public KMap(object n, object s=null, object c=null) { normal = n;shift = s;ctrl = c; }
+			public object normal, shift;
+			public KMap(object n, object s=null) { normal = n; shift = s; }
 		}
 		Dictionary<KCode, KMap> _keyMap = null;
 		Dictionary<KCode, KMap> KepMap() => _keyMap != null
@@ -69,8 +68,7 @@ namespace NonStandard.Cli {
 			[KCode.Return] = new KMap(null, '\n'),
 			[KCode.A] = new KMap('a', 'A'),
 			[KCode.B] = new KMap('b', 'B'),
-			// TODO add CopyToClipboard to KeyBinds in the Reset function
-			[KCode.C] = new KMap('c', 'C', new Action(CopyToClipboard)),
+			[KCode.C] = new KMap('c', 'C'),
 			[KCode.D] = new KMap('d', 'D'),
 			[KCode.E] = new KMap('e', 'E'),
 			[KCode.F] = new KMap('f', 'F'),
@@ -89,20 +87,11 @@ namespace NonStandard.Cli {
 			[KCode.S] = new KMap('s', 'S'),
 			[KCode.T] = new KMap('t', 'T'),
 			[KCode.U] = new KMap('u', 'U'),
-			// TODO add PasteFromClipboard to KeyBinds in the Reset function
-			[KCode.V] = new KMap('v', 'V', new Action(PasteFromClipboard)),
+			[KCode.V] = new KMap('v', 'V'),
 			[KCode.W] = new KMap('w', 'W'),
 			[KCode.X] = new KMap('x', 'X'),
 			[KCode.Y] = new KMap('y', 'Y'),
 			[KCode.Z] = new KMap('z', 'Z'),
-			// TODO add this to KeyBinds in the Reset function
-			[KCode.UpArrow] = new KMap(new Action(() => MovCur(Coord.Up)), new Action(() => MovWin(Coord.Up))),
-			// TODO add this to KeyBinds in the Reset function
-			[KCode.LeftArrow] = new KMap(new Action(() => MovCur(Coord.Left)), new Action(() => MovWin(Coord.Left))),
-			// TODO add this to KeyBinds in the Reset function
-			[KCode.DownArrow] = new KMap(new Action(() => MovCur(Coord.Down)), new Action(() => MovWin(Coord.Down))),
-			// TODO add this to KeyBinds in the Reset function
-			[KCode.RightArrow] = new KMap(new Action(() => MovCur(Coord.Right)), new Action(() => MovWin(Coord.Right))),
 		};
 		private void MovCur(Coord dir) { console.Cursor += dir; }
 		private void MovWin(Coord dir) { console.ScrollRenderWindow(dir); ; }
@@ -142,15 +131,16 @@ namespace NonStandard.Cli {
 		}
 		void AddKeysToInput(StringBuilder sb, bool alsoResolveNonText = true) {
 			keysDown.Clear();
+			if (!KeyAvailable) return;
 			GetKeyDown(keysDown);
 			if (tempKeyCodeListeners != null && keysDown.Count > 0) {
 				keysDown.ForEach(keyDown => tempKeyCodeListeners.ForEach(action => action.Invoke(keyDown)));
 				tempKeyCodeListeners.Clear();
 			}
-			bool isCtrl = KCode.AnyCtrl.IsHeld(), isShift = KCode.AnyShift.IsHeld();
+			bool isShift = KCode.AnyShift.IsHeld(), isOther = KCode.AnyCtrl.IsHeld() || KCode.AnyAlt.IsHeld();
 			for (int i = 0; i < keysDown.Count; ++i) {
 				if (_keyMap.TryGetValue(keysDown[i], out KMap kmap)) {
-					if (isCtrl) { DoTheThing(kmap.ctrl); } else if (isShift) { DoTheThing(kmap.shift); } else { DoTheThing(kmap.normal); }
+					if (isShift) { DoTheThing(kmap.shift); } else if (!isOther) { DoTheThing(kmap.normal); }
 				}
 			}
 			void DoTheThing(object context) {
@@ -199,18 +189,32 @@ namespace NonStandard.Cli {
 		void IncreaseFontSize() { console.AddToFontSize(1); }
 		private void Reset() {
 			UnityConsole console = GetComponent<UnityConsole>();
-			UnityConsoleCommander conCom = GetComponent<UnityConsoleCommander>();
-			if (conCom != null) {
-				EventBind invokeSet = new EventBind(conCom, nameof(conCom.DoCommand), "blarg");
-				invokeSet.Bind(inputListener);
+			UnityConsoleCommander consoleCommander = GetComponent<UnityConsoleCommander>();
+			if (consoleCommander != null) {
+				EventBind.On(inputListener, consoleCommander, nameof(consoleCommander.DoCommand));
 			}
-			KeyBinds.Add(new KBind(new KCombo(KCode.Equals, KModifier.AnyCtrl), "+ console font", 
-				pressFunc: new EventBind(console, nameof(console.AddToFontSize), 1f)));
-			KeyBinds.Add(new KBind(new KCombo(KCode.Minus, KModifier.AnyCtrl), "- console font", 
-				pressFunc: new EventBind(console, nameof(console.AddToFontSize), -1f)));
-			KeyBinds.Add(new KBind(new KCombo(KCode.Return, KModifier.NoShift), "submit console input",
-				pressFunc: new EventBind(this, nameof(FinishCurrentInput), null)));
+			KeyBind(KCode.Equals, KModifier.AnyCtrl, "+ console font", nameof(console.AddToFontSize), 1f, console);
+			KeyBind(KCode.Minus, KModifier.AnyCtrl, "- console font", nameof(console.AddToFontSize), -1f, console);
+			KeyBind(KCode.Return, KModifier.NoShift, "submit console input", nameof(FinishCurrentInput));
+			KeyBind(KCode.C, KModifier.AnyCtrl, "copy from command console", nameof(CopyToClipboard));
+			KeyBind(KCode.V, KModifier.AnyCtrl, "paste into command console", nameof(PasteFromClipboard));
+			KeyBind(KCode.UpArrow, KModifier.NoShift, "move cursor up", nameof(MoveCursorUp));
+			KeyBind(KCode.LeftArrow, KModifier.NoShift, "move cursor left", nameof(MoveCursorLeft));
+			KeyBind(KCode.DownArrow, KModifier.NoShift, "move cursor down", nameof(MoveCursorDown));
+			KeyBind(KCode.RightArrow, KModifier.NoShift, "move cursor right", nameof(MoveCursorRight));
+			KeyBind(KCode.UpArrow, KModifier.AnyShift, "shift window up", nameof(ShiftWindowUp));
+			KeyBind(KCode.LeftArrow, KModifier.AnyShift, "shift window left", nameof(ShiftWindowLeft));
+			KeyBind(KCode.DownArrow, KModifier.AnyShift, "shift window down", nameof(ShiftWindowDown));
+			KeyBind(KCode.RightArrow, KModifier.AnyShift, "shift window right", nameof(ShiftWindowRight));
 		}
+		public void MoveCursorUp() { MovCur(Coord.Up); }
+		public void MoveCursorLeft() { MovCur(Coord.Left); }
+		public void MoveCursorDown() { MovCur(Coord.Down); }
+		public void MoveCursorRight() { MovCur(Coord.Right); }
+		public void ShiftWindowUp() { MovWin(Coord.Up); }
+		public void ShiftWindowLeft() { MovWin(Coord.Left); }
+		public void ShiftWindowDown() { MovWin(Coord.Down); }
+		public void ShiftWindowRight() { MovWin(Coord.Right); }
 		private void Awake() { console = GetComponent<UnityConsole>(); }
 		private void Start() {
 			inputColorCode = console.AddConsoleColor(inputColor);

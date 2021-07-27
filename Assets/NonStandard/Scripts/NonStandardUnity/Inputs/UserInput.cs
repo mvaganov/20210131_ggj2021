@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NonStandard.Utility;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -41,6 +42,11 @@ namespace NonStandard.Inputs {
 			if (AxisBinds.Count > 0 && AppInput.HasAxisBind(AxisBinds[0])) {
 				for (int i = 0; i < AxisBinds.Count; ++i) { AppInput.RemoveListener(AxisBinds[i]); }
 			}
+		}
+
+		public void KeyBind(KCode kCode, KModifier modifier, string name, string methodName, object value = null, object target = null) {
+			if (target == null) target = this;
+			KeyBinds.Add(new KBind(new KCombo(kCode, modifier), name, pressFunc: new EventBind(target, methodName, value)));
 		}
 
 		public bool RemoveKeybind(string name) {

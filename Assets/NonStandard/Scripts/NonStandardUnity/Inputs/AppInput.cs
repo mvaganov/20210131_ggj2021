@@ -1,4 +1,6 @@
-﻿using System;
+﻿using NonStandard.Extension;
+using NonStandard.Procedure;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -7,6 +9,8 @@ using UnityEngine.EventSystems;
 
 namespace NonStandard.Inputs {
 	public class AppInput : UserInput {
+		public enum KBindChange { None = 0, Add = 1, Remove = 2, Update = 3 }
+
 		[TextArea(1, 30), SerializeField]
 		protected string CurrentKeyBindings;
 		public bool updateText = true;
@@ -21,8 +25,52 @@ namespace NonStandard.Inputs {
 		protected List<KBind> kBindHolds = new List<KBind>();
 		protected List<KBind> kBindReleases = new List<KBind>();
 
+		/// <summary>
+		/// not an array because all elements aren't managed by AppInput. Unity's KeyCode system does most of the work.
+		/// </summary>
+		private static readonly Dictionary<KCode, KState> _pressState = new Dictionary<KCode, KState>();
+
 		public static void Log(string text) { Debug.Log(text); }
 		public static void Log(object obj) { Log(obj.ToString()); }
+
+		public static HashSet<KCode> heldKeys = new HashSet<KCode>();
+		[Serializable] public class KeyRepeatRate {
+			public static KeyRepeatRate instance;
+
+			public KCode lastHeldKey;
+			public static KCode softwareEmulatedPress;
+			[NonSerialized] public ulong lastKeyHeldTime = 0;
+			[NonSerialized] public ulong heldDuration = 0;
+			public const ulong initialDelay = 1000;
+			public const ulong repeatDelay = 100;
+			public KeyRepeatRate() { instance = this; }
+			public void Update() {
+				if (softwareEmulatedPress != KCode.None) { softwareEmulatedPress = KCode.None; }
+				if (heldKeys.Count > 0) {
+					StringBuilder sb = new StringBuilder();
+					KCode thisHeldKey = KCode.None;
+					foreach (KCode k in heldKeys) { thisHeldKey = k; break; }
+					heldKeys.Clear();
+					if (thisHeldKey != KCode.None) {
+						ulong now = Proc.Now;
+						if (thisHeldKey == lastHeldKey && lastKeyHeldTime != 0) {
+							heldDuration += now - lastKeyHeldTime;
+							if (heldDuration > initialDelay) {
+								heldDuration -= repeatDelay;
+								softwareEmulatedPress = thisHeldKey;
+							}
+						}
+						lastKeyHeldTime = now;
+						lastHeldKey = thisHeldKey;
+					}
+				} else {
+					lastHeldKey = KCode.None;
+					lastKeyHeldTime = 0;
+					heldDuration = 0;
+				}
+			}
+		}
+		public KeyRepeatRate keyRepeatRate = new KeyRepeatRate();
 
 		private static AppInput _instance;
 		public static AppInput Instance {
@@ -129,8 +177,6 @@ namespace NonStandard.Inputs {
 			return Instance.UpdateKeyBindGroups(kBind, change);
 		}
 
-		public enum KBindChange { None = 0, Add = 1, Remove = 2, Update = 3 }
-
 		/// <summary>
 		/// used to add/remove/update a specific <see cref="KBind"/>
 		/// </summary>
@@ -184,11 +230,6 @@ namespace NonStandard.Inputs {
 		public static Vector3 MousePosition { get { return Input.mousePosition; } }
 		public static Vector3 MousePositionDelta { get { return new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y")); } }
 
-		/// <summary>
-		/// not an array because all elements aren't managed by AppInput. Unity's KeyCode system does most of the work.
-		/// </summary>
-		private static readonly Dictionary<KCode, KState> _pressState = new Dictionary<KCode, KState>();
-
 		public static bool IsOldKeyCode(KCode code) { return Enum.IsDefined(typeof(KeyCode), (int)code); }
 
 		private static bool GetKey_internal(KCode key) {
@@ -229,8 +270,14 @@ namespace NonStandard.Inputs {
 		}
 
 		public static bool GetKey(KCode key) {
-			if (IsOldKeyCode(key)) { return UnityEngine.Input.GetKey((KeyCode)key); }
-			bool pressed = GetKey_internal(key);
+			bool pressed;
+			if (IsOldKeyCode(key)) {
+				pressed = UnityEngine.Input.GetKey((KeyCode)key);
+				if (pressed && (key < KCode.NoShift || key > KCode.NoAlt)) { heldKeys.Add(key); }
+				return pressed;
+			}
+			pressed = GetKey_internal(key);
+			if (pressed && (key < KCode.NoShift || key > KCode.NoAlt)) { heldKeys.Add(key); }
 			KState ks;
 			_pressState.TryGetValue(key, out ks);
 			if (pressed && ks == KState.KeyReleased) { _pressState[key] = KState.KeyDown; }
@@ -239,6 +286,7 @@ namespace NonStandard.Inputs {
 		}
 
 		public static bool GetKeyDown(KCode key) {
+			if (KeyRepeatRate.softwareEmulatedPress == key) return true;
 			if (IsOldKeyCode(key)) { return UnityEngine.Input.GetKeyDown((KeyCode)key); }
 			KState ks;
 			_pressState.TryGetValue(key, out ks);
@@ -339,7 +387,7 @@ namespace NonStandard.Inputs {
 			/// <param name="list">where to mark if this is indeed triggered</param>
 			/// <param name="additionalFilter">an additional gate that might prevent this particluar keybind from triggering. possibly heavy method, so only checked if the key is triggered</param>
 			bool KeyCheck(KBind kb, List<KeyTrigger> list, Func<KBind, bool> additionalFilter = null) {
-				KCombo kp = trigger(kb);
+				KCombo kp = trigger.Invoke(kb);
 				if (kp != null && (additionalFilter == null || !additionalFilter.Invoke(kb))) {
 					list.Add(new KeyTrigger { kb = kb, kp = kp });
 					return true;
@@ -413,7 +461,6 @@ namespace NonStandard.Inputs {
 				triggerList.Clear();
 			}
 		}
-
 		public void Awake() {
 			EnsureInitializedKeyBindGroups();
 		}
@@ -443,8 +490,8 @@ namespace NonStandard.Inputs {
 				AxisBinds[i].Update();
 			}
 			++updates;
+			keyRepeatRate.Update();
 		}
-
 		public void UpdateCurrentKeyBindText() {
 			EnsureInitializedKeyBindGroups();
 			StringBuilder sb = new StringBuilder();
