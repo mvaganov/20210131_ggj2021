@@ -10,6 +10,7 @@ namespace NonStandard.Cli {
 		public TMP_InputField inputField;
 		TMP_Text text;
 		TMP_Text charBack;
+		public Coord bufferSize;
 		[System.Serializable] public class CursorSettings {
 			public bool cursorVisible = true;
 			public GameObject cursor;
@@ -40,40 +41,66 @@ namespace NonStandard.Cli {
 		}
 		public CursorSettings cursor = new CursorSettings();
 		[System.Serializable] public class DisplayWindowSettings {
-			public Coord bufferSize;
+			public enum WindowSizing { Unconstrained, UseStaticViewRectangle, AutoCalculateViewRectangle }
+			internal ConsoleBody body;
 			public static readonly CoordRect Maximum = new CoordRect(Coord.Zero, Coord.Max);
 			[Tooltip("only render characters contained in the render window")]
-			public bool UseWindow = true;
-			public CoordRect rect = new CoordRect(Coord.Zero, new Coord(20, 5));
-			public enum FollowBehavior { None, Yes }
+			public WindowSizing windowSizing = WindowSizing.AutoCalculateViewRectangle;
+			private Vector2 sizeCalculated = -Vector2.one;
+			private float fontSizeCalculated = -1;
+			public CoordRect viewRect = Maximum;
+			public enum FollowBehavior { No, Yes }
 			public FollowBehavior followCursor = FollowBehavior.Yes;
-			public CoordRect Limit => UseWindow ? rect : Maximum;
-			public Coord WindowSize {
-				get => UseWindow ? rect.Size : Maximum.Size;
-				set { rect.Size = value; }
+			public CoordRect Limit => windowSizing != WindowSizing.Unconstrained ? viewRect : Maximum;
+			public Coord Size {
+				get => windowSizing != WindowSizing.Unconstrained ? viewRect.Size : Maximum.Size;
+				set { viewRect.Size = value; }
 			}
-			public int WindowHeight { get => UseWindow ? rect.Height : -1; set => rect.Height = value; }
-			public int WindowWidth { get => UseWindow ? rect.Width : -1; set => rect.Width = value; }
-			internal void UpdateRenderWindow(ConsoleBody body) {
-				if (rect.PositionX < 0) { rect.PositionX -= rect.PositionX; }
-				else if (rect.Right > body.Size.col) {
-					if (rect.Width >= body.Size.col) { rect.PositionX = 0; }
-					else { rect.PositionX -= (short)(rect.Right - body.Size.col); }
+			public int Height { get => windowSizing != WindowSizing.Unconstrained ? viewRect.Height : -1; set => viewRect.Height = value; }
+			public int Width { get => windowSizing != WindowSizing.Unconstrained ? viewRect.Width : -1; set => viewRect.Width = value; }
+			public float ScrollVertical {
+				get => (float)viewRect.Top / (body.Size.Y - viewRect.Height);
+				set => viewRect.PositionY = (short)(value * (body.Size.Y - viewRect.Height));
+			}
+			public float ScrollHorizontal {
+				get => (float) viewRect.Left / (body.Size.X - viewRect.Width);
+				set => viewRect.PositionX = (short)(value * (body.Size.X - viewRect.Width));
+			}
+			internal void UpdateRenderWindow() {
+				if (viewRect.PositionX < 0) { viewRect.PositionX -= viewRect.PositionX; }
+				else if (viewRect.Right > body.Size.col) {
+					if (viewRect.Width >= body.Size.col) { viewRect.PositionX = 0; }
+					else { viewRect.PositionX -= (short)(viewRect.Right - body.Size.col); }
 				}
-				if (rect.PositionY < 0) { rect.PositionY -= rect.PositionY; }
-				else if (rect.Bottom > body.Size.row) {
-					if (rect.Height >= body.Size.row) { rect.PositionY = 0; }
-					else { rect.PositionY -= (short)(rect.Bottom - body.Size.row); }
+				if (viewRect.PositionY < 0) { viewRect.PositionY -= viewRect.PositionY; }
+				else if (viewRect.Bottom > body.Size.row) {
+					if (viewRect.Height >= body.Size.row) { viewRect.PositionY = 0; }
+					else { viewRect.PositionY -= (short)(viewRect.Bottom - body.Size.row); }
 				}
 			}
-			public void ScrollRenderWindow(Coord direction, ConsoleBody body) {
-				rect.Position += direction;
-				UpdateRenderWindow(body);
+			public void ScrollRenderWindow(Coord direction) {
+				viewRect.Position += direction;
+				UpdateRenderWindow();
+			}
+			public static Vector2 TextAreaSize(UnityConsole console) {
+				return (console.inputField?.textViewport ?? console.text.GetComponent<RectTransform>()).rect.size;
+			}
+			public bool NeedsCalculation(UnityConsole console) {
+				return windowSizing == WindowSizing.AutoCalculateViewRectangle &&
+					(fontSizeCalculated != console.text.fontSize || TextAreaSize(console) != sizeCalculated);
+			}
+			public void DoCalculation(UnityConsole console, DisplayCalculations calc) {
+				if (calc.size.Y > 1) {
+					fontSizeCalculated = console.text.fontSize;
+					sizeCalculated = TextAreaSize(console);
+				}
+				Vector2 ideal = calc.CalculateIdealSize();
+				viewRect.Size = new Coord((short)ideal.x+1, (short)ideal.y+1);
 			}
 		}
-		public DisplayWindowSettings window = new DisplayWindowSettings();
+		public DisplayWindowSettings Window = new DisplayWindowSettings();
 		public void ScrollRenderWindow(Coord direction) {
-			window.ScrollRenderWindow(direction, body);
+			Window.ScrollRenderWindow(direction);
 			textNeedsRefresh = true;
 		}
 		internal ConsoleBody body = new ConsoleBody();
@@ -117,19 +144,17 @@ namespace NonStandard.Cli {
 		public ColorRGBA GetConsoleColor(int code, bool foreground) {
 			if(code == Col.DefaultColorIndex) { code = foreground ? body.defaultColors.fore : body.defaultColors.back; }
 			//if(code < 0 || code >= colorSettings.ConsoleColorPalette.Count) {
-			//	Show.Log("wtf is " + code + "? max is "+ colorSettings.ConsoleColorPalette.Count);
+			//	Show.Log(code + "? max is "+ colorSettings.ConsoleColorPalette.Count);
 			//}
 			return colorSettings.ConsoleColorPalette[code];
 		}
 		public Coord Cursor {
 			get => body.Cursor;
 			set {
-				//bool cursorInWindow = window.rect.Contains(body.Cursor);
 				body.Cursor = value;
 				cursor.position = body.Cursor;
-				//if (cursorInWindow && !window.rect.Contains(body.Cursor)) {
-				if (window.followCursor == DisplayWindowSettings.FollowBehavior.Yes) {
-					window.rect.MoveToContain(body.Cursor);
+				if (Window.followCursor == DisplayWindowSettings.FollowBehavior.Yes) {
+					Window.viewRect.MoveToContain(body.Cursor);
 				}
 				cursor.RefreshCursorPosition(this);
 				textNeedsRefresh = true;
@@ -139,15 +164,15 @@ namespace NonStandard.Cli {
 		/// <summary>
 		/// -1 means dynamic
 		/// </summary>
-		public Coord WindowSize { get => window.WindowSize; set => window.WindowSize = value; }
-		public int WindowHeight { get => window.WindowHeight; set => window.WindowHeight = value; }
-		public int WindowWidth { get => window.WindowWidth; set => window.WindowWidth= value; }
+		public Coord WindowSize { get => Window.Size; set => Window.Size = value; }
+		public int WindowHeight { get => Window.Height; set => Window.Height = value; }
+		public int WindowWidth { get => Window.Width; set => Window.Width= value; }
 		public ConsoleColor ForegoundColor { get => body.currentColors.Fore; set => body.currentColors.Fore = value; }
 		public ConsoleColor BackgroundColor { get => body.currentColors.Back; set => body.currentColors.Back = value; }
 		public byte ForeColor { get => body.currentColors.fore; set => body.currentColors.fore = value; }
 		public byte BackColor { get => body.currentColors.back; set => body.currentColors.back = value; }
-		public int BufferHeight => window.bufferSize.Y;
-		public int BufferWidth => window.bufferSize.X;
+		public int BufferHeight => bufferSize.Y;
+		public int BufferWidth => bufferSize.X;
 		public int CursorLeft { get => body.CursorLeft; set => body.CursorLeft = value; }
 		public int CursorTop { get => body.CursorTop; set => body.CursorTop = value; }
 		public int CursorSize {
@@ -176,6 +201,7 @@ namespace NonStandard.Cli {
 		public void ResetColor() { body.currentColors = body.defaultColors; }
 		private void Awake() {
 			colorSettings.FillInDefaultPalette();
+			Window.body = body;
 		}
 
 		public TMP_Text Text => inputField?.textComponent ?? text;
@@ -208,18 +234,6 @@ namespace NonStandard.Cli {
 			brt.anchorMax = rt.anchorMax;
 			brt.offsetMin = rt.offsetMin;
 			brt.offsetMax = rt.offsetMax;
-
-			Write("Hello ");
-			body.currentColors.Fore = ConsoleColor.Red;
-			Write("World");
-			body.currentColors.Fore = ConsoleColor.Blue;
-			Write("!\n");
-			body.currentColors.Fore = ConsoleColor.Gray;
-			Write("and now I test the very long\n" +// strings in the command line console. We shall see how the wrapping\n"+
-				"and multiple\n" +
-				"lines are handled\n" +
-				"....");
-			body.RestartWriteCursor();
 		}
 		public void Update() {
 			if(cursor.position != body.Cursor) {
@@ -233,9 +247,16 @@ namespace NonStandard.Cli {
 		List<Tile> foreTile = new List<Tile>(), backTile = new List<Tile>();
 		private bool textNeedsRefresh = false;
 		public void RefreshText() {
-			CoordRect limit = window.Limit;
+			CoordRect limit = Window.Limit;
 			CalculateText(body, limit, foreTile, true, colorSettings.foregroundAlpha);
-			TransferToTMP(true, foreTile);
+			DisplayCalculations calc = null;
+			if (Window.NeedsCalculation(this)) {
+				calc = new DisplayCalculations(this);
+			}
+			TransferToTMP(true, foreTile, calc);
+			if (calc != null) {
+				Window.DoCalculation(this, calc);
+			}
 			if (charBack) {
 				CalculateText(body, limit, backTile, false, colorSettings.backgroundAlpha);
 				TransferToTMP(false, backTile);
@@ -258,7 +279,7 @@ namespace NonStandard.Cli {
 			//window.rect.MoveToContain(body.Cursor);
 			if (body.Size != oldSize) {
 				//Show.Log("window update");
-				window.UpdateRenderWindow(body);
+				Window.UpdateRenderWindow();
 			}
 			textNeedsRefresh = true;
 		}
@@ -311,11 +332,49 @@ namespace NonStandard.Cli {
 				}
 			}
 		}
-
-		public void TransferToTMP(bool foreground, List<Tile> tiles) {
+		public class DisplayCalculations {
+			public DisplayCalculations(UnityConsole console) {
+				rt = console.inputField?.textViewport ?? console.text.GetComponent<RectTransform>();
+			}
+			public RectTransform rt;
+			public Coord size = Coord.Zero;
+			public int currentLineWidth;
+			public Vector2 min, max;
+			public void CalculateVertices(Vector3[] verts) {
+				min = max = verts[0];
+				Vector3 v;
+				for (int i = 0; i < verts.Length; ++i) {
+					v = verts[i];
+					if (v.x < min.x) min.x = v.x;
+					if (v.y < min.y) min.y = v.y;
+					if (v.x > max.x) max.x = v.x;
+					if (v.y > max.y) max.y = v.y;
+				}
+			}
+			public void StartCalculatingText() {
+				currentLineWidth = 0;
+				size = Coord.Zero;
+			}
+			public void UpdateTextCalculation(char c) {
+				if (currentLineWidth == 0) { ++size.Y; }
+				switch (c) {
+				case '\0': break;
+				case '\n': currentLineWidth = 0; break;
+				default: if (++currentLineWidth > size.X) { size.X = currentLineWidth; } break;
+				}
+			}
+			public Vector2 CalculateIdealSize() {
+				Vector2 totSize = (max - min);
+				Vector2 glyphSize = new Vector2(totSize.x / size.X, totSize.y / size.Y);
+				Vector2 maxInArea = new Vector2(rt.rect.width / glyphSize.x, rt.rect.height / glyphSize.y);
+				//Show.Log(maxInArea + " <-- " + glyphSize + " chars: " + size + "   sized: " + totSize + "   / " + rt.rect.width + "," + rt.rect.height);
+				return maxInArea;
+			}
+		}
+		public void TransferToTMP(bool foreground, List<Tile> tiles, DisplayCalculations calc = null) {
 			TMP_Text label;
 			char[] letters = new char[tiles.Count];
-			for(int i = 0; i < letters.Length; ++i) { letters[i] = tiles[i].letter; }
+			for (int i = 0; i < letters.Length; ++i) { letters[i] = tiles[i].letter; }
 			string text = new string(letters);
 			if (foreground) {
 				if (inputField) {
@@ -337,12 +396,20 @@ namespace NonStandard.Cli {
 			Color32 color;
 			float height;
 			bool vertChange = false, colorChange = false;
+
+			//StringBuilder sb = new StringBuilder();
 			for (int m = 0; m < label.textInfo.meshInfo.Length; ++m) {
 				Color32[] vertColors = label.textInfo.meshInfo[m].colors32;
 				Vector3[] verts = label.textInfo.meshInfo[m].vertices;
+				calc?.CalculateVertices(verts);
+				calc?.StartCalculatingText();
 				for (int i = 0; i < chars.Length; ++i) {
 					TMP_CharacterInfo cinfo = chars[i];
-					cinfo.xAdvance = 1;
+					// stop at the zero-width breaking space
+					if (cinfo.character == '\u200B') break;
+					calc?.UpdateTextCalculation(cinfo.character);
+					//if (cinfo.isVisible) sb.Append(cinfo.character);
+					//else sb.Append("(" + ((int)cinfo.character) + ")");
 					if (!cinfo.isVisible) continue;
 					int vertexIndex = cinfo.vertexIndex;
 					if(i == cursor.index) {
@@ -365,6 +432,7 @@ namespace NonStandard.Cli {
 					}
 				}
 			}
+			//Show.Log(sb);
 			if (colorChange) { label.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32); }
 			if (vertChange) { label.UpdateVertexData(TMP_VertexDataUpdateFlags.Vertices); }
 		}

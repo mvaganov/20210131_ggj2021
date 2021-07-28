@@ -80,6 +80,7 @@ namespace NonStandard.Cli {
 					currentColors.back = (b == Col.DefaultColorIndex) ? defaultColors.back : b;
 					continue;
 				case '\b':
+					//if(lines.Count == 0) { printC = false; break; }
 					line = lines[writeCursor.row];
 					// TODO check if there is a bunch of empty space and a tab. if so, delete all the way to the tab, including the tab
 					bool needToRediscover = false;

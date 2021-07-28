@@ -41,13 +41,12 @@ namespace NonStandard.Inputs {
 			public static KCode softwareEmulatedPress;
 			[NonSerialized] public ulong lastKeyHeldTime = 0;
 			[NonSerialized] public ulong heldDuration = 0;
-			public const ulong initialDelay = 1000;
-			public const ulong repeatDelay = 100;
+			public ulong initialDelay = 750;
+			public ulong repeatDelay = 50;
 			public KeyRepeatRate() { instance = this; }
 			public void Update() {
 				if (softwareEmulatedPress != KCode.None) { softwareEmulatedPress = KCode.None; }
 				if (heldKeys.Count > 0) {
-					StringBuilder sb = new StringBuilder();
 					KCode thisHeldKey = KCode.None;
 					foreach (KCode k in heldKeys) { thisHeldKey = k; break; }
 					heldKeys.Clear();

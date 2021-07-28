@@ -134,7 +134,7 @@ GameObject:
   - component: {fileID: 70103810}
   - component: {fileID: 70103809}
   m_Layer: 5
-  m_Name: Canvas
+  m_Name: World Space
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -207,14 +207,14 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 70103808}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 10}
   m_LocalScale: {x: 0.05, y: 0.05, z: 1}
   m_Children:
   - {fileID: 404899387}
   - {fileID: 167637151}
-  m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_Father: {fileID: 1566316589}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -285,7 +285,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &167637150
 GameObject:
@@ -1125,7 +1125,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 7
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &745309410
 MonoBehaviour:
@@ -1438,7 +1438,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4550302886921004, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_RootOrder
-      value: 6
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 4550302886921004, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -1541,9 +1541,8 @@ GameObject:
   - component: {fileID: 1109693648}
   - component: {fileID: 1109693647}
   - component: {fileID: 1109693646}
-  - component: {fileID: 1109693650}
   m_Layer: 5
-  m_Name: Console Screenspace Canvas
+  m_Name: Screen Space - Overlay
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1620,28 +1619,14 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 9
+  m_Father: {fileID: 1566316589}
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!114 &1109693650
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1109693645}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 78a45a8d0e6ebf94380ee15da45acc23, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  KeyBinds: []
-  AxisBinds: []
 --- !u!1 &1357944678
 GameObject:
   m_ObjectHideFlags: 0
@@ -6394,7 +6379,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 8
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1382116206
 GameObject:
@@ -6488,7 +6473,7 @@ Transform:
   m_Children:
   - {fileID: 326009040}
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1566316587
 GameObject:
@@ -6535,9 +6520,11 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
+  m_Children:
+  - {fileID: 70103812}
+  - {fileID: 1109693649}
   m_Father: {fileID: 0}
-  m_RootOrder: 10
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1566316590
 MonoBehaviour:
@@ -6578,6 +6565,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b067f2105dd3be4fb6bfa3e487bd833, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  KeyBinds: []
+  AxisBinds: []
   isMain: 1
   activeOnStart: 0
   selectableAsMain: 1
@@ -7018,24 +7007,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inputField: {fileID: 404899388}
+  bufferSize:
+    row: 0
+    col: 0
   cursor:
     cursorVisible: 1
     cursor: {fileID: 167637150}
     position:
       row: 0
       col: 0
-  window:
-    bufferSize:
-      row: 0
-      col: 0
-    UseWindow: 1
-    rect:
+  Window:
+    windowSizing: 2
+    viewRect:
       min:
         row: 0
         col: 0
       max:
-        row: 8
-        col: 30
+        row: 16383
+        col: 16383
     followCursor: 1
   colorSettings:
     foregroundAlpha: 1
@@ -7096,18 +7085,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inputField: {fileID: 0}
+  bufferSize:
+    row: 0
+    col: 0
   cursor:
     cursorVisible: 1
     cursor: {fileID: 0}
     position:
       row: 0
       col: 0
-  window:
-    bufferSize:
-      row: 0
-      col: 0
-    UseWindow: 1
-    rect:
+  Window:
+    windowSizing: 2
+    viewRect:
       min:
         row: 0
         col: 0
