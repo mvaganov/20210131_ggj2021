@@ -6565,14 +6565,67 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b067f2105dd3be4fb6bfa3e487bd833, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  KeyBinds: []
+  KeyBinds:
+  - name: activate console
+    priority: 1000
+    disable: 0
+    eventAlwaysTriggerable: 0
+    keyCombinations:
+    - modifiers: 
+      key: 96
+    keyEvent:
+      onPress:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 1566316592}
+            m_MethodName: SetScreenSpaceCanvas
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: 
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+      onHold:
+        m_PersistentCalls:
+          m_Calls: []
+      onRelease:
+        m_PersistentCalls:
+          m_Calls: []
+  - name: deactivate console
+    priority: 1000
+    disable: 0
+    eventAlwaysTriggerable: 0
+    keyCombinations:
+    - modifiers: 
+      key: 27
+    keyEvent:
+      onPress:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 1566316592}
+            m_MethodName: SetWorldSpaceCanvas
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: 
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+      onHold:
+        m_PersistentCalls:
+          m_Calls: []
+      onRelease:
+        m_PersistentCalls:
+          m_Calls: []
   AxisBinds: []
   isMain: 1
   activeOnStart: 0
   selectableAsMain: 1
-  keyUsedTo:
-    Activate: 96
-    Deactivate: 27
   callbacks:
     enable: 1
     WhenThisActivates:
@@ -6581,7 +6634,8 @@ MonoBehaviour:
     WhenThisDeactivates:
       m_PersistentCalls:
         m_Calls: []
-  _screenSpaceCanvas: {fileID: 1109693648}
+  _screenSpaceCanvas: {fileID: 0}
+  _worldSpaceCanvas: {fileID: 0}
 --- !u!114 &1566316593
 MonoBehaviour:
   m_ObjectHideFlags: 0

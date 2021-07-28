@@ -206,7 +206,7 @@ namespace NonStandard.Cli {
 
 		public TMP_Text Text => inputField?.textComponent ?? text;
 
-		void Start() {
+		public RectTransform GetUiTransform() {
 			if (inputField == null) { inputField = GetComponentInChildren<TMP_InputField>(); }
 			if (!inputField) {
 				text = GetComponentInChildren<TMP_Text>();
@@ -215,6 +215,12 @@ namespace NonStandard.Cli {
 				inputField.readOnly = true;
 				inputField.richText = false;
 			}
+			if (inputField != null) { return inputField.GetComponent<RectTransform>(); }
+			return text.GetComponent<RectTransform>();
+		}
+
+		void Start() {
+			GetUiTransform();
 			TMP_Text pTmp = Text;
 			GameObject backgroundObject = Instantiate(Text.gameObject);
 			UnityConsole extra = backgroundObject.GetComponent<UnityConsole>();

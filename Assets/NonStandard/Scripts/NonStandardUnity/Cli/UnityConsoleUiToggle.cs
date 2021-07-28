@@ -11,30 +11,50 @@ public class UnityConsoleUiToggle : UserInput
 	public bool isMain = true; // TODO
 	public bool activeOnStart = false; // TODO
 	public bool selectableAsMain = true; // TODO
-	[System.Serializable] public class KeyUsedTo { public KCode Activate = KCode.BackQuote, Deactivate = KCode.Escape; }
-	public KeyUsedTo keyUsedTo = new KeyUsedTo(); // TODO
-	[System.Serializable]
-	public class Callbacks {
+	[System.Serializable] public class Callbacks {
 		public bool enable = true;
 		public UnityEvent WhenThisActivates, WhenThisDeactivates;
 	}
 	public Callbacks callbacks = new Callbacks(); // TODO
 	RectTransform uiTransform;
 	public Canvas _screenSpaceCanvas;
-	Canvas _originalCanvas;
+	public Canvas _worldSpaceCanvas;
+	private void Reset() {
+		KeyBind(KCode.BackQuote, KModifier.None, "activate console", nameof(SetScreenSpaceCanvas), null, this);
+		KeyBind(KCode.Escape, KModifier.None, "deactivate console", nameof(SetWorldSpaceCanvas), null, this);
+	}
 	public Canvas ScreenSpaceCanvas => _screenSpaceCanvas ? _screenSpaceCanvas : _screenSpaceCanvas = GetScreenSpaceCanvas(null);
 	public void SetScreenSpaceCanvas() {
-		// generate the full screen UI
-		Canvas c = ScreenSpaceCanvas;
-		uiTransform.SetParent(c.transform, false);
+		// TODO also activate console input
+		uiTransform.SetParent(ScreenSpaceCanvas.transform, false);
 	}
 	public void SetWorldSpaceCanvas() {
-		Canvas c = _originalCanvas;
-		uiTransform.SetParent(c.transform, false);
+		// TODO also deactivate console input
+		uiTransform.SetParent(_worldSpaceCanvas.transform, false);
 	}
+	private Canvas FindCanvas(RenderMode mode) {
+		Canvas[] canvases = GetComponentsInChildren<Canvas>();
+		for (int i = 0; i < canvases.Length; ++i) {
+			if (canvases[i].renderMode == mode) return canvases[i];
+		}
+		return null;
+	}
+
 	private void Awake() {
-		uiTransform = GetComponent<RectTransform>();
-		_originalCanvas = GetComponentInParent<Canvas>();
+		UnityConsole console = GetComponent<UnityConsole>();
+		uiTransform = console.GetUiTransform();
+		if (_screenSpaceCanvas == null) {
+			Canvas c = uiTransform.parent.GetComponent<Canvas>();
+			if (c.renderMode == RenderMode.ScreenSpaceOverlay) { _screenSpaceCanvas = c; } else {
+				_screenSpaceCanvas = FindCanvas(RenderMode.ScreenSpaceOverlay);
+			}
+		}
+		if (_worldSpaceCanvas == null) {
+			Canvas c = uiTransform.parent.GetComponent<Canvas>();
+			if (c.renderMode == RenderMode.WorldSpace) { _worldSpaceCanvas = c; } else {
+				_worldSpaceCanvas = FindCanvas(RenderMode.WorldSpace);
+			}
+		}
 	}
 	private void Start() {
 		if (activeOnStart) { SetScreenSpaceCanvas(); }
