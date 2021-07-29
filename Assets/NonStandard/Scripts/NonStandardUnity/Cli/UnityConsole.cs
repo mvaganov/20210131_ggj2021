@@ -10,7 +10,12 @@ namespace NonStandard.Cli {
 		public TMP_InputField inputField;
 		TMP_Text text;
 		TMP_Text charBack;
-		public Coord bufferSize;
+		List<Tile> foreTile = new List<Tile>(), backTile = new List<Tile>();
+		private bool textNeedsRefresh = false;
+		public CursorSettings cursor = new CursorSettings();
+		public DisplayWindowSettings Window = new DisplayWindowSettings();
+		internal ConsoleBody body = new ConsoleBody();
+		private List<byte> _colorStack = new List<byte>();
 		[System.Serializable] public class CursorSettings {
 			public bool cursorVisible = true;
 			public GameObject cursor;
@@ -39,7 +44,6 @@ namespace NonStandard.Cli {
 				cursorMeshPosition[3] = verts[vertexIndex + 3];
 			}
 		}
-		public CursorSettings cursor = new CursorSettings();
 		[System.Serializable] public class DisplayWindowSettings {
 			public enum WindowSizing { Unconstrained, UseStaticViewRectangle, AutoCalculateViewRectangle }
 			internal ConsoleBody body;
@@ -90,20 +94,21 @@ namespace NonStandard.Cli {
 					(fontSizeCalculated != console.text.fontSize || TextAreaSize(console) != sizeCalculated);
 			}
 			public void DoCalculation(UnityConsole console, DisplayCalculations calc) {
-				if (calc.size.Y > 1) {
+				Vector2 ideal = calc.CalculateIdealSize();
+				viewRect.Size = new Coord((short)ideal.x, (short)ideal.y);
+				UpdateRenderWindow();
+				// if the calculated values are reasonable limits
+				if (ideal.x < Coord.Max.X-2 || ideal.y < Coord.Max.Y - 2) {
+					// cache these calculations as valid, which means they won't be recalculated as much later
 					fontSizeCalculated = console.text.fontSize;
 					sizeCalculated = TextAreaSize(console);
 				}
-				Vector2 ideal = calc.CalculateIdealSize();
-				viewRect.Size = new Coord((short)ideal.x+1, (short)ideal.y+1);
 			}
 		}
-		public DisplayWindowSettings Window = new DisplayWindowSettings();
 		public void ScrollRenderWindow(Coord direction) {
 			Window.ScrollRenderWindow(direction);
 			textNeedsRefresh = true;
 		}
-		internal ConsoleBody body = new ConsoleBody();
 		[System.Serializable] public class ColorSettings {
 			[Range(0, 1)] public float foregroundAlpha = 1f;
 			[Range(0, 1)] public float backgroundAlpha = 0.5f;
@@ -161,18 +166,14 @@ namespace NonStandard.Cli {
 			}
 		}
 
-		/// <summary>
-		/// -1 means dynamic
-		/// </summary>
-		public Coord WindowSize { get => Window.Size; set => Window.Size = value; }
 		public int WindowHeight { get => Window.Height; set => Window.Height = value; }
 		public int WindowWidth { get => Window.Width; set => Window.Width= value; }
 		public ConsoleColor ForegoundColor { get => body.currentColors.Fore; set => body.currentColors.Fore = value; }
 		public ConsoleColor BackgroundColor { get => body.currentColors.Back; set => body.currentColors.Back = value; }
 		public byte ForeColor { get => body.currentColors.fore; set => body.currentColors.fore = value; }
 		public byte BackColor { get => body.currentColors.back; set => body.currentColors.back = value; }
-		public int BufferHeight => bufferSize.Y;
-		public int BufferWidth => bufferSize.X;
+		public int BufferHeight => body.Size.Y;
+		public int BufferWidth => body.Size.X;
 		public int CursorLeft { get => body.CursorLeft; set => body.CursorLeft = value; }
 		public int CursorTop { get => body.CursorTop; set => body.CursorTop = value; }
 		public int CursorSize {
@@ -189,7 +190,6 @@ namespace NonStandard.Cli {
 				_colorStack.RemoveAt(_colorStack.Count - 1);
 			}
 		}
-		private List<byte> _colorStack = new List<byte>();
 
 		public struct Tile {
 			public Color32 color;
@@ -250,8 +250,6 @@ namespace NonStandard.Cli {
 			}
 		}
 
-		List<Tile> foreTile = new List<Tile>(), backTile = new List<Tile>();
-		private bool textNeedsRefresh = false;
 		public void RefreshText() {
 			CoordRect limit = Window.Limit;
 			CalculateText(body, limit, foreTile, true, colorSettings.foregroundAlpha);
@@ -371,9 +369,14 @@ namespace NonStandard.Cli {
 			}
 			public Vector2 CalculateIdealSize() {
 				Vector2 totSize = (max - min);
-				Vector2 glyphSize = new Vector2(totSize.x / size.X, totSize.y / size.Y);
-				Vector2 maxInArea = new Vector2(rt.rect.width / glyphSize.x, rt.rect.height / glyphSize.y);
-				//Show.Log(maxInArea + " <-- " + glyphSize + " chars: " + size + "   sized: " + totSize + "   / " + rt.rect.width + "," + rt.rect.height);
+				Rect rect = rt.rect;
+				Vector2 maxInArea = new Vector2(Coord.Max.X-1, Coord.Max.Y-1);
+				// only limit the size if there is not enough space
+				if (totSize.x > rect.width || totSize.y > rect.height) {
+					Vector2 glyphSize = new Vector2(totSize.x / size.X, totSize.y / size.Y);
+					maxInArea = new Vector2(rect.width / glyphSize.x, rect.height / glyphSize.y - 1);
+					//Show.Log(maxInArea + " <-- " + glyphSize + " chars: " + size + "   sized: " + totSize + "   / " + rt.rect.width + "," + rt.rect.height);
+				}
 				return maxInArea;
 			}
 		}

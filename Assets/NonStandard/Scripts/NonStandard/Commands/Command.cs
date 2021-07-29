@@ -28,6 +28,7 @@ namespace NonStandard.Commands {
 				this.src = source;
 				this.print = printFunction;
 			}
+			public Arguments GetArgs() { return Arguments.Parse(cmd, tok, src); }
 		}
 
 		public delegate void Handler(Exec executionContext);

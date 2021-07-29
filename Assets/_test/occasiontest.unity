@@ -6486,11 +6486,12 @@ GameObject:
   - component: {fileID: 1566316589}
   - component: {fileID: 1566316588}
   - component: {fileID: 1566316595}
+  - component: {fileID: 1566316596}
   - component: {fileID: 1566316594}
   - component: {fileID: 1566316593}
+  - component: {fileID: 1566316590}
   - component: {fileID: 1566316592}
   - component: {fileID: 1566316591}
-  - component: {fileID: 1566316590}
   m_Layer: 0
   m_Name: Console
   m_TagString: Untagged
@@ -6538,8 +6539,78 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad42cc2eeaef6ad49853a2a5922cdff4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  newCommands: []
-  whenToUse: 0
+  whenToUse: 2
+  newCommands:
+  - name: exit
+    description: ends this program
+    devState: 0
+    arguments: []
+    commandExecution:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1566316593}
+          m_MethodName: Cmd_Exit
+          m_Mode: 0
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: 
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - name: help
+    description: prints this help text
+    devState: 0
+    arguments:
+    - name: command
+      id: -c
+      description: which specific command to get help info for
+      devState: 0
+      required: 0
+      orderedArgument: 0
+      valueType: 1
+      defaultValue: 
+    commandExecution:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1566316593}
+          m_MethodName: Cmd_Help
+          m_Mode: 0
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: 
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - name: pause
+    description: pauses the game clock
+    devState: 0
+    arguments:
+    - name: unpause
+      id: 0
+      description: unpauses the game clock
+      devState: 0
+      required: 0
+      orderedArgument: 0
+      valueType: 0
+      defaultValue: 
+    commandExecution:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1566316593}
+          m_MethodName: Cmd_Pause
+          m_Mode: 0
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: 
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
 --- !u!114 &1566316591
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6648,11 +6719,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04d22b82a813ed843aeff346816b7605, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  commandEvents:
-    firstCommands: 
-    WhenCommandRuns:
-      m_PersistentCalls:
-        m_Calls: []
+  firstCommands: 
+  WhenCommandRuns:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &1566316594
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7061,9 +7131,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inputField: {fileID: 404899388}
-  bufferSize:
-    row: 0
-    col: 0
   cursor:
     cursorVisible: 1
     cursor: {fileID: 167637150}
@@ -7105,6 +7172,18 @@ MonoBehaviour:
   charSettings:
     EmptyChar: 32
     BackgroundChar: 9608
+--- !u!114 &1566316596
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1566316587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66f8a1f6a4f299b4ba2786a7d9aa720a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1794688009
 GameObject:
   m_ObjectHideFlags: 0
@@ -7139,9 +7218,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inputField: {fileID: 0}
-  bufferSize:
-    row: 0
-    col: 0
   cursor:
     cursorVisible: 1
     cursor: {fileID: 0}

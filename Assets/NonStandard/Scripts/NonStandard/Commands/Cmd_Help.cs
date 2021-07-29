@@ -98,7 +98,10 @@ namespace NonStandard.Commands {
 				e.print.Invoke(line);
 			}
 		}
-		protected void Cmd_Help_Handler(Command.Exec e) {
+		public void Cmd_Help_Handler(Command.Exec e) {
+			Cmd_Help_Handler_General(e, commandLookup);
+		}
+		public static void Cmd_Help_Handler_General(Command.Exec e, Dictionary<string,Command> commandLookup) {
 			Arguments args = Arguments.Parse(e.cmd, e.tok, e.src);
 			//Show.Log(args);
 			if (!args.TryGet("-c", out string commandName)) {
@@ -108,11 +111,17 @@ namespace NonStandard.Commands {
 				Cmd_Help.Command_Handler(e, commandName, cmd);
 			}
 		}
-		[CommandMaker] protected Command GenerateHelpCommand() {
-			return new Command("help", Cmd_Help_Handler, new Argument[] {
+		public static Command Cmd_GenerateHelpCommand_static() {
+			return new Command("help", null, new Argument[] {
 				new Argument("-c", "command", "which specific command to get help info for", type:typeof(string), order:1),
 				//new Argument("-n", "numbers", "test parameter, an array of integers", type:typeof(int[])),
 			}, "prints this help text");
+		}
+		//[CommandMaker] // TODO remove the CommandMaker attribute?
+		public Command Cmd_GenerateHelpCommand() {
+			Command cmd = Cmd_GenerateHelpCommand_static();
+			cmd.handler = Cmd_Help_Handler;
+			return cmd;
 		}
 	}
 }
