@@ -56,7 +56,7 @@ public partial class UnityConsoleCommander : MonoBehaviour
 		Command helpCmd = Commander.Cmd_GenerateHelpCommand_static();
 		CommandEntry[] DefaultCommandEntries = new CommandEntry[] {
 			new CommandEntry("exit", "ends this program", nameof(Cmd_Exit), this),
-			new CommandEntry(helpCmd.Name, helpCmd.help, nameof(Cmd_Help), this, ArgumentEntry.GetEntriesFromRealArgs(helpCmd.arguments)),
+			new CommandEntry(helpCmd, nameof(Cmd_Help), this),
 			new CommandEntry("pause", "pauses the game clock", nameof(Cmd_Pause), this, new ArgumentEntry[] { 
 				new ArgumentEntry("unpause","0","unpauses the game clock",valueType:ArgumentEntry.ValueType.Flag),
 			}),
@@ -78,16 +78,7 @@ public partial class UnityConsoleCommander : MonoBehaviour
 		public void AddToCommander(NonStandard.Commands.Commander cmdr) {
 			Command cmd = cmdr.GetCommand(name);
 			if (cmd != null && cmd.help == description) { return; }
-			Argument[] args = new Argument[arguments.Length];
-			int orderedArgumentSlotsFilled = 0;
-			for(int i = 0; i < args.Length; ++i) {
-				args[i] = arguments[i].GenerateProperArgument();
-				if (arguments[i].orderedArgument) {
-					args[i].order = ++orderedArgumentSlotsFilled;
-				}
-			}
-			cmdr.AddCommand(new Command(name, commandExecution.Invoke, args, description, 
-				devState==DevelopmentState.Deprecated, devState == DevelopmentState.Preview));
+			cmdr.AddCommand(GenerateProperCommand());
 		}
 		public void RemoveFromCommander(NonStandard.Commands.Commander cmdr) {
 			Command cmd = cmdr.GetCommand(name);
@@ -99,6 +90,26 @@ public partial class UnityConsoleCommander : MonoBehaviour
 			this.name = name; this.description = description;
 			EventBind.On(commandExecution, functionTarget, functionName);
 			this.arguments = arguments; this.devState = devState;
+		}
+		public Command GenerateProperCommand() {
+			Argument[] args = new Argument[arguments.Length];
+			int orderedArgumentSlotsFilled = 0;
+			for (int i = 0; i < args.Length; ++i) {
+				args[i] = arguments[i].GenerateProperArgument();
+				if (arguments[i].orderedArgument) {
+					args[i].order = ++orderedArgumentSlotsFilled;
+				}
+			}
+			return new Command(name, commandExecution.Invoke, args, description,
+				devState == DevelopmentState.Deprecated, devState == DevelopmentState.Preview);
+		}
+		public CommandEntry(Command c, string functionName, object functionTarget) {
+			name = c.Name; description = c.help;
+			EventBind.On(commandExecution, functionTarget, functionName);
+			arguments = ArgumentEntry.GetEntriesFromRealArgs(c.arguments);
+			if (c.deprecated) { devState = DevelopmentState.Deprecated; }
+			else if (c.preview) { devState = DevelopmentState.Preview; }
+			else { devState = DevelopmentState.Normal; }
 		}
 	}
 	[System.Serializable] public class ArgumentEntry {
