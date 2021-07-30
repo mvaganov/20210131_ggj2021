@@ -6,6 +6,7 @@ using NonStandard.Data.Parse;
 using NonStandard.Extension;
 using NonStandard.Utility;
 using System;
+using System.Text;
 using UnityEngine;
 using Commander = NonStandard.Commands.Commander;
 
@@ -20,7 +21,7 @@ public partial class UnityConsoleCommander : MonoBehaviour
 		commander.ParseCommand(new Commander.Instruction(text, this), console.Write, out Tokenizer t);
 		if (t?.errors?.Count > 0) {
 			console.PushForeColor(ConsoleColor.Red);
-			console.Write(t.ErrorString());
+			console.WriteLine(t.ErrorString());
 			Show.Log(t.ErrorString());
 			console.PopForeColor();
 		}
@@ -28,14 +29,15 @@ public partial class UnityConsoleCommander : MonoBehaviour
 	}
 	private void Start() {
 		if (!string.IsNullOrEmpty(firstCommands)) {
-			UnityConsoleInput consoleInput = GetComponent<UnityConsoleInput>();
-			consoleInput._pastedText = firstCommands;
+			//UnityConsoleInput consoleInput = GetComponent<UnityConsoleInput>();
+			//consoleInput._pastedText = firstCommands;
+			DoCommand(firstCommands);
 		}
 	}
 	public void Cmd_Exit(Command.Exec e) { PlatformAdjust.Exit(); }
 	public void Cmd_Pause(Command.Exec e) {
 		Arguments args = e.GetArgs();
-		Show.Log(args);
+		//Show.Log(args);
 		if (args.TryGet("0", out bool unpause)) {
 			GameClock.Instance().Unpause();
 		} else {
@@ -43,6 +45,17 @@ public partial class UnityConsoleCommander : MonoBehaviour
 		}
 	}
 	public void Cmd_Help(Command.Exec e) { commander.Cmd_Help_Handler(e); }
+	public void Cmd_Echo(Command.Exec e) {
+		UnityConsole console = GetComponent<UnityConsole>();
+		StringBuilder sb = new StringBuilder();
+		for(int i = 1; i < e.tok.tokens.Count; ++i) {
+			object result = e.tok.tokens[i].Resolve(e.tok, e.src, false);
+			if (result == null) { result = ""; }
+			if (!(result is string)) { result = result.StringifySmall(); }
+			sb.Append(result.ToString());
+		}
+		console.WriteLine(sb.ToString());
+	}
 #if UNITY_EDITOR
 	public void Reset() {
 		AddDefaultCommands();
@@ -55,6 +68,7 @@ public partial class UnityConsoleCommander : MonoBehaviour
 		}
 		Command helpCmd = Commander.Cmd_GenerateHelpCommand_static();
 		CommandEntry[] DefaultCommandEntries = new CommandEntry[] {
+			new CommandEntry("echo", "prints messages to the command line", nameof(Cmd_Echo), this),
 			new CommandEntry("exit", "ends this program", nameof(Cmd_Exit), this),
 			new CommandEntry(helpCmd, nameof(Cmd_Help), this),
 			new CommandEntry("pause", "pauses the game clock", nameof(Cmd_Pause), this, new ArgumentEntry[] { 

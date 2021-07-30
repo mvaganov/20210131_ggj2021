@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using NonStandard.Extension;
+using NonStandard.Procedure;
 
 namespace NonStandard.Cli {
 	public class UnityConsole : MonoBehaviour {
@@ -42,6 +43,13 @@ namespace NonStandard.Cli {
 				cursorMeshPosition[1] = verts[vertexIndex + 1];
 				cursorMeshPosition[2] = verts[vertexIndex + 2];
 				cursorMeshPosition[3] = verts[vertexIndex + 3];
+			}
+			public void Init(UnityConsole console) {
+				if (cursor != null) {
+					UnityConsoleCursor ucc = cursor.GetComponent<UnityConsoleCursor>();
+					if (ucc == null) { ucc = cursor.AddComponent<UnityConsoleCursor>(); }
+					ucc.Initialize(console.Text.fontSize);
+				}
 			}
 		}
 		[System.Serializable] public class DisplayWindowSettings {
@@ -104,6 +112,7 @@ namespace NonStandard.Cli {
 					sizeCalculated = TextAreaSize(console);
 				}
 			}
+			public void ResetWindowSize() { viewRect.Size = new Coord(Coord.Max.X - 1, Coord.Max.Y - 1); }
 		}
 		public void ScrollRenderWindow(Coord direction) {
 			Window.ScrollRenderWindow(direction);
@@ -130,12 +139,20 @@ namespace NonStandard.Cli {
 		public ColorSettings colorSettings = new ColorSettings();
 
 		public float FontSize {
-			get => inputField.pointSize;
-			set { inputField.pointSize = charBack.fontSize = value; }
+			get => inputField?.pointSize ?? Text.fontSize;
+			set {
+				if (inputField != null) {
+					inputField.pointSize = charBack.fontSize = value;
+				} else {
+					Text.fontSize = charBack.fontSize = value;
+				}
+			}
 		}
 		public void AddToFontSize(float value) {
 			FontSize += value;
 			if (FontSize < 1) { FontSize = 1; }
+			cursor.cursor?.GetComponent<UnityConsoleCursor>().ScaleToFontSize(FontSize);
+			RefreshText();
 		}
 
 		[System.Serializable] public class CharSettings {
@@ -226,11 +243,13 @@ namespace NonStandard.Cli {
 			UnityConsole extra = backgroundObject.GetComponent<UnityConsole>();
 			if (extra != null) { DestroyImmediate(extra); }
 			RectTransform brt = backgroundObject.GetComponent<RectTransform>() ?? backgroundObject.AddComponent<RectTransform>();
-			backgroundObject.transform.SetParent(pTmp.transform);
+			backgroundObject.transform.SetParent(pTmp.transform.parent);
+			if (pTmp.transform.parent != null) {
+				backgroundObject.transform.SetSiblingIndex(0); // put the background in the background
+			}
 			backgroundObject.transform.localPosition = Vector3.zero;
 			backgroundObject.transform.localScale = Vector3.one;
 			charBack = backgroundObject.GetComponent<TMP_Text>();
-			//charBack.geometrySortingOrder = (VertexSortingOrder)(-1);
 			charBack.fontMaterial.renderQueue -= 1;
 			if (inputField) {
 				inputField.targetGraphic.material.renderQueue -= 2;
@@ -240,6 +259,7 @@ namespace NonStandard.Cli {
 			brt.anchorMax = rt.anchorMax;
 			brt.offsetMin = rt.offsetMin;
 			brt.offsetMax = rt.offsetMax;
+			cursor.Init(this);
 		}
 		public void Update() {
 			if(cursor.position != body.Cursor) {

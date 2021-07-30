@@ -25,6 +25,9 @@ namespace NonStandard.Utility {
 		public static void On<T>(UnityEvent<T> @event, object target, string methodName) {
 			new EventBind(target, methodName).Bind(@event);
 		}
+		public static void On(UnityEvent @event, object target, string methodName) {
+			new EventBind(target, methodName).Bind(@event);
+		}
 		public void Bind<T>(UnityEvent<T> @event) {
 #if UNITY_EDITOR
 			UnityEventTools.AddPersistentListener(@event, GetAction<T>(target, setMethodName));

@@ -275,7 +275,8 @@ namespace NonStandard.Data.Parse {
 					e.tokenCount = tokens.Count - e.tokenStart;
 					ExtractContextAsSubTokenList(e);
 					if (e.parseRules != CodeRules.CommentLine) { // this is an error, unless it's a comment
-						errors.Add(new ParseError(tokens[i], rows, "missing closing token"));
+						errors.Add(new ParseError(tokens[i], rows, 
+							$"missing closing token after {e.GetBeginToken().ToString().StringifySmall()}"));
 					}
 					// close any unfinished contexts inside of this context too!
 					tokens = e.tokens;
