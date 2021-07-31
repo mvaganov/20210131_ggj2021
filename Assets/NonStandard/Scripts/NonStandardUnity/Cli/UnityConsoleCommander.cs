@@ -16,10 +16,12 @@ public partial class UnityConsoleCommander : MonoBehaviour
 	[TextArea(1, 10)] public string firstCommands;
 	public UnityEvent_string WhenCommandRuns;
 
-	public Commander commander = new Commander();
+	public bool useGlobalCommander = true;
+	private Commander _commander; //= new Commander();
+	public Commander CommanderInstance => _commander != null ? _commander : useGlobalCommander ? _commander = Commander.Instance : null;
 	public void DoCommand(string text) {
 		UnityConsole console = GetComponent<UnityConsole>();
-		commander.ParseCommand(new Commander.Instruction(text, this), console.Write, out Tokenizer t);
+		CommanderInstance.ParseCommand(new Commander.Instruction(text, this), console.Write, out Tokenizer t);
 		if (t?.errors?.Count > 0) {
 			console.PushForeColor(ConsoleColor.Red);
 			console.WriteLine(t.ErrorString());
@@ -45,7 +47,7 @@ public partial class UnityConsoleCommander : MonoBehaviour
 			GameClock.Instance().Pause();
 		}
 	}
-	public void Cmd_Help(Command.Exec e) { commander.Cmd_Help_Handler(e); }
+	public void Cmd_Help(Command.Exec e) { CommanderInstance.Cmd_Help_Handler(e); }
 	public void Cmd_Echo(Command.Exec e) {
 		UnityConsole console = GetComponent<UnityConsole>();
 		StringBuilder sb = new StringBuilder();

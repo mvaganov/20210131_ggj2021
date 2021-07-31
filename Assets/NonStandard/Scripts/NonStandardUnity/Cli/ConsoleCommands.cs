@@ -46,7 +46,7 @@ namespace NonStandard.Cli {
 			newCommands.Add(command);
 		}
 		public NonStandard.Commands.Commander GetCommander() {
-			return _commander != null ? _commander : _commander = GetComponent<UnityConsoleCommander>().commander;
+			return _commander != null ? _commander : _commander = GetComponent<UnityConsoleCommander>().CommanderInstance;
 		}
 		private void OnEnable() { if (whenToUse != Active.DoNotUseCommands) { UseTheseCommands = whenToUse; } }
 		private void OnDisable() { if (whenToUse == Active.UseOnlyIfComponentIsActive) { UseTheseCommands = whenToUse; } }
