@@ -66,20 +66,26 @@ namespace NonStandard.Commands {
 					line += " ";
 					Argument arg = args[i];
 					char open = '[', close = ']';
-					if (arg.order > 0 && arg.required) { open = '\0'; close = '\0'; }
 					if (arg.required) { open = '<'; close = '>'; }
+					if (arg.order > 0 && arg.required) { open = '\0'; close = '\0'; }
 					if (open != '\0') {
 						line += open;
 					}
 					if (arg.order <= 0 || arg.flag) {
+						if (arg.order > 0) {
+							line += colorOptional;
+						}
 						line += arg.id;
+						if (arg.order > 0) {
+							line += colorStd;
+						}
 						if (!arg.flag) { line += ' '; }
 					}
 					if (!arg.flag) {
 						line += $"{arg.Name}{colorType}({arg.valueType.ToString().SubstringAfterLast(".")}){colorArgument}";
 					}
 					if (close != '\0') {
-						line += $"{close}";
+						line += close;
 					}
 				}
 				e.print.Invoke(line + "\n");

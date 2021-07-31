@@ -6,6 +6,7 @@ using NonStandard.Data.Parse;
 using NonStandard.Extension;
 using NonStandard.Utility;
 using System;
+using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using Commander = NonStandard.Commands.Commander;
@@ -56,30 +57,44 @@ public partial class UnityConsoleCommander : MonoBehaviour
 		}
 		console.WriteLine(sb.ToString());
 	}
+	public void Cmd_Clear(Command.Exec e) {
+		UnityConsole console = GetComponent<UnityConsole>();
+		console.body.Clear();
+		console.Cursor = Coord.Zero;
+		console.Window.viewRect.Position = Coord.Zero;
+		console.Window.UpdatePosition();
+	}
 #if UNITY_EDITOR
 	public void Reset() {
 		AddDefaultCommands();
 	}
-	public void AddDefaultCommands() {
-		ConsoleCommands[] cc = GetComponents<ConsoleCommands>();
-		if(cc == null || cc.Length == 0) {
+	public static ConsoleCommands[] GetCommandsListing(Transform t) {
+		ConsoleCommands[] cc = t.GetComponents<ConsoleCommands>();
+		if (cc == null || cc.Length == 0) {
 			cc = new ConsoleCommands[1];
-			cc[0] = gameObject.AddComponent<ConsoleCommands>();
+			cc[0] = t.gameObject.AddComponent<ConsoleCommands>();
 		}
+		return cc;
+	}
+
+	public static void AddCommands(Transform t, IList<CommandEntry> commands) {
+		ConsoleCommands[] cc = GetCommandsListing(t);
+		for (int i = 0; i < commands.Count; ++i) {
+			SetCommmandEntry(commands[i], cc);
+		}
+	}
+	public void AddDefaultCommands() {
 		Command helpCmd = Commander.Cmd_GenerateHelpCommand_static();
 		CommandEntry[] DefaultCommandEntries = new CommandEntry[] {
 			new CommandEntry("echo", "prints messages to the command line", nameof(Cmd_Echo), this),
+			new CommandEntry("clear", "clears messages in the command line", nameof(Cmd_Clear), this),
 			new CommandEntry("exit", "ends this program", nameof(Cmd_Exit), this),
 			new CommandEntry(helpCmd, nameof(Cmd_Help), this),
 			new CommandEntry("pause", "pauses the game clock", nameof(Cmd_Pause), this, new ArgumentEntry[] { 
 				new ArgumentEntry("unpause","0","unpauses the game clock",valueType:ArgumentEntry.ValueType.Flag),
 			}),
 		};
-		for(int i = 0; i < DefaultCommandEntries.Length; ++i) {
-			CommandEntry e = DefaultCommandEntries[i];
-			CommandEntry found = GetEntry(e.name, cc);
-			if(found == null) { cc[0].newCommands.Add(e); }
-		}
+		AddCommands(transform, DefaultCommandEntries);
 	}
 #endif
 	public enum DevelopmentState { Normal, Deprecated, Preview }
@@ -194,11 +209,21 @@ public partial class UnityConsoleCommander : MonoBehaviour
 				devState==DevelopmentState.Deprecated, devState == DevelopmentState.Preview, IsFlag());
 		}
 	}
-	public CommandEntry GetEntry(string name, ConsoleCommands[] cc) {
+	public static CommandEntry GetCommandEntry(string name, ConsoleCommands[] cc) {
 		for (int i = 0; i < cc.Length; ++i) {
 			CommandEntry entry = cc[i].GetCommand(name);
 			if (entry != null) { return entry; }
 		}
 		return null;
+	}
+	public static void SetCommmandEntry(CommandEntry entry, ConsoleCommands[] cc) {
+		for (int i = 0; i < cc.Length; ++i) {
+			CommandEntry found = cc[i].GetCommand(entry.name);
+			if (found != null) {
+				cc[i].SetCommand(entry);
+				return;
+			}
+		}
+		cc[0].SetCommand(entry);
 	}
 }

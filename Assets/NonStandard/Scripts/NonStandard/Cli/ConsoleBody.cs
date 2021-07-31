@@ -29,9 +29,10 @@ namespace NonStandard.Cli {
 			set {
 				writeCursor = value;
 				Coord limit = size;
+				if(limit.row < 1) { limit.row = 1; }
 				writeCursor.row = writeCursor.row.Clamp((short)0, (short)(limit.row - 1));
 				if (!CursorAllowedInEmptyAreaInRow) {
-					limit.col = (short)(writeCursor.row < lines.Count ? lines[writeCursor.row].Count : 0);
+					limit.col = (short)(writeCursor.row < lines.Count && writeCursor.row >= 0 ? lines[writeCursor.row].Count : 0);
 				}
 				writeCursor.col = writeCursor.col.Clamp((short)0, limit.col);
 			}
@@ -110,6 +111,7 @@ namespace NonStandard.Cli {
 						writeCursor.col += (short)(line.Count + 1);
 						printC = false; // don't print, that will add a character to the end of the previous line
 					}
+					if (writeCursor.row < 0) { writeCursor.row = 0; }
 					if (IsAtOrBeforeStartingPoint()) {
 						printC = false;
 						//Show.Log("there's probably a better algorithm for this. "+ writeCursor+" should be at "+ WriteCursorStartingPoint);
@@ -125,6 +127,9 @@ namespace NonStandard.Cli {
 				while (writeCursor.row >= lines.Count) { lines.Add(new List<ConsoleTile>()); }
 				if (printC) {
 					ConsoleTile thisLetter = GetPrintable(c, out short letterWidth, out short cursorSkip);
+					if(writeCursor.row >= lines.Count || writeCursor.row < 0) {
+						throw new Exception("bad write cursor state "+writeCursor+" with "+lines.Count+" rows");
+					}
 					line = lines[writeCursor.row];
 					int endOfChange = writeCursor.col + letterWidth + cursorSkip;
 					for (int s = writeCursor.col; s < endOfChange; ++s) {

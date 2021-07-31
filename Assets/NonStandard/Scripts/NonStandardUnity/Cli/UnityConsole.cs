@@ -17,6 +17,8 @@ namespace NonStandard.Cli {
 		public DisplayWindowSettings Window = new DisplayWindowSettings();
 		internal ConsoleBody body = new ConsoleBody();
 		private List<byte> _colorStack = new List<byte>();
+
+		// TODO move this code into UnityConsoleCursor?
 		[System.Serializable] public class CursorSettings {
 			public bool cursorVisible = true;
 			public GameObject cursor;
@@ -78,7 +80,7 @@ namespace NonStandard.Cli {
 				get => (float) viewRect.Left / (body.Size.X - viewRect.Width);
 				set => viewRect.PositionX = (short)(value * (body.Size.X - viewRect.Width));
 			}
-			internal void UpdateRenderWindow() {
+			internal void UpdatePosition() {
 				if (viewRect.PositionX < 0) { viewRect.PositionX -= viewRect.PositionX; }
 				else if (viewRect.Right > body.Size.col) {
 					if (viewRect.Width >= body.Size.col) { viewRect.PositionX = 0; }
@@ -92,7 +94,7 @@ namespace NonStandard.Cli {
 			}
 			public void ScrollRenderWindow(Coord direction) {
 				viewRect.Position += direction;
-				UpdateRenderWindow();
+				UpdatePosition();
 			}
 			public static Vector2 TextAreaSize(UnityConsole console) {
 				return (console.inputField?.textViewport ?? console.text.GetComponent<RectTransform>()).rect.size;
@@ -104,7 +106,7 @@ namespace NonStandard.Cli {
 			public void DoCalculation(UnityConsole console, DisplayCalculations calc) {
 				Vector2 ideal = calc.CalculateIdealSize();
 				viewRect.Size = new Coord((short)ideal.x, (short)ideal.y);
-				UpdateRenderWindow();
+				UpdatePosition();
 				// if the calculated values are reasonable limits
 				if (ideal.x < Coord.Max.X-2 || ideal.y < Coord.Max.Y - 2) {
 					// cache these calculations as valid, which means they won't be recalculated as much later
@@ -303,7 +305,7 @@ namespace NonStandard.Cli {
 			//window.rect.MoveToContain(body.Cursor);
 			if (body.Size != oldSize) {
 				//Show.Log("window update");
-				Window.UpdateRenderWindow();
+				Window.UpdatePosition();
 			}
 			textNeedsRefresh = true;
 		}

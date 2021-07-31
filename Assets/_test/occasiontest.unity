@@ -212,7 +212,6 @@ RectTransform:
   m_LocalScale: {x: 0.05, y: 0.05, z: 1}
   m_Children:
   - {fileID: 404899387}
-  - {fileID: 167637151}
   m_Father: {fileID: 1566316589}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -286,130 +285,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &167637150
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 167637151}
-  m_Layer: 0
-  m_Name: cursor
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &167637151
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 167637150}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children:
-  - {fileID: 207174830}
-  m_Father: {fileID: 70103812}
-  m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &207174826
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 207174830}
-  - component: {fileID: 207174829}
-  - component: {fileID: 207174828}
-  - component: {fileID: 207174827}
-  m_Layer: 0
-  m_Name: bar
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!65 &207174827
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 207174826}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 0
-  serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!23 &207174828
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 207174826}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
---- !u!33 &207174829
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 207174826}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!4 &207174830
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 207174826}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -4.5, z: 0}
-  m_LocalScale: {x: 4.5, y: 1, z: 0.0625}
-  m_Children: []
-  m_Father: {fileID: 167637151}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &290513024
 GameObject:
@@ -6479,6 +6354,7 @@ GameObject:
   - component: {fileID: 1566316590}
   - component: {fileID: 1566316592}
   - component: {fileID: 1566316591}
+  - component: {fileID: 1566316597}
   m_Layer: 0
   m_Name: Console
   m_TagString: Untagged
@@ -6528,24 +6404,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   whenToUse: 0
   newCommands:
-  - name: exit
-    description: ends this program
-    devState: 0
-    arguments: []
-    commandExecution:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 1566316593}
-          m_MethodName: Cmd_Exit
-          m_Mode: 0
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: 
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
   - name: echo
     description: prints messages to the command line
     devState: 0
@@ -6555,6 +6413,42 @@ MonoBehaviour:
         m_Calls:
         - m_Target: {fileID: 1566316593}
           m_MethodName: Cmd_Echo
+          m_Mode: 0
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: 
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - name: clear
+    description: clears messages in the command line
+    devState: 0
+    arguments: []
+    commandExecution:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1566316593}
+          m_MethodName: Cmd_Clear
+          m_Mode: 0
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: 
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - name: exit
+    description: ends this program
+    devState: 0
+    arguments: []
+    commandExecution:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1566316593}
+          m_MethodName: Cmd_Exit
           m_Mode: 0
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -6616,6 +6510,76 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
+  - name: dir
+    description: prints list of scene traversal options
+    devState: 0
+    arguments: []
+    commandExecution:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1566316591}
+          m_MethodName: Cmd_Dir
+          m_Mode: 0
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: 
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - name: pwd
+    description: prints current working object being traversed
+    devState: 0
+    arguments: []
+    commandExecution:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1566316591}
+          m_MethodName: Cmd_Pwd
+          m_Mode: 0
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: 
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - name: cd
+    description: traverses scene objects
+    devState: 0
+    arguments:
+    - name: nextDirectory
+      id: /
+      description: name of the next directory to go into. may require quotes!
+      devState: 0
+      required: 0
+      orderedArgument: 1
+      valueType: 1
+      defaultValue: 
+    - name: previousDirector
+      id: ..
+      description: go back to the parent object
+      devState: 0
+      required: 0
+      orderedArgument: 0
+      valueType: 0
+      defaultValue: 
+    commandExecution:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1566316591}
+          m_MethodName: Cmd_Cd
+          m_Mode: 0
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: 
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
 --- !u!114 &1566316591
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6645,7 +6609,7 @@ MonoBehaviour:
   - name: activate console
     priority: 1000
     disable: 0
-    eventAlwaysTriggerable: 0
+    alwaysTriggerable: 0
     keyCombinations:
     - modifiers: 
       key: 96
@@ -6673,7 +6637,7 @@ MonoBehaviour:
   - name: deactivate console
     priority: 1000
     disable: 0
-    eventAlwaysTriggerable: 0
+    alwaysTriggerable: 0
     keyCombinations:
     - modifiers: 
       key: 27
@@ -6699,8 +6663,6 @@ MonoBehaviour:
         m_PersistentCalls:
           m_Calls: []
   AxisBinds: []
-  isMain: 1
-  selectableAsMain: 1
   consoleInputActive: 1
   callbacks:
     enable: 1
@@ -6746,7 +6708,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04d22b82a813ed843aeff346816b7605, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  firstCommands: echo "Hello World!"
+  firstCommands: 
   WhenCommandRuns:
     m_PersistentCalls:
       m_Calls: []
@@ -6766,7 +6728,7 @@ MonoBehaviour:
   - name: + console font
     priority: 1000
     disable: 0
-    eventAlwaysTriggerable: 0
+    alwaysTriggerable: 0
     keyCombinations:
     - modifiers: 2b010000
       key: 61
@@ -6794,7 +6756,7 @@ MonoBehaviour:
   - name: '- console font'
     priority: 1000
     disable: 0
-    eventAlwaysTriggerable: 0
+    alwaysTriggerable: 0
     keyCombinations:
     - modifiers: 2b010000
       key: 45
@@ -6822,7 +6784,7 @@ MonoBehaviour:
   - name: submit console input
     priority: 1000
     disable: 0
-    eventAlwaysTriggerable: 0
+    alwaysTriggerable: 0
     keyCombinations:
     - modifiers: 9e000000
       key: 13
@@ -6850,7 +6812,7 @@ MonoBehaviour:
   - name: copy from command console
     priority: 1000
     disable: 0
-    eventAlwaysTriggerable: 0
+    alwaysTriggerable: 0
     keyCombinations:
     - modifiers: 2b010000
       key: 99
@@ -6878,7 +6840,7 @@ MonoBehaviour:
   - name: paste into command console
     priority: 1000
     disable: 0
-    eventAlwaysTriggerable: 0
+    alwaysTriggerable: 0
     keyCombinations:
     - modifiers: 2b010000
       key: 118
@@ -6906,7 +6868,7 @@ MonoBehaviour:
   - name: move cursor up
     priority: 1000
     disable: 0
-    eventAlwaysTriggerable: 0
+    alwaysTriggerable: 0
     keyCombinations:
     - modifiers: 2a010000
       key: 273
@@ -6934,7 +6896,7 @@ MonoBehaviour:
   - name: move cursor left
     priority: 1000
     disable: 0
-    eventAlwaysTriggerable: 0
+    alwaysTriggerable: 0
     keyCombinations:
     - modifiers: 2a010000
       key: 276
@@ -6962,7 +6924,7 @@ MonoBehaviour:
   - name: move cursor down
     priority: 1000
     disable: 0
-    eventAlwaysTriggerable: 0
+    alwaysTriggerable: 0
     keyCombinations:
     - modifiers: 2a010000
       key: 274
@@ -6990,7 +6952,7 @@ MonoBehaviour:
   - name: move cursor right
     priority: 1000
     disable: 0
-    eventAlwaysTriggerable: 0
+    alwaysTriggerable: 0
     keyCombinations:
     - modifiers: 2a010000
       key: 275
@@ -7018,7 +6980,7 @@ MonoBehaviour:
   - name: shift window up
     priority: 1000
     disable: 0
-    eventAlwaysTriggerable: 0
+    alwaysTriggerable: 0
     keyCombinations:
     - modifiers: 29010000
       key: 273
@@ -7046,7 +7008,7 @@ MonoBehaviour:
   - name: shift window left
     priority: 1000
     disable: 0
-    eventAlwaysTriggerable: 0
+    alwaysTriggerable: 0
     keyCombinations:
     - modifiers: 29010000
       key: 276
@@ -7074,7 +7036,7 @@ MonoBehaviour:
   - name: shift window down
     priority: 1000
     disable: 0
-    eventAlwaysTriggerable: 0
+    alwaysTriggerable: 0
     keyCombinations:
     - modifiers: 29010000
       key: 274
@@ -7102,7 +7064,7 @@ MonoBehaviour:
   - name: shift window right
     priority: 1000
     disable: 0
-    eventAlwaysTriggerable: 0
+    alwaysTriggerable: 0
     keyCombinations:
     - modifiers: 29010000
       key: 275
@@ -7211,6 +7173,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 66f8a1f6a4f299b4ba2786a7d9aa720a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1566316597
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1566316587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 941ee320a6176dd45901a3f850a8b6d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  promptArtifact: $
 --- !u!1 &1794688009
 GameObject:
   m_ObjectHideFlags: 0

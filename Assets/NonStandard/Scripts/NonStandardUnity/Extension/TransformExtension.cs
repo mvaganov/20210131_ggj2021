@@ -8,7 +8,9 @@ namespace NonStandard.Extension {
 			sb.Append(t.name);
 			t = t.parent;
 			while (t != null) {
-				sb.Insert(0, t.name + separator);
+				string str = t.name;
+				if (str.Contains("/")) { str = "\""+str.Escape()+"\""; }
+				sb.Insert(0, str + separator);
 				t = t.parent;
 			}
 			return sb.ToString();

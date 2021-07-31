@@ -4,9 +4,6 @@ using System.Collections.Generic;
 using UnityEngine.Events;
 using System.Text;
 using NonStandard.Utility;
-#if UNITY_EDITOR
-using UnityEditor.Events;
-#endif
 
 namespace NonStandard.Inputs {
 	[Serializable]
@@ -17,9 +14,9 @@ namespace NonStandard.Inputs {
 		public int priority = 1000;
 		public bool disable;
 		/// <summary>
-		/// if true, can still be triggered after the key event is consumed
+		/// if true, can still be triggered after the key event is consumed. use this for events that should not be masked by another event that binds to the same key combination, like force-quit, or pause.
 		/// </summary>
-		public bool eventAlwaysTriggerable;
+		public bool alwaysTriggerable;
 
 		public KCombo[] keyCombinations = new KCombo[1];
 
@@ -153,7 +150,7 @@ namespace NonStandard.Inputs {
 			if (additionalRequirement != null) {
 				this.additionalRequirement = additionalRequirement;
 			}
-			this.eventAlwaysTriggerable = eventAlwaysTriggerable;
+			this.alwaysTriggerable = eventAlwaysTriggerable;
 		}
 
 		public void Init() { Array.ForEach(keyCombinations, k => k.Init()); }

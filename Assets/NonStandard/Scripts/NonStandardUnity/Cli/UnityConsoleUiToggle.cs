@@ -9,8 +9,6 @@ using UnityEngine.UI;
 
 public class UnityConsoleUiToggle : UserInput
 {
-	public bool isMain = true; // TODO
-	public bool selectableAsMain = true; // TODO
 	bool disabledRectMask2d = false;
 	public ConsoleUiState consoleInputActive = ConsoleUiState.ScreenSpace;
 	public enum ConsoleUiState { None, ScreenSpace, WorldSpace, Both}

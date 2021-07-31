@@ -444,11 +444,11 @@ namespace NonStandard.Inputs {
 					}
 					bool activated = false;
 					// invoke non-consumptive events, or consumptive events as long as the event is not consumed
-					if (eventConsumed == null || kb.eventAlwaysTriggerable) {
+					if (eventConsumed == null || kb.alwaysTriggerable) {
 						activated = action.Invoke(kb);
 					}
 					// high-priority key mappings that consume events should prevent future events that also consume.
-					if (!kb.eventAlwaysTriggerable && activated) {
+					if (!kb.alwaysTriggerable && activated) {
 						//Log($"{kb.name} consumed {name}");
 						s_eventConsumed[triggerList[i].kp.key] = kb;
 					}

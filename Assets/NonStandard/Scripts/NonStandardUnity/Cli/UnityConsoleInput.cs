@@ -6,12 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace NonStandard.Cli {
 	[RequireComponent(typeof(UnityConsole))]
 	public class UnityConsoleInput : UserInput {
 		protected StringBuilder currentLine = new StringBuilder();
+		protected int indexInCurrentLine = 0;
 		protected List<KCode> keysDown = new List<KCode>();
 		internal string _pastedText;
 		/// <summary>
@@ -172,12 +172,14 @@ namespace NonStandard.Cli {
 		}
 		bool IsListeningToLine() { return tempLineInputListeners != null && tempLineInputListeners.Count > 0; }
 		public void CommandLineUpdate(string txt) {
-			currentLine.Append(txt);
+			currentLine.Insert(indexInCurrentLine, txt);
+			indexInCurrentLine += txt.Length;
 		}
 		public void FinishCurrentInput() {
 			string processedInput = ProcessInput(currentLine.ToString());
-			Show.Log(currentLine.ToString().StringifySmall()+" -> "+processedInput.StringifySmall());
+			//Show.Log(currentLine.ToString().StringifySmall()+" -> "+processedInput.StringifySmall());
 			currentLine.Clear();
+			indexInCurrentLine = 0;
 			console.Write("\n");
 			console.body.RestartWriteCursor();
 			if (string.IsNullOrEmpty(processedInput)) { return; }
