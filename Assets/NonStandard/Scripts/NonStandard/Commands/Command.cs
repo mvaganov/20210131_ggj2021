@@ -32,21 +32,29 @@ namespace NonStandard.Commands {
 		}
 
 		public delegate void Handler(Exec executionContext);
-
-		public readonly string Name;
-		public Handler handler;
+		public enum DevelopmentState {
+			Normal,
+			/// <summary>
+			/// this feature is discouraged, and may be removed soon
+			/// </summary>
+			Deprecated,
+			/// <summary>
+			/// this feature is not entirely finished, and future updates will likely change the way it behaves
+			/// </summary>
+			Preview
+		}
+		public string Name;
+		public virtual Handler handler { get; set; }
 		public Argument[] arguments;
-		public string help;
-		public bool deprecated = false;
-		public bool preview = false;
+		public string description;
+		public DevelopmentState devState = DevelopmentState.Normal;
 		private ParseRuleSet argumentParsingRuleset;
-		public Command(string command, Handler handler, Argument[] arguments = null, string help = null, bool deprecated = false, bool preview = false) {
+		public Command(string command, Handler handler, Argument[] arguments = null, string help = null, DevelopmentState devState = DevelopmentState.Normal) {
 			this.Name = command;
 			this.handler = handler;
 			this.arguments = arguments;
-			this.help = help;
-			this.deprecated = deprecated;
-			this.preview = preview;
+			this.description = help;
+			this.devState = devState;
 			GenerateArgumentParsingRuleset();
 		}
 		public static Delim[] BaseArgumentParseDelimiters = CodeRules.CombineDelims(

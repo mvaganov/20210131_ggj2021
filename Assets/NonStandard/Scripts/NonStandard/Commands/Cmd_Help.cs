@@ -27,6 +27,13 @@ namespace NonStandard.Commands {
 				colorDeprecated = (useColor ? Col.r(deprecated) : "");
 				colorDescription = (useColor ? Col.r(description) : "");
 			}
+			private static string ColorFor(Command.DevelopmentState devState, string defaultColor) {
+				switch (devState) {
+				case Command.DevelopmentState.Deprecated: return colorDeprecated;
+				case Command.DevelopmentState.Preview: return colorPreview;
+				default: return defaultColor;
+				}
+			}
 			public static void General_Handler(Command.Exec e, Dictionary<string, Command> commandTable) {
 				RecalculateColor();
 				List<Command> commands = new List<Command>();
@@ -34,8 +41,8 @@ namespace NonStandard.Commands {
 				commands.Sort((a, b) => a.Name.CompareTo(b.Name));
 				for (int i = 0; i < commands.Count; ++i) {
 					Command cmd = commands[i];
-					string colorTxt = cmd.deprecated ? colorDeprecated : cmd.preview ? colorPreview : colorCommand;
-					string line = $"{colorTxt}{cmd.Name}{colorStd} : {colorDescription}{cmd.help}{colorStd}\n";
+					string colorTxt = ColorFor(cmd.devState, colorCommand);
+					string line = $"{colorTxt}{cmd.Name}{colorStd} : {colorDescription}{cmd.description}{colorStd}\n";
 					e.print.Invoke(line);
 				}
 				string extraInstructions = $"for more information, type {colorCommand}help {colorOptional}-c {colorArgument}nameOfCommand{colorStd}\n";
@@ -48,7 +55,7 @@ namespace NonStandard.Commands {
 					e.print.Invoke(error);
 					return;
 				}
-				string colorTxt = command.deprecated ? colorDeprecated : command.preview ? colorPreview : colorCommand;
+				string colorTxt = ColorFor(command.devState, colorCommand);
 				string line = $"Usage: {colorTxt}{command.Name}{colorStd}";
 				List<Argument> args = new List<Argument>();
 				if (command.arguments != null) {
@@ -71,16 +78,12 @@ namespace NonStandard.Commands {
 					if (open != '\0') {
 						line += open;
 					}
-					if (arg.order <= 0 || arg.flag) {
-						if (arg.order > 0) {
-							line += colorOptional;
-						}
+					//if (arg.order <= 0 || arg.flag) {
+						if (arg.order > 0) { line += colorOptional; }
 						line += arg.id;
-						if (arg.order > 0) {
-							line += colorStd;
-						}
+						if (arg.order > 0) { line += colorArgument; }
 						if (!arg.flag) { line += ' '; }
-					}
+					//}
 					if (!arg.flag) {
 						line += $"{arg.Name}{colorType}({arg.valueType.ToString().SubstringAfterLast(".")}){colorArgument}";
 					}
@@ -91,7 +94,7 @@ namespace NonStandard.Commands {
 				e.print.Invoke(line + "\n");
 				for(int i = 0; i < args.Count; ++i) {
 					Argument arg = args[i];
-					colorTxt = arg.deprecated ? colorDeprecated : arg.preview ? colorPreview : colorArgument;
+					colorTxt = ColorFor(arg.devState, colorArgument);
 					line = $"{colorTxt}{arg.id} {colorStd}{arg.Name} : ";
 					if (!arg.flag) {
 						line += $"{colorType}({arg.valueType.ToString().SubstringAfterLast(".")}) ";
@@ -99,8 +102,8 @@ namespace NonStandard.Commands {
 					line += $"{colorDescription}{arg.description}{colorStd}\n";
 					e.print.Invoke(line);
 				}
-				colorTxt = command.deprecated ? colorDeprecated : command.preview ? colorPreview : colorCommand;
-				line = $"{colorTxt}{command.Name}{colorStd} : {colorDescription}{command.help}{colorStd}\n";
+				colorTxt = ColorFor(command.devState, colorCommand);
+				line = $"{colorTxt}{command.Name}{colorStd} : {colorDescription}{command.description}{colorStd}\n";
 				e.print.Invoke(line);
 			}
 		}

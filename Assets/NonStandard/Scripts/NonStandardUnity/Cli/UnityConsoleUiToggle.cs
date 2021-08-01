@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-public class UnityConsoleUiToggle : UserInput
+public class UnityConsoleUiToggle : KeyInput
 {
 	bool disabledRectMask2d = false;
 	public ConsoleUiState consoleInputActive = ConsoleUiState.ScreenSpace;
@@ -20,12 +20,14 @@ public class UnityConsoleUiToggle : UserInput
 	RectTransform uiTransform;
 	public Canvas _screenSpaceCanvas;
 	public Canvas _worldSpaceCanvas;
+#if UNITY_EDITOR
 	private void Reset() {
-		KeyBind(KCode.BackQuote, KModifier.None, "activate console", nameof(SetScreenSpaceCanvas), null, this);
-		KeyBind(KCode.Escape, KModifier.None, "deactivate console", nameof(SetWorldSpaceCanvas), null, this);
+		KeyBind(KCode.BackQuote, KModifier.None, "activate console", nameof(SetScreenSpaceCanvas), target: this);
+		KeyBind(KCode.Escape, KModifier.None, "deactivate console", nameof(SetWorldSpaceCanvas), target: this);
 		EventBind.On(callbacks.WhenThisActivates, this, nameof(Pause));
 		EventBind.On(callbacks.WhenThisDeactivates, this, nameof(Unpause));
 	}
+#endif
 	public Canvas ScreenSpaceCanvas => _screenSpaceCanvas ? _screenSpaceCanvas : _screenSpaceCanvas = GetScreenSpaceCanvas(null);
 	public void EnqueueConsoleTextRefresh() {
 		Proc.Enqueue(() => {

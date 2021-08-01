@@ -34,14 +34,7 @@ namespace NonStandard.Commands {
 		/// this argument is required. cause an error if the argument is missing. default true if order is greater than zero
 		/// </summary>
 		public bool required = false;
-		/// <summary>
-		/// this feature is discouraged, and may be removed soon
-		/// </summary>
-		public bool deprecated = false;
-		/// <summary>
-		/// this feature is not entirely finished, and future updates will likely change the way it behaves
-		/// </summary>
-		public bool preview = false;
+		public Command.DevelopmentState devState = Command.DevelopmentState.Normal;
 		/// <summary>
 		/// this argument doesn't have a value beyond being present or absent
 		/// </summary>
@@ -60,7 +53,7 @@ namespace NonStandard.Commands {
 		/// <param name="preview">this feature is not entirely finished, and future updates will likely change the way it behaves</param>
 		/// <param name="flag">this argument doesn't have a value beyond being present or absent</param>
 		public Argument(string id, string name = null, string description = null, object defaultValue = null, System.Type type = null, int order = -1,
-			bool required = false, bool deprecated = false, bool preview = false, bool flag = false) {
+			bool required = false, Command.DevelopmentState devState = Command.DevelopmentState.Normal, bool flag = false) {
 			this.id = id;
 			this.Name = name;
 			this.description = description;
@@ -68,8 +61,7 @@ namespace NonStandard.Commands {
 			this.valueType = type;
 			this.order = order;
 			this.required = required;
-			this.deprecated = deprecated;
-			this.preview = preview;
+			this.devState = devState;
 			this.flag = flag;
 			if (this.valueType == null && this.defaultValue != null) {
 				this.valueType = defaultValue.GetType();

@@ -7,7 +7,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class GameObjectTraverse : MonoBehaviour
+public class GameObjectTraverse : ConsoleCommands
 {
 	public Transform workingTransform;
 
@@ -100,8 +100,11 @@ public class GameObjectTraverse : MonoBehaviour
 		console.WriteLine(pwd);
 	}
 	public void Cmd_Cd(Command.Exec e) {
-		string dir = e.tok.GetStr(1, e.src);
-		if (dir == ".." && workingTransform != null) {
+		Arguments args = e.GetArgs();
+		//Debug.Log(args);
+		args.TryGet("/", out string dir);
+		args.TryGet("..", out bool backDir);
+		if ((dir == ".." || backDir) && workingTransform != null) {
 			workingTransform = workingTransform.parent;
 			//Show.Log("backing up");
 			return;
@@ -118,6 +121,7 @@ public class GameObjectTraverse : MonoBehaviour
 		}
 	}
 
+#if UNITY_EDITOR
 	public void Reset() {
 		UnityConsoleCommander.CommandEntry[] DefaultCommandEntries = new UnityConsoleCommander.CommandEntry[] {
 			new UnityConsoleCommander.CommandEntry("dir", "prints list of scene traversal options", nameof(Cmd_Dir), this),
@@ -127,6 +131,7 @@ public class GameObjectTraverse : MonoBehaviour
 				new UnityConsoleCommander.ArgumentEntry("previousDirector","..","go back to the parent object")
 			}),
 		};
-		UnityConsoleCommander.AddCommands(transform, DefaultCommandEntries);
+		AddCommands(DefaultCommandEntries);
 	}
+#endif
 }

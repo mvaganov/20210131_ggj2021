@@ -14,12 +14,10 @@ GameObject:
   - component: {fileID: 3207923541690185598}
   - component: {fileID: 3207923541690185592}
   - component: {fileID: 3207923541690185595}
-  - component: {fileID: 3207923541690185572}
   - component: {fileID: 3207923541690185594}
   - component: {fileID: 3207923541690185573}
-  - component: {fileID: 3207923541690185599}
   m_Layer: 0
-  m_Name: Console
+  m_Name: console
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -119,6 +117,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 66f8a1f6a4f299b4ba2786a7d9aa720a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  options:
+    StandardInput: 1
+    DoCommands: 1
+    ToggleMainUI: 1
+    TraverseScene: 1
+    System: 0
 --- !u!114 &3207923541690185592
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -496,7 +500,6 @@ MonoBehaviour:
       onRelease:
         m_PersistentCalls:
           m_Calls: []
-  AxisBinds: []
   textInput: 1
   clipboardPaste: 1
   inputColor: {r: 0, g: 1, b: 0, a: 1}
@@ -526,24 +529,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04d22b82a813ed843aeff346816b7605, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  firstCommands: 
-  WhenCommandRuns:
-    m_PersistentCalls:
-      m_Calls: []
---- !u!114 &3207923541690185572
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3207923541690185569}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad42cc2eeaef6ad49853a2a5922cdff4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
   whenToUse: 0
-  newCommands:
+  commands:
   - name: echo
     description: prints messages to the command line
     devState: 0
@@ -650,6 +637,127 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
+  firstCommandsToExecute: 
+  globalCommander: 1
+  WhenCommandRuns:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &3207923541690185594
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3207923541690185569}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b067f2105dd3be4fb6bfa3e487bd833, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  KeyBinds:
+  - name: activate console
+    priority: 1000
+    disable: 0
+    alwaysTriggerable: 0
+    keyCombinations:
+    - modifiers: 
+      key: 96
+    keyEvent:
+      onPress:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 3207923541690185594}
+            m_MethodName: SetScreenSpaceCanvas
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: 
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+      onHold:
+        m_PersistentCalls:
+          m_Calls: []
+      onRelease:
+        m_PersistentCalls:
+          m_Calls: []
+  - name: deactivate console
+    priority: 1000
+    disable: 0
+    alwaysTriggerable: 0
+    keyCombinations:
+    - modifiers: 
+      key: 27
+    keyEvent:
+      onPress:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 3207923541690185594}
+            m_MethodName: SetWorldSpaceCanvas
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: 
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+      onHold:
+        m_PersistentCalls:
+          m_Calls: []
+      onRelease:
+        m_PersistentCalls:
+          m_Calls: []
+  consoleInputActive: 1
+  callbacks:
+    enable: 1
+    WhenThisActivates:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 3207923541690185594}
+          m_MethodName: Pause
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: 
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+    WhenThisDeactivates:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 3207923541690185594}
+          m_MethodName: Unpause
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: 
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  _screenSpaceCanvas: {fileID: 0}
+  _worldSpaceCanvas: {fileID: 0}
+--- !u!114 &3207923541690185573
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3207923541690185569}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93fe5d38b9a8c354fb4a082f250a34fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  whenToUse: 0
+  commands:
   - name: dir
     description: prints list of scene traversal options
     devState: 0
@@ -720,135 +828,7 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
---- !u!114 &3207923541690185594
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3207923541690185569}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2b067f2105dd3be4fb6bfa3e487bd833, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  KeyBinds:
-  - name: activate console
-    priority: 1000
-    disable: 0
-    alwaysTriggerable: 0
-    keyCombinations:
-    - modifiers: 
-      key: 96
-    keyEvent:
-      onPress:
-        m_PersistentCalls:
-          m_Calls:
-          - m_Target: {fileID: 3207923541690185594}
-            m_MethodName: SetScreenSpaceCanvas
-            m_Mode: 1
-            m_Arguments:
-              m_ObjectArgument: {fileID: 0}
-              m_ObjectArgumentAssemblyTypeName: 
-              m_IntArgument: 0
-              m_FloatArgument: 0
-              m_StringArgument: 
-              m_BoolArgument: 0
-            m_CallState: 2
-      onHold:
-        m_PersistentCalls:
-          m_Calls: []
-      onRelease:
-        m_PersistentCalls:
-          m_Calls: []
-  - name: deactivate console
-    priority: 1000
-    disable: 0
-    alwaysTriggerable: 0
-    keyCombinations:
-    - modifiers: 
-      key: 27
-    keyEvent:
-      onPress:
-        m_PersistentCalls:
-          m_Calls:
-          - m_Target: {fileID: 3207923541690185594}
-            m_MethodName: SetWorldSpaceCanvas
-            m_Mode: 1
-            m_Arguments:
-              m_ObjectArgument: {fileID: 0}
-              m_ObjectArgumentAssemblyTypeName: 
-              m_IntArgument: 0
-              m_FloatArgument: 0
-              m_StringArgument: 
-              m_BoolArgument: 0
-            m_CallState: 2
-      onHold:
-        m_PersistentCalls:
-          m_Calls: []
-      onRelease:
-        m_PersistentCalls:
-          m_Calls: []
-  AxisBinds: []
-  consoleInputActive: 1
-  callbacks:
-    enable: 1
-    WhenThisActivates:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 3207923541690185594}
-          m_MethodName: Pause
-          m_Mode: 1
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: 
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
-    WhenThisDeactivates:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 3207923541690185594}
-          m_MethodName: Unpause
-          m_Mode: 1
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: 
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
-  _screenSpaceCanvas: {fileID: 0}
-  _worldSpaceCanvas: {fileID: 0}
---- !u!114 &3207923541690185573
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3207923541690185569}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 93fe5d38b9a8c354fb4a082f250a34fd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
   workingTransform: {fileID: 0}
---- !u!114 &3207923541690185599
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3207923541690185569}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 941ee320a6176dd45901a3f850a8b6d1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  promptArtifact: $
 --- !u!1 &3207923542183574407
 GameObject:
   m_ObjectHideFlags: 0
@@ -1239,7 +1219,7 @@ MonoBehaviour:
   m_CaretColor: {r: 1, g: 0, b: 0, a: 1}
   m_CustomCaretColor: 1
   m_SelectionColor: {r: 0.65882355, g: 0.80784315, b: 1, a: 0.7529412}
-  m_Text: 
+  m_Text: here is some text
   m_CaretBlinkRate: 0.85
   m_CaretWidth: 3
   m_ReadOnly: 1
@@ -1365,7 +1345,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u200B"
+  m_text: "here is some text\u200B"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: e8bc52215b3823540b5191bf14d30460, type: 2}
   m_sharedMaterial: {fileID: 4255364861296134624, guid: e8bc52215b3823540b5191bf14d30460,
@@ -1435,10 +1415,10 @@ MonoBehaviour:
   m_margin: {x: 0, y: 0, z: 0, w: 0}
   m_textInfo:
     textComponent: {fileID: 3207923542979668951}
-    characterCount: 1
+    characterCount: 18
     spriteCount: 0
-    spaceCount: 0
-    wordCount: 1
+    spaceCount: 3
+    wordCount: 4
     linkCount: 0
     lineCount: 1
     pageCount: 1
@@ -1485,8 +1465,8 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3207923543157234762}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 10}
-  m_LocalScale: {x: 0.05, y: 0.05, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 20}
+  m_LocalScale: {x: 0.025, y: 0.025, z: 1}
   m_Children:
   - {fileID: 3207923542820661617}
   m_Father: {fileID: 3207923541690185575}
@@ -1494,8 +1474,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: -4}
-  m_SizeDelta: {x: 400, y: 200}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 400, y: 400}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &3207923543157234761
 Canvas:

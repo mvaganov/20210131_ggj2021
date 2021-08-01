@@ -273,10 +273,12 @@ namespace NonStandard.Ui {
 					string.Join("\n", Array.ConvertAll(mouseCursors, mc => mc.transform.HierarchyPath())));
 			}
 		}
+#if UNITY_EDITOR
 		void Reset() {
 			if(cursors == null || cursors.Length == 0) { AddCursors(); }
 			CheckForMultipleMouseCursorObjects();
 		}
+#endif
 		void OnValidate() {
 			CheckForMultipleMouseCursorObjects();
 			if (!Application.isPlaying) { return; }

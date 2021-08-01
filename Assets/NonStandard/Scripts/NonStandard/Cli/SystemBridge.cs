@@ -2,15 +2,17 @@
 using System.IO;
 using System.Diagnostics;
 using System.Threading;
+using NonStandard.Commands;
 
 namespace NonStandard.Cli {
+	// TODO re-implement, so command-line events can be called from C# programs while maintaining command line state.
 	public class SystemBridge
 	{
 		System.Diagnostics.Process system_process;
 		Thread thread;
 		FileInfo cmdLineSemaphoreFile;
 		private string currentCommand = "";
-		private CmdLine.DoAfterStringIsRead currentCommand_callback;
+		private Show.PrintFunc currentCommand_callback;
 		/// the outputs from the bash thread
 		private List<string> log, err;
 		private bool isInitialized = false;
@@ -18,7 +20,7 @@ namespace NonStandard.Cli {
 		private bool promptNeedsRedraw = false;
 		/// used to communicate to the CmdLine that the bash thread finished something
 		private bool probablyFinishedCommand = true;
-		private CmdLine_base _cmd;
+		//private CmdLine_base _cmd;
 
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || PLATFORM_STANDALONE_WIN
 		private string commandExecutable = "cmd";
@@ -92,7 +94,7 @@ namespace NonStandard.Cli {
 			}
 			System.Diagnostics.Process proc = system_process;
 			Thread t = thread;
-			if (_cmd != null) { _cmd.NeedToRefreshUserPrompt = true; }
+			//if (_cmd != null) { _cmd.NeedToRefreshUserPrompt = true; }
 			thread = null;
 			system_process = null;
 			isInitialized = false;
@@ -102,11 +104,11 @@ namespace NonStandard.Cli {
 			t.Join(); // should be the last statement
 		}
 
-		public void DoCommand(string s, object whosAsking, CmdLine.DoAfterStringIsRead cb = null, CmdLine_base cmd = null)
+		public void DoCommand(string s, object whosAsking, Show.PrintFunc cb = null)//, CmdLine_base cmd = null)
 		{
 			if (thread == null)
 			{
-				_cmd = cmd;
+				//_cmd = cmd;
 				currentCommand = s.Trim();
 				currentCommand_callback = cb;
 				log = new List<string>();
@@ -241,14 +243,15 @@ namespace NonStandard.Cli {
 
 		public string MachineName { get { return system_process.MachineName; } }
 
-		public void Update(Commander.Instruction inst, CmdLine_base cmd)
+		public void Update(Command.Exec inst)//, CmdLine_base cmd)
 		{
 			bool somethingPrinted = false;
 			if (log != null)
 			{
 				while (log.Count > 0)
 				{
-					cmd.HandleLog(log[0], "", CmdLine_base.LogType.Log);
+					//cmd.HandleLog(log[0], "", CmdLine_base.LogType.Log);
+					inst.print(log[0]);
 					log.RemoveAt(0);
 					somethingPrinted = true;
 				}
@@ -257,7 +260,8 @@ namespace NonStandard.Cli {
 			{
 				while (err.Count > 0)
 				{
-					cmd.HandleLog(err[0], "", CmdLine_base.LogType.Error);
+					//cmd.HandleLog(err[0], "", CmdLine_base.LogType.Error);
+					inst.print(err[0]);
 					err.RemoveAt(0);
 					somethingPrinted = true;
 				}
@@ -265,19 +269,19 @@ namespace NonStandard.Cli {
 			string s = null;
 			if (inst != null)
 			{
-				s = inst.text;
-				if (s != null) { DoCommand(s, inst.source); }
+				s = inst.tok.str;
+				if (s != null) { DoCommand(s, inst.src); }
 			}
 			if (string.IsNullOrEmpty(s) &&
 			string.IsNullOrEmpty(currentCommand) &&
 			(somethingPrinted || promptNeedsRedraw))
 			{
-				cmd.NeedToRefreshUserPrompt = true;
+				//cmd.NeedToRefreshUserPrompt = true;
 			}
-			if (cmd.NeedToRefreshUserPrompt)
-			{
-				promptNeedsRedraw = false;
-			}
+			//if (cmd.NeedToRefreshUserPrompt)
+			//{
+			//	promptNeedsRedraw = false;
+			//}
 		}
 	}
 }

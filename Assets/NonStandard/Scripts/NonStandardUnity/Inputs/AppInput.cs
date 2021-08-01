@@ -123,12 +123,6 @@ namespace NonStandard.Inputs {
 			return index >= 0;
 		}
 
-		public bool RemoveKeyBind(string name) {
-			int index = KeyBinds.FindIndex(kb => kb.name == name);
-			if (index < 0) return false;
-			return RemoveListener(KeyBinds[index], index);
-		}
-
 		public bool RemoveKeyBind(KBind kBind) {
 			int index = KeyBinds.IndexOf(kBind);
 			if (index < 0) return false;

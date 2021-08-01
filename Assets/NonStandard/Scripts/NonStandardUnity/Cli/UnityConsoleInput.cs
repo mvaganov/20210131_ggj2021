@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace NonStandard.Cli {
 	[RequireComponent(typeof(UnityConsole))]
-	public class UnityConsoleInput : UserInput {
+	public class UnityConsoleInput : KeyInput {
 		protected StringBuilder currentLine = new StringBuilder();
 		protected int indexInCurrentLine = 0;
 		protected List<KCode> keysDown = new List<KCode>();
@@ -190,6 +190,7 @@ namespace NonStandard.Cli {
 			}
 		}
 		void IncreaseFontSize() { console.AddToFontSize(1); }
+#if UNITY_EDITOR
 		private void Reset() {
 			UnityConsole console = GetComponent<UnityConsole>();
 			UnityConsoleCommander consoleCommander = GetComponent<UnityConsoleCommander>();
@@ -198,18 +199,19 @@ namespace NonStandard.Cli {
 			}
 			KeyBind(KCode.Equals, KModifier.AnyCtrl, "+ console font", nameof(console.AddToFontSize), 1f, console);
 			KeyBind(KCode.Minus, KModifier.AnyCtrl, "- console font", nameof(console.AddToFontSize), -1f, console);
-			KeyBind(KCode.Return, KModifier.NoShift, "submit console input", nameof(FinishCurrentInput));
-			KeyBind(KCode.C, KModifier.AnyCtrl, "copy from command console", nameof(CopyToClipboard));
-			KeyBind(KCode.V, KModifier.AnyCtrl, "paste into command console", nameof(PasteFromClipboard));
-			KeyBind(KCode.UpArrow, KModifier.AnyAlt, "move cursor up", nameof(MoveCursorUp));
-			KeyBind(KCode.LeftArrow, KModifier.AnyAlt, "move cursor left", nameof(MoveCursorLeft));
-			KeyBind(KCode.DownArrow, KModifier.AnyAlt, "move cursor down", nameof(MoveCursorDown));
-			KeyBind(KCode.RightArrow, KModifier.AnyAlt, "move cursor right", nameof(MoveCursorRight));
-			KeyBind(KCode.UpArrow, KModifier.AnyShift, "shift window up", nameof(ShiftWindowUp));
-			KeyBind(KCode.LeftArrow, KModifier.AnyShift, "shift window left", nameof(ShiftWindowLeft));
-			KeyBind(KCode.DownArrow, KModifier.AnyShift, "shift window down", nameof(ShiftWindowDown));
-			KeyBind(KCode.RightArrow, KModifier.AnyShift, "shift window right", nameof(ShiftWindowRight));
+			KeyBind(KCode.Return, KModifier.NoShift, "submit console input", nameof(FinishCurrentInput), target:this);
+			KeyBind(KCode.C, KModifier.AnyCtrl, "copy from command console", nameof(CopyToClipboard), target: this);
+			KeyBind(KCode.V, KModifier.AnyCtrl, "paste into command console", nameof(PasteFromClipboard), target: this);
+			KeyBind(KCode.UpArrow, KModifier.AnyAlt, "move cursor up", nameof(MoveCursorUp), target: this);
+			KeyBind(KCode.LeftArrow, KModifier.AnyAlt, "move cursor left", nameof(MoveCursorLeft), target: this);
+			KeyBind(KCode.DownArrow, KModifier.AnyAlt, "move cursor down", nameof(MoveCursorDown), target: this);
+			KeyBind(KCode.RightArrow, KModifier.AnyAlt, "move cursor right", nameof(MoveCursorRight), target: this);
+			KeyBind(KCode.UpArrow, KModifier.AnyShift, "shift window up", nameof(ShiftWindowUp), target: this);
+			KeyBind(KCode.LeftArrow, KModifier.AnyShift, "shift window left", nameof(ShiftWindowLeft), target: this);
+			KeyBind(KCode.DownArrow, KModifier.AnyShift, "shift window down", nameof(ShiftWindowDown), target: this);
+			KeyBind(KCode.RightArrow, KModifier.AnyShift, "shift window right", nameof(ShiftWindowRight), target: this);
 		}
+#endif
 		public void MoveCursorUp() { MovCur(Coord.Up); }
 		public void MoveCursorLeft() { MovCur(Coord.Left); }
 		public void MoveCursorDown() { MovCur(Coord.Down); }

@@ -918,7 +918,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &516913402
 PrefabInstance:
@@ -961,7 +961,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4550302886921004, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_RootOrder
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4550302886921004, guid: 8d542b9fba148c245b1da48b5fd1ffb2, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -2172,7 +2172,7 @@ Transform:
   - {fileID: 1741739013}
   - {fileID: 424347421}
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &893536463
 MonoBehaviour:
@@ -8571,7 +8571,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1514335943
 MonoBehaviour:
@@ -10829,7 +10829,7 @@ ParticleSystem:
       maxColor: {r: 1, g: 1, b: 1, a: 1}
       maxGradient:
         serializedVersion: 2
-        key0: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 1}
+        key0: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 0.0627451}
         key1: {r: 1, g: 1, b: 1, a: 0}
         key2: {r: 1, g: 1, b: 1, a: 0}
         key3: {r: 0, g: 1, b: 1, a: 0}
@@ -14763,7 +14763,7 @@ PrefabInstance:
     - target: {fileID: 3207923541690185575, guid: b75e041fc0741f047b843b42adfa6faa,
         type: 3}
       propertyPath: m_RootOrder
-      value: 0
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 3207923541690185575, guid: b75e041fc0741f047b843b42adfa6faa,
         type: 3}
@@ -14779,56 +14779,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3207923542820661622, guid: b75e041fc0741f047b843b42adfa6faa,
-        type: 3}
-      propertyPath: m_Text
-      value: here is some text
-      objectReference: {fileID: 0}
-    - target: {fileID: 3207923542979668951, guid: b75e041fc0741f047b843b42adfa6faa,
-        type: 3}
-      propertyPath: m_textInfo.characterCount
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3207923542979668951, guid: b75e041fc0741f047b843b42adfa6faa,
-        type: 3}
-      propertyPath: m_textInfo.wordCount
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3207923542979668951, guid: b75e041fc0741f047b843b42adfa6faa,
-        type: 3}
-      propertyPath: m_textInfo.lineCount
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3207923542979668951, guid: b75e041fc0741f047b843b42adfa6faa,
-        type: 3}
-      propertyPath: m_textInfo.pageCount
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3207923543157234766, guid: b75e041fc0741f047b843b42adfa6faa,
-        type: 3}
-      propertyPath: m_LocalScale.x
-      value: 0.025
-      objectReference: {fileID: 0}
-    - target: {fileID: 3207923543157234766, guid: b75e041fc0741f047b843b42adfa6faa,
-        type: 3}
-      propertyPath: m_LocalScale.y
-      value: 0.025
-      objectReference: {fileID: 0}
-    - target: {fileID: 3207923543157234766, guid: b75e041fc0741f047b843b42adfa6faa,
-        type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 400
-      objectReference: {fileID: 0}
-    - target: {fileID: 3207923543157234766, guid: b75e041fc0741f047b843b42adfa6faa,
-        type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3207923543157234766, guid: b75e041fc0741f047b843b42adfa6faa,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 20
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b75e041fc0741f047b843b42adfa6faa, type: 3}

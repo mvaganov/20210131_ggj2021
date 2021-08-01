@@ -299,7 +299,7 @@ namespace NonStandard.Character {
 					t.rotation = Quaternion.Lerp(rotStart, targetView.rotation, p);
 				}
 			}
-			Show.Log("asdfdsafdsa");
+			//Show.Log("asdfdsafdsa");
 			targetDistance = (targetView.distance - distStart) * p + distStart;
 			if (targetView.useTransformPositionChanges) {
 				if (targetView.target != null) {
