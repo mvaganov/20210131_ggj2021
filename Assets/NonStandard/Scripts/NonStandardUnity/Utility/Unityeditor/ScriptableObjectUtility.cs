@@ -1,7 +1,8 @@
-﻿using UnityEditor;
+﻿#if UNITY_EDITOR
+using UnityEditor;
 using UnityEngine;
 
-namespace NonStandard {
+namespace NonStandard.Utility.UnityEditor {
 	public static class ScriptableObjectUtility {
 		/// This makes it easy to create, name and place unique new ScriptableObject asset files.
 		public static T CreateAsset<T>() where T : ScriptableObject { return CreateAsset(typeof(T)) as T; }
@@ -50,3 +51,4 @@ namespace NonStandard {
 		}
 	}
 }
+#endif

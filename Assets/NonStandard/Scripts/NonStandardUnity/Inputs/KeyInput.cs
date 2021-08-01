@@ -1,5 +1,4 @@
-﻿using NonStandard.Utility;
-using System.Collections;
+﻿using NonStandard.Utility.UnityEditor;
 using System.Collections.Generic;
 using UnityEngine;
 

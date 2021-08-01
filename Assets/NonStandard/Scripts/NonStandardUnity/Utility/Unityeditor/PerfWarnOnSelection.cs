@@ -3,7 +3,7 @@
 using UnityEditor;
 #endif
 
-namespace NonStandard.Utility {
+namespace NonStandard.Utility.UnityEditor {
 	public class PerfWarnOnSelection : MonoBehaviour {
 #if UNITY_EDITOR
 		public GameObject[] selectingSlowsRenderingInEditMode;

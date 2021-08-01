@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using NonStandard.Extension;
-using NonStandard.Procedure;
 
 namespace NonStandard.Cli {
 	public class UnityConsole : MonoBehaviour {

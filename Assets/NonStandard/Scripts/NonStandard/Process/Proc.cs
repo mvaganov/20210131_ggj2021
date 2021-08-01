@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace NonStandard.Procedure {
+namespace NonStandard.Process {
 	/// <summary>
 	/// short for "Procedure" or "Process", this class is an interface to sequential process convenience functions
 	/// </summary>

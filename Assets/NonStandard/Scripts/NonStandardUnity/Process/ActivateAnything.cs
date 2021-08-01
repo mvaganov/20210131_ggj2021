@@ -1,8 +1,9 @@
-﻿using System;
+﻿using NonStandard.Utility.UnityEditor;
+using System;
 using System.Collections;
 using UnityEngine;
 
-namespace NonStandard.Procedure {
+namespace NonStandard.Process {
 	/// This class serves as a store for static Utility functions related to 'activating things'.
 	/// TODO make this a partial class. Get it to work with the NonStandard.Process classes too
 	public static class ActivateAnything {

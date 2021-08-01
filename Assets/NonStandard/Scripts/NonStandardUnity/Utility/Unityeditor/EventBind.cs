@@ -5,7 +5,7 @@ using UnityEditor.Events;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace NonStandard.Utility {
+namespace NonStandard.Utility.UnityEditor {
 	public class EventBind {
 		public object target;
 		public string setMethodName;

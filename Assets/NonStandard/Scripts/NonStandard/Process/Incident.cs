@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 
-namespace NonStandard.Procedure {
+namespace NonStandard.Process {
 	[System.Serializable]
 	public class Incident {
 		/// <summary>

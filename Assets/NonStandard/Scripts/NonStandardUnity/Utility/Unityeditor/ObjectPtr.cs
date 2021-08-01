@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-namespace NonStandard {
+namespace NonStandard.Utility.UnityEditor {
 	public interface IReference { object Dereference(); }
 
 	[System.Serializable]
@@ -31,7 +31,7 @@ namespace NonStandard {
 
 #if UNITY_EDITOR
 	// enables the ObjectPtr property, not fully utilized by Timer, but certainly utilized by NonStandardAssets
-	[CustomPropertyDrawer(typeof(NonStandard.ObjectPtr))]
+	[CustomPropertyDrawer(typeof(NonStandard.Utility.UnityEditor.ObjectPtr))]
 	public class PropertyDrawer_ObjectPtr : PropertyDrawer {
 		delegate Object SelectNextObjectFunction();
 		public static bool showLabel = true;

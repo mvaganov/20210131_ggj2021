@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace NonStandard.Procedure {
+namespace NonStandard.Process {
 	/// <summary>
 	/// no vowel at the end to reduce namespace collision
 	/// </summary>

@@ -1,8 +1,6 @@
 ﻿using NonStandard;
 using NonStandard.Extension;
-using NonStandard.Procedure;
-using System.Collections;
-using System.Collections.Generic;
+using NonStandard.Process;
 using UnityEngine;
 
 public class Instigator : MonoBehaviour

@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
-namespace NonStandard.Procedure {
+namespace NonStandard.Process {
 	/// <summary>
 	/// a structure for connecting <see cref="Proc.edure"/>s into something more complex, with different kinds of linear advancement
 	/// </summary>

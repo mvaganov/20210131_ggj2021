@@ -1,2 +1,4 @@
 ﻿using UnityEngine;
-public class GameArea : MonoBehaviour {}
+namespace NonStandard.Character {
+	public class GameArea : MonoBehaviour { }
+}

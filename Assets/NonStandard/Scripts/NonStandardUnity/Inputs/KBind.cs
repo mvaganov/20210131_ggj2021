@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine.Events;
 using System.Text;
 using NonStandard.Utility;
+using NonStandard.Utility.UnityEditor;
 
 namespace NonStandard.Inputs {
 	[Serializable]

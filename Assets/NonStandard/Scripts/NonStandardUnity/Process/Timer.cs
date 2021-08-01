@@ -1,7 +1,7 @@
-﻿using UnityEngine;
-using NonStandard.Procedure;
+﻿using NonStandard.Utility.UnityEditor;
+using UnityEngine;
 
-namespace NonStandard
+namespace NonStandard.Process
 {
 	public class Timer : MonoBehaviour
 	{

@@ -1,6 +1,6 @@
 ﻿using System;
 using UnityEngine;
-using NonStandard.Procedure;
+using NonStandard.Process;
 
 namespace NonStandard {
 	/// <summary>

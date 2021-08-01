@@ -1,6 +1,7 @@
-﻿using System;
+﻿using NonStandard.Data;
+using System;
 
-namespace NonStandard.Data {
+namespace NonStandard.Cli {
 	public interface IDrawable {
 		void Draw(ConsoleTile[,] screen, Coord offset);
 	}

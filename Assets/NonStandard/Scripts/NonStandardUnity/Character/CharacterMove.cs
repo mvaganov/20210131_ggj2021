@@ -1,7 +1,8 @@
-﻿// http://codegiraffe.com/unity/NonStandardPlayer.unitypackage
+﻿using NonStandard.Data;
 using NonStandard.Inputs;
-using NonStandard.Procedure;
+using NonStandard.Process;
 using NonStandard.Utility;
+using NonStandard.Utility.UnityEditor;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;

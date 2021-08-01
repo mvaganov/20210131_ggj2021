@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace NonStandard.Ui {
+namespace NonStandard.Ui.Mouse {
 	public class MouseCursor : MonoBehaviour {
 		public CursorSet[] cursors = new CursorSet[] { };
 

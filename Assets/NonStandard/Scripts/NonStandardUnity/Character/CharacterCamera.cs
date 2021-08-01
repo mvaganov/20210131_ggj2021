@@ -1,9 +1,7 @@
 ﻿using NonStandard.Data;
-using NonStandard.Procedure;
+using NonStandard.Process;
 using NonStandard.Ui;
-using System;
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 
 namespace NonStandard.Character {

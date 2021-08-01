@@ -1,9 +1,8 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace NonStandard.Ui {
+namespace NonStandard.Ui.Mouse {
 	public class DragWithMouseOrResize : DragWithMouse {
 		private bool pointerDown;
 		public bool disableReize = true;

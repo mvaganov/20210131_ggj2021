@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace NonStandard.Procedure {
+namespace NonStandard.Process {
 	[System.Serializable]
 	public partial class TimeKeeper {
 		public const string ScheduledId = "chrono";

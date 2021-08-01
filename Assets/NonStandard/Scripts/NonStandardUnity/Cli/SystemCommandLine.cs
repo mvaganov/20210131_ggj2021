@@ -2,10 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SystemCommandLine : MonoBehaviour
-{
-	public string promptArtifact = "$"; // TODO implement
-	private void Start() {
-		
+namespace NonStandard.Cli {
+	/// <summary>
+	/// TODO implement access to the system's command line using SystemBridge
+	/// </summary>
+	public class SystemCommandLine : MonoBehaviour {
+		public string promptArtifact = "$"; // TODO implement
+		private void Start() {
+
+		}
 	}
 }
