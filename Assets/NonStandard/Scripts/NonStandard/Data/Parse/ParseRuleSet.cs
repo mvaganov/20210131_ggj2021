@@ -165,13 +165,13 @@ namespace NonStandard.Data.Parse {
 				}
 			}
 			public string GetText() { return Unescape(); }
-			public object Resolve(TokenErrLog tok, object scope, bool simplify = true) {
+			public object Resolve(TokenErrLog tok, object scope, bool simplify = true, bool fullyResolve = false) {
 				DelimOp op = sourceMeta as DelimOp;
 				if(op != null) { 
 					return op.resolve.Invoke(tok, this, scope);
 				}
 				if (IsText()) { return Unescape(); }
-				return Resolve(tok, scope, tokens, simplify);
+				return Resolve(tok, scope, tokens, simplify, fullyResolve);
 			}
 			public static void FindTerms(List<Token> tokens, int start, int length, List<int> found) {
 				for(int i = 0; i < length; ++i) {
@@ -181,21 +181,21 @@ namespace NonStandard.Data.Parse {
 					found.Add(i);
 				}
 			}
-			public static List<object> ResolveTerms(TokenErrLog tok, object scope, List<Token> tokens) {
+			public static List<object> ResolveTerms(TokenErrLog tok, object scope, List<Token> tokens, bool fullyResolve = false) {
 				List<object> results = new List<object>();
-				ResolveTerms(tok, scope, tokens, 0, tokens.Count, results);
+				ResolveTerms(tok, scope, tokens, 0, tokens.Count, results, fullyResolve);
 				return results;
 			}
-			public static void ResolveTerms(TokenErrLog tok, object scope, List<Token> tokens, int start, int length, List<object> results) {
+			public static void ResolveTerms(TokenErrLog tok, object scope, List<Token> tokens, int start, int length, List<object> results, bool fullyResolve = false) {
 				List<int> found = new List<int>();
 				FindTerms(tokens, start, length, found);
 				for (int i = 0; i < found.Count; ++i) {
 					Token t = tokens[found[i]];
-					results.Add(t.Resolve(tok, scope));
+					results.Add(t.Resolve(tok, scope, true, fullyResolve));
 				}
 			}
-			public static object Resolve(TokenErrLog tok, object scope, List<Token> tokens, bool simplify = true) {
-				List<object> result = ResolveTerms(tok, scope, tokens);
+			public static object Resolve(TokenErrLog tok, object scope, List<Token> tokens, bool simplify = true, bool fullyResolve = false) {
+				List<object> result = ResolveTerms(tok, scope, tokens, fullyResolve);
 				if (simplify) { switch (result.Count) { case 0: return null; case 1: return result[0]; } }
 				return result;
 			}

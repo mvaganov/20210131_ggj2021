@@ -9,23 +9,35 @@ namespace NonStandard.Ui {
 			return go.GetComponentInChildren<Text>().gameObject;
 		}
 		public static void SetText(GameObject go, string value) {
+			TMPro.TMP_InputField tif = go.GetComponentInChildren<TMPro.TMP_InputField>();
+			if (tif != null) { tif.text = value; return; }
 			TMPro.TMP_Text tmp = go.GetComponentInChildren<TMPro.TMP_Text>();
 			if (tmp != null) { tmp.text = value; return; }
+			InputField inf = go.GetComponentInChildren<InputField>();
+			if (inf != null) { inf.text = value; return; }
 			Text txt = go.GetComponentInChildren<Text>();
 			txt.text = value;
 		}
 		public static string GetText(GameObject go) {
+			TMPro.TMP_InputField tif = go.GetComponentInChildren<TMPro.TMP_InputField>();
+			if (tif != null) { return tif.text; }
 			TMPro.TMP_Text tmp = go.GetComponentInChildren<TMPro.TMP_Text>();
 			if (tmp != null) { return tmp.text; }
+			InputField inf = go.GetComponentInChildren<InputField>();
+			if (inf != null) { return inf.text; }
 			Text txt = go.GetComponentInChildren<Text>();
 			return txt.text;
 		}
 		public static float GetFontSize(GameObject go) {
+			TMPro.TMP_InputField tif = go.GetComponentInChildren<TMPro.TMP_InputField>();
+			if (tif != null) { return tif.pointSize; }
 			TMPro.TMP_Text tmp = go.GetComponentInChildren<TMPro.TMP_Text>();
 			if (tmp != null) { return tmp.fontSize; }
 			return go.GetComponentInChildren<Text>().fontSize;
 		}
 		public static void SetFontSize(GameObject go, float value) {
+			TMPro.TMP_InputField tif = go.GetComponentInChildren<TMPro.TMP_InputField>();
+			if (tif != null) { tif.pointSize = value; return; }
 			TMPro.TMP_Text tmp = go.GetComponentInChildren<TMPro.TMP_Text>();
 			if (tmp != null) { tmp.fontSize = value; return; }
 			go.GetComponentInChildren<Text>().fontSize = (int)value;

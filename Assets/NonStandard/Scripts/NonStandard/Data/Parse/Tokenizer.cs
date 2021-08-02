@@ -45,7 +45,7 @@ namespace NonStandard.Data.Parse {
 		/// <param name="i"></param>
 		/// <param name="scope"></param>
 		/// <returns></returns>
-		public object GetResolvedToken(int i, object scope = null) { return GetToken(i).Resolve(this, scope); }
+		public object GetResolvedToken(int i, object scope = null) { return GetToken(i).Resolve(this, scope, true, true); }
 		/// <summary>
 		/// this is probably the method you're looking for. Get a string from the list of tokens, resolving it if it's a variable.
 		/// </summary>
@@ -81,6 +81,12 @@ namespace NonStandard.Data.Parse {
 			return -1;
 		}
 		public Tokenizer() { }
+		public Tokenizer(Tokenizer toCopy) {
+			this.str = toCopy.str;
+			this.tokens = toCopy.tokens.Copy();
+			this.tokenStrings = toCopy.tokenStrings.Copy();
+			this.rows = toCopy.rows.Copy();
+		}
 		public void FilePositionOf(Token token, out int row, out int col) {
 			ParseError.FilePositionOf(token, rows, out row, out col);
 		}

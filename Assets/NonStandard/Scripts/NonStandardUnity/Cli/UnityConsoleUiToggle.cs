@@ -102,7 +102,6 @@ namespace NonStandard.Cli {
 		}
 		private void Start() {
 			ConsoleUiState state = GetCurrentState();
-			Debug.Log(state + ", active on " + consoleInputActive);
 			if (state != ConsoleUiState.None) {
 				ActivateConsoleInput(consoleInputActive == state || consoleInputActive == ConsoleUiState.Both);
 			}

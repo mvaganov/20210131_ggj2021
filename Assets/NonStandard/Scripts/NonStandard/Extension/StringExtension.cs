@@ -99,14 +99,14 @@ namespace NonStandard.Extension {
 			return sb.ToString();
 		}
 		public static string[] Split(this string str, string delimiter = "\n") {
-			List<int> lineEndings = GenerateIndexTable(delimiter);
+			List<int> lineEndings = GenerateIndexTable(str, delimiter);
 			string[] lines = new string[lineEndings.Count + 1];
 			int lineStart = 0;
 			for (int i = 0; i < lineEndings.Count; ++i) {
-				lines[i] = str.Substring(lineStart, lineEndings[i]);
+				lines[i] = str.Substring(lineStart, lineEndings[i] - lineStart);
 				lineStart = lineEndings[i] + delimiter.Length;
 			}
-			lines[lineEndings.Count] = str.Substring(lineStart, str.Length);
+			lines[lineEndings.Count] = str.Substring(lineStart, str.Length - lineStart);
 			return lines;
 		}
 

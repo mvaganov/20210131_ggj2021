@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace NonStandard.Data.Parse {
@@ -24,16 +25,20 @@ namespace NonStandard.Data.Parse {
 			}
 			return Resolve(null,null).ToString();
 		}
-		public object Resolve(TokenErrLog tok, object scope, bool simplify=true) {
+		public object Resolve(TokenErrLog tok, object scope, bool simplify=true, bool fullyResolve = false) {
 			if (index == -1 && length == -1) return meta;
 			if (meta == null) throw new NullReferenceException();
 			if (meta is string) {
 				string str = ToString((string)meta);
+				if (scope != null && fullyResolve) {
+					CodeRules.op_SearchForMember(tok, str, out object value, out Type type, scope);
+					return value;
+				}
 				return str;
 			}
 			TokenSubstitution ss = meta as TokenSubstitution; if (ss != null) return ss.value;
 			Delim d = meta as Delim; if (d != null) return d.text;
-			ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry; if (pce != null) return pce.Resolve(tok, scope, simplify);
+			ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry; if (pce != null) return pce.Resolve(tok, scope, simplify, fullyResolve);
 			throw new DecoderFallbackException();
 		}
 		public string GetAsSmallText() {
@@ -47,6 +52,13 @@ namespace NonStandard.Data.Parse {
 		public string GetAsBasicToken() { if (meta is string) { return ((string)meta).Substring(index, length); } return null; }
 		public Delim GetAsDelimiter() { return meta as Delim; }
 		public ParseRuleSet.Entry GetAsContextEntry() { return meta as ParseRuleSet.Entry; }
+		public List<Token> GetTokenSublist() {
+			ParseRuleSet.Entry e = GetAsContextEntry();
+			if(e != null) {
+				return e.tokens;
+			}
+			return null;
+		}
 		public bool IsContextBeginning() {
 			ParseRuleSet.Entry ctx = GetAsContextEntry(); if (ctx != null) { return ctx.GetBeginToken() == this; }
 			return false;

@@ -11,7 +11,7 @@ namespace NonStandard.Data.Parse {
 		public static ParseRuleSet
 			String, Char, Number, Hexadecimal, Expression, SquareBrace, GenericArgs, CodeBody,
 			CodeInString, Sum, Difference, Product, Quotient, Modulus, Power, LogicalAnd, LogicalOr,
-			Assignment, Equal, LessThan, GreaterThan, LessThanOrEqual, GreaterThanOrEqual,
+			Assignment, Equal, LessThan, GreaterThan, LessThanOrEqual, GreaterThanOrEqual, MembershipOperator,
 			NotEqual, XmlCommentLine, CommentLine, CommentBlock, Default;
 
 		public static Delim[] _string_delimiter = new Delim[] { new DelimCtx("\"", ctx: "string", s: true, e: true), };
@@ -31,7 +31,12 @@ namespace NonStandard.Data.Parse {
 		public static Delim[] _instruction_finished_delimiter = new Delim[] { ";" };
 		public static Delim[] _instruction_finished_delimiter_ignore_rest = new Delim[] { new Delim(";", parseRule: IgnoreTheRestOfThis) };
 		public static Delim[] _list_item_delimiter = new Delim[] { "," };
-		public static Delim[] _membership_operator = new Delim[] { new Delim(".", "member"), new Delim("->", "pointee"), new Delim("::", "scope resolution"), new Delim("?.", "null conditional") };
+		public static Delim[] _membership_operator = new Delim[] {
+			new DelimOp(".", "member",syntax:CodeRules.opinit_mem,resolve:CodeRules.op_mem, order:10),
+			new Delim("->", "pointee"),
+			new Delim("::", "scope resolution"),
+			new Delim("?.", "null conditional")
+		};
 		public static Delim[] _prefix_unary_operator = new Delim[] { "++", "--", "!", "-", "~" };
 		public static Delim[] _postfix_unary_operator = new Delim[] { "++", "--" };
 		public static Delim[] _binary_operator = new Delim[] { "&", "|", "<<", ">>", "^" };
@@ -128,6 +133,7 @@ namespace NonStandard.Data.Parse {
 			Equal = new ParseRuleSet("equal", CodeRules.None);
 			LessThan = new ParseRuleSet("less than", CodeRules.None);
 			GreaterThan = new ParseRuleSet("greater than", CodeRules.None);
+			MembershipOperator = new ParseRuleSet("membership operator", CodeRules.None);
 			LessThanOrEqual = new ParseRuleSet("less than or equal", CodeRules.None);
 			GreaterThanOrEqual = new ParseRuleSet("greater than or equal", CodeRules.None);
 			NotEqual = new ParseRuleSet("not equal", CodeRules.None);
@@ -228,6 +234,7 @@ namespace NonStandard.Data.Parse {
 		public static ParseRuleSet.Entry opinit_gt_(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "greater than"); }
 		public static ParseRuleSet.Entry opinit_lte(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "less than or equal"); }
 		public static ParseRuleSet.Entry opinit_gte(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "greater than or equal"); }
+		public static ParseRuleSet.Entry opinit_mem(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "membership operator"); }
 
 		/// <summary>
 		/// 
@@ -239,46 +246,42 @@ namespace NonStandard.Data.Parse {
 		/// <param name="type"></param>
 		/// <param name="simplify">if true, and the result is a list with one item, the list is stripped away and the single item is returned</param>
 		public static void op_ResolveToken(TokenErrLog tok, Token token, object scope, out object value, out Type type, bool simplify=true) {
+//			Show.Log("resolving: " + token.ToString());
 			value = token.Resolve(tok, scope, simplify);
 			type = (value != null) ? value.GetType() : null;
 			if (scope == null || type == null) { return; } // no scope, or no data, easy. we're done.
 			string name = value as string;
 			if (name == null) {  // data not a string (can't be a reference from scope), also easy. done.
-				List<object> args = value as List<object>;
-				if(args != null) {
-					for(int i = 0; i < args.Count; ++i) {
-						bool remove = false;
-						op_ResolveToken(tok, new Token(args[i], -1, -1), scope, out value, out type);
-						switch (value as string) { case ",": remove = true; break; }
-						if (remove) { args.RemoveAt(i--); } else { args[i] = value; }
-					}
-					value = args;
-					type = args.GetType();
-				}
+				op_Resolve_SimplifyListOfArguments(tok, ref value, ref type, scope);
 				return;
 			}
 			ParseRuleSet.Entry e = token.GetAsContextEntry();
 			if (e != null && e.IsText()) { return; } // data is explicitly meant to be a string, done.
+			op_SearchForMember(tok, name, out value, out type, scope);
+		}
+		public static void op_SearchForMember(TokenErrLog tok, string name, out object value, out Type type, object scope) {
 			switch (name) {
 			case "null": value = null; type = null; return;
 			case "true": value = true; type = typeof(bool); return;
 			case "false": value = false; type = typeof(bool); return;
 			}
+			value = name;
+			type = typeof(string);
 			// otherwise, we search for the data within the given context
 			Type scopeType = scope.GetType();
 			KeyValuePair<Type, Type> dType = scopeType.GetIDictionaryType();
-			if(dType.Key != null) {
-				if (dType.Key == typeof(string) && 
-					(name[0]==(Parser.Wildcard) || name[name.Length-1]==(Parser.Wildcard))) {
+			if (dType.Key != null) {
+				if (dType.Key == typeof(string) &&
+					(name[0] == (Parser.Wildcard) || name[name.Length - 1] == (Parser.Wildcard))) {
 					MethodInfo getKey = null;
-					IEnumerator en = (IEnumerator)scopeType.GetMethod("GetEnumerator", Type.EmptyTypes).Invoke(scope,new object[] { });
-					while(en.MoveNext()) {
+					IEnumerator en = (IEnumerator)scopeType.GetMethod("GetEnumerator", Type.EmptyTypes).Invoke(scope, new object[] { });
+					while (en.MoveNext()) {
 						object kvp = en.Current;
 						if (getKey == null) {
 							getKey = kvp.GetType().GetProperty("Key").GetGetMethod();
 						}
 						string memberName = getKey.Invoke(kvp, null) as string;
-						if(Parser.IsWildcardMatch(memberName, name)) {
+						if (Parser.IsWildcardMatch(memberName, name)) {
 							name = memberName;
 							break;
 						}
@@ -323,7 +326,7 @@ namespace NonStandard.Data.Parse {
 				string[] names = Array.ConvertAll(fields, f => f.Name);
 				int index = Parser.FindIndexWithWildcard(names, name, false);
 				if (index >= 0) {
-					//Show.Log(name+" "+scopeType+" :"+index + " " + names.Join(", ") + " " +fields.Join(", "));
+					Show.Log(name + " " + scopeType + " :" + index + " " + names.JoinToString() + " " + fields.JoinToString());
 					value = fields[index].GetValue(scope);
 					type = (value != null) ? value.GetType() : null;
 					return;
@@ -332,7 +335,8 @@ namespace NonStandard.Data.Parse {
 				names = Array.ConvertAll(props, p => p.Name);
 				index = Parser.FindIndexWithWildcard(names, name, false);
 				if (index >= 0) {
-					value = props[index].GetValue(scope,null);
+					Show.Log(name + " " + scopeType + " :" + index + " " + names.JoinToString() + " " + props.JoinToString());
+					value = props[index].GetValue(scope);
 					type = (value != null) ? value.GetType() : null;
 					return;
 				}
@@ -345,12 +349,26 @@ namespace NonStandard.Data.Parse {
 				}
 				PropertyInfo prop = scopeType.GetProperty(name);
 				if (prop != null) {
-					value = prop.GetValue(scope,null);
+					value = prop.GetValue(scope, null);
 					type = (value != null) ? value.GetType() : null;
 					return;
 				}
 			}
 		}
+		private static void op_Resolve_SimplifyListOfArguments(TokenErrLog tok, ref object value, ref Type type, object scope) {
+			List<object> args = value as List<object>;
+			if (args != null) {
+				for (int i = 0; i < args.Count; ++i) {
+					bool remove = false;
+					op_ResolveToken(tok, new Token(args[i], -1, -1), scope, out value, out type);
+					switch (value as string) { case ",": remove = true; break; }
+					if (remove) { args.RemoveAt(i--); } else { args[i] = value; }
+				}
+				value = args;
+				type = args.GetType();
+			}
+		}
+
 		public static void op_BinaryArgs(TokenErrLog tok, ParseRuleSet.Entry e, object scope, out object left, out object right, out Type lType, out Type rType) {
 			op_ResolveToken(tok, e.tokens[0], scope, out left, out lType);
 			op_ResolveToken(tok, e.tokens[2], scope, out right, out rType);
@@ -561,6 +579,16 @@ namespace NonStandard.Data.Parse {
 			if(!CodeConvert.TryConvert(ref obj, typeof(double))) { return true; }
 			double d = (double)obj;
 			return d != 0;
+		}
+		public static object op_mem(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {
+			object left, right; Type lType, rType;
+			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
+			//Show.Log(lType+" "+left+" . "+rType+" "+right);
+			object val = lType.GetValue(left, right as string);
+			if (val == null) {
+				val = e.tokens[0].ToString()+e.tokens[1]+e.tokens[2];
+			}
+			return val;
 		}
 		public static object op_and(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {
 			object left, right; Type lType, rType;
