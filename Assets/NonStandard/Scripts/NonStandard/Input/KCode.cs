@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace NonStandard.Inputs {
 	public static class KCodeExtension {
@@ -18,11 +19,11 @@ namespace NonStandard.Inputs {
 			case KCode.AltGr:
 			case KCode.LeftAlt:
 			case KCode.RightAlt:
-		#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
 			return "Option";
-		#else
-			return "Alt";
-		#endif
+#else
+				return "Alt";
+#endif
 			case KCode.AnyShift: case KCode.LeftShift: case KCode.RightShift: return "Shift";
 			case KCode.LeftApple: case KCode.RightApple: return "Apple";
 			case KCode.LeftWindows: case KCode.RightWindows: return "Windows";
@@ -37,6 +38,143 @@ namespace NonStandard.Inputs {
 			}
 			return k.ToString();
 		}
+
+		public static KCode FromConsoleKey(System.ConsoleKeyInfo ckey) { return FromConsoleKey(ckey.Key); }
+
+		public static readonly Dictionary<ConsoleKey, KCode> consoleToKCode = new Dictionary<ConsoleKey, KCode>() {
+			[ConsoleKey.PageUp] = KCode.PageUp,
+			[ConsoleKey.PageDown] = KCode.PageDown,
+			[ConsoleKey.End] = KCode.End,
+			[ConsoleKey.Home] = KCode.Home,
+			[ConsoleKey.LeftArrow] = KCode.LeftArrow,
+			[ConsoleKey.UpArrow] = KCode.UpArrow,
+			[ConsoleKey.RightArrow] = KCode.RightArrow,
+			[ConsoleKey.DownArrow] = KCode.DownArrow,
+			[ConsoleKey.Print] = KCode.Print,
+			[ConsoleKey.Execute] = KCode.SysReq,
+			[ConsoleKey.PrintScreen] = KCode.Print,
+			[ConsoleKey.Insert] = KCode.Insert,
+			[ConsoleKey.Delete] = KCode.Delete,
+			[ConsoleKey.Help] = KCode.Help,
+			[ConsoleKey.A] = KCode.A,
+			[ConsoleKey.B] = KCode.B,
+			[ConsoleKey.C] = KCode.C,
+			[ConsoleKey.D] = KCode.D,
+			[ConsoleKey.E] = KCode.E,
+			[ConsoleKey.F] = KCode.F,
+			[ConsoleKey.G] = KCode.G,
+			[ConsoleKey.H] = KCode.H,
+			[ConsoleKey.I] = KCode.I,
+			[ConsoleKey.J] = KCode.J,
+			[ConsoleKey.K] = KCode.K,
+			[ConsoleKey.L] = KCode.L,
+			[ConsoleKey.M] = KCode.M,
+			[ConsoleKey.N] = KCode.N,
+			[ConsoleKey.O] = KCode.O,
+			[ConsoleKey.P] = KCode.P,
+			[ConsoleKey.Q] = KCode.Q,
+			[ConsoleKey.R] = KCode.R,
+			[ConsoleKey.S] = KCode.S,
+			[ConsoleKey.T] = KCode.T,
+			[ConsoleKey.U] = KCode.U,
+			[ConsoleKey.V] = KCode.V,
+			[ConsoleKey.W] = KCode.W,
+			[ConsoleKey.X] = KCode.X,
+			[ConsoleKey.Y] = KCode.Y,
+			[ConsoleKey.Z] = KCode.Z,
+			[ConsoleKey.LeftWindows] = KCode.LeftWindows,
+			[ConsoleKey.RightWindows] = KCode.RightWindows,
+			[ConsoleKey.Applications] = KCode.Menu,
+			[ConsoleKey.NumPad0] = KCode.Keypad0,
+			[ConsoleKey.NumPad1] = KCode.Keypad1,
+			[ConsoleKey.NumPad2] = KCode.Keypad2,
+			[ConsoleKey.NumPad3] = KCode.Keypad3,
+			[ConsoleKey.NumPad4] = KCode.Keypad4,
+			[ConsoleKey.NumPad5] = KCode.Keypad5,
+			[ConsoleKey.NumPad6] = KCode.Keypad6,
+			[ConsoleKey.NumPad7] = KCode.Keypad7,
+			[ConsoleKey.NumPad8] = KCode.Keypad8,
+			[ConsoleKey.NumPad9] = KCode.Keypad9,
+			[ConsoleKey.Multiply] = KCode.KeypadMultiply,
+			[ConsoleKey.Add] = KCode.KeypadPlus,
+			[ConsoleKey.Separator] = KCode.Minus,
+			[ConsoleKey.Subtract] = KCode.KeypadMinus,
+			[ConsoleKey.Decimal] = KCode.KeypadPeriod,
+			[ConsoleKey.Divide] = KCode.KeypadDivide,
+			[ConsoleKey.F1] = KCode.F1,
+			[ConsoleKey.F2] = KCode.F2,
+			[ConsoleKey.F3] = KCode.F3,
+			[ConsoleKey.F4] = KCode.F4,
+			[ConsoleKey.F5] = KCode.F5,
+			[ConsoleKey.F6] = KCode.F6,
+			[ConsoleKey.F7] = KCode.F7,
+			[ConsoleKey.F8] = KCode.F8,
+			[ConsoleKey.F9] = KCode.F9,
+			[ConsoleKey.F10] = KCode.F10,
+			[ConsoleKey.F11] = KCode.F11,
+			[ConsoleKey.F12] = KCode.F12,
+			[ConsoleKey.F13] = KCode.F13,
+			[ConsoleKey.F14] = KCode.F14,
+			[ConsoleKey.F15] = KCode.F15,
+			[ConsoleKey.Oem1] = KCode.Semicolon,
+			[ConsoleKey.OemPlus] = KCode.Plus,
+			[ConsoleKey.OemComma] = KCode.Comma,
+			[ConsoleKey.OemMinus] = KCode.Minus,
+			[ConsoleKey.OemPeriod] = KCode.Period,
+			[ConsoleKey.Oem2] = KCode.Slash,
+			[ConsoleKey.Oem3] = KCode.BackQuote,
+			[ConsoleKey.Oem4] = KCode.LeftBracket,
+			[ConsoleKey.Oem5] = KCode.Backslash,
+			[ConsoleKey.Oem6] = KCode.RightBracket,
+			[ConsoleKey.Oem7] = KCode.Quote,
+
+			[ConsoleKey.Select] = KCode.UnsupportedKey,
+			[ConsoleKey.Sleep] = KCode.UnsupportedKey,
+			[ConsoleKey.F16] = KCode.UnsupportedKey,
+			[ConsoleKey.F17] = KCode.UnsupportedKey,
+			[ConsoleKey.F18] = KCode.UnsupportedKey,
+			[ConsoleKey.F19] = KCode.UnsupportedKey,
+			[ConsoleKey.F20] = KCode.UnsupportedKey,
+			[ConsoleKey.F21] = KCode.UnsupportedKey,
+			[ConsoleKey.F22] = KCode.UnsupportedKey,
+			[ConsoleKey.F23] = KCode.UnsupportedKey,
+			[ConsoleKey.F24] = KCode.UnsupportedKey,
+			[ConsoleKey.BrowserBack] = KCode.UnsupportedKey,
+			[ConsoleKey.BrowserForward] = KCode.UnsupportedKey,
+			[ConsoleKey.BrowserRefresh] = KCode.UnsupportedKey,
+			[ConsoleKey.BrowserStop] = KCode.UnsupportedKey,
+			[ConsoleKey.BrowserSearch] = KCode.UnsupportedKey,
+			[ConsoleKey.BrowserFavorites] = KCode.UnsupportedKey,
+			[ConsoleKey.BrowserHome] = KCode.UnsupportedKey,
+			[ConsoleKey.VolumeMute] = KCode.UnsupportedKey,
+			[ConsoleKey.VolumeDown] = KCode.UnsupportedKey,
+			[ConsoleKey.VolumeUp] = KCode.UnsupportedKey,
+			[ConsoleKey.MediaNext] = KCode.UnsupportedKey,
+			[ConsoleKey.MediaPrevious] = KCode.UnsupportedKey,
+			[ConsoleKey.MediaStop] = KCode.UnsupportedKey,
+			[ConsoleKey.MediaPlay] = KCode.UnsupportedKey,
+			[ConsoleKey.LaunchMail] = KCode.UnsupportedKey,
+			[ConsoleKey.LaunchMediaSelect] = KCode.UnsupportedKey,
+			[ConsoleKey.LaunchApp1] = KCode.UnsupportedKey,
+			[ConsoleKey.LaunchApp2] = KCode.UnsupportedKey,
+			[ConsoleKey.Oem8] = KCode.UnsupportedKey,
+			[ConsoleKey.Oem102] = KCode.UnsupportedKey,
+			[ConsoleKey.Process] = KCode.UnsupportedKey,
+			[ConsoleKey.Packet] = KCode.UnsupportedKey,
+			[ConsoleKey.Attention] = KCode.UnsupportedKey,
+			[ConsoleKey.CrSel] = KCode.UnsupportedKey,
+			[ConsoleKey.ExSel] = KCode.UnsupportedKey,
+			[ConsoleKey.EraseEndOfFile] = KCode.UnsupportedKey,
+			[ConsoleKey.Play] = KCode.UnsupportedKey,
+			[ConsoleKey.Zoom] = KCode.UnsupportedKey,
+			[ConsoleKey.NoName] = KCode.UnsupportedKey,
+			[ConsoleKey.Pa1] = KCode.UnsupportedKey,
+			[ConsoleKey.OemClear] = KCode.UnsupportedKey,
+		};
+		public static KCode FromConsoleKey(System.ConsoleKey cKey) {
+			if (consoleToKCode.TryGetValue(cKey, out KCode kCode)) { return kCode; }
+			return (KCode)(int)(cKey);
+		}
 	}
 	/// <summary>
 	/// named after the Unity Input.Get___ methods (except KeyReleased)
@@ -47,8 +185,7 @@ namespace NonStandard.Inputs {
 	///   built to be an extension for the UnityEngine.KeyCode enumerator
 	/// Key codes returned by Event.keyCode. These map directly to a physical key on the keyboard
 	/// </summary>
-	public enum KCode
-	{
+	public enum KCode {
 		/// Not assigned (never returned as the result of a keystroke)
 		None = 0,
 
@@ -59,7 +196,7 @@ namespace NonStandard.Inputs {
 		// UNUSED = 5, // 0x00000001
 		// UNUSED = 6, // 0x00000001
 		// UNUSED = 7, // 0x00000001
-	
+
 		/// <summary>
 		/// The backspace key
 		/// </summary>
@@ -86,7 +223,7 @@ namespace NonStandard.Inputs {
 		// UNUSED = 16, // 0x00000010
 		// UNUSED = 17, // 0x00000011
 		// UNUSED = 18, // 0x00000012
-	
+
 		/// <summary>
 		/// Pause on PC machines
 		/// </summary>
@@ -104,12 +241,12 @@ namespace NonStandard.Inputs {
 		/// Escape key
 		/// </summary>
 		Escape = 27, // 0x0000001B
-	
+
 		MouseXUp = 28, // 0x0000001C
 		MouseXDown = 29, // 0x0000001D
 		MouseYUp = 30, // 0x0000001E
 		MouseYDown = 31, // 0x0000001F
-	
+
 		/// <summary>
 		/// Space key
 		/// </summary>
@@ -242,7 +379,7 @@ namespace NonStandard.Inputs {
 		/// At key '@'
 		/// </summary>
 		At = 64, // 0x00000040
-	
+
 		// UNUSED = 65, // a 0x00000041
 		// UNUSED = 66, // b 0x00000042
 		// UNUSED = 67, // c 0x00000043
@@ -418,23 +555,23 @@ namespace NonStandard.Inputs {
 		/// The forward delete key
 		/// </summary>
 		Delete = 127, // 0x0000007F
-	
+
 		_UserDefined0 = 128, // 0x00000080
-		_UserDefined1 = _UserDefined0+1, // 0x00000081
-		_UserDefined2 = _UserDefined0+2, // 0x00000082
-		_UserDefined3 = _UserDefined0+3, // 0x00000083
-		_UserDefined4 = _UserDefined0+4, // 0x00000084
-		_UserDefined5 = _UserDefined0+5, // 0x00000085
-		_UserDefined6 = _UserDefined0+6, // 0x00000086
-		_UserDefined7 = _UserDefined0+7, // 0x00000087
-		_UserDefined8 = _UserDefined0+8, // 0x00000088
-		_UserDefined9 = _UserDefined0+9, // 0x00000089
-		_UserDefined10 = _UserDefined0+10, // 0x0000008A
-		_UserDefined11 = _UserDefined0+11, // 0x0000008B
-		_UserDefined12 = _UserDefined0+12, // 0x0000008C
-		_UserDefined13 = _UserDefined0+13, // 0x0000008D
-		_UserDefined14 = _UserDefined0+14, // 0x0000008E
-		_UserDefined15 = _UserDefined0+15, // 0x0000008F
+		_UserDefined1 = _UserDefined0 + 1, // 0x00000081
+		_UserDefined2 = _UserDefined0 + 2, // 0x00000082
+		_UserDefined3 = _UserDefined0 + 3, // 0x00000083
+		_UserDefined4 = _UserDefined0 + 4, // 0x00000084
+		_UserDefined5 = _UserDefined0 + 5, // 0x00000085
+		_UserDefined6 = _UserDefined0 + 6, // 0x00000086
+		_UserDefined7 = _UserDefined0 + 7, // 0x00000087
+		_UserDefined8 = _UserDefined0 + 8, // 0x00000088
+		_UserDefined9 = _UserDefined0 + 9, // 0x00000089
+		_UserDefined10 = _UserDefined0 + 10, // 0x0000008A
+		_UserDefined11 = _UserDefined0 + 11, // 0x0000008B
+		_UserDefined12 = _UserDefined0 + 12, // 0x0000008C
+		_UserDefined13 = _UserDefined0 + 13, // 0x0000008D
+		_UserDefined14 = _UserDefined0 + 14, // 0x0000008E
+		_UserDefined15 = _UserDefined0 + 15, // 0x0000008F
 
 		// UNUSED = 144, // 0x00000090
 		// UNUSED = 145, // 0x00000091
@@ -453,19 +590,38 @@ namespace NonStandard.Inputs {
 		/// <summary>
 		/// shift keys is explicitly not pressed
 		/// </summary>
-		NoShift = 158, // 0x0000000E
+		NoShift = 158, // 0x0000009E
 		/// <summary>
 		/// ctrl keys are explicitly not pressed
 		/// </summary>
-		NoCtrl = 159, // 0x0000000F
+		NoCtrl = 159, // 0x0000009F
 		/// <summary>
 		/// alt keys are explicitly not pressed
 		/// </summary>
-		NoAlt = 160, // 0x00000010
+		NoAlt = 160, // 0x000000A0
 		/// <summary>
 		/// alt keys are explicitly not pressed
 		/// </summary>
-		NoOption = 160, // 0x00000010
+		NoOption = 160, // 0x000000A0
+
+		// UNUSED = 161, // 0x000000A1
+		// UNUSED = 162, // 0x000000A2
+		// UNUSED = 163, // 0x000000A3
+		// UNUSED = 164, // 0x000000A4
+		// UNUSED = 165, // 0x000000A5
+		// UNUSED = 166, // 0x000000A6
+		// UNUSED = 167, // 0x000000A7
+		// UNUSED = 168, // 0x000000A8
+		// UNUSED = 169, // 0x000000A9
+		UnsupportedKey = 170, // 0x000000AA
+		// UNUSED = 171, // 0x000000AB
+		// UNUSED = 172, // 0x000000AC
+		// UNUSED = 173, // 0x000000AD
+		// UNUSED = 174, // 0x000000AE
+		// UNUSED = 175, // 0x000000AF
+		// UNUSED = 176, // 0x000000B0
+		// ...
+		// UNUSED = 255, // 0x000000ff
 
 		/// <summary>
 		/// Numeric keypad 0
@@ -738,20 +894,20 @@ namespace NonStandard.Inputs {
 		/// Menu key
 		/// </summary>
 		Menu = 319, // 0x0000013F
-	
+
 		// UNUSED320 = 320, // 0x00000140
-	
+
 		/// <summary>
-		/// Pushing the scroll wheel forward</para>
+		/// Pushing the scroll wheel forward
 		/// NEW
 		/// </summary>
 		MouseWheelUp = 321, // 0x00000141
 		/// <summary>
-		/// Pulling the scroll wheel backward</para>
+		/// Pulling the scroll wheel backward
 		/// NEW
 		/// </summary>
 		MouseWheelDown = 322, // 0x00000142
-	
+
 		/// <summary>
 		/// The Left (or primary) mouse button
 		/// </summary>
