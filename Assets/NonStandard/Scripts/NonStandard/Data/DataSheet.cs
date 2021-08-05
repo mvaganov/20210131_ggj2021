@@ -13,12 +13,12 @@ namespace NonStandard.Data {
 		/// </summary>
 		public string description;
 	}
-	public class DataSheet : DataSheet_<ColumnData> {
+	public class DataSheet : DataSheet<ColumnData> {
 		public DataSheet() : base() { }
 		public DataSheet(Tokenizer unfilteredFormat, int indexOfValueElement = 0) : base(unfilteredFormat, indexOfValueElement) { }
 	}
-	public class DataSheet_<MetaData> where MetaData : new() {
-		public Tokenizer fieldFormat;
+	public class DataSheet<MetaData> where MetaData : new() {
+		public List<Token> fieldTokens = new List<Token>();
 		/// <summary>
 		/// the actual data
 		/// </summary>
@@ -26,14 +26,14 @@ namespace NonStandard.Data {
 		/// <summary>
 		/// data about the columns
 		/// </summary>
-		public List<Column> columns = new List<Column>();
+		public List<ColumnData> columns = new List<ColumnData>();
 		/// <summary>
 		/// which column is sorted first?
 		/// </summary>
 		protected List<int> columnSortOrder = new List<int>();
 
 		public enum SortState { None, Ascending, Descening }
-		public class Column {
+		public class ColumnData {
 			/// <summary>
 			/// what type the values in this column are expected to be
 			/// </summary>
@@ -52,10 +52,10 @@ namespace NonStandard.Data {
 			public Comparison<object> sort;
 		}
 
-		public DataSheet_() { }
-		public DataSheet_(Tokenizer unfilteredFormat, int indexOfValueElement = 0) {
+		public DataSheet() { }
+		public DataSheet(Tokenizer unfilteredFormat, int indexOfValueElement = 0) {
 			InitFormat(unfilteredFormat, indexOfValueElement);
-			SetColumnCount(fieldFormat.tokens.Count);
+			SetColumnCount(fieldTokens.Count);
 		}
 
 		public object Get(int row, int col) { return data[row][col]; }
@@ -66,45 +66,45 @@ namespace NonStandard.Data {
 
 		public void SetColumnCount(int count) {
 			if (columns.Count < count) { columns.Capacity = count; }
-			for (int i = columns.Count; i < count; ++i) { columns.Add(new Column()); }
+			for (int i = columns.Count; i < count; ++i) { columns.Add(new ColumnData()); }
 		}
 
 		public void InitFormat(Tokenizer unfilteredFieldFormat, int indexOfValueElement = 0) {
-			fieldFormat = GetFilteredTokenizerOfValues(unfilteredFieldFormat, indexOfValueElement);
+			fieldTokens = GetValueTokens(unfilteredFieldFormat, indexOfValueElement);
 		}
 
-		public static Tokenizer GetFilteredTokenizerOfValues(Tokenizer tokenizer, int indexOfValueElement = 0) {
-			Tokenizer justValues = new Tokenizer();
-			justValues.str = tokenizer.str;
+		public static List<Token> GetValueTokens(Tokenizer tokenizer, int indexOfValueElement = 0) {
+			List<Token> justValues = new List<Token>();
 			List<Token> main = tokenizer.tokens[0].GetTokenSublist();
 			// main[0] is "[" and main[main.Count-1] is "]"
 			for (int i = 1; i < main.Count - 1; ++i) {
 				List<Token> entry = main[i].GetTokenSublist();
 				// +1 is needed because element 0 is "["
-				justValues.tokens.Add(entry[indexOfValueElement + 1]);
+				justValues.Add(entry[indexOfValueElement + 1]);
 			}
 			return justValues;
 		}
 
-		public void InitData(IList<object> source) {
+		public void InitData(IList<object> source, TokenErrLog errLog) {
 			data = new List<object[]>();
-			InsertRange(0, source);
+			InsertRange(0, source, errLog);
 		}
 
-		public void InsertRange(int index, IList<object> source) {
+		public void InsertRange(int index, IList<object> source, TokenErrLog errLog) {
 			object[][] items = new object[source.Count][];
 			for (int i = 0; i < source.Count; ++i) {
-				items[i] = GenerateRow(source[i]);
+				items[i] = GenerateRow(source[i], errLog);
 			}
 			data.InsertRange(index, items);
 		}
-		public void AddRange(IList<object> source) { InsertRange(data.Count, source); }
-		public void AddData(object elementForRow) { data.Add(GenerateRow(elementForRow)); }
+		public void AddRange(IList<object> source, TokenErrLog errLog) { InsertRange(data.Count, source, errLog); }
+		public void AddData(object elementForRow, TokenErrLog errLog) { data.Add(GenerateRow(elementForRow, errLog)); }
 
-		public object[] GenerateRow(object source) {
-			object[] result = new object[fieldFormat.tokens.Count];
+		public object[] GenerateRow(object source, TokenErrLog errLog) {
+			if(errLog == null) { errLog = new Tokenizer(); }
+			object[] result = new object[fieldTokens.Count];
 			for (int i = 0; i < result.Length; ++i) {
-				result[i] = fieldFormat.GetResolvedToken(i, source);
+				result[i] = fieldTokens[i].Resolve(errLog, source, true, true);
 			}
 			return result;
 		}
@@ -124,6 +124,13 @@ namespace NonStandard.Data {
 
 		public void Sort() {
 			data.Sort(RowSort);
+		}
+
+		public void SetColumn(int index, ColumnData column, Token fieldScript) {
+			while (columns.Count <= index) { columns.Add(new ColumnData()); }
+			columns[index] = column;
+			while (fieldTokens.Count <= index) { fieldTokens.Add(new Token()); }
+			fieldTokens[index] = fieldScript;
 		}
 	}
 }

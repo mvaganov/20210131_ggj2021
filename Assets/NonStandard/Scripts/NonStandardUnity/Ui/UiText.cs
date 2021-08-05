@@ -16,7 +16,7 @@ namespace NonStandard.Ui {
 			InputField inf = go.GetComponentInChildren<InputField>();
 			if (inf != null) { inf.text = value; return; }
 			Text txt = go.GetComponentInChildren<Text>();
-			txt.text = value;
+			if (txt != null) { txt.text = value; }
 		}
 		public static string GetText(GameObject go) {
 			TMPro.TMP_InputField tif = go.GetComponentInChildren<TMPro.TMP_InputField>();
@@ -26,7 +26,8 @@ namespace NonStandard.Ui {
 			InputField inf = go.GetComponentInChildren<InputField>();
 			if (inf != null) { return inf.text; }
 			Text txt = go.GetComponentInChildren<Text>();
-			return txt.text;
+			if (txt != null) { return txt.text; }
+			return null;
 		}
 		public static float GetFontSize(GameObject go) {
 			TMPro.TMP_InputField tif = go.GetComponentInChildren<TMPro.TMP_InputField>();

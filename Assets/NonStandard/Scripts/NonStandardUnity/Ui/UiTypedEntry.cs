@@ -27,22 +27,22 @@ namespace NonStandard.Ui {
 			if (tokenizer.errors.Count > 0) {
 				Debug.LogWarning(tokenizer.ErrorString());
 			}
-			Debug.Log(tokenizer);
+			//Debug.Log(tokenizer);
 			object obj = ptr.data;
 
-			// TODO make a copy of the tokenizer with only the value comoponents, for faster token resolution.
-			// TODO have DataSheet calculate the things
 			// TODO implement a sorting UI also, so the rows can be sorted
 
-			DataSheet_< UiTypedColumnData> ds = new DataSheet_<UiTypedColumnData>(tokenizer, valueIndex);
-			ds.AddData(obj);
+			DataSheet< UiTypedColumnData> ds = new DataSheet<UiTypedColumnData>(tokenizer, valueIndex);
+			ds.AddData(obj, tokenizer);
 			List<Token> tokenizedList = tokenizer.tokens[0].GetTokenSublist();
 			for(int i = 1; i < tokenizedList.Count-1; ++i) {
 				List<Token> list = tokenizedList[i].GetTokenSublist();
-				DataSheet_<UiTypedColumnData>.Column col = ds.columns[i - 1];
+				DataSheet<UiTypedColumnData>.ColumnData col = ds.columns[i - 1];
 				col.data.label = list[columnTitleIndex + 1].ToString();
 				string uiName = list[uiTypeIndex + 1].ToString();
 				col.data.uiBase = Global.Get<UiTypedEntryPrototype>().GetElement(uiName);
+				string text = list[valueIndex + 1].Resolve(tokenizer, obj, true, true).ToString();
+				//Debug.Log(list[valueIndex + 1].ToString()+" ~> "+text);
 			}
 
 			//Tokenizer justValues = GetTokenizerOfValues(tokenizer);
@@ -53,7 +53,7 @@ namespace NonStandard.Ui {
 			Vector2 cursor = Vector2.zero;
 			for(int i = 0; i < elementList.Count; ++i) {
 				List<object> list = elementList[i] as List<object>;
-				Show.Log(list[columnTitleIndex] + "(" + list[uiTypeIndex] + "): " + list[valueIndex].GetType().ToString());
+				//Show.Log(list[columnTitleIndex] + "(" + list[uiTypeIndex] + "): " + list[valueIndex].GetType().ToString());
 				GameObject prototype = Global.Get<UiTypedEntryPrototype>().GetElement(list[uiTypeIndex].ToString());
 				GameObject uiPart = Instantiate(prototype);
 				RectTransform rect = uiPart.GetComponent<RectTransform>();
