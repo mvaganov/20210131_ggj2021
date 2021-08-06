@@ -5,6 +5,7 @@ using NonStandard.Extension;
 using NonStandard.Process;
 using System;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 
 namespace NonStandard.Ui {
@@ -18,8 +19,8 @@ namespace NonStandard.Ui {
 	public class UnityDataSheet : MonoBehaviour {
 		const int columnTitleIndex = 0, uiTypeIndex = 1, valueIndex = 2, headerUiType = 3, columnWidth = 4;
 		public RectTransform headerRectangle;
-		public RectTransform bodyRectangle;
-		public RectTransform dataRowRectangle;
+		public RectTransform contentRectangle;
+		public GameObject prefab_dataRow;
 		public Udash data = new Udash();
 		public List<GameObject> headers = new List<GameObject>();
 		public List<GameObject> dataRows = new List<GameObject>();
@@ -132,17 +133,19 @@ namespace NonStandard.Ui {
 
 		void GenerateDataRows() {
 			dataRows.ForEach(go => { go.transform.SetParent(null); Destroy(go); });
+			dataRows.Clear();
 			Vector2 cursor = Vector2.zero;
 			for (int r = 0; r < data.data.Count; ++r) {
-				GameObject rowUi = Instantiate(dataRowRectangle.gameObject);
+				GameObject rowUi = Instantiate(prefab_dataRow.gameObject);
 				rowUi.SetActive(true);
 				dataRows.Add(rowUi);
 				RectTransform rect = rowUi.GetComponent<RectTransform>();
-				rect.transform.SetParent(bodyRectangle, false);
+				rect.transform.SetParent(contentRectangle, false);
 				rect.anchoredPosition = cursor;
 				object[] row = data.data[r];
 				Vector2 rowCursor = Vector2.zero;
 				cursor.y -= rect.rect.height;
+				//StringBuilder sb = new StringBuilder();
 				for (int c = 0; c < row.Length; ++c) {
 					Udash.ColumnData cold = data.columns[c];
 					GameObject fieldUi = Instantiate(cold.data.uiBase);
@@ -151,6 +154,7 @@ namespace NonStandard.Ui {
 					object value = row[c];
 					if (value != null) {
 						UiText.SetText(fieldUi, value.ToString());
+						//sb.Append(value.ToString() + ", ");
 					}
 					rect = fieldUi.GetComponent<RectTransform>();
 					float w = cold.data.width > 0 ? cold.data.width : rect.sizeDelta.x;
@@ -158,10 +162,15 @@ namespace NonStandard.Ui {
 					rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, w);
 					rowCursor.x += w * rt.localScale.x;
 				}
+				//Show.Log(sb);
 				rect = rowUi.GetComponent<RectTransform>();
 				rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, rowCursor.x);
 			}
-			bodyRectangle.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, -cursor.y);
+			contentRectangle.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, -cursor.y);
+		}
+		public void SetSortState(int column, SortState sortState) {
+			data.SetSortState(column, sortState);
+			GenerateDataRows();
 		}
 	}
 }

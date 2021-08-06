@@ -1,4 +1,5 @@
 ﻿using NonStandard.Data.Parse;
+using NonStandard.Extension;
 using System;
 using System.Collections.Generic;
 
@@ -17,6 +18,7 @@ namespace NonStandard.Data {
 		public DataSheet() : base() { }
 		public DataSheet(Tokenizer unfilteredFormat, int indexOfValueElement = 0) : base(unfilteredFormat, indexOfValueElement) { }
 	}
+	public enum SortState { None, Ascending, Descening }
 	public class DataSheet<MetaData> where MetaData : new() {
 		public List<Token> fieldTokens = new List<Token>();
 		/// <summary>
@@ -32,7 +34,6 @@ namespace NonStandard.Data {
 		/// </summary>
 		protected List<int> columnSortOrder = new List<int>();
 
-		public enum SortState { None, Ascending, Descening }
 		public class ColumnData {
 			/// <summary>
 			/// what type the values in this column are expected to be
@@ -63,6 +64,15 @@ namespace NonStandard.Data {
 
 		public object this [int row, int col] { get => Get(row, col); set => Set(row, col, value); }
 		public object[] this [int row] { get => data[row]; }
+
+		public void SetSortState(int column, SortState sortState) {
+			int columnImportance = columnSortOrder.IndexOf(column);
+			if (columnImportance >= 0) { columnSortOrder.RemoveAt(columnImportance); }
+			columns[column].sortState = sortState;
+			if (sortState == SortState.None) { return; }
+			columnSortOrder.Insert(0, column);
+			Sort();
+		}
 
 		public void SetColumnCount(int count) {
 			if (columns.Count < count) { columns.Capacity = count; }
@@ -109,12 +119,30 @@ namespace NonStandard.Data {
 			return result;
 		}
 
+		public int DefaultSort(object a, object b) {
+			if (a == b) return 0;
+			if (a == null && b != null) return 1;
+			if (a != null && b == null) return -1;
+			Type ta = a.GetType(), tb = b.GetType();
+			if (ta == tb) {
+				if (ta == typeof(double)) { return Comparer<double>.Default.Compare((double)a, (double)b); }
+				if (ta == typeof(string)) { return StringComparer.Ordinal.Compare(a, b); }
+				if (ta == typeof(double)) { return Comparer<double>.Default.Compare((double)a, (double)b); }
+			}
+			return 0;
+		}
+
 		public int RowSort(object[] rowA, object[] rowB) {
 			for (int i = 0; i < columnSortOrder.Count; ++i) {
 				int index = columnSortOrder[i];
-				if (columns[index].sortState == SortState.None) { continue; }
+				if (columns[index].sortState == SortState.None) {
+					//Show.Log("SortState not being set...");
+					continue;
+				}
 				Comparison<object> sort = columns[index].sort;
+				if (sort == null) { sort = DefaultSort; }
 				int comparison = sort(rowA[index], rowB[index]);
+				//Show.Log("compare "+ rowA[index]+" vs "+ rowB[index]);
 				if (comparison == 0) continue;
 				if (columns[index].sortState == SortState.Descening) { comparison *= -1; }
 				return comparison;
@@ -123,6 +151,7 @@ namespace NonStandard.Data {
 		}
 
 		public void Sort() {
+			//Show.Log("SORTING "+columnSortOrder.JoinToString());
 			data.Sort(RowSort);
 		}
 
