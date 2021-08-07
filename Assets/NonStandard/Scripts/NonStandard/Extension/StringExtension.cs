@@ -152,6 +152,13 @@ namespace NonStandard.Extension {
 			}
 			return sb.ToString();
 		}
+		public static bool ContainsNonAlphaCharacters(this string str) {
+			for (int i = 0; i < str.Length; ++i) {
+				char c = str[i];
+				if (!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))) return true;
+			}
+			return false;
+		}
 		public static int CountNumericCharactersAt(this string str, int index, int numberBase, bool includeNegativeSign, bool includeSingleDecimal) {
 			return CountNumericCharactersAt(str, index, numberBase, includeNegativeSign, includeSingleDecimal, out int _);
 		}

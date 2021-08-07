@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace NonStandard.Extension {
 	public static class ReflectionParseExtension {
-		public static object GetValue(this object obj, IList<MemberInfo> path) {
+		public static object GetMemberValueUsingReflection(this object obj, IList<MemberInfo> path) {
 			object r = obj;
 			for(int i = 0; i < path.Count; ++i) {
 				switch (path[i]) {

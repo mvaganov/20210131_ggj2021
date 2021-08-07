@@ -8,6 +8,7 @@ using UnityEngine.UI;
 
 public class ColumnHeader : MonoBehaviour {
 	UnityDataSheet uds;
+	// TODO remove column, add column, resize column, rearrange column
 	private void Start() {
 		uds = GetComponentInParent<UnityDataSheet>();
 		//Show.Log("UDS: "+uds);

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace NonStandard.Data {
-	public class DictionaryKeeperManager : MonoBehaviour {
+	public class ScriptedDictionaryManager : MonoBehaviour {
 		public void Awake() {
 			Commander.Instance.AddCommands(new Command[] {
 				new Command("assertnum", AssertNum, new Argument[]{
@@ -24,9 +24,9 @@ namespace NonStandard.Data {
 				}, "Ensures the given variable exists with the given value."),
 			});
 		}
-		public List<DictionaryKeeper> keepers = new List<DictionaryKeeper>();
-		public DictionaryKeeper Keeper;
-		public void Register(DictionaryKeeper keeper) { keepers.Add(keeper); if (Keeper == null) Keeper = keeper; }
+		public List<ScriptedDictionary> keepers = new List<ScriptedDictionary>();
+		public ScriptedDictionary Keeper;
+		public void Register(ScriptedDictionary keeper) { keepers.Add(keeper); if (Keeper == null) Keeper = keeper; }
 		public void Increment(string name) { Keeper.AddTo(name, 1); }
 		public void Decrement(string name) { Keeper.AddTo(name, -1); }
 		public void Increment(Command.Exec e) { Increment(e.tok.GetStr(1)); }

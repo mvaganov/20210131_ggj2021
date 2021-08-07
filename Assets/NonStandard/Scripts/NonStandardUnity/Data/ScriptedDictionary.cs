@@ -7,12 +7,10 @@ using UnityEngine.Events;
 namespace NonStandard.Data {
 
 	[System.Serializable, StringifyHideType]
-	public class SensitiveHashTable_stringobject : BurlyHashTable<string, object> { }
-	public class DictionaryKeeper : MonoBehaviour {
-		protected SensitiveHashTable_stringobject dict = new SensitiveHashTable_stringobject();
-		public SensitiveHashTable_stringobject Dictionary { get { return dict; } }
-		[System.Serializable] public class StringEvent : UnityEvent<string> { }
-		public StringEvent stringListener;
+	public class HashTable_stringobject : BurlyHashTable<string, object> { }
+	public class ScriptedDictionary : MonoBehaviour {
+		[SerializeField, HideInInspector] protected HashTable_stringobject dict = new HashTable_stringobject();
+		public HashTable_stringobject Dictionary { get { return dict; } }
 #if UNITY_EDITOR
 		[TextArea(3, 10)]
 		public string values;
@@ -31,7 +29,7 @@ namespace NonStandard.Data {
 				parseResults = tok.errors.JoinToString("\n");
 			} else {
 				//parseResults = dict.Show(true);
-				string newResults = dict.Stringify(true);
+				string newResults = dict.Stringify(pretty:true,showType:true,showNulls:true);
 				if (parseResults != newResults) { parseResults = newResults; }
 			}
 		}
@@ -50,10 +48,12 @@ namespace NonStandard.Data {
 #else
 		void ShowChange(){}
 #endif
-		[System.Serializable] public class KVP { public string key; public float value; }
+		public StringEvent dictionaryTostringChangeListener;
+
+		[System.Serializable] public class StringEvent : UnityEvent<string> { }
 
 		void Awake() {
-			Global.Get<DictionaryKeeperManager>().Register(this);
+			Global.Get<ScriptedDictionaryManager>().Register(this);
 		}
 
 		void Start() {
@@ -61,9 +61,11 @@ namespace NonStandard.Data {
 			dict.onChange += (k, a, b) => { ShowChange(); };
 #endif
 			dict.onChange += (k, a, b) => {
-				string s = dict.Stringify(true);
-				//Debug.Log(s);
-				stringListener.Invoke(s);
+				if (dictionaryTostringChangeListener.GetPersistentEventCount() > 0) {
+					string s = dict.Stringify(true);
+					//Debug.Log(s);
+					dictionaryTostringChangeListener.Invoke(s);
+				}
 			};
 			dict.FunctionAssignIgnore();
 			//string[] mainStats = new string[] { "str", "con", "dex", "int", "wis", "cha" };

@@ -9,15 +9,15 @@ namespace NonStandard.GameUi.Dialog {
     public class DialogManager : MonoBehaviour {
         public TextAsset root;
         public TextAsset[] knownAssets;
-        public DictionaryKeeper dict;
+        public ScriptedDictionary dict;
         [Tooltip("what game object should be considered as initiating the dialog")]
         public GameObject dialogWithWho;
 
         public List<Dialog> dialogs = new List<Dialog>();
         public DialogViewer dialogView;
 
-        public DictionaryKeeper GetScriptScope() { return dict; }
-        public static DictionaryKeeper ScopeDictionaryKeeper { get { return DialogManager.Instance.GetScriptScope(); } }
+        public ScriptedDictionary GetScriptScope() { return dict; }
+        public static ScriptedDictionary ScopeDictionaryKeeper { get { return DialogManager.Instance.GetScriptScope(); } }
         public static object Scope { get { return ScopeDictionaryKeeper.Dictionary; } }
 
         public static DialogViewer ActiveDialog { get { return Instance.dialogView; } set { Instance.dialogView = value; } }
@@ -50,7 +50,7 @@ namespace NonStandard.GameUi.Dialog {
 
         void Start() {
             if (dialogView == null) { dialogView = FindObjectOfType<DialogViewer>(); }
-            if (dict == null) { dict = GetComponentInChildren<DictionaryKeeper>(); }
+            if (dict == null) { dict = GetComponentInChildren<ScriptedDictionary>(); }
             Dialog[] d;
             //NonStandard.Show.Log(knownAssets.JoinToString(", ", ta => ta.name));
             //NonStandard.Show.Log(root.name+":" + root.text.Length);

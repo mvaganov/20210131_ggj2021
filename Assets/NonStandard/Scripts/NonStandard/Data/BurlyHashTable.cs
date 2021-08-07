@@ -15,12 +15,16 @@ namespace NonStandard.Data {
 		/// <summary>
 		/// user can define their own hash function
 		/// </summary>
-		public Func<KEY, int> hFunc = null;
+		public HashFunction_t hFunc = null;
 		/// <summary>
 		/// callback whenever any change is made. onChange(key, oldValue, newValue)
 		/// </summary>
-		public Action<KEY, VAL, VAL> onChange;
+		public KeyValueChangeCallback onChange;
 		protected List<List<KV>> buckets;
+
+		public delegate void KeyValueChangeCallback(KEY Key, VAL oldValue, VAL newValue);
+		public delegate int HashFunction_t(KEY Key);
+
 		public const int defaultBuckets = 8;
 		public const int maxComputeDepth = 1000;
 		/// <summary>
@@ -41,7 +45,7 @@ namespace NonStandard.Data {
 			/// <summary>
 			/// callback whenever any change is made. onChange(oldValue, newValue)
 			/// </summary>
-			public Action<VAL, VAL> onChange;
+			public KeyValueChangeCallback onChange;
 			/// <summary>
 			/// values that depend on this value. if this value changes, these need to be notified. we are the sunlight, these are the plant.
 			/// </summary>
@@ -114,7 +118,7 @@ namespace NonStandard.Data {
 					if (dependents != null) dependents.ForEach(dep => dep.needsDependencyRecalculation = true);
 					VAL oldValue = _val;
 					_val = newValue;
-					if (onChange != null) onChange.Invoke(oldValue, newValue);
+					if (onChange != null) onChange.Invoke(key, oldValue, newValue);
 				}
 			}
 			public KV(int hash, KEY k) : this(hash, k, default(VAL)) { }
@@ -149,7 +153,7 @@ namespace NonStandard.Data {
 		}
 		private KV Kv(KEY key) { return new KV(Hash(key), key); }
 		private KV Kv(KEY key, VAL val) { return new KV(Hash(key), key, val); }
-		public BurlyHashTable(Func<KEY, int> hashFunc, int bCount = defaultBuckets) { hFunc = hashFunc; BucketCount = bCount; }
+		public BurlyHashTable(HashFunction_t hashFunc, int bCount = defaultBuckets) { hFunc = hashFunc; BucketCount = bCount; }
 		public BurlyHashTable() { }
 		public BurlyHashTable(int bucketCount) { BucketCount = bucketCount; }
 		public int Count {
@@ -160,8 +164,8 @@ namespace NonStandard.Data {
 			}
 		}
 		public int BucketCount { get { return buckets != null ? buckets.Count : 0; } set { SetHashFunction(hFunc, value); } }
-		public Func<KEY, int> HashFunction { get { return hFunc; } set { SetHashFunction(value, BucketCount); } }
-		public void SetHashFunction(Func<KEY, int> hFunc, int bucketCount) {
+		public HashFunction_t HashFunction { get { return hFunc; } set { SetHashFunction(value, BucketCount); } }
+		public void SetHashFunction(HashFunction_t hFunc, int bucketCount) {
 			this.hFunc = hFunc;
 			if (bucketCount <= 0) { buckets = null; return; }
 			SetBucketCount(bucketCount);

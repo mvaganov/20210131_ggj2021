@@ -20,7 +20,7 @@ public class Game : MonoBehaviour
 	public Discovery prefab_discovery;
 	public GameObject firstPlayer;
 	public GameObject nextLevelButton;
-	public DictionaryKeeper mainDictionaryKeeper;
+	public ScriptedDictionary mainDictionaryKeeper;
 	private Dictionary<string, string[]> resourceNames;
 	public NpcCreation npcCreator;
 	public TokenCreation tokenCreator;
@@ -131,7 +131,7 @@ public class Game : MonoBehaviour
 			// set seed
 			random.Seed = lvl.seed;
 			// set variables
-			SensitiveHashTable_stringobject d = mainDictionaryKeeper.Dictionary;
+			HashTable_stringobject d = mainDictionaryKeeper.Dictionary;
 			CodeConvert.TryParse(lvl.variables, out d, null, tokenizer);
 			// set 
 		}

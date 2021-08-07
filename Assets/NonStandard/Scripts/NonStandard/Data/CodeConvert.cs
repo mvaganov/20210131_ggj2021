@@ -27,6 +27,7 @@ namespace NonStandard.Data {
 			return resultType != null;
 		}
 		public static bool TryParseType(Type type, string text, ref object data, object scope, Tokenizer tokenizer = null) {
+			if (text == null || text.Trim().Length == 0) return false;
 			try {
 				if (tokenizer == null) { tokenizer = new Tokenizer(); }
 				tokenizer.Tokenize(text);
