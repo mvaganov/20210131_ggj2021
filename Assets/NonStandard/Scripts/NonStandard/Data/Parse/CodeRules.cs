@@ -583,8 +583,8 @@ namespace NonStandard.Data.Parse {
 		public static object op_mem(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
-			//Show.Log(lType+" "+left+" . "+rType+" "+right);
-			object val = lType.GetValue(left, right as string);
+			//Show.Log(e.tokens[0].ToString()+ e.tokens[1].ToString()+ e.tokens[2].ToString()+"~~~"+ lType +" "+left+" . "+rType+" "+right);
+			object val = lType.GetValue(left, e.tokens[2].ToString());
 			if (val == null) {
 				val = e.tokens[0].ToString()+e.tokens[1]+e.tokens[2];
 			}
@@ -606,7 +606,7 @@ namespace NonStandard.Data.Parse {
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			if (lType == rType) { return lType.TryCompare(left, right, out compareValue); }
 			compareValue = 0;
-			tok.AddError(e.tokens[1].index, "can't operate ("+lType+")"+left+" "+e.tokens[1]+" ("+rType+")"+right);
+			tok.AddError(e.tokens[1].index, "can't operate ("+lType+")"+left+" "+e.tokens[1]+" ("+rType+")"+right+" with scope("+scope+")");
 			return false;
 		}
 		public static object op_equ(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {

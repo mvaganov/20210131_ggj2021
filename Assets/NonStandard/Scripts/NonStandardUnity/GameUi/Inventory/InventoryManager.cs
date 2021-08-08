@@ -26,6 +26,7 @@ namespace NonStandard.GameUi.Inventory {
 		}
 		public void GiveInventory(Command.Exec e) {
 			string itemName = e.tok.GetStr(1, Commander.Instance.GetScope());
+			//Show.Log("Give " + e.tok);
 			Inventory inv = main;
 			GameObject itemObj = inv.RemoveItem(itemName);
 			if (itemObj != null) {

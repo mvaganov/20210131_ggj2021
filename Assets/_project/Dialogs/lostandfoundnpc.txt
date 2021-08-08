@@ -1,13 +1,13 @@
 ﻿{name "dialog"+color options[
-	{=Command command:"assertnum {0}Given 0;assertnum {0} 0;set color {0}"%(color)}
-	{=Command required:color+"Given==0" command:"dialog dialog"+color+"A"}
-	{=Co¤     r¤       color+"Given==1" c¤      "dialog dialog"+color+"B"}
-	{=Co¤ r¤ color+"Given==2" c¤ "dialog dialog"+color+"C"}
-	{=Co¤ r¤ color+"Given==3" c¤ "dialog dialog"+color+"D"}
-	{=Co¤ r¤ color+"Given==4" c¤ "dialog dialog"+color+"E"}
+	{=Command command: "assertnum {0}Given 0; assertnum {0} 0; set color {0}" % (color)}
+	{=Command required: "{0}Given==0" % (color) command: "dialog dialog{0}A" % color}
+	{=Co¤     r¤        "{0}Given==1"%color     c¤       "dialog dialog{0}B"%color}
+	{=Co¤ r¤ "{0}Given==2"%color c¤ "dialog dialog{0}C"%color}
+	{=Co¤ r¤ "{0}Given==3"%color c¤ "dialog dialog{0}D"%color}
+	{=Co¤ r¤ "{0}Given==4"%color c¤ "dialog dialog{0}E"%color}
 ]}
-{n¤ "dialog"+color+"A" o¤[{=T¤ t¤ textA}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ color+">=1" c¤ "give {0};++{0}Given;dialog dialog{0}"%(color) t¤ "I think I found what you've been looking for."}]}
-{n¤ "dialog"+color+"B" o¤[{=T¤ t¤ textB}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ color+">=1" c¤ "give {0};++{0}Given;dialog dialog{0}"%(color) t¤ "Is this what you wanted?"}]}
-{n¤ "dialog"+color+"C" o¤[{=T¤ t¤ textC}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ color+">=1" c¤ "give {0};++{0}Given;dialog dialog{0}"%(color) t¤ "Will this be enough?"}]}
-{n¤ "dialog"+color+"D" o¤[{=T¤ t¤ textD}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ color+">=1" c¤ "give {0};++{0}Given;dialog dialog{0}"%(color) t¤ "Are you still looking for this?"}]}
-{n¤ "dialog"+color+"E" o¤[{=T¤ t¤ textE}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ color+">=1" c¤ "give {0};++{0}Given;claimplayer;done"%(color) t¤ "Join me."}]}
+{n¤ "dialog{0}A"%color o¤[{=T¤ t¤ textA}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ "{0}>=1"%color c¤ "give \"{0}\";++{0}Given;dialog dialog{0}"%color t¤ "I think I found what you've been looking for."}]}
+{n¤ "dialog{0}B"%color o¤[{=T¤ t¤ textB}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ "{0}>=1"%color c¤ "give \"{0}\";++{0}Given;dialog dialog{0}"%color t¤ "Is this what you wanted?"}]}
+{n¤ "dialog{0}C"%color o¤[{=T¤ t¤ textC}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ "{0}>=1"%color c¤ "give \"{0}\";++{0}Given;dialog dialog{0}"%color t¤ "Will this be enough?"}]}
+{n¤ "dialog{0}D"%color o¤[{=T¤ t¤ textD}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ "{0}>=1"%color c¤ "give \"{0}\";++{0}Given;dialog dialog{0}"%color t¤ "Are you still looking for this?"}]}
+{n¤ "dialog{0}E"%color o¤[{=T¤ t¤ textE}{=Ch¤ t¤ done c¤ hide}{=Ch¤ r¤ "{0}>=1"%color c¤ "give \"{0}\";++{0}Given;claimplayer;done"%color t¤ "Join me."}]}

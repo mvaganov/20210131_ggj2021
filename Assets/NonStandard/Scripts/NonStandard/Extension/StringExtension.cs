@@ -282,6 +282,7 @@ namespace NonStandard.Extension {
 		/// <returns>the indexes of the given substring in this string</returns>
 		public static List<int> GenerateIndexTable(this string haystack, string needle = "\n") {
 			List<int> found = new List<int>();
+			//if (haystack == null || needle == null) return found;
 			int limit = haystack.Length - needle.Length;
 			for(int i = 0; i < limit; ++i) {
 				if(haystack.IsSubstringAt(needle, i)) { found.Add(i); }

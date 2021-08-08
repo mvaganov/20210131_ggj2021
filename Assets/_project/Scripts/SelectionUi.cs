@@ -35,14 +35,14 @@ public class SelectionUi : MonoBehaviour
 	void ShowSelectedVisual(GameObject go, bool show) {
 		SelectedVisual.Show(go, show && prefab_selectionObject && showSelectionObject, prefab_selectionObject);
 	}
-	public void SetSelection(CharacterMove characterMove) {
+	public void SetSelection(CharacterRoot character) {
 		selection.ForEach(f => {
 			f.ShowPath(false);
 			ShowSelectedVisual(f.gameObject, false);
 		});
 		selection.Clear();
-		if (characterMove != null) {
-			selection.Add(c2m.Follower(characterMove));
+		if (character != null) {
+			selection.Add(c2m.Follower(character.move));
 		}
 		ResetSelectionVisual();
 	}

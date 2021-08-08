@@ -5,7 +5,8 @@ namespace NonStandard.Data.Parse {
 	public class Expression {
 		private List<Token> tokens;
 		public Expression(List<Token> tokens) { this.tokens = tokens; }
-		public Expression(string textToTokenize, Tokenizer tok) {
+		public Expression(string textToTokenize, Tokenizer tok = null) {
+			if (tok == null) { tok = new Tokenizer(); }
 			tok.Tokenize(textToTokenize);
 			tokens = tok.tokens;
 		}
@@ -16,9 +17,9 @@ namespace NonStandard.Data.Parse {
 		public string DebugPrint(int depth = 0, string indent = "  ", string separator = ", ") {
 			return Tokenizer.DebugPrint(tokens, depth, indent, separator);
 		}
-		public List<object> Resolve(Tokenizer tok, object scope = null) {
+		public List<object> Resolve(TokenErrLog errLog, object scope = null) {
 			List<object> results = new List<object>();
-			ParseRuleSet.Entry.ResolveTerms(tok, scope, tokens, 0, tokens.Count, results);
+			ParseRuleSet.Entry.ResolveTerms(errLog, scope, tokens, 0, tokens.Count, results);
 			return results;
 		}
 

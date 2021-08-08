@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace NonStandard.Character {
 	public class ClickToMove : MonoBehaviour {
-		public CharacterMoveProxy characterToMove;
+		public CharacterProxy characterToMove;
 		public KeyCode key = KeyCode.Mouse0;
 		public Camera _camera;
 		[System.Serializable]
@@ -23,8 +23,8 @@ namespace NonStandard.Character {
 #if UNITY_EDITOR
 		/// called when created by Unity Editor
 		void Reset() {
-			if (characterToMove == null) { characterToMove = transform.GetComponentInParent<CharacterMoveProxy>(); }
-			if (characterToMove == null) { characterToMove = FindObjectOfType<CharacterMoveProxy>(); }
+			if (characterToMove == null) { characterToMove = transform.GetComponentInParent<CharacterProxy>(); }
+			if (characterToMove == null) { characterToMove = FindObjectOfType<CharacterProxy>(); }
 			if (_camera == null) { _camera = GetComponent<Camera>(); }
 			if (_camera == null) { _camera = Camera.main; }
 			if (_camera == null) { _camera = FindObjectOfType<Camera>(); }
@@ -78,7 +78,7 @@ namespace NonStandard.Character {
 
 		private void Update() {
 			if (follower == null && characterToMove.Target != null) {
-				SetFollower(characterToMove.Target);
+				SetFollower(characterToMove.Target.move);
 			}
 			if (follower == null) return;
 			if (Input.GetKey(key)) {

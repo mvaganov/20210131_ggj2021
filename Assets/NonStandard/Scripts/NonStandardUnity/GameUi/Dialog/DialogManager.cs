@@ -59,7 +59,7 @@ namespace NonStandard.GameUi.Dialog {
                 CodeConvert.TryParse(root.text, out d, dict.Dictionary, tokenizer);
                 tokenizer.ShowErrorTo(NonStandard.Show.Error);
                 if (d == null) return;
-                //NonStandard.Show.Log("dialogs: [" + NonStandard.Show.Stringify(d, false)+"]");
+                //NonStandard.Show.Log("dialogs: [" + d.Stringify(pretty:true)+"]");
                 dialogs.AddRange(d);
                 ResolveTemplatedDialogs(dialogs);
             } catch (System.Exception e) {

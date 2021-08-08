@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using NonStandard.Inputs;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace NonStandard.GameUi.Dialog {
@@ -21,7 +22,7 @@ namespace NonStandard.GameUi.Dialog {
 			}
 		}
 		private void OnDisable() {
-			if (!enabled || hiddenPlace == null) return;
+			if (!enabled || hiddenPlace == null || AppInput.IsQuitting) return;
 			for (int i = 0; i < home.Count; ++i) {
 				uiToDisableDuringDialog[i].SetParent(home[i], false);
 			}

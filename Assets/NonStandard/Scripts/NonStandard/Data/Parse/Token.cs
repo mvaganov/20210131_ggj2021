@@ -28,17 +28,22 @@ namespace NonStandard.Data.Parse {
 		public object Resolve(TokenErrLog tok, object scope, bool simplify = true, bool fullyResolve = false) {
 			if (index == -1 && length == -1) return meta;
 			if (meta == null) throw new NullReferenceException();
-			if (meta is string) {
-				string str = ToString((string)meta);
+			switch (meta) {
+			case string s: {
+				string str = ToString(s);
 				if (scope != null && fullyResolve) {
 					CodeRules.op_SearchForMember(tok, str, out object value, out Type type, scope);
 					return value;
 				}
 				return str;
 			}
-			TokenSubstitution ss = meta as TokenSubstitution; if (ss != null) return ss.value;
-			Delim d = meta as Delim; if (d != null) return d.text;
-			ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry; if (pce != null) return pce.Resolve(tok, scope, simplify, fullyResolve);
+			case TokenSubstitution ss: return ss.value;
+			case Delim d: return d.text;
+			case ParseRuleSet.Entry pce: return pce.Resolve(tok, scope, simplify, fullyResolve);
+			}
+			//TokenSubstitution ss = meta as TokenSubstitution; if (ss != null) return ss.value;
+			//Delim d = meta as Delim; if (d != null) return d.text;
+			//ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry; if (pce != null) return pce.Resolve(tok, scope, simplify, fullyResolve);
 			throw new DecoderFallbackException();
 		}
 		public string GetAsSmallText() {

@@ -1,24 +1,38 @@
-﻿using UnityEngine;
+﻿using NonStandard.Utility.UnityEditor;
+using UnityEngine;
 
 namespace NonStandard.Character
 {
 	public class SuperCyanGlue : MonoBehaviour
 	{
 		public Animator animator;
-		public CharacterMove character;
+		[ContextMenuItem("Bind Events", "BindEvents")]
+		public CharacterRoot character;
 		private void Start() {
+			Init();
+		}
+		private void Init() {
 			if (animator == null) { animator = GetComponent<Animator>(); }
 			if (animator == null) { animator = GetComponentInParent<Animator>(); }
-			if (character == null) { character = GetComponent<CharacterMove>(); }
-			if (character == null) { character = GetComponentInParent<CharacterMove>(); }
+			if (character == null) { character = GetComponent<CharacterRoot>(); }
+			if (character == null) { character = GetComponentInParent<CharacterRoot>(); }
 			if (character == null) {
 				Utility.Follow f = GetComponent<Utility.Follow>();
-				if (f) { character = f.whoToFollow.GetComponent<CharacterMove>(); }
+				if (f) { character = f.whoToFollow.GetComponent<CharacterRoot>(); }
 			}
-			character.callbacks.jumped.AddListener(Jump);
-			character.callbacks.stand.AddListener(Stand);
-			character.callbacks.fall.AddListener(Fall);
-			character.callbacks.arrived.AddListener(Wave);
+			character?.Init();
+			//cb.jumped.AddListener(Jump);
+			//cb.stand.AddListener(Stand);
+			//cb.fall.AddListener(Fall);
+			//cb.arrived.AddListener(Wave);
+		}
+		public void BindEvents() {
+			Init();
+			CharacterMove.Callbacks cb = character.move.callbacks;
+			EventBind.On(cb.jumped, this, nameof(Jump));
+			EventBind.On(cb.stand, this, nameof(Stand));
+			EventBind.On(cb.fall, this, nameof(Fall));
+			EventBind.On(cb.arrived, this, nameof(Wave));
 		}
 
 		bool shouldTriggerJumpAnimation = false;
@@ -26,7 +40,7 @@ namespace NonStandard.Character
 			//Show.Log("jump");
 			//animator.SetTrigger("Land");
 			animator.SetBool("Grounded", false);
-			if (character.IsStableOnGround()) {
+			if (character.move.IsStableOnGround()) {
 				shouldTriggerJumpAnimation = true;
 			}
 		}
@@ -49,7 +63,7 @@ namespace NonStandard.Character
 
 		public void FixedUpdate() {
 			if (animator.GetBool("Grounded")) {
-				float speed = character.rb.velocity.magnitude;
+				float speed = character.move.rb.velocity.magnitude;
 				animator.SetFloat("MoveSpeed", speed);
 			}
 			if (shouldTriggerJumpAnimation && !animator.IsInTransition(0)) {

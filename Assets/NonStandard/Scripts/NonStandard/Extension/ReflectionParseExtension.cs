@@ -16,6 +16,7 @@ namespace NonStandard.Extension {
 		}
 		public static object GetValue(this Type type, object obj, string variableNamePath, List<MemberInfo> out_path = null,
 		BindingFlags bindAttr = BindingFlags.Public | BindingFlags.Instance) {
+			//Show.Log(variableNamePath);
 			string[] vars = variableNamePath.Split(".");
 			Type t = type;
 			object result = obj;

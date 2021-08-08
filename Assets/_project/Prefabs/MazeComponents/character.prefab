@@ -15,6 +15,8 @@ GameObject:
   - component: {fileID: 1345119069021353540}
   - component: {fileID: 2777020805269124855}
   - component: {fileID: 8374091285262765857}
+  - component: {fileID: 459450027649526800}
+  - component: {fileID: -9161983726472368407}
   m_Layer: 8
   m_Name: character
   m_TagString: Player
@@ -87,12 +89,15 @@ MonoBehaviour:
     maxStableAngle: 60
     automaticMovement:
       targetPosition: {x: 0, y: 0, z: 0}
+      closeEnough: 0
       enabled: 0
       jumpAtObstacle: 0
       arrived: 0
+    disabled: 0
     canMoveInAir: 1
     lookForwardMoving: 1
     maintainSpeedAgainstWall: 1
+    systemMovement: 0
     isStableOnGround: 0
     strafeRightMovement: 0
     moveForwardMovement: 0
@@ -104,13 +109,21 @@ MonoBehaviour:
     lastOppositionDirection: {x: 0, y: 0, z: 0}
     orientationTransform: {fileID: 0}
   jump:
+    isJumping: 0
+    peaked: 0
+    heightSet: 0
+    pressed: 0
+    showJumpArc: 0
+    forgiveLateJumps: 1
+    enabled: 1
     minJumpHeight: 0.25
     maxJumpHeight: 1.5
     fullJumpPressDuration: 0.5
-    maxJumps: 1
-    PressJump: 0
-    impulseActive: 0
-    jumpsSoFar: 0
+    doubleJumps: 0
+    TimedJumpPress: 0
+    targetJumpHeight: 0
+    position: {x: 0, y: 0, z: 0}
+    usedDoubleJumps: 0
   callbacks:
     moveDirectionChanged:
       m_PersistentCalls:
@@ -124,10 +137,10 @@ MonoBehaviour:
     fall:
       m_PersistentCalls:
         m_Calls: []
-    collisionStart:
+    wallCollisionStart:
       m_PersistentCalls:
         m_Calls: []
-    collisionStopped:
+    wallCollisionStopped:
       m_PersistentCalls:
         m_Calls: []
     arrived:
@@ -146,12 +159,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _text: interact
-  _interactUi: {fileID: 0}
-  worldOffset: {x: 0, y: 1, z: 0}
-  _showing: 1
-  alwaysOn: 0
-  size: 1
-  fontCoefficient: 1
+  internalState:
+    _interactUi: {fileID: 0}
+    worldOffset: {x: 0, y: 0, z: 0}
+    _showing: 1
+    alwaysOn: 0
+    size: 1
+    fontCoefficient: 1
 --- !u!114 &2777020805269124855
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -164,9 +178,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 347a01521cfaa3c4e8125fe409d3b99f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  binders: []
-  homePoint: {x: 0, y: 0, z: 0}
   bindOnStart: 1
+  homePoint: {x: 0, y: 0, z: 0}
+  gameAreaInhabited: []
 --- !u!114 &8374091285262765857
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -181,6 +195,39 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   inventory: {fileID: 0}
   autoPickup: 0
+--- !u!114 &459450027649526800
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1345119069021353541}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39cd39337c9e20a4aa7bde5085c5f831, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  move: {fileID: 0}
+  dict: {fileID: 0}
+--- !u!114 &-9161983726472368407
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1345119069021353541}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7bd8ba2fb0435214b9a3fe20c49f2374, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dict:
+    onAssignmentToFunction: 0
+  values: 
+  parseResults: null
+  dictionaryTostringChangeListener:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &1345606606223651937
 GameObject:
   m_ObjectHideFlags: 0

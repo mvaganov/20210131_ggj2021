@@ -1,8 +1,5 @@
 ﻿using NonStandard.Data;
-using NonStandard.Inputs;
 using NonStandard.Process;
-using NonStandard.Utility;
-using NonStandard.Utility.UnityEditor;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -12,7 +9,6 @@ namespace NonStandard.Character {
 	public class CharacterMove : MonoBehaviour
 	{
 		[HideInInspector] public Rigidbody rb;
-		[ContextMenuItem("Create default user controls", "CreateDefaultUserControls")]
 		public Transform head;
 		private Transform body;
 		private CapsuleCollider capsule;
@@ -502,7 +498,6 @@ namespace NonStandard.Character {
 		[Tooltip("hooks that allow code execution when character state changes (useful for animation)")]
 		public Callbacks callbacks = new Callbacks();
 
-		// TODO move to Callbacks.cs, in NonStandard.Character
 		[System.Serializable] public class Callbacks
 		{
 			[Tooltip("when player changes direction, passes the new direction")]
@@ -519,44 +514,6 @@ namespace NonStandard.Character {
 			public UnityEvent wallCollisionStopped;
 			[Tooltip("when auto-moving player reaches their goal, passes absolute location of the goal")]
 			public UnityEvent_Vector3 arrived;
-		}
-		public void CreateDefaultUserControls() {
-			GameObject userInput = new GameObject(name+" input");
-			Transform t = userInput.transform;
-			t.SetParent(transform);
-			t.localPosition = Vector3.zero;
-			CharacterCamera camera = GetComponentInChildren<CharacterCamera>();
-			if(camera == null) { camera = GetComponentInParent<CharacterCamera>(); }
-			UserInput mouseLook = userInput.AddComponent<UserInput>();
-			if(camera != null) {
-				mouseLook.AxisBinds.Add(new AxBind(new Axis("Mouse X", 5), "mouselook X",
-					camera, "set_HorizontalRotateInput"));
-				mouseLook.AxisBinds.Add(new AxBind(new Axis("Mouse Y", 5), "mouselook Y",
-					camera, "set_VerticalRotateInput"));
-			}
-			mouseLook.enabled = false;
-			UserInput userMoves = userInput.AddComponent<UserInput>();
-			KBind rightClick = new KBind(KCode.Mouse1, "use mouselook",
-				pressFunc: new EventBind(mouseLook, "set_enabled", true),
-				releaseFunc: new EventBind(mouseLook, "set_enabled", false));
-			rightClick.keyEvent.AddPress(camera, "SetMouseCursorLock", true);
-			rightClick.keyEvent.AddRelease(camera, "SetMouseCursorLock", false);
-			userMoves.KeyBinds.Add(rightClick);
-			userMoves.KeyBinds.Add(new KBind(KCode.PageUp, "zoom in",
-				pressFunc: new EventBind(camera, "set_ZoomInput", -5f),
-				releaseFunc: new EventBind(camera, "set_ZoomInput", 0f)));
-			userMoves.KeyBinds.Add(new KBind(KCode.PageDown, "zoom out",
-				pressFunc: new EventBind(camera, "set_ZoomInput", 5f),
-				releaseFunc: new EventBind(camera, "set_ZoomInput", 0f)));
-			userMoves.KeyBinds.Add(new KBind(KCode.Space, "jump",
-				pressFunc: new EventBind(this, "set_Jump", 1f),
-				releaseFunc: new EventBind(this, "set_Jump", 0f)));
-			userMoves.AxisBinds.Add(new AxBind(new Axis("Horizontal"), "strafe right/left",
-				this, "set_StrafeRightMovement"));
-			userMoves.AxisBinds.Add(new AxBind(new Axis("Vertical"), "move forward/backward",
-				this, "set_MoveForwardMovement"));
-			userMoves.AxisBinds.Add(new AxBind(new Axis("Mouse ScrollWheel", -4), "zoom in/out",
-				camera, "AddToTargetDistance"));
 		}
 	}
 }

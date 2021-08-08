@@ -3,7 +3,6 @@ using NonStandard.Data;
 using NonStandard.Data.Parse;
 using NonStandard.GameUi;
 using NonStandard.GameUi.Dialog;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,8 +10,8 @@ public class NpcCreation : MonoBehaviour
 {
 	public Game game;
 	public TextAsset npcNamesText;
-	public CharacterMove prefab_npcPlayer;
-	public List<CharacterMove> npcs = new List<CharacterMove>();
+	public CharacterRoot prefab_npcPlayer;
+	public List<CharacterRoot> npcs = new List<CharacterRoot>();
 	private Dictionary<string, string> npcNames;
 
 	public void Init() {
@@ -46,7 +45,7 @@ public class NpcCreation : MonoBehaviour
 				tok.ShowErrorTo(DialogManager.ActiveDialog.ShowError);
 				ps.Stop();
 			};
-			npcs.Add(npc.GetComponent<CharacterMove>());
+			npcs.Add(npc.GetComponent<CharacterRoot>());
 		}
 
 	}

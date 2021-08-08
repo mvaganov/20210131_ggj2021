@@ -7,18 +7,18 @@ using UnityEngine;
 public class FourthPersonController : MonoBehaviour
 {
     public CharacterCamera _camera;
-    public CharacterMoveProxy characterMoveProxy;
+    public CharacterProxy characterMoveProxy;
     public ClickToMove clickToMove;
     public CharacterCamera.CameraView view;
-    public CharacterMove previous;
-    private CharacterMove self;
+    public CharacterRoot previous;
+    private CharacterRoot self;
     public Interact3dUi i3dui;
-    public CharacterMove GetMover() { return self; }
+    public CharacterRoot GetMover() { return self; }
     public GameObject visibleObjects;
     Bounds visibleBounds;
 
 	public void Awake() {
-        self = GetComponent<CharacterMove>();
+        self = GetComponent<CharacterRoot>();
 	}
     //public bool useSpecialLogic = false;
     public void CenterOnVisibleBounds(float maxDistance) {
@@ -120,10 +120,10 @@ public class FourthPersonController : MonoBehaviour
             _camera.LerpView("user");
         } else {
             previous = characterMoveProxy.Target;
-            transform.position = (previous.head ? previous.head:previous.transform).position;
+            transform.position = (previous.move.head ? previous.move.head:previous.transform).position;
             characterMoveProxy.Target = self;
             _camera.LerpTo(view);
-            clickToMove.SetFollower(previous);
+            clickToMove.SetFollower(previous.move);
             i3dui.triggerArea.transform.SetParent(previous.transform);
             i3dui.triggerArea.transform.localPosition = Vector3.zero;
         }

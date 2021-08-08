@@ -83,7 +83,7 @@ public class TokenCreation : MonoBehaviour
             });
             // find which NPC wants this, and make them light up
             ParticleSystem ps = null;
-            CharacterMove npc = game.npcCreator.npcs.Find(n => {
+            CharacterRoot npc = game.npcCreator.npcs.Find(n => {
                 ps = n.GetComponentInChildren<ParticleSystem>();
                 if (ps.name == mat.name) return true;
                 ps = null;

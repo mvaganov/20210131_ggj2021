@@ -55,7 +55,6 @@ namespace NonStandard.Data {
 		void Awake() {
 			Global.Get<ScriptedDictionaryManager>().Register(this);
 		}
-
 		void Start() {
 #if UNITY_EDITOR
 			dict.onChange += (k, a, b) => { ShowChange(); };

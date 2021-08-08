@@ -326,7 +326,22 @@ namespace NonStandard.Data.Parse {
 							? Current.tokens.GetRange(index, context.tokenCount)
 							: context.tokens;
 					if (memberType == typeof(Expression)) {
-						memberValue = new Expression(new List<Token>() { token });
+						Expression expr = new Expression(new List<Token>() { token });
+						if (scope != null) {
+							List<object> resolved = expr.Resolve(tok, scope);
+							if (resolved.Count == 1) {
+								switch (resolved[0]) {
+								case string partiallyResolvedExpressionAsString:
+									expr = new Expression(partiallyResolvedExpressionAsString);
+									break;
+								case Expression partiallyResolvedExpression:
+									expr = partiallyResolvedExpression;
+									break;
+								}
+							}
+							//Show.Log(resolved.JoinToString() + " " + resolved[0].GetType()+ " >><< " + expr+ " " + expr.GetType());
+						}
+						memberValue = expr;
 					} else {
 						if (CodeConvert.IsConvertable(memberType)) {
 							//Show.Log(memberId + " :: " + memberValue);

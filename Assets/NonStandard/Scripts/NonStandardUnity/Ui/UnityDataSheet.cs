@@ -116,11 +116,11 @@ namespace NonStandard.Ui {
 			GenerateHeaders();
 			Proc.Enqueue(() => {
 				NpcCreation npcs = Global.Get<NpcCreation>();
-				CharacterMoveProxy charMove = Global.Get<CharacterMoveProxy>();
+				CharacterProxy charMove = Global.Get<CharacterProxy>();
 				List<object> chars = new List<object>();
 				chars.Add(charMove.Target);
 				chars.AddRange(npcs.npcs);
-				Show.Log("listing "+chars.JoinToString());
+				//Show.Log("listing "+chars.JoinToString());
 				Load(chars);
 			});
 		}

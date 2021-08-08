@@ -1,5 +1,6 @@
 ﻿using NonStandard.Data;
 using NonStandard.Data.Parse;
+using NonStandard.Extension;
 using System;
 using System.Collections.Generic;
 
@@ -11,8 +12,8 @@ namespace NonStandard.GameUi.Dialog {
 			public Expression required; // conditional requirement for this option
 			public bool Available(Tokenizer tok, object scope) {
 				if (required == null) return true;
-				bool available;
-				if (!required.TryResolve(out available, tok, scope)) { return false; }
+				//Show.Log("resolving required condition: "+required.ToString());
+				if (!required.TryResolve(out bool available, tok, scope)) { return false; }
 				return available;
 			}
 		}
@@ -26,7 +27,7 @@ namespace NonStandard.GameUi.Dialog {
 	public class TemplatedDialog : Dialog {
 		public string template, parameters;
 		public Dialog[] Generate() {
-			Dictionary<string, object> data;
+			Dictionary<string, object> parametersForTemplate;
 			Tokenizer tokenizer = new Tokenizer();
 			string dialogData = DialogManager.Instance.GetAsset(parameters),
 				dialogTemplate = DialogManager.Instance.GetAsset(template);
@@ -34,12 +35,14 @@ namespace NonStandard.GameUi.Dialog {
 				Show.Error("failed to find components of templated script " + template + "<" + parameters + ">");
 				return null;
 			}
-			CodeConvert.TryParse(dialogData, out data, null, tokenizer);
+			CodeConvert.TryParse(dialogData, out parametersForTemplate, null, tokenizer);
 			if (tokenizer.ShowErrorTo(Show.Error)) { return null; }
-			Dialog[] dialogs;
-			CodeConvert.TryParse(dialogTemplate, out dialogs, data, tokenizer);
+			//Show.Log(parametersForTemplate.Stringify(pretty: true));
+			Dialog[] templatedDialogs;
+			CodeConvert.TryParse(dialogTemplate, out templatedDialogs, parametersForTemplate, tokenizer);
 			if (tokenizer.ShowErrorTo(Show.Error)) { return null; }
-			return dialogs;
+			//Show.Log(templatedDialogs.Stringify(pretty: true));
+			return templatedDialogs;
 		}
 	}
 }

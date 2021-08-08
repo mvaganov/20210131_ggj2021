@@ -6,7 +6,7 @@ using UnityEngine;
 public class CharacterControlManager : MonoBehaviour
 {
 	public CharacterCamera cam;
-	public CharacterMoveProxy moveProxy;
+	public CharacterProxy moveProxy;
 	public GameObject localPlayerInterfaceObject;
 	public ClickToMove clickToMove;
 	public FourthPersonController fourthPersonControl;
@@ -17,13 +17,13 @@ public class CharacterControlManager : MonoBehaviour
 			Interact3dItem i3i = moveProxy.Target.GetComponent<Interact3dItem>();
 			if(i3i != null) i3i.showing = true;
 		}
-		CharacterMove cm = obj.GetComponent<CharacterMove>();
+		CharacterRoot cm = obj.GetComponent<CharacterRoot>();
 		if (moveProxy.Target != fourthPersonControl.GetMover()) {
-			cam.target = cm != null && cm.head != null ? cm.head : obj.transform;
+			cam.target = cm != null && cm.move.head != null ? cm.move.head : obj.transform;
 			moveProxy.Target = cm;
 		}
-		if (cm != null) { cm.move.orientationTransform = cam.transform; }
-		clickToMove.SetFollower(cm);
+		if (cm != null) { cm.move.move.orientationTransform = cam.transform; }
+		clickToMove.SetFollower(cm.move);
 		Transform t = localPlayerInterfaceObject.transform;
 		Interact3dUi.TriggerArea ta = t.GetComponent<Interact3dUi.TriggerArea>();
 		ta.Blink();
