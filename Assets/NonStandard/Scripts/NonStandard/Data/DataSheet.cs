@@ -82,13 +82,18 @@ namespace NonStandard.Data {
 		public void InitFormat(Tokenizer unfilteredFieldFormat, int indexOfValueElement = 0) {
 			fieldTokens = GetValueTokens(unfilteredFieldFormat, indexOfValueElement);
 		}
-
+		public static bool IsValidColumnDescription(List<Token> entry) {
+			ParseRuleSet.Entry pre = entry[0].GetAsContextEntry();
+			//Show.Log(entry.Count + ": " + pre.IsEnclosure + " " + pre.parseRules.name);
+			return pre.IsEnclosure;
+		}
 		public static List<Token> GetValueTokens(Tokenizer tokenizer, int indexOfValueElement = 0) {
 			List<Token> justValues = new List<Token>();
 			List<Token> main = tokenizer.tokens[0].GetTokenSublist();
 			// main[0] is "[" and main[main.Count-1] is "]"
 			for (int i = 1; i < main.Count - 1; ++i) {
 				List<Token> entry = main[i].GetTokenSublist();
+				if (!IsValidColumnDescription(entry)) { continue; }
 				// +1 is needed because element 0 is "["
 				justValues.Add(entry[indexOfValueElement + 1]);
 			}

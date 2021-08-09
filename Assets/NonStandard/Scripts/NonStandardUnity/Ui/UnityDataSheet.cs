@@ -48,12 +48,13 @@ namespace NonStandard.Ui {
 
 			data = new Udash();
 			//data.InitFormat(tokenizer, valueIndex);
-			List<Token> fieldFormat = DataSheet.GetValueTokens(tokenizer, valueIndex);
+			//List<Token> fieldFormat = DataSheet.GetValueTokens(tokenizer, valueIndex);
 			data.AddRange(list, tokenizer);
 			List<Token> tokenizedList = tokenizer.tokens[0].GetTokenSublist();
+			int index = 0;
 			for (int i = 1; i < tokenizedList.Count - 1; ++i) {
 				List<Token> list = tokenizedList[i].GetTokenSublist();
-				int index = i - 1;
+				if (!DataSheet.IsValidColumnDescription(list)) { continue; }
 				string uiName = list[uiTypeIndex + 1].Resolve(tokenizer, null, true, true).ToString();
 				string headerName = list[headerUiType + 1].Resolve(tokenizer, null, true, true).ToString();
 				string label = list[columnTitleIndex + 1].Resolve(tokenizer, null, true, true).ToString();
@@ -71,10 +72,11 @@ namespace NonStandard.Ui {
 				//	+ headerName + "::: " + data.columns[index].data.headerBase);
 				if (list.Count > columnWidth + 1) {
 					object resolved = list[columnWidth + 1].Resolve(tokenizer, null, true, true);
-					//Debug.Log(label+" w: "+resolved);
+					Debug.Log(label+" w: "+resolved);
 					float w = Convert.ToSingle(resolved);
 					data.columns[index].data.width = w;
 				}
+				++index;
 			}
 		}
 

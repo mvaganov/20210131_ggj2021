@@ -724,7 +724,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 184047390}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0f79d3b0e5c06424ea3f67e186b0f8f9, type: 3}
   m_Name: 
@@ -807,8 +807,16 @@ MonoBehaviour:
 
     ["speed" "txticon" (move.move.speed/5) "sortlabel" (30)]
 
-    ["+"
-    "nothing" (null) "btncntr" (30)]
+    //
+    skill from skill table
+
+    ["handi" "label" (data.handicraft) "sortlabel" (80)]
+
+    //
+    TODO add columns by creating new variables in data
+
+    ["+" "nothing" (null)
+    "btncntr" (30)]
 
     ]'
 --- !u!1 &203351150
@@ -1926,7 +1934,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2136581222}
   m_HandleRect: {fileID: 2136581221}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -4343,7 +4351,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 862296460}
   m_Direction: 2
   m_Value: 1.0000001
-  m_Size: 0.39966676
+  m_Size: 0.3996667
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -19553,6 +19561,11 @@ PrefabInstance:
     - target: {fileID: 6027826901593700890, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
       propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6027826901593700890, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
+        type: 3}
+      propertyPath: m_AnchorMin.x
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7731634059116809493, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
