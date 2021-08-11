@@ -1,4 +1,5 @@
 ﻿using NonStandard.Commands;
+using NonStandard.Extension;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -47,7 +48,7 @@ namespace NonStandard.Data {
 			//Show.Log("!!!!%^ getting value ");
 			//Show.Log("!!!!%^ checking "+tok.tokens[2]+" in "+Scope);
 			object itemValue = exec.tok.GetResolvedToken(2, mainDictionary.Dictionary);
-			//Show.Log("!!!!%^ value is " + itemValue);
+			//Show.Log("!!!!%^ "+mainDictionary.transform.HierarchyPath()+"["+ itemName + "] is " + itemValue);
 			mainDictionary.Dictionary.Set(itemName, itemValue);
 		}
 		public void SetMainDicionary(ScriptedDictionary scriptedDictionary) { mainDictionary = scriptedDictionary; }

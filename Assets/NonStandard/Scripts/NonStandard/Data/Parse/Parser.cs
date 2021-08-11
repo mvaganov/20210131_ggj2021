@@ -292,12 +292,14 @@ namespace NonStandard.Data.Parse {
 				if (field != null) {
 					try {
 						//Show.Log("setting " + result + "." + field.Name + " = " + memberValue);
+						if (field.FieldType.IsEnum && memberValue is string str) { memberValue = Enum.Parse(field.FieldType, str); }
 						field.SetValue(result, memberValue);
 					}catch(Exception e) {
 						Show.Error(field.Name + " field.SetValue:" + e);
 					}
 				} else if (prop != null) {
 					try {
+						if (prop.PropertyType.IsEnum && memberValue is string str) { memberValue = Enum.Parse(prop.PropertyType, str); }
 						prop.SetValue(result, memberValue, null);
 					} catch (Exception e) {
 						Show.Error(prop.Name + " field.SetValue:" + e);

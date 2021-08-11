@@ -32,7 +32,7 @@ namespace NonStandard.Data.Parse {
 		public static Delim[] _instruction_finished_delimiter_ignore_rest = new Delim[] { new Delim(";", parseRule: IgnoreTheRestOfThis) };
 		public static Delim[] _list_item_delimiter = new Delim[] { "," };
 		public static Delim[] _membership_operator = new Delim[] {
-			new DelimOp(".", "member",syntax:CodeRules.opinit_mem,resolve:CodeRules.op_mem, order:10),
+			new DelimOp(".", "member",syntax:CodeRules.opinit_mem,resolve:CodeRules.op_member, order:10),
 			new Delim("->", "pointee"),
 			new Delim("::", "scope resolution"),
 			new Delim("?.", "null conditional")
@@ -257,14 +257,15 @@ namespace NonStandard.Data.Parse {
 			}
 			ParseRuleSet.Entry e = token.GetAsContextEntry();
 			if (e != null && e.IsText()) { return; } // data is explicitly meant to be a string, done.
-			op_SearchForMember(tok, name, out value, out type, scope);
+			op_SearchForMember(name, out value, out type, scope);
 		}
-		public static void op_SearchForMember(TokenErrLog tok, string name, out object value, out Type type, object scope) {
+		public static bool op_SearchForMember(string name, out object value, out Type type, object scope) {
 			switch (name) {
-			case "null": value = null; type = null; return;
-			case "true": value = true; type = typeof(bool); return;
-			case "false": value = false; type = typeof(bool); return;
+			case "null": value = null; type = null; return true;
+			case "true": value = true; type = typeof(bool); return true;
+			case "false": value = false; type = typeof(bool); return true;
 			}
+			//Show.Log(name+"=========="+scope);
 			value = name;
 			type = typeof(string);
 			// otherwise, we search for the data within the given context
@@ -287,14 +288,15 @@ namespace NonStandard.Data.Parse {
 						}
 					}
 				}
+				bool hasIt = false;
 				// how to generically interface with standard Dictionary objects
 				IDictionary dict = scope as IDictionary;
 				if (dict != null) {
-					if (dict.Contains(name)) { value = dict[name]; }
+					if (dict.Contains(name)) { value = dict[name]; hasIt = true; }
 				} else {
 					// how to generically interface with a non standard dictionary
 					MethodInfo mi = scopeType.GetMethod("ContainsKey", new Type[] { dType.Key });
-					bool hasIt = false;
+					//bool hasIt = false;
 					if (mi == null) {
 						Show.Error("couldn't find ContainsKey, how about:" + scopeType.GetMethods().JoinToString(", ", m => m.Name));
 					} else {
@@ -304,22 +306,32 @@ namespace NonStandard.Data.Parse {
 							hasIt = (bool)mi.Invoke(scope, new object[] { name });
 							//Show.Log("~~~#$W COULD seek " + name);
 						} catch (Exception) {
-							//Show.Log("~~~#$X couldn't find "+name+" in "+scopeType);
+							//Show.Log("~~~#$X couldn't find "+name+" in " + scopeType);
 							hasIt = false;
 						}
 					}
 					if (hasIt) {
-						mi = scopeType.GetMethod("Get", new Type[] { dType.Key });
+						//mi = scopeType.GetMethod("Get", new Type[] { dType.Key });
+						//if (mi == null) {
+						//	Show.Error("couldn't find Get, need a method to get data out of a dictionary. How about:" + scopeType.GetMethods().JoinToString(", ", m => m.Name));
+						//	value = null;
+						//} else {
+						//	value = mi.Invoke(scope, new object[] { name });
+						//}
+						mi = scopeType.GetMethod("TryGetValue");
 						if (mi == null) {
-							Show.Error("couldn't find Get, how about:" + scopeType.GetMethods().JoinToString(", ", m => m.Name));
+							Show.Error("couldn't find TryGetValue, need a method to get data out of a dictionary. How about:" + 
+								scopeType.GetMethods().JoinToString(", ", m => m.Name));
 							value = null;
 						} else {
-							value = mi.Invoke(scope, new object[] { name });
+							object[] parameters = new object[] { name, null };
+							value = mi.Invoke(scope, parameters);
+							if ((bool)value != false) { value = parameters[1]; } else { value = null; hasIt = false; }
 						}
 					}
 				}
-				type = (value != null) ? value.GetType() : null;
-				return;
+				type = hasIt && (value != null) ? value.GetType() : null;
+				return type != null;
 			}
 			if (name.Length > 0 && (name[0] == Parser.Wildcard || name[name.Length - 1] == Parser.Wildcard)) {
 				FieldInfo[] fields = scopeType.GetFields();
@@ -329,7 +341,7 @@ namespace NonStandard.Data.Parse {
 					Show.Log(name + " " + scopeType + " :" + index + " " + names.JoinToString() + " " + fields.JoinToString());
 					value = fields[index].GetValue(scope);
 					type = (value != null) ? value.GetType() : null;
-					return;
+					return type != null;
 				}
 				PropertyInfo[] props = scopeType.GetProperties();
 				names = Array.ConvertAll(props, p => p.Name);
@@ -338,22 +350,23 @@ namespace NonStandard.Data.Parse {
 					Show.Log(name + " " + scopeType + " :" + index + " " + names.JoinToString() + " " + props.JoinToString());
 					value = props[index].GetValue(scope);
 					type = (value != null) ? value.GetType() : null;
-					return;
+					return type != null;
 				}
 			} else {
 				FieldInfo field = scopeType.GetField(name);
 				if (field != null) {
 					value = field.GetValue(scope);
 					type = (value != null) ? value.GetType() : null;
-					return;
+					return type != null;
 				}
 				PropertyInfo prop = scopeType.GetProperty(name);
 				if (prop != null) {
 					value = prop.GetValue(scope, null);
 					type = (value != null) ? value.GetType() : null;
-					return;
+					return type != null;
 				}
 			}
+			return false;
 		}
 		private static void op_Resolve_SimplifyListOfArguments(TokenErrLog tok, ref object value, ref Type type, object scope) {
 			List<object> args = value as List<object>;
@@ -370,14 +383,13 @@ namespace NonStandard.Data.Parse {
 		}
 
 		public static void op_BinaryArgs(TokenErrLog tok, ParseRuleSet.Entry e, object scope, out object left, out object right, out Type lType, out Type rType) {
-			op_ResolveToken(tok, e.tokens[0], scope, out left, out lType);
-			op_ResolveToken(tok, e.tokens[2], scope, out right, out rType);
-			// upcast to double. all the math operations expect doubles only, for algorithm simplicity
-			if (lType != typeof(string) && lType != typeof(double) && CodeConvert.IsConvertable(lType)) {
-				CodeConvert.TryConvert(ref left, typeof(double)); lType = typeof(double);
-			}
-			if (rType != typeof(string) && rType != typeof(double) && CodeConvert.IsConvertable(rType)) {
-				CodeConvert.TryConvert(ref right, typeof(double)); rType = typeof(double);
+			SingleArg(tok, e.tokens[0], scope, out left, out lType);
+			SingleArg(tok, e.tokens[2], scope, out right, out rType);
+		}
+		public static void SingleArg(TokenErrLog tok, Token token, object scope, out object value, out Type valType) {
+			op_ResolveToken(tok, token, scope, out value, out valType);
+			if (valType != typeof(string) && valType != typeof(double) && CodeConvert.IsConvertable(valType)) {
+				CodeConvert.TryConvert(ref value, typeof(double)); valType = typeof(double);
 			}
 		}
 		public static object op_asn(TokenErrLog tok, ParseRuleSet.Entry e, object scope) { return "="; }
@@ -580,11 +592,17 @@ namespace NonStandard.Data.Parse {
 			double d = (double)obj;
 			return d != 0;
 		}
-		public static object op_mem(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {
-			object left, right; Type lType, rType;
-			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
+		public struct DefaultString {
+			public string str;
+			public override string ToString() { return str; }
+			public DefaultString(string str) { this.str = str; }
+		}
+		public static object op_member(TokenErrLog tok, ParseRuleSet.Entry e, object scope) {
+			object left; Type lType;
+			SingleArg(tok, e.tokens[0], scope, out left, out lType); //op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			//Show.Log(e.tokens[0].ToString()+ e.tokens[1].ToString()+ e.tokens[2].ToString()+"~~~"+ lType +" "+left+" . "+rType+" "+right);
-			object val = lType.GetValue(left, e.tokens[2].ToString());
+			string name = e.tokens[2].ToString();
+			object val = lType.GetValue(left, name, new DefaultString(name));
 			if (val == null) {
 				val = e.tokens[0].ToString()+e.tokens[1]+e.tokens[2];
 			}

@@ -6,10 +6,10 @@ namespace NonStandard.Character {
 	public class CharacterRoot : MonoBehaviour
 	{
 		public CharacterMove move;
-		public ScriptedDictionary dict;
+		public ScriptedDictionary data;
 		public void Init() {
 			if (move == null) { move = GetComponentInChildren<CharacterMove>(); }
-			if (dict == null) { dict = GetComponentInChildren<ScriptedDictionary>(); }
+			if (data == null) { data = GetComponentInChildren<ScriptedDictionary>(); }
 		}
 		public void Awake() { Init(); }
 		public void Start() { Init(); }

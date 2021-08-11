@@ -1,6 +1,8 @@
 ﻿using NonStandard.Data.Parse;
 using NonStandard.Extension;
 using NonStandard.Process;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -8,9 +10,9 @@ namespace NonStandard.Data {
 
 	[System.Serializable, StringifyHideType]
 	public class HashTable_stringobject : BurlyHashTable<string, object> { }
-	public class ScriptedDictionary : MonoBehaviour {
+	public class ScriptedDictionary : MonoBehaviour, IDictionary<string, object>
+	{
 		[SerializeField, HideInInspector] protected HashTable_stringobject dict = new HashTable_stringobject();
-		public HashTable_stringobject Dictionary { get { return dict; } }
 #if UNITY_EDITOR
 		[TextArea(3, 10)]
 		public string values;
@@ -101,5 +103,22 @@ namespace NonStandard.Data {
 			}
 			return resolvedText;
 		}
+		public HashTable_stringobject Dictionary { get { return dict; } }
+		public ICollection<string> Keys => dict.Keys;
+		public ICollection<object> Values => dict.Values;
+		public int Count => dict.Count;
+		public bool IsReadOnly => dict.IsReadOnly;
+		public object this[string key] { get => dict[key]; set => dict[key] = value; }
+		public void Add(string key, object value) { dict.Add(key, value); }
+		public bool ContainsKey(string key) { return dict.ContainsKey(key); }
+		public bool Remove(string key) { return dict.Remove(key); }
+		public bool TryGetValue(string key, out object value) { return dict.TryGetValue(key, out value); }
+		public void Add(KeyValuePair<string, object> item) { dict.Add(item); }
+		public void Clear() { dict.Clear(); }
+		public bool Contains(KeyValuePair<string, object> item) { return dict.Contains(item); }
+		public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex) { dict.CopyTo(array, arrayIndex); }
+		public bool Remove(KeyValuePair<string, object> item) { return dict.Remove(item); }
+		public IEnumerator<KeyValuePair<string, object>> GetEnumerator() { return dict.GetEnumerator(); }
+		IEnumerator IEnumerable.GetEnumerator() { return dict.GetEnumerator(); }
 	}
 }

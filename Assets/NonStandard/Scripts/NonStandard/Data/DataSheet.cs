@@ -1,5 +1,4 @@
 ﻿using NonStandard.Data.Parse;
-using NonStandard.Extension;
 using System;
 using System.Collections.Generic;
 
@@ -51,6 +50,10 @@ namespace NonStandard.Data {
 			/// specific algorithms used to sort
 			/// </summary>
 			public Comparison<object> sort;
+			/// <summary>
+			/// 
+			/// </summary>
+			public object defaultValue = null;
 		}
 
 		public DataSheet() { }
@@ -118,21 +121,32 @@ namespace NonStandard.Data {
 		public object[] GenerateRow(object source, TokenErrLog errLog) {
 			if(errLog == null) { errLog = new Tokenizer(); }
 			object[] result = new object[fieldTokens.Count];
+
 			for (int i = 0; i < result.Length; ++i) {
-				result[i] = fieldTokens[i].Resolve(errLog, source, true, true);
+				object value = fieldTokens[i].Resolve(errLog, source, true, true);
+				if(value is CodeRules.DefaultString && columns[i].defaultValue != null) {
+					value = columns[i].defaultValue;// (float)0;
+				}
+				result[i] = value;
+				//if (fieldTokens[i].ToString() == "()") { Show.Log("oh hai "+result[i]); }
 			}
 			return result;
 		}
 
 		public int DefaultSort(object a, object b) {
-			if (a == b) return 0;
-			if (a == null && b != null) return 1;
-			if (a != null && b == null) return -1;
+			if (a == b) { return 0; }
+			if (a == null && b != null) { return 1; }
+			if (a != null && b == null) { return -1; }
 			Type ta = a.GetType(), tb = b.GetType();
+			if ((ta.IsAssignableFrom(typeof(double)) || ta.IsAssignableFrom(typeof(long)))
+			&&  (tb.IsAssignableFrom(typeof(double)) || tb.IsAssignableFrom(typeof(long)))) {
+				ta = tb = typeof(double);
+				a = Convert.ChangeType(a, ta);
+				b = Convert.ChangeType(b, tb);
+			}
 			if (ta == tb) {
 				if (ta == typeof(double)) { return Comparer<double>.Default.Compare((double)a, (double)b); }
 				if (ta == typeof(string)) { return StringComparer.Ordinal.Compare(a, b); }
-				if (ta == typeof(double)) { return Comparer<double>.Default.Compare((double)a, (double)b); }
 			}
 			return 0;
 		}
@@ -146,9 +160,9 @@ namespace NonStandard.Data {
 				}
 				Comparison<object> sort = columns[index].sort;
 				if (sort == null) { sort = DefaultSort; }
-				int comparison = sort(rowA[index], rowB[index]);
-				//Show.Log("compare "+ rowA[index]+" vs "+ rowB[index]);
-				if (comparison == 0) continue;
+				int comparison = sort.Invoke(rowA[index], rowB[index]);
+				//Show.Log(comparison+" compare " + rowA[index]+" vs "+ rowB[index]+"   " + rowA[index].GetType() + " vs " + rowB[index].GetType());
+				if (comparison == 0) { continue; }
 				if (columns[index].sortState == SortState.Descening) { comparison *= -1; }
 				return comparison;
 			}

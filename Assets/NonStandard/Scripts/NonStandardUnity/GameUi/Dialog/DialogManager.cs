@@ -55,6 +55,9 @@ namespace NonStandard.GameUi.Dialog {
             //NonStandard.Show.Log(knownAssets.JoinToString(", ", ta => ta.name));
             //NonStandard.Show.Log(root.name+":" + root.text.Length);
             Tokenizer tokenizer = new Tokenizer();
+            if (dict != null) {
+                Global.Get<ScriptedDictionaryManager>().SetMainDicionary(dict);
+            }
             try {
                 CodeConvert.TryParse(root.text, out d, dict.Dictionary, tokenizer);
                 tokenizer.ShowErrorTo(NonStandard.Show.Error);
