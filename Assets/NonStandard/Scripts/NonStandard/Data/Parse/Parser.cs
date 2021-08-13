@@ -198,27 +198,6 @@ namespace NonStandard.Data.Parse {
 			}
 			result = ilist;
 		}
-		//public static object ConvertIList(IList listData, Type resultListType, Type resultListElementType) {
-		//	if (resultListType.IsArray) {
-		//		try {
-		//			Array a = Array.CreateInstance(resultListElementType, listData.Count);
-		//			for (int i = 0; i < listData.Count; ++i) { a.SetValue(listData[i], i); }
-		//			return a;
-		//		} catch (Exception e) {
-		//			Show.Error("array creation:" + e);
-		//		}
-		//	} else {
-		//		try {
-		//			object result = resultListType.GetNewInstance();
-		//			IList ilist = result as IList;
-		//			for (int i = 0; i < listData.Count; ++i) { ilist.Add(listData[i]); }
-		//			return ilist;
-		//		} catch (Exception e) {
-		//			Show.Error("List creation:" + e);
-		//		}
-		//	}
-		//	return null;
-		//}
 		protected bool GetMemberNameAndAssociatedType() {
 			memberToken = Current.Token;
 			if (SkipStructuredDelimiters(memberToken.GetAsDelimiter())) { memberToken.Invalidate(); return true; }
@@ -278,32 +257,13 @@ namespace NonStandard.Data.Parse {
 		}
 		protected void AssignValueToMember() {
 			if (dictionaryAdd != null) {
-				try {
-				switch(AssignDictionaryMember(dictionaryTypes, dictionaryAdd, result, memberId, memberValue)) {
-				case 1: AddError("unable to convert key \"" + memberId + "\" (" + memberId.GetType() + 
-					") to " + dictionaryTypes.Key); break;
-				case 2: AddError("unable to convert \"" + memberId + "\" value (" + memberValue.GetType() + 
-					") \"" + memberValue + "\" to type " + memberType); break;
-				}
-				} catch(Exception e) {
-					Show.Error(memberId+" dictionaryAdd:" + e);
-				}
+				string error = AssignValueToDictionary(dictionaryTypes, dictionaryAdd, result, memberId, memberValue, memberType);
+				if(error != null) { AddError(error); }
 			} else {
 				if (field != null) {
-					try {
-						//Show.Log("setting " + result + "." + field.Name + " = " + memberValue);
-						if (field.FieldType.IsEnum && memberValue is string str) { memberValue = Enum.Parse(field.FieldType, str); }
-						field.SetValue(result, memberValue);
-					}catch(Exception e) {
-						Show.Error(field.Name + " field.SetValue:" + e);
-					}
+					AssignField(result, field, memberValue);
 				} else if (prop != null) {
-					try {
-						if (prop.PropertyType.IsEnum && memberValue is string str) { memberValue = Enum.Parse(prop.PropertyType, str); }
-						prop.SetValue(result, memberValue, null);
-					} catch (Exception e) {
-						Show.Error(prop.Name + " field.SetValue:" + e);
-					}
+					AssignProperty(result, prop, memberValue);
 				} else {
 					throw new Exception("huh? how did we get here?");
 				}
@@ -311,6 +271,36 @@ namespace NonStandard.Data.Parse {
 			}
 			memberId = null;
 			memberToken.Invalidate();
+		}
+		public static string AssignValueToDictionary(KeyValuePair<Type, Type> dictionaryTypes, MethodInfo dictionaryAdd, object result, object memberId, object memberValue, Type memberType) {
+			try {
+				switch (AssignDictionaryMember(dictionaryTypes, dictionaryAdd, result, memberId, memberValue)) {
+				case 1: return ("unable to convert key \"" + memberId + "\" (" + memberId.GetType() +
+					") to " + dictionaryTypes.Key);
+				case 2: return ("unable to convert \"" + memberId + "\" value (" + memberValue.GetType() +
+					") \"" + memberValue + "\" to type " + memberType);
+				}
+			} catch (Exception e) {
+				return (memberId + " dictionaryAdd:" + e);
+			}
+			return null;
+		}
+		public static void AssignField(object obj, FieldInfo field, object memberValue) {
+			try {
+				//Show.Log("setting " + result + "." + field.Name + " = " + memberValue);
+				if (field.FieldType.IsEnum && memberValue is string str) { memberValue = Enum.Parse(field.FieldType, str); }
+				field.SetValue(obj, memberValue);
+			} catch (Exception e) {
+				Show.Error(field.Name + " field.SetValue:" + e);
+			}
+		}
+		public static void AssignProperty(object obj, PropertyInfo prop, object memberValue) {
+			try {
+				if (prop.PropertyType.IsEnum && memberValue is string str) { memberValue = Enum.Parse(prop.PropertyType, str); }
+				prop.SetValue(obj, memberValue, null);
+			} catch (Exception e) {
+				Show.Error(prop.Name + " field.SetValue:" + e);
+			}
 		}
 		protected bool TryGetValue() {
 			memberValue = null;
