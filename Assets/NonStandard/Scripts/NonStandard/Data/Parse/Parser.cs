@@ -7,8 +7,6 @@ using System.Text;
 
 namespace NonStandard.Data.Parse {
 	public class Parser {
-		/// used by wildcard searches, for member names and enums. dramatically reduces structural typing
-		public const char Wildcard = '¤';
 		/// current data being parsed
 		protected object memberValue;
 		/// the object being parsed into, the final result
@@ -81,8 +79,9 @@ namespace NonStandard.Data.Parse {
 			if (t == null) {
 				Type[] childTypes = resultType.GetSubClasses();
 				string[] typeNames = Array.ConvertAll(childTypes, ty => ty.ToString());
-				string nameSearch = typeName[0]!=(Parser.Wildcard) ? Parser.Wildcard + typeName : typeName;
-				int index = FindIndexWithWildcard(typeNames, nameSearch, false);
+				char wildcard = ReflectionParseExtension.Wildcard;
+				string nameSearch = typeName[0] != wildcard ? wildcard + typeName : typeName;
+				int index = ReflectionParseExtension.FindIndexWithWildcard(typeNames, nameSearch, false);
 				if (index >= 0) { t = childTypes[index]; }
 			}
 			if (t != null && (result == null || result.GetType() != t)) {
@@ -384,34 +383,6 @@ namespace NonStandard.Data.Parse {
 		}
 
 		protected void AddError(string message) { tok.AddError(Current.Token, message); }
-
-		/// <param name="names"></param>
-		/// <param name="n">name to find. the needle in the names haystack</param>
-		/// <param name="sorted"></param>
-		/// <param name="wildcard"></param>
-		/// <returns></returns>
-		public static int FindIndexWithWildcard(string[] names, string n, bool sorted, char wildcard = Wildcard) {
-			if (n.Length == 1 && n[0] == wildcard) return 0;
-			bool startsW = n[n.Length-1]==(wildcard), endsW = n[0]==(wildcard);
-			if (startsW && endsW) { return Array.FindIndex(names, s => s.Contains(n.Substring(1, n.Length - 2))); }
-			if (endsW) { n = n.Substring(1); return Array.FindIndex(names, s => s.EndsWith(n)); }
-			if (startsW) { n = n.Substring(0, n.Length - 1); }
-			int index = sorted ? Array.BinarySearch(names, n) : (startsW)
-				? Array.FindIndex(names, s => s.StartsWith(n)) : Array.IndexOf(names, n);
-			if (startsW && index < 0) {
-				index = ~index;
-				return (index < names.Length && names[index].StartsWith(n)) ? index : -1;
-			}
-			return index;
-		}
-		public static bool IsWildcardMatch(string possibility, string n, char wildcard = Wildcard) {
-			if (n.Length == 1 && n[0] == wildcard) return true;
-			bool startsW = n[n.Length - 1] == (wildcard), endsW = n[0] == (wildcard);
-			if (startsW && endsW) { return possibility.Contains(n.Substring(1, n.Length - 2)); }
-			if (endsW) { n = n.Substring(1); return possibility.EndsWith(n); }
-			if (startsW) { n = n.Substring(0, n.Length - 1); }
-			return possibility.StartsWith(n);
-		}
 	}
 	public class MemberReflectionTable {
 		public string[] fieldNames, propNames;
@@ -433,10 +404,10 @@ namespace NonStandard.Data.Parse {
 			return sb.ToString();
 		}
 		public FieldInfo GetField(string name) {
-			int index = Parser.FindIndexWithWildcard(fieldNames, name, true); return (index < 0) ? null : fields[index];
+			int index = ReflectionParseExtension.FindIndexWithWildcard(fieldNames, name, true); return (index < 0) ? null : fields[index];
 		}
 		public PropertyInfo GetProperty(string name) {
-			int index = Parser.FindIndexWithWildcard(propNames, name, true); return (index < 0) ? null : props[index];
+			int index = ReflectionParseExtension.FindIndexWithWildcard(propNames, name, true); return (index < 0) ? null : props[index];
 		}
 		public bool TryGetMemberDetails(string memberName, out Type memberType, out FieldInfo field, out PropertyInfo prop) {
 			field = GetField(memberName);

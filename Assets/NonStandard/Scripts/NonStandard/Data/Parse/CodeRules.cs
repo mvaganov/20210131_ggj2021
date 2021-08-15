@@ -203,7 +203,7 @@ namespace NonStandard.Data.Parse {
 			}
 			if (index - 1 < 0) { tok.AddError(t, "missing left operand"); return null; }
 			if (index + 1 >= tokens.Count) { tok.AddError(t, "missing right operand"); return null; }
-			ParseRuleSet foundContext; ParseRuleSet.allContexts.TryGetValue(contextName, out foundContext);
+			ParseRuleSet foundContext = ParseRuleSet.GetContext(contextName);
 			if (foundContext == null) { throw new Exception(tok.AddError(t, "context '" + contextName + "' does not exist").ToString()); }
 			ParseRuleSet.Entry parent = null; int pIndex;
 			for (pIndex = 0; pIndex < tokens.Count; ++pIndex) {
@@ -236,9 +236,6 @@ namespace NonStandard.Data.Parse {
 		public static ParseRuleSet.Entry opinit_gte(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "greater than or equal"); }
 		public static ParseRuleSet.Entry opinit_mem(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "membership operator"); }
 
-		/// <summary>
-		/// 
-		/// </summary>
 		/// <param name="tok"></param>
 		/// <param name="token"></param>
 		/// <param name="scope"></param>
@@ -266,167 +263,12 @@ namespace NonStandard.Data.Parse {
 			case "false": value = false; type = typeof(bool); return true;
 			}
 			type = typeof(string);
-			if(TryGetValue(scope, name, out value, out object _)) {
+			if(ReflectionParseExtension.TryGetValue(scope, name, out value, out object _)) {
 				type = (value != null) ? value.GetType() : null;
 				return type != null;
 			}
 			return false;
 		}
-		// TODO move to ReflectionParseExtension
-		public static bool TryGetValue(object scope, string name, out object value, out object path) {
-			Type scopeType = scope.GetType();
-			KeyValuePair<Type, Type> dType = scopeType.GetIDictionaryType();
-			bool result;
-			if (dType.Key != null) {
-				result = TryGetValue_Dictionary(scope, name, out value, scopeType, dType.Key);
-				path = name;
-				return result;
-			}
-			result = TryGetValue_Object(scope, name, out value, out MemberInfo mi);
-			path = mi;
-			return result;
-		}
-		public static bool TryGetValue_Object(object scope, string name, out object value, out MemberInfo memberInfo) {
-			Type scopeType = scope.GetType();
-			memberInfo = null;
-			if (name.Length > 0 && (name[0] == Parser.Wildcard || name[name.Length - 1] == Parser.Wildcard)) {
-				FieldInfo[] fields = scopeType.GetFields();
-				string[] names = Array.ConvertAll(fields, f => f.Name);
-				int index = Parser.FindIndexWithWildcard(names, name, false);
-				if (index >= 0) { memberInfo = fields[index]; value = fields[index].GetValue(scope); return true; }
-				PropertyInfo[] props = scopeType.GetProperties();
-				names = Array.ConvertAll(props, p => p.Name);
-				index = Parser.FindIndexWithWildcard(names, name, false);
-				if (index >= 0) { memberInfo = props[index]; value = props[index].GetValue(scope); return true; }
-			} else {
-				FieldInfo field = scopeType.GetField(name);
-				if (field != null) { memberInfo = field; value = field.GetValue(scope); return true; }
-				PropertyInfo prop = scopeType.GetProperty(name);
-				if (prop != null) { memberInfo = prop; value = prop.GetValue(scope, null); return true; }
-			}
-			value = null;
-			return false;
-		}
-		public static bool TryGetValue_Dictionary(object scope, string name, out object value, Type scopeType = null, Type keyType = null) {
-			value = name;
-			if (scopeType == null) { scopeType = scope.GetType(); }
-			if (keyType == null) { keyType = scopeType.GetIDictionaryType().Key; }
-			if (keyType == typeof(string)) { name = ConvertWildcardIntoDictionaryKey(scope, name, scopeType); }
-			bool hasIt = false;
-			// how to generically interface with standard Dictionary objects
-			IDictionary dict = scope as IDictionary;
-			if (dict != null) {
-				if (dict.Contains(name)) { value = dict[name]; hasIt = true; }
-			} else {
-				// how to generically interface with a non standard dictionary
-				MethodInfo mi = scopeType.GetMethod("ContainsKey", new Type[] { keyType });
-				if (mi == null) {
-					Show.Error("couldn't find ContainsKey, how about:" + scopeType.GetMethods().JoinToString(", ", m => m.Name));
-				} else {
-					try {
-						hasIt = (bool)mi.Invoke(scope, new object[] { name });
-					} catch (Exception) {
-						hasIt = false;
-					}
-				}
-				if (hasIt) {
-					hasIt = TryGetValue_DictionaryReflective(scopeType, scope, name, out value);
-				}
-			}
-			return hasIt;
-		}
-		public static bool TryGetValue_DictionaryReflective(Type scopeType, object scope, string name, out object value) {
-			MethodInfo mi = scopeType.GetMethod("TryGetValue");
-			if (mi == null) {
-				Show.Error("couldn't find TryGetValue, need a method to get data out of a dictionary. How about:" +
-					scopeType.GetMethods().JoinToString(", ", m => m.Name));
-				value = null;
-				return false;
-			} else {
-				object[] parameters = new object[] { name, null };
-				value = mi.Invoke(scope, parameters);
-				if ((bool)value != false) { value = parameters[1]; } else { value = null; return false; }
-			}
-			return true;
-		}
-		public static string ConvertWildcardIntoDictionaryKey(object scope, string name, Type scopeType = null) {
-			if (scopeType == null) { scopeType = scope.GetType(); }
-			if (name[0] == Parser.Wildcard || name[name.Length - 1] == Parser.Wildcard) {
-				MethodInfo getKey = null;
-				IEnumerator en = (IEnumerator)scopeType.GetMethod("GetEnumerator", Type.EmptyTypes).Invoke(scope, new object[] { });
-				while (en.MoveNext()) {
-					object kvp = en.Current;
-					if (getKey == null) { getKey = kvp.GetType().GetProperty("Key").GetGetMethod(); }
-					string memberName = getKey.Invoke(kvp, null) as string;
-					if (Parser.IsWildcardMatch(memberName, name)) { return memberName; }
-				}
-			}
-			return name;
-		}
-		public static bool TrySetValue(object scope, string name, object value, out object path) {
-			Type scopeType = scope.GetType();
-			KeyValuePair<Type, Type> dType = scopeType.GetIDictionaryType();
-			bool result;
-			if (dType.Key != null) {
-				result = TrySetValue_Dictionary(scope, name, value, scopeType, dType.Key);
-				path = name;
-				return result;
-			}
-			result = TrySetValue_Object(scope, name, value, out MemberInfo mi);
-			path = mi;
-			return result;
-		}
-		public static bool TrySetValue_Object(object scope, string name, object value, out MemberInfo memberInfo) {
-			Type scopeType = scope.GetType();
-			memberInfo = null;
-			if (name.Length > 0 && (name[0] == Parser.Wildcard || name[name.Length - 1] == Parser.Wildcard)) {
-				FieldInfo[] fields = scopeType.GetFields();
-				string[] names = Array.ConvertAll(fields, f => f.Name);
-				int index = Parser.FindIndexWithWildcard(names, name, false);
-				if (index >= 0) { memberInfo = fields[index]; fields[index].SetValue(scope, value); return true; }
-				PropertyInfo[] props = scopeType.GetProperties();
-				names = Array.ConvertAll(props, p => p.Name);
-				index = Parser.FindIndexWithWildcard(names, name, false);
-				if (index >= 0) { memberInfo = props[index]; props[index].SetValue(scope, value); return true; }
-			} else {
-				FieldInfo field = scopeType.GetField(name);
-				if (field != null) { memberInfo = field; field.SetValue(scope, value); return true; }
-				PropertyInfo prop = scopeType.GetProperty(name);
-				if (prop != null) { memberInfo = prop; prop.SetValue(scope, value); return true; }
-			}
-			value = null;
-			return false;
-		}
-		public static bool TrySetValue_Dictionary(object scope, string name, object value, Type scopeType = null, Type keyType = null) {
-			value = name;
-			if (scopeType == null) { scopeType = scope.GetType(); }
-			if (keyType == null) { keyType = scopeType.GetIDictionaryType().Key; }
-			if (keyType == typeof(string)) { name = ConvertWildcardIntoDictionaryKey(scope, name, scopeType); }
-			// how to generically interface with standard Dictionary objects
-			IDictionary dict = scope as IDictionary;
-			if (dict != null) {
-				dict[name] = value;
-			} else {
-				TrySetValue_DictionaryReflective(scopeType, scope, name, value);
-			}
-			return true;
-		}
-		public static bool TrySetValue_DictionaryReflective(Type scopeType, object scope, string name, object value) {
-			KeyValuePair<Type, Type> dTypes = scopeType.GetIDictionaryType();
-			MethodInfo mi = scopeType.GetMethod("Add", new Type[] { dTypes.Key, dTypes.Value });
-			if (mi == null) {
-				Show.Error("couldn't find Add, need a method to add data to a dictionary. How about:" +
-					scopeType.GetMethods().JoinToString(", ", m => m.Name));
-				value = null;
-				return false;
-			} else {
-				object[] parameters = new object[] { name, value };
-				value = mi.Invoke(scope, parameters);
-				//if ((bool)value != false) { value = parameters[1]; } else { value = null; return false; }
-			}
-			return true;
-		}
-
 		private static void op_Resolve_SimplifyListOfArguments(TokenErrLog tok, ref object value, ref Type type, object scope) {
 			List<object> args = value as List<object>;
 			if (args != null) {
@@ -661,7 +503,7 @@ namespace NonStandard.Data.Parse {
 			SingleArg(tok, e.tokens[0], scope, out left, out lType); //op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			//Show.Log(e.tokens[0].ToString()+ e.tokens[1].ToString()+ e.tokens[2].ToString()+"~~~"+ lType +" "+left+" . "+rType+" "+right);
 			string name = e.tokens[2].ToString();
-			object val = lType.GetValue(left, name, new DefaultString(name));
+			object val = ReflectionParseExtension.GetValue(left, name, new DefaultString(name));
 			if (val == null) {
 				val = e.tokens[0].ToString()+e.tokens[1]+e.tokens[2];
 			}

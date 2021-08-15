@@ -77,7 +77,7 @@ namespace NonStandard.Commands {
 		}
 		void GenerateArgumentParsingRuleset() {
 			argumentParsingRuleset = new ParseRuleSet("Cmd_" + Name, GenerateArgumentDelims());
-			argumentParsingRuleset.AddDelimiterFallback(ParseRuleSet.allContexts["default"]);
+			argumentParsingRuleset.AddDelimiterFallback(ParseRuleSet.GetContext("default"));
 		}
 		public Tokenizer Tokenize(string text) {
 			Tokenizer tokenizer = new Tokenizer();

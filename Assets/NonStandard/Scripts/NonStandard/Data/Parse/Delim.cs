@@ -6,8 +6,7 @@ namespace NonStandard.Data.Parse {
 	public class DelimCtx : Delim {
 		public ParseRuleSet Context {
 			get {
-				return foundContext != null ? foundContext :
-					ParseRuleSet.allContexts.TryGetValue(contextName, out foundContext) ? foundContext : null;
+				return foundContext != null ? foundContext : foundContext = ParseRuleSet.GetContext(contextName);
 			}
 		}
 		private ParseRuleSet foundContext = null;

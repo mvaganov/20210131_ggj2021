@@ -1,4 +1,5 @@
 ﻿using NonStandard.Data;
+using NonStandard.Extension;
 using NonStandard.Process;
 using NonStandard.Ui;
 using System.Collections.Generic;
@@ -230,7 +231,7 @@ namespace NonStandard.Character {
 				}
 				break;
 			}
-			CodeConvert.TryConvertEnumWildcard(typeof(Direction3D), viewName, out object v);
+			ReflectionParseExtension.TryConvertEnumWildcard(typeof(Direction3D), viewName, out object v);
 			if (v != null) {
 				LerpDirection((Direction3D)v); return;
 			}

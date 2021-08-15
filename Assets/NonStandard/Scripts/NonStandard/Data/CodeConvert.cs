@@ -77,7 +77,7 @@ namespace NonStandard.Data {
 			try {
 				if (typeToGet.IsEnum) {
 					string str = value as string;
-					if (str != null) { return TryConvertEnumWildcard(typeToGet, str, out value); }
+					if (str != null) { return ReflectionParseExtension.TryConvertEnumWildcard(typeToGet, str, out value); }
 				}
 				switch (Type.GetTypeCode(typeToGet)) {
 				case TypeCode.Boolean: value = Convert.ToBoolean(value); break;
@@ -136,19 +136,6 @@ namespace NonStandard.Data {
 					return false;
 				}
 			}
-			return true;
-		}
-		public static bool TryConvertEnumWildcard(Type typeToGet, string str, out object value, char wildcard = Parser.Wildcard) {
-			bool startsWith = str[str.Length-1]==(wildcard), endsWidth = str[0]==(wildcard);
-			if (startsWith || endsWidth) {
-				Array a = Enum.GetValues(typeToGet);
-				string[] names = new string[a.Length];
-				for (int i = 0; i < a.Length; ++i) { names[i] = a.GetValue(i).ToString(); }
-				int index = Parser.FindIndexWithWildcard(names, str, false, wildcard);
-				if (index < 0) { value = null; return false; }
-				str = names[index];
-			}
-			value = Enum.Parse(typeToGet, str);
 			return true;
 		}
 

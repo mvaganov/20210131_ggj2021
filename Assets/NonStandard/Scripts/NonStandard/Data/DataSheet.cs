@@ -1,6 +1,8 @@
 ﻿using NonStandard.Data.Parse;
+using NonStandard.Extension;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace NonStandard.Data {
 	public class ColumnData {
@@ -19,7 +21,6 @@ namespace NonStandard.Data {
 	}
 	public enum SortState { None, Ascending, Descening }
 	public class DataSheet<MetaData> where MetaData : new() {
-		public List<Token> fieldTokens = new List<Token>();
 		/// <summary>
 		/// the actual data
 		/// </summary>
@@ -34,6 +35,19 @@ namespace NonStandard.Data {
 		protected List<int> columnSortOrder = new List<int>();
 
 		public class ColumnData {
+			private Token _fieldToken;
+			/// <summary>
+			/// what field is being read (or modified) in this column
+			/// </summary>
+			public Token fieldToken { get => _fieldToken; set {
+					_fieldToken = value;
+					RefreshEditPath();
+				}
+			}
+			/// <summary>
+			/// if this field is editable, this list of members will be used to edit
+			/// </summary>
+			public List<object> editPath;
 			/// <summary>
 			/// what type the values in this column are expected to be
 			/// </summary>
@@ -54,12 +68,33 @@ namespace NonStandard.Data {
 			/// 
 			/// </summary>
 			public object defaultValue = null;
+
+			public void RefreshEditPath() {
+				// the field can have an editPath if it doesn't contain any binary operators except for member operators
+				List<Token> toks = new List<Token>();
+				_fieldToken.FlattenInto(toks);
+				StringBuilder sb = new StringBuilder();
+				sb.Append(fieldToken.GetAsSmallText());
+				for(int i = 0; i < toks.Count; ++i) {
+					ParseRuleSet.Entry pc = toks[i].meta as ParseRuleSet.Entry;
+					if (pc == null) continue;
+					sb.Append(" | "+pc.parseRules.name+"@"+toks[i].index);
+				}
+				Show.Log(sb);
+				Show.Log(fieldToken.Stringify());
+				//string tokenText = fieldToken.GetAsSmallText();
+				//Show.Log(tokenText);
+				editPath = null;
+			}
 		}
 
 		public DataSheet() { }
 		public DataSheet(Tokenizer unfilteredFormat, int indexOfValueElement = 0) {
-			InitFormat(unfilteredFormat, indexOfValueElement);
+			List<Token> fieldTokens = GetValueTokens(unfilteredFormat, indexOfValueElement);
 			SetColumnCount(fieldTokens.Count);
+			for(int i = 0; i < columns.Count; ++i) {
+				columns[i].fieldToken = fieldTokens[i];
+			}
 		}
 
 		public object Get(int row, int col) { return data[row][col]; }
@@ -82,9 +117,6 @@ namespace NonStandard.Data {
 			for (int i = columns.Count; i < count; ++i) { columns.Add(new ColumnData()); }
 		}
 
-		public void InitFormat(Tokenizer unfilteredFieldFormat, int indexOfValueElement = 0) {
-			fieldTokens = GetValueTokens(unfilteredFieldFormat, indexOfValueElement);
-		}
 		public static bool IsValidColumnDescription(List<Token> entry) {
 			ParseRuleSet.Entry pre = entry[0].GetAsContextEntry();
 			//Show.Log(entry.Count + ": " + pre.IsEnclosure + " " + pre.parseRules.name);
@@ -120,10 +152,10 @@ namespace NonStandard.Data {
 
 		public object[] GenerateRow(object source, TokenErrLog errLog) {
 			if(errLog == null) { errLog = new Tokenizer(); }
-			object[] result = new object[fieldTokens.Count];
+			object[] result = new object[columns.Count];
 
 			for (int i = 0; i < result.Length; ++i) {
-				object value = fieldTokens[i].Resolve(errLog, source, true, true);
+				object value = columns[i].fieldToken.Resolve(errLog, source, true, true);
 				if(value is CodeRules.DefaultString && columns[i].defaultValue != null) {
 					value = columns[i].defaultValue;// (float)0;
 				}
@@ -174,11 +206,10 @@ namespace NonStandard.Data {
 			data.Sort(RowSort);
 		}
 
-		public void SetColumn(int index, ColumnData column, Token fieldScript) {
+		public void SetColumn(int index, ColumnData column) {
 			while (columns.Count <= index) { columns.Add(new ColumnData()); }
 			columns[index] = column;
-			while (fieldTokens.Count <= index) { fieldTokens.Add(new Token()); }
-			fieldTokens[index] = fieldScript;
 		}
+		public ColumnData GetColumn(int index) { return columns[index]; }
 	}
 }

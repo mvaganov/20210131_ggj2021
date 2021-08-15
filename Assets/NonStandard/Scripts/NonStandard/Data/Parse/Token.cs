@@ -5,25 +5,47 @@ using System.Text;
 namespace NonStandard.Data.Parse {
 	public struct Token : IEquatable<Token>, IComparable<Token> {
 		public int index, length; // 32 bits x2
+		/// <summary>
+		/// if this field is a different type, it changes the behavior of this class in dramatic and meaningful ways
+		/// <see cref="string"/> - means this is some kind of basic string, either a string literal, or an unescaped 'probably a string' situation. these could be a variable token that should be resolved later, when better context is given
+		/// <see cref="ParseRuleSet.Entry"/> - means this token is a container of other tokens. things inside of parenthesis, square braces, quotes, etc. binary operators also fall into this category.
+		/// <see cref="Delim"/> - means this token is a standard piece of syntax, like a constant, or a default type
+		/// <see cref="TokenSubstitution"/> - means this token should have it's value semantically replaced by <see cref="TokenSubstitution.value"/>, even though it is literally a sequence of characters. used when resolving alphanumeric tokens into numbers, enums, or constants
+		/// </summary>
 		public object meta; // 64 bits
 		public Token(object meta, int i, int len) { this.meta = meta; index = i; length = len; }
-		public static Token None = new Token(null, -1, -1);
+		private static Token _None = new Token(null, -1, -1);
+		public static Token None => _None;
 		public int GetBeginIndex() { return index; }
 		public int GetEndIndex() { return index + length; }
 		public string ToString(string s) { return s.Substring(index, length); }
 		public override string ToString() {
 			ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry;
-			if (pce != null) {
-				Delim d = pce.sourceMeta as Delim;
-				if(d != null) { return d.ToString(); }
-				if(IsValid) return ToString(pce.TextRaw);
-				string output = pce.parseRules.name;
-				if (pce.IsText()) {
-					output += "(" + pce.GetText() + ")";
-				}
-				return output;
+			if (pce == null) {
+				return Resolve(null, null).ToString();
 			}
-			return Resolve(null,null).ToString();
+			Delim d = pce.sourceMeta as Delim;
+			if(d != null) { return d.ToString(); }
+			if(IsValid) return ToString(pce.TextRaw);
+			string output = pce.parseRules.name;
+			if (pce.IsText()) {
+				output += "(" + pce.GetText() + ")";
+			}
+			return output;
+		}
+		public void FlattenInto(List<Token> tokens) {
+			if (tokens.Contains(this)) { return; }// throw new Exception("recursion?"); }
+			tokens.Add(this);
+			ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry;
+			if(pce != null) {
+				for(int i = 0; i < pce.tokenCount; ++i) {
+					int index = pce.tokenStart + i;
+					Token t = pce.tokens[index];
+					if (!pce.IsBegin(t)) {
+						t.FlattenInto(tokens);
+					}
+				}
+			}
 		}
 		public object Resolve(TokenErrLog tok, object scope, bool simplify = true, bool fullyResolve = false) {
 			if (index == -1 && length == -1) return meta;
@@ -43,9 +65,6 @@ namespace NonStandard.Data.Parse {
 			case Delim d: return d.text;
 			case ParseRuleSet.Entry pce: return pce.Resolve(tok, scope, simplify, fullyResolve);
 			}
-			//TokenSubstitution ss = meta as TokenSubstitution; if (ss != null) return ss.value;
-			//Delim d = meta as Delim; if (d != null) return d.text;
-			//ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry; if (pce != null) return pce.Resolve(tok, scope, simplify, fullyResolve);
 			throw new DecoderFallbackException();
 		}
 		public string GetAsSmallText() {
@@ -53,6 +72,7 @@ namespace NonStandard.Data.Parse {
 			if (e != null) {
 				if (IsContextBeginning()) { return e.beginDelim.ToString(); }
 				if (IsContextEnding()) { return e.endDelim.ToString(); }
+				return e.TextEnclosed;
 			}
 			return ToString();
 		}

@@ -5,12 +5,14 @@ using System.Text;
 
 namespace NonStandard.Data.Parse {
 	public class ParseRuleSet {
-		public static Dictionary<string, ParseRuleSet> allContexts = new Dictionary<string, ParseRuleSet>();
+		protected static Dictionary<string, ParseRuleSet> allContexts = new Dictionary<string, ParseRuleSet>();
 		public string name = "default";
 		protected char[] whitespace;
 		protected Delim[] delimiters;
 		private List<ParseRuleSet> delimiterFallback = new List<ParseRuleSet>();
 
+		//public static Dictionary<string, ParseRuleSet> GetAllContexts() { return allContexts; }
+		public static ParseRuleSet GetContext(string name) { allContexts.TryGetValue(name, out ParseRuleSet value); return value; }
 		public char[] Whitespace {
 			get => whitespace;
 			set {
@@ -120,18 +122,28 @@ namespace NonStandard.Data.Parse {
 			return false;
 		}
 		public Entry GetEntry(List<Token> tokens, int startTokenIndex, object meta, ParseRuleSet.Entry parent = null) {
-			Entry e = new Entry { parseRules = this, tokens = tokens, tokenStart = startTokenIndex, sourceMeta = meta, parent = parent };
+			Entry e = new Entry { parseRules = this, tokens = tokens, tokenStart = startTokenIndex, sourceMeta = meta };
+			e.SetParent(parent);
 			return e;
 		}
 		public class Entry {
 			public ParseRuleSet parseRules = null;
-			public Entry parent = null;
+			protected Entry parent = null;
 			public List<Token> tokens;
-			public int tokenStart, tokenCount = -1;
+			/// <summary>
+			/// where in the list of tokens this container pulls its children from. might be non-zero it the token list is borrowed from elsewhere
+			/// </summary>
+			public int tokenStart;
+			/// <summary>
+			/// how many tokens from the token list this container is claiming. they will be contiguous following <see cref="tokenStart"/>
+			/// </summary>
+			public int tokenCount = -1;
 			public Delim beginDelim, endDelim;
 			public object sourceMeta;
 			public int depth { get { Entry p = parent; int n = 0; while (p != null) { p = p.parent; ++n; } return n; } }
 			public readonly static Entry None = new Entry();
+			public Entry GetParent() { return parent; }
+			public void SetParent(Entry p) { parent = p; }
 			public static string PrintAll(List<Token> tokens) {
 				StringBuilder sb = new StringBuilder();
 				List<List<Token>> stack = new List<List<Token>>();
@@ -150,6 +162,13 @@ namespace NonStandard.Data.Parse {
 					} else {
 						sb.Append(t);
 					}
+				}
+			}
+			public string TextEnclosed {
+				get {
+					int start = tokens[tokenStart].index;
+					int limit = tokens[tokenStart + tokenCount - 1].GetEndIndex();
+					return TextRaw.Substring(start, limit - start);
 				}
 			}
 			public string TextRaw { 

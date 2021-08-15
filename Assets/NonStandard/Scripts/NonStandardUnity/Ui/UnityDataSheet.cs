@@ -31,6 +31,10 @@ namespace NonStandard.Ui {
 
 		public List<object> list = new List<object>();
 
+		public int GetRow(GameObject rowObject) {
+			return dataRows.IndexOf(rowObject);
+		}
+
 		private void Awake() {
 			rt = GetComponent<RectTransform>();
 		}
@@ -46,15 +50,18 @@ namespace NonStandard.Ui {
 			data.AddRange(list, tokenizer);
 			List<Token> tokenizedList = tokenizer.tokens[0].GetTokenSublist();
 			int index = 0;
-			for (int i = 1; i < tokenizedList.Count - 1; ++i) {
+			// offset, required because tokenizer lists include the beginning and ending tokens, like "[" and "]"
+			const int o = 1;
+			for (int i = o; i < tokenizedList.Count - 1; ++i) {
 				List<Token> list = tokenizedList[i].GetTokenSublist();
 				if (!DataSheet.IsValidColumnDescription(list)) { continue; }
-				string uiName = list[uiTypeIndex + 1].Resolve(tokenizer, null, true, true).ToString();
-				string headerName = list[headerUiType + 1].Resolve(tokenizer, null, true, true).ToString();
-				string label = list[columnTitleIndex + 1].Resolve(tokenizer, null, true, true).ToString();
-				object defaultValue = list.Count > defaultValueIndex ? list[defaultValueIndex + 1].Resolve(tokenizer, null, true, true) : null;
+				string uiName = list[uiTypeIndex + o].Resolve(tokenizer, null, true, true).ToString();
+				string headerName = list[headerUiType + o].Resolve(tokenizer, null, true, true).ToString();
+				string label = list[columnTitleIndex + o].Resolve(tokenizer, null, true, true).ToString();
+				object defaultValue = list.Count > defaultValueIndex ? list[defaultValueIndex + o].Resolve(tokenizer, null, true, true) : null;
 				//Debug.Log(uiPrototypes+"    "+index + "  uiName "+uiName+"   headerName "+headerName);
 				data.SetColumn(index, new Udash.ColumnData {
+					fieldToken = list[valueIndex + o],
 					data = new UnityColumnData {
 						label = label,
 						uiBase = uiPrototypes.GetElement(uiName),
@@ -63,11 +70,11 @@ namespace NonStandard.Ui {
 					},
 					type = null,
 					defaultValue = defaultValue
-				}, list[valueIndex + 1]);
+				});
 				//Debug.Log(uiName + "::: " + data.columns[index].data.uiBase +"\n"
 				//	+ headerName + "::: " + data.columns[index].data.headerBase);
-				if (list.Count > columnWidth + 1) {
-					object resolved = list[columnWidth + 1].Resolve(tokenizer, null, true, true);
+				if (list.Count > columnWidth + o) {
+					object resolved = list[columnWidth + o].Resolve(tokenizer, null, true, true);
 					//Debug.Log(label+" w: "+resolved);
 					float w = Convert.ToSingle(resolved);
 					data.columns[index].data.width = w;
@@ -170,6 +177,8 @@ namespace NonStandard.Ui {
 			data.SetSortState(column, sortState);
 			GenerateDataRows();
 		}
+
+		public Udash.ColumnData GetColumn(int index) { return data.GetColumn(index); }
 
 		// TODO
 		public void RemoveColumn(int index) { }
