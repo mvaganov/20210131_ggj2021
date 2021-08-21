@@ -3,6 +3,7 @@ using NonStandard.Data.Parse;
 using NonStandard.Ui;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 
 public class ColumnInputField : MonoBehaviour
@@ -20,9 +21,14 @@ public class ColumnInputField : MonoBehaviour
 		int col = transform.GetSiblingIndex();
 		int row = uds.GetRow(transform.parent.gameObject);
 		Udash.ColumnData column = uds.GetColumn(col);
-		Token t = column.fieldToken;
-		string shown = t.GetAsSmallText();
-		Show.Log("need to change "+uds.list[row]+" element "+shown);
-		//uds.SetSortState(col, (SortState)index);
+		if (column.canEdit) {
+			column.SetValue(uds.list[row], text);
+		}
+		//Token t = column.fieldToken;
+		//StringBuilder sb = new StringBuilder();
+		//t.DebugOut(sb);	
+		//string shown = sb.ToString();//t.GetAsSmallText();
+		//Show.Log("need to change "+uds.list[row]+" element "+shown);
+		////uds.SetSortState(col, (SortState)index);
 	}
 }

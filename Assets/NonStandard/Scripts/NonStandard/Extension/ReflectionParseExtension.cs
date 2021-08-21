@@ -53,48 +53,59 @@ namespace NonStandard.Extension {
 		}
 		public static object GetValue(object obj, string variableNamePath, object defaultValue, List<object> out_path = null) {
 			//Show.Log(variableNamePath);
-			string[] vars = variableNamePath.Split(".");
+			IList<object> vars = variableNamePath.Split(".");
+			return GetValueFromRawPath(obj, vars, defaultValue, out_path);
+		}
+		public static object GetValueFromRawPath(object obj, IList<object> rawPath, object defaultValue = null, List<object> out_compiledPath = null) {
 			object result = obj;
-			for (int i = 0; i < vars.Length; ++i) {
-				result = GetValueIndividual(result, vars[i], out object path, defaultValue);
-				if (out_path != null) { out_path.Add(path); }
-				bool done = i == vars.Length - 1;
-				if (!done) {
-					if (result == null) return null;
+			for (int i = 0; i < rawPath.Count; ++i) {
+				string pathStr = rawPath[i].ToString();
+				result = GetValueIndividual(obj, pathStr, out object path, defaultValue);
+				//Show.Log(obj+"["+ pathStr + "] = ("+path+") \'"+result+"\'");
+				if (out_compiledPath != null) {
+					out_compiledPath.Add(path);
 				}
+				bool done = i == rawPath.Count - 1;
+				if (!done) {
+					if (result == null) return defaultValue;
+				}
+				obj = result;
 			}
 			return result;
 		}
-		//public static bool SetValueIndividual(this Type type, object obj, string variableName, object value) {
-		//	FieldInfo fi = type.GetField(variableName, bindAttr);
-		//	if (fi != null) { fi.SetValue(obj, value); return true; }
-		//	PropertyInfo pi = type.GetProperty(variableName, bindAttr);
-		//	if (pi != null) { pi.SetValue(obj, value); return true; }
-
-		//	//Show.Log("needa find "+variableName+" from "+obj);
-		//	//bool foundIt = CodeRules.op_SearchForMember(variableName, out object value, out Type _, obj);
-		//	//if (!foundIt) {
-		//		//Show.Log("ASSIGNING DEFAULT VALUE "+defaultValue+" "+defaultValue.GetType());
-		//		//value = defaultValue;
-		//	//}
-		//	//path = variableName;
-		//	//return value;
-		//	return false;
-		//}
-		public static object GetValueIndividual(object obj, string variableName, out object path, object defaultValue) {
+		/// <summary>
+		/// used when the path is known, having been compiled already by <see cref="GetValueFromRawPath(object, IList{object}, object, List{object})"/>
+		/// </summary>
+		/// <param name="scope"></param>
+		/// <param name="path"></param>
+		/// <param name="result"></param>
+		/// <returns></returns>
+		public static bool TryGetValueCompiled(object scope, object path, out object result) {
+			switch (path) {
+			case FieldInfo fi: result = fi.GetValue(scope); return true;
+			case PropertyInfo pi: result = pi.GetValue(scope); return true;
+			case string s: return TryGetValue_Dictionary(scope, ref path, out result);
+			}
+			result = null;
+			return false;
+		}
+		public static bool TryGetValueCompiled(object scope, IList<object> alreadyCompiledPath, out object result) {
+			object cursor = scope;
+			for(int i = 0; i < alreadyCompiledPath.Count; ++i) {
+				if(!TryGetValueCompiled(cursor, alreadyCompiledPath[i], out cursor)) {
+					result = null;
+					return false;
+				}
+			}
+			result = cursor;
+			return true;
+		}
+		public static object GetValueIndividual(object obj, string variableName, out object path, object defaultValue, char wildcard = Wildcard) {
 			if(!TryGetValue(obj, variableName, out object value, out path)) {
 				return defaultValue;
 			}
 			return value;
 		}
-		//private static void SetValue(this Type type, object obj, IList<string> path, object value) {
-		//	object cursor = obj;
-		//	Type t = type;
-		//	for (int i = 0; i < path.Count; ++i) {
-		//		obj = t.GetValueIndividual(cursor, path[i], out object step, null);
-
-		//	}
-		//}
 
 		/// <summary>
 		/// trys to get a member variable based on the name requested. the name can include a wildcard
@@ -132,6 +143,11 @@ namespace NonStandard.Extension {
 			return result;
 		}
 		public static bool TryGetValue_Object(object scope, string name, out object value, out MemberInfo memberInfo, char wildcard = Wildcard) {
+			if (name == null) {
+				value = null;
+				memberInfo = null;
+				return false;
+			}
 			Type scopeType = scope.GetType();
 			memberInfo = null;
 			if (name.Length > 0 && (name[0] == wildcard || name[name.Length - 1] == wildcard)) {

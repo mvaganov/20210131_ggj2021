@@ -118,7 +118,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2375386854271800958}
   m_HandleRect: {fileID: 6027826901593700890}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -3959,7 +3959,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.00017487015, y: 0.000029237079}
+  m_AnchoredPosition: {x: -0.0008908045, y: -0.0004929489}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &5049753555242306424
@@ -5536,7 +5536,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000019832978, y: 0.00016939298}
+  m_AnchoredPosition: {x: 0.00015762096, y: 0.000019760802}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &5049753556087296669
@@ -6421,7 +6421,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 5049753557020563047}
   m_HandleRect: {fileID: 5049753557020563046}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -7867,7 +7867,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   move: {fileID: 5155537503424186002}
-  dict: {fileID: 5049753555989822290}
+  data: {fileID: 5049753555989822290}
 --- !u!114 &5049753555989822290
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7882,8 +7882,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dict:
     onAssignmentToFunction: 0
-  values: 'name : "player"'
-  parseResults: "{\n  name : \"player\"\n}"
+  values: 'name : "player"
+
+    handicraft 2'
+  parseResults: "{\n  name : \"player\",\n  handicraft : 2\n}"
   dictionaryTostringChangeListener:
     m_PersistentCalls:
       m_Calls: []
@@ -8595,7 +8597,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.0004954627, y: 0.00011892901}
+  m_AnchoredPosition: {x: -0.000017093495, y: 0.00012207031}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &2115387794360142880
@@ -8780,7 +8782,6 @@ GameObject:
   - component: {fileID: 5522780448137940977}
   - component: {fileID: 5516634493613668622}
   - component: {fileID: 5049753555504237216}
-  - component: {fileID: 7731634059116809493}
   m_Layer: 5
   m_Name: ui variables
   m_TagString: Untagged
@@ -8958,32 +8959,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ignoreClicksOnThisElement: 1
---- !u!114 &7731634059116809493
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7731634059116809492}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0f79d3b0e5c06424ea3f67e186b0f8f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  onStart:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2784749141738171664}
-        m_MethodName: ClaimMainDictionary
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
 --- !u!1 &8184011464306007269
 GameObject:
   m_ObjectHideFlags: 0
@@ -9374,15 +9349,15 @@ PrefabInstance:
       objectReference: {fileID: 9100000, guid: 8b9a677f24793ba45bdc27a1dab7745e, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1e8e1924bb442334c9125455634bb567, type: 3}
---- !u!4 &5045311140544892710 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4749730850939948, guid: 1e8e1924bb442334c9125455634bb567,
-    type: 3}
-  m_PrefabInstance: {fileID: 5049753555743402762}
-  m_PrefabAsset: {fileID: 0}
 --- !u!95 &5134373744275210720 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 95879256730774250, guid: 1e8e1924bb442334c9125455634bb567,
+    type: 3}
+  m_PrefabInstance: {fileID: 5049753555743402762}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &5045311140544892710 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4749730850939948, guid: 1e8e1924bb442334c9125455634bb567,
     type: 3}
   m_PrefabInstance: {fileID: 5049753555743402762}
   m_PrefabAsset: {fileID: 0}

@@ -166,8 +166,12 @@ namespace NonStandard.Data.Parse {
 			}
 			public string TextEnclosed {
 				get {
+					switch (sourceMeta) {
+					case DelimOp d: return TextRaw;
+					}
 					int start = tokens[tokenStart].index;
 					int limit = tokens[tokenStart + tokenCount - 1].GetEndIndex();
+					//Show.Log(parseRules.name + " " +sourceMeta.GetType()+" "+start+", "+limit+" "+TextRaw);
 					return TextRaw.Substring(start, limit - start);
 				}
 			}

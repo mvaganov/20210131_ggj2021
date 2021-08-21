@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NonStandard.Extension;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -21,9 +22,7 @@ namespace NonStandard.Data.Parse {
 		public string ToString(string s) { return s.Substring(index, length); }
 		public override string ToString() {
 			ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry;
-			if (pce == null) {
-				return Resolve(null, null).ToString();
-			}
+			if (pce == null) { return Resolve(null, null).ToString(); }
 			Delim d = pce.sourceMeta as Delim;
 			if(d != null) { return d.ToString(); }
 			if(IsValid) return ToString(pce.TextRaw);
@@ -33,17 +32,39 @@ namespace NonStandard.Data.Parse {
 			}
 			return output;
 		}
+		public void DebugOut(StringBuilder sb = null, int depth = 0, List<Token> recursionGuard = null) {
+			if (recursionGuard == null) { recursionGuard = new List<Token>(); }
+			if (recursionGuard.Contains(this)) { return; }
+			recursionGuard.Add(this);
+			if (sb == null) { sb = new StringBuilder(); }
+			sb.Append(StringExtension.Indentation(depth, "  "));
+			sb.Append(meta.GetType().ToString() + ":" + GetAsSmallText()+"@"+index);
+			ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry;
+			if (pce != null) {
+				sb.Append(pce.parseRules.name);
+			}
+			sb.Append("\n");
+			if (pce != null) {
+				for (int i = 0; i < pce.tokenCount; ++i) {
+					Token t = pce.tokens[pce.tokenStart + i];
+					if (t.index == index && t.meta.GetType() == meta.GetType()) continue;
+					t.DebugOut(sb, depth + 1, recursionGuard);
+				}
+			}
+		}
+		/// <summary>
+		/// gathers a linear list of the tokens contained in this token
+		/// </summary>
 		public void FlattenInto(List<Token> tokens) {
-			if (tokens.Contains(this)) { return; }// throw new Exception("recursion?"); }
+			if (tokens.Contains(this)) { return; }
 			tokens.Add(this);
 			ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry;
 			if(pce != null) {
 				for(int i = 0; i < pce.tokenCount; ++i) {
-					int index = pce.tokenStart + i;
-					Token t = pce.tokens[index];
-					if (!pce.IsBegin(t)) {
-						t.FlattenInto(tokens);
-					}
+					Token t = pce.tokens[pce.tokenStart + i];
+					// binary operators insert a copy of themselves (but not themselves exactly) as the middle of 3 tokens
+					if (t.index == index && t.meta.GetType() == meta.GetType()) { continue; }
+					t.FlattenInto(tokens);
 				}
 			}
 		}

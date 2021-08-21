@@ -67,6 +67,7 @@ namespace NonStandard.Extension {
 		/// <param name="indent">if null, use <see cref="DefaultIndentation"/></param>
 		/// <param name="depth"></param>
 		public static string Indentation(int depth, string indent = null) {
+			if (depth <= 0) return "";
 			if (indent == null) { indent = DefaultIndentation; }
 			StringBuilder sb = new StringBuilder();
 			while (depth-- > 0) { sb.Append(indent); }
