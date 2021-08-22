@@ -1,4 +1,5 @@
-﻿using NonStandard.GameUi.Particles;
+﻿using NonStandard.Extension;
+using NonStandard.GameUi.Particles;
 using NonStandard.Ui;
 using NonStandard.Utility;
 using System;
@@ -37,7 +38,11 @@ namespace NonStandard.GameUi.Inventory {
 		}
 		public GameObject FindItem(string name) {
 			if (items == null) return null;
-			// TODO wildcard search
+			if (ReflectionParseExtension.HasValidWildcard(name)) {
+				List<string> options = items.ConvertAll(o => o.name);
+				int index = ReflectionParseExtension.FindIndexWithWildcard(options, name, false);
+				if (index >= 0) return items[index];
+			}
 			GameObject found = items.Find(i => i.name == name);
 			return found;
 		}

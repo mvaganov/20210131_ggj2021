@@ -12,7 +12,6 @@ namespace NonStandard.TouchGui {
 		public override void Start() {
 			base.Start();
 			rectTransform = GetComponent<RectTransform>();
-			// TODO get the UI system working with these events, and see if mobile still works.
 			Ui.PointerTrigger.AddEvent(gameObject, UnityEngine.EventSystems.EventTriggerType.PointerDown, PointerDown);
 			Ui.PointerTrigger.AddEvent(gameObject, UnityEngine.EventSystems.EventTriggerType.Drag, PointerDrag);
 			Ui.PointerTrigger.AddEvent(gameObject, UnityEngine.EventSystems.EventTriggerType.PointerUp, PointerUp);

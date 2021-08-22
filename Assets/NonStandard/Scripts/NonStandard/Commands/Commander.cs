@@ -31,7 +31,6 @@ namespace NonStandard.Commands {
 		public object GetScope() { return _scope; }
 		public Commander() {
 			if (_instance != null) { Show.Warning("multiple commanders exist"); }
-			InitializeCommands();
 		}
 		public Command GetCommand(string commandName) {
 			commandLookup.TryGetValue(commandName, out Command command);
@@ -82,28 +81,6 @@ namespace NonStandard.Commands {
 		public bool RemoveCommand(Command command) {
 			return commandLookup.Remove(command.Name);
 		}
-		private void InitializeCommands() {
-			//Show.Log("initializing...");
-			AddCommandsFrom(this);
-			AddCommandsFrom(type:typeof(MoreCommands));
-		}
-		public void AddCommandsFrom(object obj) { AddCommandsFrom(obj, null); }
-		public void AddCommandsFrom(Type type) { AddCommandsFrom(null, type); }
-		private void AddCommandsFrom(object obj, Type type) {
-			if(obj != null && type == null) type = obj.GetType();
-			IEnumerable<MethodInfo> methods = type.FindMethodsWithAttribute<CommandMakerAttribute>();
-			//Show.Log(type.Name+" has candidates");
-			object[] noparams = Array.Empty<object>();
-			foreach (MethodInfo m in methods) {
-				//Show.Log(m.Name);
-				try {
-					Command cmd = m.Invoke(obj, noparams) as Command;
-					//Show.Log("adding \'"+cmd.Name+"\' from "+m.Name);
-					AddCommand(cmd);
-				} catch (Exception) { }
-			}
-		}
-
 		public Instruction PopInstruction() {
 			if (instructionList.Count > 0) {
 				RecentInstruction = instructionList[0];
@@ -116,9 +93,4 @@ namespace NonStandard.Commands {
 		/// <param name="instruction">Command string, with arguments.</param>
 		public void EnqueueRun(Instruction instruction) { instructionList.Add(instruction); }
 	}
-
-	public partial class MoreCommands { }
-
-
-	[AttributeUsage(AttributeTargets.Method)] public class CommandMakerAttribute : Attribute { }
 }

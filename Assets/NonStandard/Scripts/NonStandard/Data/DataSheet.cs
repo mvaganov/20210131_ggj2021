@@ -24,7 +24,7 @@ namespace NonStandard.Data {
 		public DataSheet() : base() { }
 		public DataSheet(Tokenizer unfilteredFormat, int indexOfValueElement = 0) : base(unfilteredFormat, indexOfValueElement) { }
 	}
-	public enum SortState { None, Ascending, Descening }
+	public enum SortState { None, Ascending, Descening, Count }
 	public class DataSheet<MetaData> where MetaData : new() {
 		/// <summary>
 		/// the actual data

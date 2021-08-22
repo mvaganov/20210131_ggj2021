@@ -9,6 +9,9 @@ namespace NonStandard.Extension {
 	public static class ReflectionParseExtension {
 		/// used by wildcard searches, for member names and enums. dramatically reduces structural typing
 		public const char Wildcard = '¤';
+		public static bool HasValidWildcard(string text, char wildcard = Wildcard) {
+			return text[0] == wildcard || text[text.Length-1] == wildcard;
+		}
 		public static bool IsWildcardMatch(string possibility, string n, char wildcard = Wildcard) {
 			if (n.Length == 1 && n[0] == wildcard) return true;
 			bool startsW = n[n.Length - 1] == (wildcard), endsW = n[0] == (wildcard);
@@ -22,17 +25,17 @@ namespace NonStandard.Extension {
 		/// <param name="sorted">if sorted alphabetically, BinarySearch can be used to speed up the search</param>
 		/// <param name="wildcard"></param>
 		/// <returns></returns>
-		public static int FindIndexWithWildcard(string[] names, string n, bool sorted, char wildcard = Wildcard) {
+		public static int FindIndexWithWildcard(IList<string> names, string n, bool sorted, char wildcard = Wildcard) {
 			if (n.Length == 1 && n[0] == wildcard) return 0;
 			bool startsW = n[n.Length - 1] == (wildcard), endsW = n[0] == (wildcard);
-			if (startsW && endsW) { return Array.FindIndex(names, s => s.Contains(n.Substring(1, n.Length - 2))); }
-			if (endsW) { n = n.Substring(1); return Array.FindIndex(names, s => s.EndsWith(n)); }
+			if (startsW && endsW) { return names.FindIndex(s => s.Contains(n.Substring(1, n.Length - 2))); }
+			if (endsW) { n = n.Substring(1); return names.FindIndex(s => s.EndsWith(n)); }
 			if (startsW) { n = n.Substring(0, n.Length - 1); }
-			int index = sorted ? Array.BinarySearch(names, n) : (startsW)
-				? Array.FindIndex(names, s => s.StartsWith(n)) : Array.IndexOf(names, n);
+			int index = sorted ? names.BinarySearchIndexOf(n) : (startsW)
+				? names.FindIndex(s => s.StartsWith(n)) : names.IndexOf(n);
 			if (startsW && index < 0) {
 				index = ~index;
-				return (index < names.Length && names[index].StartsWith(n)) ? index : -1;
+				return (index < names.Count && names[index].StartsWith(n)) ? index : -1;
 			}
 			return index;
 		}

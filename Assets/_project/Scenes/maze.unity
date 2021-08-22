@@ -799,9 +799,9 @@ MonoBehaviour:
   dataRows: []
   uiPrototypes: {fileID: 1714983818}
   fields: "[\n[\"\" \"braille\" null \"nothing\" (30)]\n[\"name\" \"label\" (na\xA4)
-    \"sortlabel\" (100) \"nameless\"]\n[\"speed\" \"txticon\" (move.move.speed/5)
-    \"sortlabel\" (30) 0.0]\n// skill from skill table\n[\"handicraft\" \"input\"
-    (data.handi\xA4) \"sortlabel\" (80) 0.0]\n// TODO add columns by creating new
+    \"collabel\" (100) \"nameless\"]\n[\"speed\" \"txticon\" (move.move.speed/5)
+    \"collabel\" (30) 0.0]\n// skill from skill table\n[\"handicraft\" \"input\"
+    (data.handi\xA4) \"collabel\" (80) 0.0]\n// TODO add columns by creating new
     variables in data\n[\"+\" \"nothing\" (null) \"addcol\" (30)]\n]"
 --- !u!1 &203351150
 GameObject:
@@ -19596,7 +19596,7 @@ GameObject:
   - component: {fileID: 2098747025}
   - component: {fileID: 2098747026}
   m_Layer: 5
-  m_Name: sortlabel
+  m_Name: collabel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -19682,6 +19682,8 @@ MonoBehaviour:
     - m_Text: Move Column
       m_Image: {fileID: 0}
     - m_Text: Resize Column
+      m_Image: {fileID: 0}
+    - m_Text: Edit Column
       m_Image: {fileID: 0}
     - m_Text: Remove Column
       m_Image: {fileID: 0}

@@ -120,17 +120,15 @@ namespace NonStandard.Commands {
 				Cmd_Help.Command_Handler(e, commandName, cmd);
 			}
 		}
+		/// <summary>
+		/// creates a <see cref="Command"/> structure, which is connected to the command parser through Unity, visible in the Unity UI
+		/// </summary>
+		/// <returns></returns>
 		public static Command Cmd_GenerateHelpCommand_static() {
 			return new Command("help", null, new Argument[] {
 				new Argument("-c", "command", "which specific command to get help info for", type:typeof(string), order:1),
 				//new Argument("-n", "numbers", "test parameter, an array of integers", type:typeof(int[])),
 			}, "prints this help text");
-		}
-		//[CommandMaker] // TODO remove the CommandMaker attribute?
-		public Command Cmd_GenerateHelpCommand() {
-			Command cmd = Cmd_GenerateHelpCommand_static();
-			cmd.handler = Cmd_Help_Handler;
-			return cmd;
 		}
 	}
 }

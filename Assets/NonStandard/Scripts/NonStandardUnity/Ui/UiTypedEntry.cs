@@ -30,8 +30,6 @@ namespace NonStandard.Ui {
 			//Debug.Log(tokenizer);
 			object obj = ptr.data;
 
-			// TODO implement a sorting UI also, so the rows can be sorted
-
 			DataSheet< UiTypedColumnData> ds = new DataSheet<UiTypedColumnData>(tokenizer, valueIndex);
 			ds.AddData(obj, tokenizer);
 			List<Token> tokenizedList = tokenizer.tokens[0].GetTokenSublist();

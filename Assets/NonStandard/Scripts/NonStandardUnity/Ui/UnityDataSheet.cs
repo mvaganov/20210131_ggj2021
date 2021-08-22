@@ -260,10 +260,34 @@ namespace NonStandard.Ui {
 		}
 		public Udash.ColumnSetting GetColumn(int index) { return data.GetColumn(index); }
 
-		// TODO
-		public void RemoveColumn(int index) { }
+		// TODO add column
 		public void AddColumn() {
+			Show.Log("TODO add column");
+		}
 
+		// TODO allow editing with a special menu
+		public void EditColumn(int index) {
+			// data script: text input field
+			// column label text: text input field
+			// column field type: dropdown referencing the children of 'typed item prototype'
+			// default value: text input field
+			// default value type: dropdown referencing types allowed in column field type
+			Show.Log("TODO allow editing with a special menu");
+		}
+
+		// TODO allow columns to be removed
+		public void RemoveColumn(int index) {
+			Show.Log("TODO allow columns to be removed after a confirmation popup");
+		}
+
+		// TODO allow column to be shifted left or right
+		public void MoveColumn(int index) {
+			Show.Log("TODO allow column to be shifted left or right");
+		}
+
+		// TODO allow column to be increased in size to the right
+		public void ResizeColumn(int index) {
+			Show.Log("TODO allow column to be increased in size to the right");
 		}
 	}
 }
