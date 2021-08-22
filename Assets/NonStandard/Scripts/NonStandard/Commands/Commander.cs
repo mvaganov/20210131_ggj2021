@@ -48,14 +48,14 @@ namespace NonStandard.Commands {
 			if (command != null) {
 				tokenizer = command.Tokenize(trimmed);
 				//Show.Log(tokenizer);
-				if (tokenizer.errors.Count > 0) { return; }
+				if (tokenizer.HasError()) { return; }
 				command.handler.Invoke(new Command.Exec(command, tokenizer, instruction.source, print));
 			} else {
 				print.Invoke("unknown command \'" + firstWord + "\'\n");
 				tokenizer = new Tokenizer();
 				tokenizer.Tokenize(trimmed, Command.BaseArgumentParseRules);
 			}
-			if (tokenizer.errors.Count > 0) { return; }
+			if (tokenizer.HasError()) { return; }
 			Instruction next = NextInstruction(tokenizer, instruction.source);
 			if (next == null) { return; }
 			ParseCommand(next, print, out tokenizer); // make this a do-while loop instead of tail recursion?

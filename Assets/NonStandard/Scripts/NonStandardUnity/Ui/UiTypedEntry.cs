@@ -24,7 +24,7 @@ namespace NonStandard.Ui {
 		public void Start() {
 			Tokenizer tokenizer = new Tokenizer();
 			tokenizer.Tokenize(fields);
-			if (tokenizer.errors.Count > 0) {
+			if (tokenizer.HasError()) {
 				Debug.LogWarning(tokenizer.ErrorString());
 			}
 			//Debug.Log(tokenizer);

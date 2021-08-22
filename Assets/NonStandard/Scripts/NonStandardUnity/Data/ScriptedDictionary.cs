@@ -98,7 +98,7 @@ namespace NonStandard.Data {
 		public string Format(string text) {
 			Tokenizer tok = new Tokenizer();
 			string resolvedText = CodeConvert.Format(text, dict, tok);
-			if (tok.errors.Count > 0) {
+			if (tok.HasError()) {
 				Show.Error(tok.errors.JoinToString(", "));
 			}
 			return resolvedText;

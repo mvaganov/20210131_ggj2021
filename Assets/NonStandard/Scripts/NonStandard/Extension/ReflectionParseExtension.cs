@@ -1,4 +1,5 @@
-﻿using NonStandard.Data.Parse;
+﻿using NonStandard.Data;
+using NonStandard.Data.Parse;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -100,14 +101,14 @@ namespace NonStandard.Extension {
 			switch (path) {
 			case FieldInfo fi:
 				if (value != null && !fi.FieldType.IsAssignableFrom(value.GetType())) {
-					value = Convert.ChangeType(value, fi.FieldType);
+					CodeConvert.Convert(ref value, fi.FieldType);
 				}
 				fi.SetValue(scope, value);
 				return true;
 			case PropertyInfo pi:
 				if (!pi.CanWrite) return false;
 				if (value != null && !pi.PropertyType.IsAssignableFrom(value.GetType())) {
-					value = Convert.ChangeType(value, pi.PropertyType);
+					CodeConvert.Convert(ref value, pi.PropertyType);
 				}
 				pi.SetValue(scope, value);
 				return true;

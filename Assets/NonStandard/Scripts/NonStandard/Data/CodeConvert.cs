@@ -72,6 +72,16 @@ namespace NonStandard.Data {
 			}
 			return typeToGet.IsEnum;
 		}
+		/// <summary>
+		/// does convert, will throw <see cref="FormatException"/> if convert fails
+		/// </summary>
+		/// <param name="value"></param>
+		/// <param name="typeToConvertTo"></param>
+		public static void Convert(ref object value, Type typeToConvertTo) {
+			if (!TryConvert(ref value, typeToConvertTo)) {
+				throw new FormatException("could not convert \"" + value + "\" to type " + typeToConvertTo);
+			}
+		}
 		public static bool TryConvert(ref object value, Type typeToGet) {
 			if (value != null && value.GetType() == typeToGet) return true;
 			try {
@@ -80,19 +90,21 @@ namespace NonStandard.Data {
 					if (str != null) { return ReflectionParseExtension.TryConvertEnumWildcard(typeToGet, str, out value); }
 				}
 				switch (Type.GetTypeCode(typeToGet)) {
-				case TypeCode.Boolean: value = Convert.ToBoolean(value); break;
-				case TypeCode.SByte: value = Convert.ToSByte(value); break;
-				case TypeCode.Byte: value = Convert.ToByte(value); break;
-				case TypeCode.Char: value = Convert.ToChar(value); break;
-				case TypeCode.Int16: value = Convert.ToInt16(value); break;
-				case TypeCode.UInt16: value = Convert.ToUInt16(value); break;
-				case TypeCode.Int32: value = Convert.ToInt32(value); break;
-				case TypeCode.UInt32: value = Convert.ToUInt32(value); break;
-				case TypeCode.Single: value = Convert.ToSingle(value); break;
-				case TypeCode.Int64: value = Convert.ToInt64(value); break;
-				case TypeCode.UInt64: value = Convert.ToUInt64(value); break;
-				case TypeCode.Double: value = Convert.ToDouble(value); break;
-				case TypeCode.String: value = Convert.ToString(value); break;
+				case TypeCode.Boolean:
+				case TypeCode.SByte:
+				case TypeCode.Byte:
+				case TypeCode.Char:
+				case TypeCode.Int16:
+				case TypeCode.UInt16:
+				case TypeCode.Int32:
+				case TypeCode.UInt32:
+				case TypeCode.Single:
+				case TypeCode.Int64:
+				case TypeCode.UInt64:
+				case TypeCode.Double:
+				case TypeCode.String:
+					value = System.Convert.ChangeType(value, typeToGet);
+					break;
 				default:
 					if (TryConvertIList(ref value, typeToGet)) { 
 						return true;

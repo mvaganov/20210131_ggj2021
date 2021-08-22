@@ -8,6 +8,7 @@ using System.Text;
 using UnityEngine;
 using NonStandard.Extension;
 using System;
+using NonStandard.Data;
 
 public class ColumnInputField : MonoBehaviour
 {
@@ -36,7 +37,7 @@ public class ColumnInputField : MonoBehaviour
 		if (column.canEdit) {
 			object value = text;
 			if(column.type != null) {
-				value = Convert.ChangeType(value, column.type);
+				CodeConvert.Convert(ref value, column.type);
 			}
 			column.SetValue(uds.list[row], value);
 			uds.data[row][col] = value;

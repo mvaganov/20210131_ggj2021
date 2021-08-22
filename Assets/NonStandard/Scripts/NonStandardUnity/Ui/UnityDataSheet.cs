@@ -44,7 +44,7 @@ namespace NonStandard.Ui {
 			rt = GetComponent<RectTransform>();
 			Tokenizer tokenizer = new Tokenizer();
 			tokenizer.Tokenize(fields);
-			if (tokenizer.errors.Count > 0) {
+			if (tokenizer.HasError()) {
 				Debug.LogWarning(tokenizer.ErrorString());
 			}
 			data = new Udash();

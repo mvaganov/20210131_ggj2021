@@ -5,6 +5,7 @@ using System.Text;
 
 namespace NonStandard.Data.Parse {
 	public interface TokenErrLog {
+		bool HasError();
 		void AddError(ParseError error);
 		string ErrorString();
 		IList<int> TextRows();
@@ -35,6 +36,7 @@ namespace NonStandard.Data.Parse {
 		/// </summary>
 		internal List<int> rows = new List<int>();
 		public IList<int> TextRows() => rows;
+		public bool HasError() { return errors.Count > 0; }
 		public int TokenCount { get { return tokens.Count; } }
 		/// <param name="i"></param>
 		/// <returns>raw token data</returns>

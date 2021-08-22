@@ -103,12 +103,16 @@ namespace NonStandard.Data {
 					}
 				} else {
 					result = fieldToken.Resolve(errLog, scope, true, true);
-					// TODO if error happened, result is defaultValue?
-					if (type != null) {
-						// TODO check if result.GetType() is type? if not, try to convert, if can't convert, result is defaultValue?
+					if (errLog.HasError()) {
+						result = defaultValue;
 					}
 				}
-				return result;
+				return FilterType(result);
+			}
+
+			public object FilterType(object value) {
+				if (type != null) { CodeConvert.Convert(ref value, type); }
+				return value;
 			}
 
 			public bool SetValue(object scope, object value) {
@@ -117,15 +121,12 @@ namespace NonStandard.Data {
 				if (needsToLoadEditPath) {
 					CompileEditPath(scope);
 				}
-				// TODO use proper editPath to assign the given value.
-				// convert the type before assigning it?
-				// if the value is not the right type, throw an error?
-
-				if(!ReflectionParseExtension.TrySetValueCompiledPath(scope, editPath, value)) {
+				value = FilterType(value);
+				if (!ReflectionParseExtension.TrySetValueCompiledPath(scope, editPath, value)) {
 					Show.Log("unable to set " + _fieldToken.GetAsSmallText() + " to " + value);
 				}
 				ReflectionParseExtension.TryGetValueCompiledPath(scope, editPath, out object result);
-				Show.Log("set " + scope + "." + _fieldToken.GetAsSmallText() + " to " + result);
+				//Show.Log("set " + scope + "." + _fieldToken.GetAsSmallText() + " to " + result);
 				return true;
 			}
 
@@ -276,8 +277,8 @@ namespace NonStandard.Data {
 			if ((ta.IsAssignableFrom(typeof(double)) || ta.IsAssignableFrom(typeof(long)))
 			&&  (tb.IsAssignableFrom(typeof(double)) || tb.IsAssignableFrom(typeof(long)))) {
 				ta = tb = typeof(double);
-				a = Convert.ChangeType(a, ta);
-				b = Convert.ChangeType(b, tb);
+				CodeConvert.Convert(ref a, ta);
+				CodeConvert.Convert(ref b, tb);
 				//Show.Log(a + "vs" + b);
 			}
 			if (ta == tb) {
