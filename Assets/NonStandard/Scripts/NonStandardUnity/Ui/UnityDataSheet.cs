@@ -1,6 +1,7 @@
 ﻿using NonStandard.Character;
 using NonStandard.Data;
 using NonStandard.Data.Parse;
+using NonStandard.Extension;
 using NonStandard.Process;
 using System;
 using System.Collections.Generic;
@@ -59,8 +60,9 @@ namespace NonStandard.Ui {
 				string headerName = list[headerUiType + o].Resolve(tokenizer, null, true, true).ToString();
 				string label = list[columnTitleIndex + o].Resolve(tokenizer, null, true, true).ToString();
 				object defaultValue = list.Count > defaultValueIndex ? list[defaultValueIndex + o].Resolve(tokenizer, null, true, true) : null;
+				Type type = defaultValue != null ? defaultValue.GetType() : null;
 				//Debug.Log(uiPrototypes+"    "+index + "  uiName "+uiName+"   headerName "+headerName);
-				data.SetColumn(index, new Udash.ColumnData {
+				data.SetColumn(index, new Udash.ColumnSetting {
 					fieldToken = list[valueIndex + o],
 					data = new UnityColumnData {
 						label = label,
@@ -68,7 +70,7 @@ namespace NonStandard.Ui {
 						headerBase = uiPrototypes.GetElement(headerName),
 						width = -1,
 					},
-					type = null,
+					type = type,
 					defaultValue = defaultValue
 				});
 				//Debug.Log(uiName + "::: " + data.columns[index].data.uiBase +"\n"
@@ -77,7 +79,7 @@ namespace NonStandard.Ui {
 					object resolved = list[columnWidth + o].Resolve(tokenizer, null, true, true);
 					//Debug.Log(label+" w: "+resolved);
 					float w = Convert.ToSingle(resolved);
-					data.columns[index].data.width = w;
+					data.columnSettings[index].data.width = w;
 				}
 				++index;
 			}
@@ -86,8 +88,8 @@ namespace NonStandard.Ui {
 		void GenerateHeaders() {
 			if (headerRectangle == null) return;
 			Vector2 cursor = Vector2.zero;
-			for (int i = 0; i < data.columns.Count; ++i) {
-				Udash.ColumnData cold = data.columns[i];
+			for (int i = 0; i < data.columnSettings.Count; ++i) {
+				Udash.ColumnSetting cold = data.columnSettings[i];
 				GameObject go = null;
 				if (i < headers.Count) { go = headers[i]; }
 				while (i >= headers.Count) { headers.Add(null); }
@@ -136,49 +138,127 @@ namespace NonStandard.Ui {
 			GenerateDataRows();
 		}
 
+		GameObject CreateRow(RowData rowData, float yPosition = float.NaN) {
+			GameObject rowUi = Instantiate(prefab_dataRow.gameObject);
+			RowObject rObj = rowUi.GetComponent<RowObject>();
+			if (rObj == null) {
+				throw new Exception("RowUI prefab must have " + nameof(RowObject) + " component");
+			}
+			rObj.obj = rowData.model;
+			if(rObj.obj == null) {
+				throw new Exception("something bad. where is the object that this row is for?");
+			}
+			rowUi.SetActive(true);
+
+			object[] columns = rowData.columns;
+			//StringBuilder sb = new StringBuilder();
+			Vector2 rowCursor = Vector2.zero;
+			RectTransform rect;
+			for (int c = 0; c < columns.Length; ++c) {
+				Udash.ColumnSetting colS = data.columnSettings[c];
+				GameObject fieldUi = Instantiate(colS.data.uiBase);
+				fieldUi.SetActive(true);
+				fieldUi.transform.SetParent(rowUi.transform, false);
+				object value = columns[c];
+				if (value != null) {
+					UiText.SetText(fieldUi, value.ToString());
+					//sb.Append(value.ToString() + ", ");
+				}
+				rect = fieldUi.GetComponent<RectTransform>();
+				float w = colS.data.width > 0 ? colS.data.width : rect.sizeDelta.x;
+				rect.anchoredPosition = rowCursor;
+				rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, w);
+				rowCursor.x += w * rt.localScale.x;
+			}
+			//Show.Log(sb);
+			rect = rowUi.GetComponent<RectTransform>();
+			rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, rowCursor.x);
+			rect.transform.SetParent(contentRectangle, false);
+			if (!float.IsNaN(yPosition)) {
+				rect.anchoredPosition = new Vector2(0, yPosition);
+			}
+			dataRows.Add(rowUi);
+			return rowUi;
+		}
+
 		void GenerateDataRows() {
 			dataRows.ForEach(go => { go.transform.SetParent(null); Destroy(go); });
 			dataRows.Clear();
 			Vector2 cursor = Vector2.zero;
-			for (int r = 0; r < data.data.Count; ++r) {
-				GameObject rowUi = Instantiate(prefab_dataRow.gameObject);
-				rowUi.SetActive(true);
-				dataRows.Add(rowUi);
+			for (int r = 0; r < data.rows.Count; ++r) {
+				GameObject rowUi = CreateRow(data.rows[r]);
 				RectTransform rect = rowUi.GetComponent<RectTransform>();
-				rect.transform.SetParent(contentRectangle, false);
 				rect.anchoredPosition = cursor;
-				object[] row = data.data[r];
-				Vector2 rowCursor = Vector2.zero;
 				cursor.y -= rect.rect.height;
-				//StringBuilder sb = new StringBuilder();
-				for (int c = 0; c < row.Length; ++c) {
-					Udash.ColumnData cold = data.columns[c];
-					GameObject fieldUi = Instantiate(cold.data.uiBase);
-					fieldUi.SetActive(true);
-					fieldUi.transform.SetParent(rowUi.transform, false);
-					object value = row[c];
-					if (value != null) {
-						UiText.SetText(fieldUi, value.ToString());
-						//sb.Append(value.ToString() + ", ");
-					}
-					rect = fieldUi.GetComponent<RectTransform>();
-					float w = cold.data.width > 0 ? cold.data.width : rect.sizeDelta.x;
-					rect.anchoredPosition = rowCursor;
-					rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, w);
-					rowCursor.x += w * rt.localScale.x;
+			}
+			contentRectangle.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, -cursor.y);
+		}
+		public void RefreshRows() {
+			// map list elements to row UI
+			Dictionary<object, RowObject> srcToRowUiMap = new Dictionary<object, RowObject>();
+			for(int i = 0; i < contentRectangle.childCount; ++i) {
+				RowObject rObj = contentRectangle.GetChild(i).GetComponent<RowObject>();
+				if (rObj == null) { continue; }
+				if (rObj.obj == null) {
+					throw new Exception("found a row (" + rObj.transform.HierarchyPath() + ") without source object at index "+i);
 				}
-				//Show.Log(sb);
-				rect = rowUi.GetComponent<RectTransform>();
-				rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, rowCursor.x);
+				srcToRowUiMap[rObj.obj] = rObj;
+			}
+			Vector2 cursor = Vector2.zero;
+			// go through all of the row elements and put the row UI elements in the correct spot
+			for(int i = 0; i < data.rows.Count; ++i) {
+				RowData rd = data.rows[i];
+				if (!srcToRowUiMap.TryGetValue(rd.model, out RowObject uiElement)) {
+					throw new Exception("could not find "+rd.model+", call "+nameof(SyncSpreadSheetUiWith)+"?");
+				}
+				uiElement.transform.SetSiblingIndex(i);
+				RectTransform rect = uiElement.GetComponent<RectTransform>();
+				rect.anchoredPosition = cursor;
+				cursor.y -= rect.rect.height;
 			}
 			contentRectangle.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, -cursor.y);
 		}
 		public void SetSortState(int column, SortState sortState) {
+			SyncSpreadSheetUiWith(list);
 			data.SetSortState(column, sortState);
-			GenerateDataRows();
+			RefreshRows();
 		}
-
-		public Udash.ColumnData GetColumn(int index) { return data.GetColumn(index); }
+		public void SyncSpreadSheetUiWith(IList<object> list) {
+			// go through the list. if it has an element missing from the spreadsheet, add it to the spreadsheet (including UI)
+			for (int i = 0; i < list.Count; ++i) {
+				RowData rd = data.GetRowData(list[i]);
+				if (rd != null) { continue; }
+				rd = data.AddData(list[i], errLog);
+				bool haveUi = contentRectangle.IndexOfChild(c=> {
+					RowObject rObj = c.GetComponent<RowObject>();
+					if (rObj != null && rObj.obj == rd.model) { return true; }
+					return false;
+				}) >= 0;
+				if (!haveUi) {
+					GameObject rowUi = CreateRow(rd);
+				}
+			}
+			// go through the spreadsheet. if it has an element missing from the list, remove it from the spreadsheet (including UI)
+			for (int i = data.rows.Count-1; i >= 0; --i) {
+				object m = data.rows[i].model;
+				if (list.IndexOf(m) >= 0) { continue; }
+				// if this spreadsheet row object is not in the expected list, remove it
+				data.rows.RemoveAt(i);
+				// also, remove the UI element
+				for(int c = 0; c < contentRectangle.childCount; ++c) {
+					RowObject rObj = contentRectangle.GetChild(c).GetComponent<RowObject>();
+					if (rObj == null) continue;
+					if (rObj.obj == m) { rObj.transform.SetParent(null); Destroy(rObj); }
+				}
+			}
+		}
+		public void Sort() {
+			SyncSpreadSheetUiWith(list);
+			if (data.Sort()) {
+				RefreshRows();
+			}
+		}
+		public Udash.ColumnSetting GetColumn(int index) { return data.GetColumn(index); }
 
 		// TODO
 		public void RemoveColumn(int index) { }

@@ -37,7 +37,7 @@ namespace NonStandard.Ui {
 			List<Token> tokenizedList = tokenizer.tokens[0].GetTokenSublist();
 			for(int i = 1; i < tokenizedList.Count-1; ++i) {
 				List<Token> list = tokenizedList[i].GetTokenSublist();
-				DataSheet<UiTypedColumnData>.ColumnData col = ds.columns[i - 1];
+				DataSheet<UiTypedColumnData>.ColumnSetting col = ds.columnSettings[i - 1];
 				col.data.label = list[columnTitleIndex + 1].ToString();
 				string uiName = list[uiTypeIndex + 1].ToString();
 				col.data.uiBase = Global.Get<UiTypedEntryPrototype>().GetElement(uiName);

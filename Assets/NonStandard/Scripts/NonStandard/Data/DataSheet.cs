@@ -15,6 +15,11 @@ namespace NonStandard.Data {
 		/// </summary>
 		public string description;
 	}
+	public class RowData {
+		public object model;
+		public object[] columns;
+		public RowData(object model, object[] columns) { this.model = model; this.columns = columns; }
+	}
 	public class DataSheet : DataSheet<ColumnData> {
 		public DataSheet() : base() { }
 		public DataSheet(Tokenizer unfilteredFormat, int indexOfValueElement = 0) : base(unfilteredFormat, indexOfValueElement) { }
@@ -24,17 +29,17 @@ namespace NonStandard.Data {
 		/// <summary>
 		/// the actual data
 		/// </summary>
-		public List<object[]> data = new List<object[]>();
+		public List<RowData> rows = new List<RowData>();
 		/// <summary>
 		/// data about the columns
 		/// </summary>
-		public List<ColumnData> columns = new List<ColumnData>();
+		public List<ColumnSetting> columnSettings = new List<ColumnSetting>();
 		/// <summary>
 		/// which column is sorted first?
 		/// </summary>
 		protected List<int> columnSortOrder = new List<int>();
 
-		public class ColumnData {
+		public class ColumnSetting {
 			private Token _fieldToken;
 			/// <summary>
 			/// what field is being read (or modified) in this column
@@ -73,25 +78,55 @@ namespace NonStandard.Data {
 			/// </summary>
 			public Comparison<object> sort;
 			/// <summary>
-			/// 
+			/// what to resolve in this column if the path is missing or erroneous
 			/// </summary>
 			public object defaultValue = null;
 
-			public object Resolve(object scope) {
+			object CompileEditPath(object scope) {
+				//Show.Log("need to compile " + editPath.JoinToString());
+				List<object> compiledPath = new List<object>();
+				object result = ReflectionParseExtension.GetValueFromRawPath(scope, editPath, defaultValue, compiledPath);
+				editPath = compiledPath;
+				//ReflectionParseExtension.TryGetValueCompiledPath(scope, editPath, out result);
+				//Show.Log("compiled " + editPath.JoinToString(",",o=>o?.GetType()?.ToString() ?? "???")+" : "+result);
+				needsToLoadEditPath = false;
+				return result;
+			}
+
+			public object GetValue(TokenErrLog errLog, object scope) {
 				object result;
 				if (needsToLoadEditPath) {
-					Show.Log("need to compile " + editPath.JoinToString());
-					List<object> compiledPath = new List<object>();
-					result = ReflectionParseExtension.GetValueFromRawPath(scope, editPath, null, compiledPath);
-					editPath = compiledPath;
-					Show.Log("compiled " + editPath.JoinToString(",",o=>o?.GetType()?.ToString() ?? "???")+" : "+result);
-					needsToLoadEditPath = false;
+					result = CompileEditPath(scope);
 				} else if (editPath != null) {
-					ReflectionParseExtension.TryGetValueCompiled(scope, editPath, out result);
+					if(!ReflectionParseExtension.TryGetValueCompiledPath(scope, editPath, out result)) {
+						result = defaultValue;
+					}
 				} else {
-					result = fieldToken.Resolve(new Tokenizer(), scope, true, true);
+					result = fieldToken.Resolve(errLog, scope, true, true);
+					// TODO if error happened, result is defaultValue?
+					if (type != null) {
+						// TODO check if result.GetType() is type? if not, try to convert, if can't convert, result is defaultValue?
+					}
 				}
 				return result;
+			}
+
+			public bool SetValue(object scope, object value) {
+				//Show.Log("attempting to set " + _fieldToken.GetAsSmallText() + " to " + value);
+				if (!canEdit) return false;
+				if (needsToLoadEditPath) {
+					CompileEditPath(scope);
+				}
+				// TODO use proper editPath to assign the given value.
+				// convert the type before assigning it?
+				// if the value is not the right type, throw an error?
+
+				if(!ReflectionParseExtension.TrySetValueCompiledPath(scope, editPath, value)) {
+					Show.Log("unable to set " + _fieldToken.GetAsSmallText() + " to " + value);
+				}
+				ReflectionParseExtension.TryGetValueCompiledPath(scope, editPath, out object result);
+				Show.Log("set " + scope + "." + _fieldToken.GetAsSmallText() + " to " + result);
+				return true;
 			}
 
 			public void RefreshEditPath() {
@@ -99,9 +134,9 @@ namespace NonStandard.Data {
 				List<Token> allTokens = new List<Token>();
 				bool isValidEditableField = TokenOnlyContains(_fieldToken, new ParseRuleSet[] { 
 					CodeRules.Expression, CodeRules.MembershipOperator, CodeRules.SquareBrace }, allTokens);
-				StringBuilder sb = new StringBuilder();
-				sb.Append(fieldToken.GetAsSmallText() + " " + isValidEditableField + "\n");
-				Show.Log(sb);
+				//StringBuilder sb = new StringBuilder();
+				//sb.Append(fieldToken.GetAsSmallText() + " " + isValidEditableField + "\n");
+				//Show.Log(sb);
 				editPath = null;
 				if (!isValidEditableField) {
 					canEdit = false;
@@ -137,47 +172,40 @@ namespace NonStandard.Data {
 				}
 				return true;
 			}
-			public bool SetValue(object scope, object value) {
-				if (!canEdit) return false;
-				if (needsToLoadEditPath) {
-					// TODO load editPath properly
-
-					needsToLoadEditPath = false;
-				}
-				// TODO use proper editPath to assign the given value.
-				// convert the type before assigning it?
-				// if the value is not the right type, throw an error?
-				return true;
-			}
 		}
 
 		public DataSheet() { }
 		public DataSheet(Tokenizer unfilteredFormat, int indexOfValueElement = 0) {
 			List<Token> fieldTokens = GetValueTokens(unfilteredFormat, indexOfValueElement);
 			SetColumnCount(fieldTokens.Count);
-			for(int i = 0; i < columns.Count; ++i) {
-				columns[i].fieldToken = fieldTokens[i];
+			for(int i = 0; i < columnSettings.Count; ++i) {
+				columnSettings[i].fieldToken = fieldTokens[i];
 			}
 		}
 
-		public object Get(int row, int col) { return data[row][col]; }
-		public void Set(int row, int col, object value) { data[row][col] = value; }
+		public object Get(int row, int col) { return rows[row].columns[col]; }
+		public void Set(int row, int col, object value) { rows[row].columns[col] = value; }
 
 		public object this [int row, int col] { get => Get(row, col); set => Set(row, col, value); }
-		public object[] this [int row] { get => data[row]; }
+		public object[] this [int row] { get => rows[row].columns; }
 
+		/// <param name="column">which column is having it's sort statechanged</param>
+		/// <param name="sortState">the new <see cref="SortState"/> for this column</param>
 		public void SetSortState(int column, SortState sortState) {
 			int columnImportance = columnSortOrder.IndexOf(column);
 			if (columnImportance >= 0) { columnSortOrder.RemoveAt(columnImportance); }
-			columns[column].sortState = sortState;
-			if (sortState == SortState.None) { return; }
+			columnSettings[column].sortState = sortState;
+			if (sortState == SortState.None) {
+				columnSortOrder.Remove(column);
+				return;
+			}
 			columnSortOrder.Insert(0, column);
 			Sort();
 		}
 
 		public void SetColumnCount(int count) {
-			if (columns.Count < count) { columns.Capacity = count; }
-			for (int i = columns.Count; i < count; ++i) { columns.Add(new ColumnData()); }
+			if (columnSettings.Count < count) { columnSettings.Capacity = count; }
+			for (int i = columnSettings.Count; i < count; ++i) { columnSettings.Add(new ColumnSetting()); }
 		}
 
 		public static bool IsValidColumnDescription(List<Token> entry) {
@@ -199,34 +227,45 @@ namespace NonStandard.Data {
 		}
 
 		public void InitData(IList<object> source, TokenErrLog errLog) {
-			data = new List<object[]>();
+			rows = new List<RowData>();
 			InsertRange(0, source, errLog);
 		}
 
 		public void InsertRange(int index, IList<object> source, TokenErrLog errLog) {
-			object[][] items = new object[source.Count][];
+			RowData[] newRows = new RowData[source.Count];
 			for (int i = 0; i < source.Count; ++i) {
-				items[i] = GenerateRow(source[i], errLog);
+				newRows[i] = GenerateRow(source[i], errLog);
 			}
-			data.InsertRange(index, items);
+			rows.InsertRange(index, newRows);
 		}
-		public void AddRange(IList<object> source, TokenErrLog errLog) { InsertRange(data.Count, source, errLog); }
-		public void AddData(object elementForRow, TokenErrLog errLog) { data.Add(GenerateRow(elementForRow, errLog)); }
+		public void AddRange(IList<object> source, TokenErrLog errLog) { InsertRange(rows.Count, source, errLog); }
+		public RowData AddData(object elementForRow, TokenErrLog errLog) {
+			RowData rd = GenerateRow(elementForRow, errLog);
+			rows.Add(rd);
+			return rd;
+		}
 
-		public object[] GenerateRow(object source, TokenErrLog errLog) {
+		public RowData GenerateRow(object source, TokenErrLog errLog) {
 			if(errLog == null) { errLog = new Tokenizer(); }
-			object[] result = new object[columns.Count];
+			object[] result = new object[columnSettings.Count];
 
 			for (int i = 0; i < result.Length; ++i) {
 				//object value = columns[i].fieldToken.Resolve(errLog, source, true, true);
-				object value = columns[i].Resolve(source);
-				if(value is CodeRules.DefaultString && columns[i].defaultValue != null) {
-					value = columns[i].defaultValue;// (float)0;
+				object value = columnSettings[i].GetValue(errLog, source);
+				if(value is CodeRules.DefaultString && columnSettings[i].defaultValue != null) {
+					value = columnSettings[i].defaultValue;// (float)0;
 				}
 				result[i] = value;
 				//if (fieldTokens[i].ToString() == "()") { Show.Log("oh hai "+result[i]); }
 			}
-			return result;
+			return new RowData(source, result);
+		}
+
+		public RowData GetRowData(object model) {
+			for(int i = 0; i < rows.Count; ++i) {
+				if (rows[i].model == model) return rows[i];
+			}
+			return null;
 		}
 
 		public int DefaultSort(object a, object b) {
@@ -239,6 +278,7 @@ namespace NonStandard.Data {
 				ta = tb = typeof(double);
 				a = Convert.ChangeType(a, ta);
 				b = Convert.ChangeType(b, tb);
+				//Show.Log(a + "vs" + b);
 			}
 			if (ta == tb) {
 				if (ta == typeof(double)) { return Comparer<double>.Default.Compare((double)a, (double)b); }
@@ -247,33 +287,37 @@ namespace NonStandard.Data {
 			return 0;
 		}
 
-		public int RowSort(object[] rowA, object[] rowB) {
+		public int RowSort(RowData rowA, RowData rowB) {
 			for (int i = 0; i < columnSortOrder.Count; ++i) {
 				int index = columnSortOrder[i];
-				if (columns[index].sortState == SortState.None) {
+				if (columnSettings[index].sortState == SortState.None) {
 					//Show.Log("SortState not being set...");
 					continue;
 				}
-				Comparison<object> sort = columns[index].sort;
+				Comparison<object> sort = columnSettings[index].sort;
 				if (sort == null) { sort = DefaultSort; }
-				int comparison = sort.Invoke(rowA[index], rowB[index]);
-				//Show.Log(comparison+" compare " + rowA[index]+" vs "+ rowB[index]+"   " + rowA[index].GetType() + " vs " + rowB[index].GetType());
+				int comparison = sort.Invoke(rowA.columns[index], rowB.columns[index]);
+				//Show.Log(comparison+" compare " + rowA.columns[index]+" vs "+ rowB.columns[index]+"   " + rowA.columns[index].GetType() + " vs " + rowB.columns[index].GetType());
 				if (comparison == 0) { continue; }
-				if (columns[index].sortState == SortState.Descening) { comparison *= -1; }
+				if (columnSettings[index].sortState == SortState.Descening) { comparison *= -1; }
 				return comparison;
 			}
 			return 0;
 		}
 
-		public void Sort() {
-			//Show.Log("SORTING "+columnSortOrder.JoinToString());
-			data.Sort(RowSort);
+		public bool Sort() {
+			if (columnSortOrder == null || columnSortOrder.Count == 0) { return false; }
+			//Show.Log("SORTING "+columnSortOrder.JoinToString(", ",i=>i.ToString()+":"+columnSettings[i].sortState));
+			//StringBuilder sb = new StringBuilder(); sb.Append(rows.JoinToString(",", r => r.model.ToString()) + "\n");
+			rows.Sort(RowSort);
+			//sb.Append(rows.JoinToString(",", r => r.model.ToString()) + "\n"); Show.Log(sb);
+			return true;
 		}
 
-		public void SetColumn(int index, ColumnData column) {
-			while (columns.Count <= index) { columns.Add(new ColumnData()); }
-			columns[index] = column;
+		public void SetColumn(int index, ColumnSetting column) {
+			while (columnSettings.Count <= index) { columnSettings.Add(new ColumnSetting()); }
+			columnSettings[index] = column;
 		}
-		public ColumnData GetColumn(int index) { return columns[index]; }
+		public ColumnSetting GetColumn(int index) { return columnSettings[index]; }
 	}
 }

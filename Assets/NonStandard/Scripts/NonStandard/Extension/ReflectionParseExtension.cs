@@ -89,7 +89,33 @@ namespace NonStandard.Extension {
 			result = null;
 			return false;
 		}
-		public static bool TryGetValueCompiled(object scope, IList<object> alreadyCompiledPath, out object result) {
+		/// <summary>
+		/// used when the path is known, having been compiled already by <see cref="GetValueFromRawPath(object, IList{object}, object, List{object})"/>
+		/// </summary>
+		/// <param name="scope"></param>
+		/// <param name="path"></param>
+		/// <param name="value"></param>
+		/// <returns></returns>
+		public static bool TrySetValueCompiled(object scope, object path, object value) {
+			switch (path) {
+			case FieldInfo fi:
+				if (value != null && !fi.FieldType.IsAssignableFrom(value.GetType())) {
+					value = Convert.ChangeType(value, fi.FieldType);
+				}
+				fi.SetValue(scope, value);
+				return true;
+			case PropertyInfo pi:
+				if (!pi.CanWrite) return false;
+				if (value != null && !pi.PropertyType.IsAssignableFrom(value.GetType())) {
+					value = Convert.ChangeType(value, pi.PropertyType);
+				}
+				pi.SetValue(scope, value);
+				return true;
+			case string s: return TrySetValue_Dictionary(scope, ref s, value);
+			}
+			return false;
+		}
+		public static bool TryGetValueCompiledPath(object scope, IList<object> alreadyCompiledPath, out object result) {
 			object cursor = scope;
 			for(int i = 0; i < alreadyCompiledPath.Count; ++i) {
 				if(!TryGetValueCompiled(cursor, alreadyCompiledPath[i], out cursor)) {
@@ -98,6 +124,19 @@ namespace NonStandard.Extension {
 				}
 			}
 			result = cursor;
+			return true;
+		}
+		public static bool TrySetValueCompiledPath(object scope, IList<object> alreadyCompiledPath, object result) {
+			object cursor = scope;
+			int last = alreadyCompiledPath.Count - 1;
+			for (int i = 0; i < last; ++i) {
+				if (!TryGetValueCompiled(cursor, alreadyCompiledPath[i], out cursor)) {
+					return false;
+				}
+			}
+			if (!TrySetValueCompiled(cursor, alreadyCompiledPath[last], result)) {
+				return false;
+			}
 			return true;
 		}
 		public static object GetValueIndividual(object obj, string variableName, out object path, object defaultValue, char wildcard = Wildcard) {
@@ -134,7 +173,7 @@ namespace NonStandard.Extension {
 			KeyValuePair<Type, Type> dType = scopeType.GetIDictionaryType();
 			bool result;
 			if (dType.Key != null) {
-				result = TrySetValue_Dictionary(scope, keyName, value, scopeType, dType.Key);
+				result = TrySetValue_Dictionary(scope, ref keyName, value, scopeType, dType.Key);
 				if (!result) { path = null; } else { path = keyName; }
 				return result;
 			}
@@ -208,8 +247,7 @@ namespace NonStandard.Extension {
 			}
 			return TryGetValue_DictionaryReflective(scopeType, scope, key, out value);
 		}
-		public static bool TrySetValue_Dictionary(object scope, string name, object value, Type scopeType = null, Type keyType = null) {
-			value = name;
+		public static bool TrySetValue_Dictionary(object scope, ref string name, object value, Type scopeType = null, Type keyType = null) {
 			if (scopeType == null) { scopeType = scope.GetType(); }
 			if (keyType == null) { keyType = scopeType.GetIDictionaryType().Key; }
 			if (keyType == typeof(string)) { name = ConvertWildcardIntoDictionaryKey(scope, name, scopeType); }

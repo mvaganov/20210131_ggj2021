@@ -800,9 +800,9 @@ MonoBehaviour:
   uiPrototypes: {fileID: 1714983818}
   fields: "[\n[\"\" \"braille\" null \"nothing\" (30)]\n[\"name\" \"label\" (na\xA4)
     \"sortlabel\" (100) \"nameless\"]\n[\"speed\" \"txticon\" (move.move.speed/5)
-    \"sortlabel\" (30) 0]\n// skill from skill table\n[\"handicraft\" \"input\" (data.handi\xA4)
-    \"sortlabel\" (80) 0]\n// TODO add columns by creating new variables in data\n[\"+\"
-    \"nothing\" (null) \"addcol\" (30)]\n]"
+    \"sortlabel\" (30) 0.0]\n// skill from skill table\n[\"handicraft\" \"input\"
+    (data.handi\xA4) \"sortlabel\" (80) 0.0]\n// TODO add columns by creating new
+    variables in data\n[\"+\" \"nothing\" (null) \"addcol\" (30)]\n]"
 --- !u!1 &203351150
 GameObject:
   m_ObjectHideFlags: 0
@@ -1028,8 +1028,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 350615063}
   m_HandleRect: {fileID: 350615062}
   m_Direction: 0
-  m_Value: 0
-  m_Size: 1
+  m_Value: 1
+  m_Size: 0.9999999
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -4492,8 +4492,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 862296461}
   m_HandleRect: {fileID: 862296460}
   m_Direction: 2
-  m_Value: 0.9999998
-  m_Size: 0.3996668
+  m_Value: 0.99999964
+  m_Size: 0.39966676
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -12503,7 +12503,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 884d3bd5fd8dd8a4da2b965a58afb46b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  path: 
 --- !u!114 &1628713026
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12563,7 +12562,18 @@ MonoBehaviour:
   m_CharacterLimit: 0
   m_OnEndEdit:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1628713025}
+        m_MethodName: Sort
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_OnSubmit:
     m_PersistentCalls:
       m_Calls: []
@@ -18327,6 +18337,7 @@ GameObject:
   - component: {fileID: 1837837386}
   - component: {fileID: 1837837388}
   - component: {fileID: 1837837387}
+  - component: {fileID: 1837837389}
   m_Layer: 5
   m_Name: data row
   m_TagString: Untagged
@@ -18390,6 +18401,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1837837385}
   m_CullTransparentMesh: 0
+--- !u!114 &1837837389
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1837837385}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d33014bc99d46a4eb161a8d3679959d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1857207405
 GameObject:
   m_ObjectHideFlags: 0
@@ -20401,6 +20424,11 @@ PrefabInstance:
     - target: {fileID: 6027826901593700890, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
       propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6027826901593700890, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
+        type: 3}
+      propertyPath: m_AnchorMin.x
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8825238488467681474, guid: 8d542b9fba148c245b1da48b5fd1ffb2,

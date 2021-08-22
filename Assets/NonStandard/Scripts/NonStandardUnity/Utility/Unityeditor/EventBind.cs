@@ -22,8 +22,22 @@ namespace NonStandard.Utility.UnityEditor {
 			if (targetinfo == null) { Debug.LogError("no method " + setMethodName + "(" + typeof(T).Name + ") in " + target.ToString()); }
 			return Delegate.CreateDelegate(typeof(UnityAction<T>), target, targetinfo, false) as UnityAction<T>;
 		}
+		public static bool IfNotAlready<T>(UnityEvent<T> @event, UnityEngine.Object target, string methodName) {
+			for(int i = 0; i < @event.GetPersistentEventCount(); ++i) {
+				if (@event.GetPersistentTarget(i) == target && @event.GetPersistentMethodName(i) == methodName) { return false; }
+			}
+			On(@event, target, methodName);
+			return true;
+		}
 		public static void On<T>(UnityEvent<T> @event, object target, string methodName) {
 			new EventBind(target, methodName).Bind(@event);
+		}
+		public static bool IfNotAlready(UnityEvent @event, UnityEngine.Object target, string methodName) {
+			for (int i = 0; i < @event.GetPersistentEventCount(); ++i) {
+				if (@event.GetPersistentTarget(i) == target && @event.GetPersistentMethodName(i) == methodName) { return false; }
+			}
+			On(@event, target, methodName);
+			return true;
 		}
 		public static void On(UnityEvent @event, object target, string methodName) {
 			new EventBind(target, methodName).Bind(@event);

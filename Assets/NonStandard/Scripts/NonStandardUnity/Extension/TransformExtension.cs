@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using UnityEngine;
 
 namespace NonStandard.Extension {
@@ -14,6 +15,14 @@ namespace NonStandard.Extension {
 				t = t.parent;
 			}
 			return sb.ToString();
+		}
+
+		public static int IndexOfChild(this Transform t, Func<Transform, bool> predicate) {
+			for(int i = 0; i < t.childCount; ++i) {
+				Transform c = t.GetChild(i);
+				if (c != null && predicate.Invoke(c)) { return i; }
+			}
+			return -1;
 		}
 	}
 }
