@@ -68,7 +68,7 @@ public class Team : MonoBehaviour {
 		return rosterUi.AddItem(memberObject, name, activateMember);
 	}
 	public void ActivateTeamMember(GameObject memberObject) {
-		CharacterControlManager ccm = Global.Get<CharacterControlManager>();
+		CharacterControlManager ccm = Global.GetComponent<CharacterControlManager>();
 		Interact3dItem i3i = ccm.moveProxy.GetComponent<Interact3dItem>();
 		if (i3i != null) { i3i.showing = true; }
 		ccm.SetCharacter(memberObject);

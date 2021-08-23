@@ -21,7 +21,7 @@ namespace NonStandard.GameUi.Particles {
 		public ParticleSystem GetParticles() {
 			ParticleSystem ps = null;
 			if (!string.IsNullOrEmpty(expectedParticleName)) {
-				if (expP == null) { expP = Global.Get<ExpectedParticles>(); }
+				if (expP == null) { expP = Global.GetComponent<ExpectedParticles>(); }
 				if (expP != null) { ps = expP.Get(expectedParticleName); }
 			}
 			if (ps == null) { ps = _particleSystem; }

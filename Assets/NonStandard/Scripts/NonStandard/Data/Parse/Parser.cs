@@ -104,7 +104,6 @@ namespace NonStandard.Data.Parse {
 				listData = new List<object>();
 			} else {
 				try {
-					// TODO deal with primitive types here. they don't need to be allocated till the value is known.see TryGetValue()
 					if (resultType.IsPrimitive || resultType == typeof(string)) {
 						Show.Error("need to parse primitive! see TryGetValue()?");
 					}

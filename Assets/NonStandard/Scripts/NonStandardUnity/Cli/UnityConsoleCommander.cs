@@ -31,6 +31,7 @@ namespace NonStandard.Cli {
 			if (!string.IsNullOrEmpty(firstCommandsToExecute)) {
 				DoCommand(firstCommandsToExecute);
 			}
+			Show.Warning("'help pause' didn't work. fix it next? something wrong with argument parsing?");
 		}
 		public void Cmd_Exit(Command.Exec e) { PlatformAdjust.Exit(); }
 		public void Cmd_Pause(Command.Exec e) {

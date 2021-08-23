@@ -2,7 +2,7 @@
 using UnityEngine;
 
 namespace NonStandard {
-	public class Global : MonoBehaviour {
+	public partial class Global : MonoBehaviour {
 		private static Global _instance;
 		private static List<Global> globs = new List<Global>();
 		public static Global Instance() {
@@ -18,16 +18,22 @@ namespace NonStandard {
 		}
 		public static GameObject Get() { return Instance().gameObject; }
 		public static T Get<T>(bool includeInactive = true) where T : Component {
+			return null;
+		}
+		public static T GetComponent<T>(bool includeInactive = true) where T : Component {
+			T found = Get<T>(null);
+			if (found != null) return found;
 			T componentInstance = Instance().GetComponentInChildren<T>(includeInactive);
 			if (componentInstance == null) {
 				for(int i = 0; i < globs.Count; ++i) {
 					Global g = globs[i];
-					if (g == null || g == _instance) { globs.RemoveAt(i--); continue; }
+					if (g == null) { globs.RemoveAt(i--); continue; }
 					componentInstance = g.GetComponentInChildren<T>(includeInactive);
-					if (componentInstance) return componentInstance;
+					if (componentInstance) { break; }
 				}
 			}
 			if (componentInstance == null) { componentInstance = _instance.gameObject.AddComponent<T>(); }
+			directory[typeof(T)] = componentInstance;
 			return componentInstance;
 		}
 		public void Pause() { GameClock.Instance().Pause(); }

@@ -5,7 +5,7 @@ namespace NonStandard.GameUi.Particles {
 		public FloatyText prefab_floatyText;
 
 		public static FloatyText Create(Vector3 position, string text, Camera cam = null) {
-			FloatyTextManager ftm = Global.Get<FloatyTextManager>();
+			FloatyTextManager ftm = Global.GetComponent<FloatyTextManager>();
 			FloatyText ft = Instantiate(ftm.prefab_floatyText).GetComponent<FloatyText>();
 			ft.cam = cam;
 			ft.name = text;

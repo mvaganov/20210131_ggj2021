@@ -41,10 +41,10 @@ public class Game : MonoBehaviour
 	void Start() {
 		tokenCreator.Init();
 		npcCreator.Init();
-		ConditionCheck cc = Global.Get<ConditionCheck>();
+		ConditionCheck cc = Global.GetComponent<ConditionCheck>();
 		cc.condition = () => {
 			//Show.Log("checking victory " + Global.Get<Team>().members.Count + " / " + (npcs.Count + 1));
-			return Global.Get<Team>().members.Count >= npcCreator.npcs.Count + 1;
+			return Global.GetComponent<Team>().members.Count >= npcCreator.npcs.Count + 1;
 		};
 		cc.action = () => {
 			Tokenizer tok = new Tokenizer();
@@ -53,7 +53,7 @@ public class Game : MonoBehaviour
 			DialogManager.Instance.Show();
 		};
 		//Show.Log("finished initializing " + this);
-		Team team = Global.Get<Team>();
+		Team team = Global.GetComponent<Team>();
 		team.AddMember(firstPlayer);
 		EnsureExplorer(firstPlayer);
 		maze.stage=-1;
@@ -82,7 +82,7 @@ public class Game : MonoBehaviour
 		LevelGenerate(lvl);
 	}
 	public void LevelGenerate(LevelState lvl) {
-		Team team = Global.Get<Team>();
+		Team team = Global.GetComponent<Team>();
 		if (lvl == null) {
 			lvl = new LevelState();
 			lvl.stage = maze.stage;
@@ -118,7 +118,7 @@ public class Game : MonoBehaviour
 			int[][] invToLoad;
 			CodeConvert.TryParse(lvl.tokenInventory, out invToLoad, null, tokenizer);
 			//Debug.Log(Show.Stringify(invToLoad,false));
-			Vector3 playerLoc = Global.Get<CharacterControlManager>().localPlayerInterfaceObject.transform.position;
+			Vector3 playerLoc = Global.GetComponent<CharacterControlManager>().localPlayerInterfaceObject.transform.position;
 			for (int i = 0; i < invToLoad.Length; ++i) {
 				int[] t = invToLoad[i];
 				if (t == null || t.Length == 0) continue;
@@ -182,8 +182,8 @@ public class Game : MonoBehaviour
 
 	public void ClaimPlayer(Command.Exec e) {
 		GameObject npc = DialogManager.Instance.dialogWithWho;
-		Global.Get<Team>().AddMember(npc);
-		MazeLevel ml = Global.Get<MazeLevel>();
+		Global.GetComponent<Team>().AddMember(npc);
+		MazeLevel ml = Global.GetComponent<MazeLevel>();
 		Discovery d = EnsureExplorer(npc);
 		ParticleSystem ps = npc.GetComponentInChildren<ParticleSystem>();
 		Color color = ps.main.startColor.color;
@@ -191,7 +191,7 @@ public class Game : MonoBehaviour
 		d.discoveredWall = Color.Lerp(d.discoveredWall, color, 0.25f);
 		d.discoveredRamp = Color.Lerp(d.discoveredRamp, color, 0.25f);
 		d.maze = ml;
-		Global.Get<ConditionCheck>().DoActivateTest();
+		Global.GetComponent<ConditionCheck>().DoActivateTest();
 		InventoryCollector inv = npc.GetComponentInChildren<InventoryCollector>();
 		inv.inventory = InventoryManager.main;
 		inv.autoPickup = true;

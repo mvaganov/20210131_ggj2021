@@ -55,7 +55,7 @@ namespace NonStandard.Data {
 		[System.Serializable] public class StringEvent : UnityEvent<string> { }
 
 		void Awake() {
-			Global.Get<ScriptedDictionaryManager>().Register(this);
+			Global.GetComponent<ScriptedDictionaryManager>().Register(this);
 		}
 		void Start() {
 #if UNITY_EDITOR

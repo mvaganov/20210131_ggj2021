@@ -38,7 +38,7 @@ namespace NonStandard.Ui {
 				DataSheet<UiTypedColumnData>.ColumnSetting col = ds.columnSettings[i - 1];
 				col.data.label = list[columnTitleIndex + 1].ToString();
 				string uiName = list[uiTypeIndex + 1].ToString();
-				col.data.uiBase = Global.Get<UiTypedEntryPrototype>().GetElement(uiName);
+				col.data.uiBase = Global.GetComponent<UiTypedEntryPrototype>().GetElement(uiName);
 				string text = list[valueIndex + 1].Resolve(tokenizer, obj, true, true).ToString();
 				//Debug.Log(list[valueIndex + 1].ToString()+" ~> "+text);
 			}
@@ -52,7 +52,7 @@ namespace NonStandard.Ui {
 			for(int i = 0; i < elementList.Count; ++i) {
 				List<object> list = elementList[i] as List<object>;
 				//Show.Log(list[columnTitleIndex] + "(" + list[uiTypeIndex] + "): " + list[valueIndex].GetType().ToString());
-				GameObject prototype = Global.Get<UiTypedEntryPrototype>().GetElement(list[uiTypeIndex].ToString());
+				GameObject prototype = Global.GetComponent<UiTypedEntryPrototype>().GetElement(list[uiTypeIndex].ToString());
 				GameObject uiPart = Instantiate(prototype);
 				RectTransform rect = uiPart.GetComponent<RectTransform>();
 				if(rect != null) {

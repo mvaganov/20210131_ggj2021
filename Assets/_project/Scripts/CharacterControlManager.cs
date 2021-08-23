@@ -38,6 +38,6 @@ public class CharacterControlManager : MonoBehaviour
 	}
 
 	void Start() {
-		Global.Get<Team>().AddMember(moveProxy.Target.gameObject);
+		Global.GetComponent<Team>().AddMember(moveProxy.Target.gameObject);
 	}
 }

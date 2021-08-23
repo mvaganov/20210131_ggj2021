@@ -14,7 +14,7 @@ namespace NonStandard.GameUi.Inventory {
 		public UnityEvent_GameObject onRemoveItem;
 		public List<GameObject> GetItems() { return items; }
 		private void Awake() {
-			Global.Get<InventoryManager>().Register(this);
+			Global.GetComponent<InventoryManager>().Register(this);
 		}
 		public ListItemUi AddItem(GameObject itemObject) {
 			if (items == null) { items = new List<GameObject>(); }
@@ -23,7 +23,7 @@ namespace NonStandard.GameUi.Inventory {
 			InventoryItem item = itemObject.GetComponent<InventoryItem>();
 			itemObject.SetActive(false);
 			item.onAddToInventory?.Invoke(this);
-			Vector3 playerLoc = Global.Get<Character.CharacterProxy>().transform.position;
+			Vector3 playerLoc = Global.GetComponent<Character.CharacterProxy>().transform.position;
 			Vector3 localPosition = itemObject.transform.position - playerLoc;
 			itemObject.transform.SetParent(transform);
 			itemObject.transform.localPosition = localPosition;
@@ -59,7 +59,7 @@ namespace NonStandard.GameUi.Inventory {
 			itemObject.SetActive(true);
 			Vector3 localPos = itemObject.transform.localPosition;
 			//Show.Log("POS out " + localPos);
-			Vector3 playerLoc = Global.Get<Character.CharacterProxy>().transform.position;
+			Vector3 playerLoc = Global.GetComponent<Character.CharacterProxy>().transform.position;
 			itemObject.transform.SetParent(null);
 			itemObject.transform.position = playerLoc + localPos;
 			Rigidbody rb = itemObject.GetComponent<Rigidbody>();

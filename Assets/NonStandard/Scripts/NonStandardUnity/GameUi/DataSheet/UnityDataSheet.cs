@@ -117,13 +117,13 @@ namespace NonStandard.Ui {
 
 		private void Start() {
 			if (uiPrototypes == null) {
-				uiPrototypes = Global.Get<UiTypedEntryPrototype>();
+				uiPrototypes = Global.GetComponent<UiTypedEntryPrototype>();
 			}
 			Init();
 			GenerateHeaders();
 			Proc.Enqueue(() => {
-				NpcCreation npcs = Global.Get<NpcCreation>();
-				CharacterProxy charMove = Global.Get<CharacterProxy>();
+				NpcCreation npcs = Global.GetComponent<NpcCreation>();
+				CharacterProxy charMove = Global.GetComponent<CharacterProxy>();
 				List<object> chars = new List<object>();
 				chars.Add(charMove.Target);
 				chars.AddRange(npcs.npcs);
@@ -278,16 +278,6 @@ namespace NonStandard.Ui {
 		// TODO allow columns to be removed
 		public void RemoveColumn(int index) {
 			Show.Log("TODO allow columns to be removed after a confirmation popup");
-		}
-
-		// TODO allow column to be shifted left or right
-		public void MoveColumn(int index) {
-			Show.Log("TODO allow column to be shifted left or right");
-		}
-
-		// TODO allow column to be increased in size to the right
-		public void ResizeColumn(int index) {
-			Show.Log("TODO allow column to be increased in size to the right");
 		}
 	}
 }

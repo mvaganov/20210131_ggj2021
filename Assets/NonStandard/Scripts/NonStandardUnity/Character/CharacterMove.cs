@@ -498,8 +498,7 @@ namespace NonStandard.Character {
 		[Tooltip("hooks that allow code execution when character state changes (useful for animation)")]
 		public Callbacks callbacks = new Callbacks();
 
-		[System.Serializable] public class Callbacks
-		{
+		[System.Serializable] public class Callbacks {
 			[Tooltip("when player changes direction, passes the new direction")]
 			public UnityEvent_Vector3 moveDirectionChanged;
 			[Tooltip("when player changes their standing angle, passes the new ground normal")]

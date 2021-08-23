@@ -4,8 +4,12 @@ using UnityEngine.UI;
 namespace NonStandard.Ui {
 	public static class UiText {
 		public static GameObject GetTextObject(GameObject go) {
+			TMPro.TMP_InputField tif = go.GetComponentInChildren<TMPro.TMP_InputField>();
+			if (tif != null) { return tif.gameObject; }
 			TMPro.TMP_Text tmp = go.GetComponentInChildren<TMPro.TMP_Text>();
 			if (tmp != null) { return tmp.gameObject; }
+			InputField inf = go.GetComponentInChildren<InputField>();
+			if (inf != null) { return inf.gameObject; }
 			return go.GetComponentInChildren<Text>().gameObject;
 		}
 		public static void SetText(GameObject go, string value) {
