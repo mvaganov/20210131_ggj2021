@@ -1,7 +1,6 @@
 ﻿using NonStandard.Data;
 using NonStandard.Extension;
 using NonStandard.Inputs;
-using NonStandard.Utility;
 using NonStandard.Utility.UnityEditor;
 using System;
 using System.Collections.Generic;

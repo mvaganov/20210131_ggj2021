@@ -28,18 +28,18 @@ namespace NonStandard.Extension {
 			List<string> strings = new List<string>();
 			if (toString == null) { toString = o => o.ToString(); }
 			IEnumerator<T> e = source.GetEnumerator();
-			while(e.MoveNext()) { strings.Add(toString.Invoke(e.Current)); }
+			while (e.MoveNext()) { strings.Add(toString.Invoke(e.Current)); }
 			e.Dispose();
 			return strings.JoinToString(separator);
 		}
-    
+
 		/// <summary>
 		/// the way that Stringify writes a dictionary's type 
 		/// </summary>
 		public static string StringifyTypeOfDictionary(Type t) { return "=\"" + t.ToString() + "\""; }
 
 		public static string StringifySmall(this object obj) {
-			return Stringify(obj, pretty: false, showNulls:true);
+			return Stringify(obj, pretty: false, showNulls: true);
 		}
 		/// <summary>
 		/// stringifies an object using custom NonStandard rules
@@ -52,7 +52,7 @@ namespace NonStandard.Extension {
 		/// <param name="filter">object0 is the object, object1 is the member, object2 is the value. if it returns null, print as usual. if returns "", skip print.</param>
 		/// <param name="howToMarkStrongType">if null, use <see cref="StringifyTypeOfDictionary"/>, which is expected by <see cref="NonStandard.Data.CodeConvert.TryParse"/></param>
 		/// <returns></returns>
-		public static string Stringify(this object obj, bool pretty = true, bool showType = true, bool showNulls = false, bool showBoundary = true, int depth = 0, List<object> rStack = null, KeyValuePairToStringFilter filter = null, Func<Type,string> howToMarkStrongType = null) {
+		public static string Stringify(this object obj, bool pretty = true, bool showType = true, bool showNulls = false, bool showBoundary = true, int depth = 0, List<object> rStack = null, KeyValuePairToStringFilter filter = null, Func<Type, string> howToMarkStrongType = null) {
 			if (obj == null) return showNulls ? "null" : "";
 			if (filter != null) { string res = filter.Invoke(obj, null, null); if (res != null) { return res; } }
 			Type t = obj.GetType();
@@ -151,7 +151,7 @@ namespace NonStandard.Extension {
 				if (!showNulls && v == null) { continue; }
 				if (filter == null) {
 					string keyToString = k.ToString();
-					if (k is string && keyToString.ContainsNonAlphaCharacters()) { keyToString = keyToString.StringifySmall();}
+					if (k is string && keyToString.ContainsNonAlphaCharacters()) { keyToString = keyToString.StringifySmall(); }
 					sb.Append(keyToString).Append(pretty ? " : " : ":");
 					sb.Append(Stringify(v, pretty, showType, showNulls, true, depth + 1, rStack));
 					printed = true;

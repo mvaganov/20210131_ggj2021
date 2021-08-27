@@ -1,9 +1,7 @@
-﻿using UnityEngine;
-using UnityEngine.Events;
+﻿using NonStandard.Data;
+using UnityEngine;
 
 namespace NonStandard.Utility {
-	[System.Serializable] public class UnityEvent_GameObject : UnityEvent<GameObject> { }
-	[System.Serializable] public class UnityEvent_string : UnityEvent<string> { }
 	public class CollisionTrigger : MonoBehaviour {
 		public UnityEvent_GameObject onTrigger = new UnityEvent_GameObject();
 		public UnityEvent_GameObject onEndTrigger = new UnityEvent_GameObject();

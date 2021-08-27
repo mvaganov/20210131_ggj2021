@@ -47,6 +47,9 @@ namespace NonStandard.Extension {
 		public static string SubstringBeforeWhitespace(this string str) {
 			return SubstringBeforeFirst(str, whitespace);
 		}
+		public static string SubstringBeforeFirst(this string str, string delimiter) {
+			return SubstringBeforeFirst(str, new string[] { delimiter });
+		}
 		public static string SubstringBeforeFirst(this string str, string[] delimiter) {
 			if(delimiter == null) { delimiter = whitespace; }
 			int index = IndexOfFirst(str, delimiter, out int which);

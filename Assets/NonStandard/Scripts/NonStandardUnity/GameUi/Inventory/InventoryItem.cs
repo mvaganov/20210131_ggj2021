@@ -1,9 +1,7 @@
-﻿using NonStandard.GameUi.Particles;
+﻿using NonStandard.Data;
 using NonStandard.Utility;
 using System;
 using UnityEngine;
-using UnityEngine.Events;
-using static UnityEngine.ParticleSystem;
 
 namespace NonStandard.GameUi.Inventory {
 	public class InventoryItem : MonoBehaviour {
