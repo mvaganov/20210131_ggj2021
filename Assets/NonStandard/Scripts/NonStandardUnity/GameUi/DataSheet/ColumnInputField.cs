@@ -16,7 +16,7 @@ public class ColumnInputField : MonoBehaviour
 	public void Reset() {
 		TMPro.TMP_InputField input = GetComponent<TMPro.TMP_InputField>();
 		EventBind.IfNotAlready(input.onValueChanged, this, nameof(AssignFromText));
-		EventBind.IfNotAlready(input.onEndEdit, this, nameof(Sort));
+		//EventBind.IfNotAlready(input.onEndEdit, this, nameof(Sort));
 	}
 	public void Sort(string text) {
 		UnityDataSheet uds = GetComponentInParent<UnityDataSheet>();

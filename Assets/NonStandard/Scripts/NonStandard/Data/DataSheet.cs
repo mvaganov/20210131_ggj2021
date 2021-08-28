@@ -316,9 +316,20 @@ namespace NonStandard.Data {
 		}
 
 		public void SetColumn(int index, ColumnSetting column) {
+			bool newColumn = index >= columnSettings.Count;
 			while (columnSettings.Count <= index) { columnSettings.Add(new ColumnSetting()); }
+			for(int r = 0; r < rows.Count; ++r) {
+				if (columnSettings.Count != rows[r].columns.Length) {
+					Array.Resize(ref rows[r].columns, columnSettings.Count);
+				}
+			}
+			if (!newColumn) {
+				Show.Log("TODO convert old column data to new column data");
+				//ColumnSetting oldColumn = columnSettings[index];
+			}
 			columnSettings[index] = column;
 		}
+		public void AddColumn(ColumnSetting column) { SetColumn(columnSettings.Count, column); }
 		public ColumnSetting GetColumn(int index) { return columnSettings[index]; }
 	}
 }

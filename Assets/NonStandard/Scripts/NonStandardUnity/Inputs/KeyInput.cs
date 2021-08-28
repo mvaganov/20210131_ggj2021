@@ -45,5 +45,6 @@ namespace NonStandard.Inputs {
 		}
 		public bool RemoveBind(string name) { return RemoveBind(KeyBinds, name); }
 		public bool SetEnableBind(string name, bool enable) { return SetEnableBind(KeyBinds, name, enable); }
+		public void ClickButton(UnityEngine.UI.Button button) { button.onClick.Invoke(); }
 	}
 }
