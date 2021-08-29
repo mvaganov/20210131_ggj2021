@@ -14,6 +14,35 @@ namespace NonStandard.Ui {
 		public GameObject headerBase;
 		public float width;
 	}
+	//[
+	//["" "braille" null "nothing" (30)]
+	//["name" "label" (na¤) "collabel" (100) "nameless"]
+	//["speed" "txticon" (move.move.speed/5) "collabel" (30) 0.0]
+	//// skill from skill table
+	//["handicraft" "input" (data.handi¤) "collabel" (80) 0.0]
+	//// TODO add columns by creating new variables in data
+	//["+" "braille" (null) "addcol" (30)]
+	//]
+	/*
+{label:"", columnUi:"braille", valueScript:null, headerUi:nothing, widthOfColumn:30}
+{label:"name", columnUi:"label", valueScript:na¤, headerUi:collabel, widthOfColumn:100}
+{l¤:"speed", c¤:"txticon", v¤:(move.move.speed/5), h¤:collabel, w¤:30, d¤:0.0}
+{l¤:"handicraft", c¤:"input", v¤:(data.handicraft), h¤:collabel, w¤:80, d¤:0.0}
+{l¤:"+", c¤:"braille", v¤:null, h¤:addcol, w¤:30}
+	*/
+	public class UnityDataSheetColumnInitStructure {
+		public string label;
+		/// <summary>
+		/// could be a string, number, expression
+		/// </summary>
+		public Token valueScript;
+		public object defaultValue;
+		public Type typeOfValue;
+		public string columnUi;
+		public float widthOfColumn;
+		public string headerUi;
+		public bool alwaysLast;
+	}
 	public class Udash : DataSheet<UnityColumnData> { }
 	public class UnityDataSheet : MonoBehaviour {
 		const int columnTitleIndex = 0, uiTypeIndex = 1, valueIndex = 2, headerUiType = 3, columnWidth = 4, defaultValueIndex = 5;
@@ -28,7 +57,7 @@ namespace NonStandard.Ui {
 		protected Tokenizer errLog = new Tokenizer();
 
 		[TextArea(1, 10)]
-		public string fields;
+		public string columnSetup;
 
 		public List<object> list = new List<object>();
 
@@ -39,47 +68,35 @@ namespace NonStandard.Ui {
 		private void Awake() {
 			rt = GetComponent<RectTransform>();
 		}
-
 		private void Init() {
 			rt = GetComponent<RectTransform>();
 			Tokenizer tokenizer = new Tokenizer();
-			tokenizer.Tokenize(fields);
+			Show.Log(columnSetup);
+			CodeConvert.TryParse(columnSetup, out UnityDataSheetColumnInitStructure[] columns, null, tokenizer);
 			if (tokenizer.HasError()) {
-				Debug.LogWarning(tokenizer.ErrorString());
+				Show.Error("error: " + tokenizer.ErrorString());
+				return;
 			}
+
 			data = new Udash();
-			data.AddRange(list, tokenizer);
-			List<Token> tokenizedList = tokenizer.tokens[0].GetTokenSublist();
 			int index = 0;
-			// offset, required because tokenizer lists include the beginning and ending tokens, like "[" and "]"
-			const int o = 1;
-			for (int i = o; i < tokenizedList.Count - 1; ++i) {
-				List<Token> list = tokenizedList[i].GetTokenSublist();
-				if (!DataSheet.IsValidColumnDescription(list)) { continue; }
-				string uiName = list[uiTypeIndex + o].Resolve(tokenizer, null, true, true).ToString();
-				string headerName = list[headerUiType + o].Resolve(tokenizer, null, true, true).ToString();
-				string label = list[columnTitleIndex + o].Resolve(tokenizer, null, true, true).ToString();
-				object defaultValue = list.Count > defaultValueIndex ? list[defaultValueIndex + o].Resolve(tokenizer, null, true, true) : null;
-				Type type = defaultValue != null ? defaultValue.GetType() : null;
-				//Debug.Log(uiPrototypes+"    "+index + "  uiName "+uiName+"   headerName "+headerName);
+			data.AddRange(list, tokenizer);
+			for (int i = 0; i < columns.Length; ++i) {
+				UnityDataSheetColumnInitStructure c = columns[i];
+				c.typeOfValue = c.defaultValue != null ? c.defaultValue.GetType() : null;
 				data.SetColumn(index, new Udash.ColumnSetting {
-					fieldToken = list[valueIndex + o],
+					fieldToken = c.valueScript,
 					data = new UnityColumnData {
-						label = label,
-						uiBase = uiPrototypes.GetElement(uiName),
-						headerBase = uiPrototypes.GetElement(headerName),
+						label = c.label,
+						uiBase = uiPrototypes.GetElement(c.columnUi),
+						headerBase = uiPrototypes.GetElement(c.headerUi),
 						width = -1,
 					},
-					type = type,
-					defaultValue = defaultValue
+					type = c.typeOfValue,
+					defaultValue = c.defaultValue
 				});
-				//Debug.Log(uiName + "::: " + data.columns[index].data.uiBase +"\n"
-				//	+ headerName + "::: " + data.columns[index].data.headerBase);
-				if (list.Count > columnWidth + o) {
-					object resolved = list[columnWidth + o].Resolve(tokenizer, null, true, true);
-					//Debug.Log(label+" w: "+resolved);
-					float w = Convert.ToSingle(resolved);
-					data.columnSettings[index].data.width = w;
+				if (c.widthOfColumn > 0) {
+					data.columnSettings[index].data.width = c.widthOfColumn;
 				}
 				++index;
 			}

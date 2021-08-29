@@ -351,102 +351,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 20120332}
   m_CullTransparentMesh: 0
---- !u!1 &49825352
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 49825353}
-  - component: {fileID: 49825356}
-  - component: {fileID: 49825355}
-  - component: {fileID: 49825354}
-  m_Layer: 5
-  m_Name: typed item
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!224 &49825353
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 49825352}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 184047391}
-  m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: -206.2, y: -56.528564}
-  m_SizeDelta: {x: 200, y: 32}
-  m_Pivot: {x: 0, y: 1}
---- !u!114 &49825354
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 49825352}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 59c74f6a4d949a143b5e19a387c75c9c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  fields: '[
-
-    ["name" "label" (name)]
-
-    ["speed" "txticon" (move.speed/5)]
-
-    ]'
-  ptr:
-    data: {fileID: 114967211848434886}
---- !u!114 &49825355
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 49825352}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
-  m_RaycastTarget: 1
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &49825356
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 49825352}
-  m_CullTransparentMesh: 0
 --- !u!1 &63725431
 GameObject:
   m_ObjectHideFlags: 0
@@ -1471,7 +1375,6 @@ RectTransform:
   m_Children:
   - {fileID: 1899277488}
   - {fileID: 1714983816}
-  - {fileID: 49825353}
   - {fileID: 1837837386}
   - {fileID: 205554989}
   - {fileID: 1495476098}
@@ -1564,11 +1467,12 @@ MonoBehaviour:
   headers: []
   dataRows: []
   uiPrototypes: {fileID: 1714983818}
-  fields: "[\n[\"\" \"braille\" null \"nothing\" (30)]\n[\"name\" \"label\" (na\xA4)
-    \"collabel\" (100) \"nameless\"]\n[\"speed\" \"txticon\" (move.move.speed/5)
-    \"collabel\" (30) 0.0]\n// skill from skill table\n[\"handicraft\" \"input\"
-    (data.handi\xA4) \"collabel\" (80) 0.0]\n// TODO add columns by creating new
-    variables in data\n[\"+\" \"braille\" (null) \"addcol\" (30)]\n]"
+  columnSetup: "{label:\"\", columnUi:\"braille\", valueScript:null, headerUi:nothing,
+    widthOfColumn:30}\r\n{label:\"name\", columnUi:\"label\", valueScript:na\xA4,
+    headerUi:collabel, widthOfColumn:100}\r\n{l\xA4:\"speed\", c\xA4:\"txticon\",
+    v\xA4:(move.move.speed/5), h\xA4:collabel, w\xA4:30, d\xA4:0.0}\r\n{l\xA4:\"handicraft\",
+    c\xA4:\"input\", v\xA4:(data.handicraft), h\xA4:collabel, w\xA4:80, d\xA4:0.0}\r\n{l\xA4:\"+\",
+    c\xA4:\"braille\", v\xA4:null, h\xA4:addcol, w\xA4:30}\r"
 --- !u!1 &203351150
 GameObject:
   m_ObjectHideFlags: 0
@@ -1639,7 +1543,7 @@ RectTransform:
   - {fileID: 236727518}
   - {fileID: 963891723}
   m_Father: {fileID: 184047391}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -2109,7 +2013,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 350615063}
   m_HandleRect: {fileID: 350615062}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -7676,7 +7580,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 862296461}
   m_HandleRect: {fileID: 862296460}
   m_Direction: 2
-  m_Value: 1.0000004
+  m_Value: 1
   m_Size: 0.39966676
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -9032,7 +8936,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1402369697}
   m_HandleRect: {fileID: 1402369696}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -17090,7 +16994,7 @@ RectTransform:
   - {fileID: 588534429}
   - {fileID: 1989602082}
   m_Father: {fileID: 184047391}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
@@ -24642,7 +24546,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 184047391}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}

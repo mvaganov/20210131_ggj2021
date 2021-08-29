@@ -20,6 +20,8 @@ namespace NonStandard.Data.Parse {
 		public int GetBeginIndex() { return index; }
 		public int GetEndIndex() { return index + length; }
 		public string ToString(string s) { return s.Substring(index, length); }
+
+		public string Stringify() { return GetAsSmallText(); }
 		public override string ToString() {
 			ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry;
 			if (pce == null) { return Resolve(null, null).ToString(); }
@@ -70,7 +72,7 @@ namespace NonStandard.Data.Parse {
 		}
 		public object Resolve(TokenErrLog tok, object scope, bool simplify = true, bool fullyResolve = false) {
 			if (index == -1 && length == -1) return meta;
-			if (meta == null) throw new NullReferenceException();
+			if (meta == null) throw new NullReferenceException("can't resolve NULL token");
 			switch (meta) {
 			case string s: {
 				string str = ToString(s);

@@ -206,7 +206,7 @@ namespace NonStandard.Data.Parse {
 					if (e.IsText()) {
 						memberId = e.GetText();
 					} else {
-						AddError("unable to parse member ("+e.parseRules.name+") as member name for " + resultType);
+						AddError("unable to parse token ("+e.parseRules.name+"), expected member name for " + resultType);
 					}
 				} else {
 					memberId = e.Resolve(tok, scope);// "dictionary member value will be resolved later";
@@ -300,11 +300,17 @@ namespace NonStandard.Data.Parse {
 				Show.Error(prop.Name + " field.SetValue:" + e);
 			}
 		}
+		/// <summary>
+		/// parse <see cref="memberType"/> out of the next token
+		/// </summary>
+		/// <returns>true if a <see cref="memberType"/> value was parsed into <see cref="memberValue"/> out of the next token</returns>
 		protected bool TryGetValue() {
 			memberValue = null;
 			Token token = Current.Token;
 			object meta = token.meta;
 			if(SkipStructuredDelimiters(meta as Delim)) { return true; }
+			// if we're looking for an unparsed token, we got it! lets go!
+			if (memberType == typeof(Token)) { memberValue = token; return true; }
 			ParseRuleSet.Entry context = meta as ParseRuleSet.Entry;
 			if (context != null) {
 				bool subContextUsingSameList = context.tokens == Current.tokens;
@@ -350,7 +356,7 @@ namespace NonStandard.Data.Parse {
 			string s = meta as string;
 			if (s != null) {
 				//memberValue = token.ToString(s);
-				CodeRules.op_ResolveToken(tok, token, scope, out memberValue, out Type memType);
+				CodeRules.op_ResolveToken(tok, token, scope, out memberValue, out Type _memberType);
 				if (memberType == null || memberValue == null || (!memberType.IsAssignableFrom(memberValue.GetType()) && !CodeConvert.TryConvert(ref memberValue, memberType))) {
 					AddError("unable to convert (" + memberValue + ") to type '" + memberType + "'");
 					return false;

@@ -22,7 +22,6 @@ namespace NonStandard.Data {
 	}
 	public class DataSheet : DataSheet<ColumnData> {
 		public DataSheet() : base() { }
-		public DataSheet(Tokenizer unfilteredFormat, int indexOfValueElement = 0) : base(unfilteredFormat, indexOfValueElement) { }
 	}
 	public enum SortState { None, Ascending, Descening, Count }
 	public class DataSheet<MetaData> where MetaData : new() {
@@ -176,13 +175,6 @@ namespace NonStandard.Data {
 		}
 
 		public DataSheet() { }
-		public DataSheet(Tokenizer unfilteredFormat, int indexOfValueElement = 0) {
-			List<Token> fieldTokens = GetValueTokens(unfilteredFormat, indexOfValueElement);
-			SetColumnCount(fieldTokens.Count);
-			for(int i = 0; i < columnSettings.Count; ++i) {
-				columnSettings[i].fieldToken = fieldTokens[i];
-			}
-		}
 
 		public object Get(int row, int col) { return rows[row].columns[col]; }
 		public void Set(int row, int col, object value) { rows[row].columns[col] = value; }
@@ -202,29 +194,6 @@ namespace NonStandard.Data {
 			}
 			columnSortOrder.Insert(0, column);
 			Sort();
-		}
-
-		public void SetColumnCount(int count) {
-			if (columnSettings.Count < count) { columnSettings.Capacity = count; }
-			for (int i = columnSettings.Count; i < count; ++i) { columnSettings.Add(new ColumnSetting()); }
-		}
-
-		public static bool IsValidColumnDescription(List<Token> entry) {
-			ParseRuleSet.Entry pre = entry[0].GetAsContextEntry();
-			//Show.Log(entry.Count + ": " + pre.IsEnclosure + " " + pre.parseRules.name);
-			return pre.IsEnclosure;
-		}
-		public static List<Token> GetValueTokens(Tokenizer tokenizer, int indexOfValueElement = 0) {
-			List<Token> justValues = new List<Token>();
-			List<Token> main = tokenizer.tokens[0].GetTokenSublist();
-			// main[0] is "[" and main[main.Count-1] is "]"
-			for (int i = 1; i < main.Count - 1; ++i) {
-				List<Token> entry = main[i].GetTokenSublist();
-				if (!IsValidColumnDescription(entry)) { continue; }
-				// +1 is needed because element 0 is "["
-				justValues.Add(entry[indexOfValueElement + 1]);
-			}
-			return justValues;
 		}
 
 		public void InitData(IList<object> source, TokenErrLog errLog) {
