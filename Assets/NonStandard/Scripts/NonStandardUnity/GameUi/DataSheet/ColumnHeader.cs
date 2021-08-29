@@ -7,6 +7,7 @@ namespace NonStandard.GameUi.DataSheet {
 	public class ColumnHeader : MonoBehaviour {
 		[ContextMenuItem("PopulateDropdown", "PopulateDropdown")] public GameObject editUi;
 		public ModalConfirmation confirmRemoveUi;
+		public Udash.ColumnSetting columnSetting;
 		int Col() { return transform.GetSiblingIndex(); }
 		TMP_Dropdown DD() { return GetComponent<TMP_Dropdown>(); }
 		UnityDataSheet UDS() { return GetComponentInParent<UnityDataSheet>(); }

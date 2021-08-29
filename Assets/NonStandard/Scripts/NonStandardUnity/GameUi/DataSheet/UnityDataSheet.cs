@@ -3,16 +3,18 @@ using NonStandard.Data;
 using NonStandard.Data.Parse;
 using NonStandard.Extension;
 using NonStandard.Process;
+using NonStandard.Ui;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace NonStandard.Ui {
+namespace NonStandard.GameUi.DataSheet {
 
 	public class UnityColumnData : ColumnData {
 		public GameObject uiBase;
 		public GameObject headerBase;
 		public float width;
+		public bool alwaysLast;
 	}
 	//[
 	//["" "braille" null "nothing" (30)]
@@ -91,6 +93,7 @@ namespace NonStandard.Ui {
 						uiBase = uiPrototypes.GetElement(c.columnUi),
 						headerBase = uiPrototypes.GetElement(c.headerUi),
 						width = -1,
+						alwaysLast = c.alwaysLast
 					},
 					type = c.typeOfValue,
 					defaultValue = c.defaultValue
@@ -105,18 +108,22 @@ namespace NonStandard.Ui {
 		void GenerateHeaders() {
 			if (headerRectangle == null) return;
 			Vector2 cursor = Vector2.zero;
+			// put old headers aside. they may be reused.
 			List<GameObject> unusedHeaders = new List<GameObject>();
-			for (int i = 0; i < data.columnSettings.Count; ++i) {
-				Udash.ColumnSetting colS = data.columnSettings[i];
-				GameObject header = null;
-				if (i < headers.Count) { header = headers[i]; }
-				while (i >= headers.Count) { headers.Add(null); }
+			for (int i = 0; i < headers.Count; ++i) {
+				GameObject header = headers[i];
 				if (header != null) {
 					header.transform.SetParent(null, false);
 					unusedHeaders.Add(header);
-					header = null;
 				}
-				for(int h=0;h<unusedHeaders.Count; ++h) {
+			}
+			headers.Clear();
+			for (int i = 0; i < data.columnSettings.Count; ++i) {
+				Udash.ColumnSetting colS = data.columnSettings[i];
+				GameObject header = null;
+				while (i >= headers.Count) { headers.Add(null); }
+				// check if the header we need is in the old header list
+				for(int h = 0; h < unusedHeaders.Count; ++h) {
 					GameObject hdr = unusedHeaders[h];
 					if (hdr.name.StartsWith(colS.data.headerBase.name) && UiText.GetText(hdr) == colS.data.label) {
 						header = hdr;
@@ -129,16 +136,21 @@ namespace NonStandard.Ui {
 					header = Instantiate(colS.data.headerBase);
 					UiText.SetText(header, colS.data.label);
 				}
+				ColumnHeader ch = header.GetComponent<ColumnHeader>();
+				if (ch != null) { ch.columnSetting = colS; }
 				header.SetActive(true);
 				header.transform.SetParent(headerRectangle, false);
 				header.transform.SetSiblingIndex(i);
 				headers[i] = header;
 				RectTransform rect = header.GetComponent<RectTransform>();
-				float w = colS.data.width > 0 ? colS.data.width : rect.sizeDelta.x;
-				//rect.sizeDelta = new Vector2(w, rt.sizeDelta.y);
 				rect.anchoredPosition = cursor;
-				rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, w);
-				//rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, rt.rect.height);
+				float w = rect.sizeDelta.x;
+				if (colS.data.width > 0) {
+					w = colS.data.width;
+					rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, w);
+				} else {
+					colS.data.width = w; // if the width isn't set, use the default width of the column header
+				}
 				cursor.x += w * rt.localScale.x;
 			}
 			for(int i = 0; i < unusedHeaders.Count; ++i) {
@@ -191,47 +203,47 @@ namespace NonStandard.Ui {
 			Vector2 rowCursor = Vector2.zero;
 			RectTransform rect;
 			List<GameObject> unusedColumns = new List<GameObject>();
+			for(int i = 0; i < rObj.transform.childCount; ++i) {
+				GameObject fieldUi = rObj.transform.GetChild(i).gameObject;
+				if (fieldUi != null) {//!fieldUi.name.StartsWith(colS.data.uiBase.name)) {
+					fieldUi.transform.SetParent(null, false);
+					unusedColumns.Add(fieldUi);
+				}
+			}
 			for (int c = 0; c < columns.Length; ++c) {
 				Udash.ColumnSetting colS = data.columnSettings[c];
 				GameObject fieldUi = null;
-				// if there's already a field for this column, delete it if it's not the right one.
-				if(rObj.transform.childCount > c) {
-					fieldUi = rObj.transform.GetChild(c).gameObject;
-					if (!fieldUi.name.StartsWith(colS.data.uiBase.name)) {
-						fieldUi.transform.SetParent(null, false);
-						unusedColumns.Add(fieldUi);
-						fieldUi = null;
+				// check if there's a version of it from earlier
+				for (int i = 0; i < unusedColumns.Count; ++i) {
+					if (unusedColumns[i].name.StartsWith(colS.data.uiBase.name)) {
+						fieldUi = unusedColumns[i];
+						unusedColumns.RemoveAt(i);
+						//Debug.Log("recycling "+ unusedColumns[i].name);
+						break;
 					}
-					//else { Debug.Log("keep using "+colS.data.uiBase.name); }
 				}
-				// if the field UI needs to be created
+				// otherwise create it
 				if (fieldUi == null) {
-					// check if there's a version of it from earlier
-					for (int i = 0; i < unusedColumns.Count; ++i) {
-						if (unusedColumns[i].name.StartsWith(colS.data.uiBase.name)) {
-							fieldUi = unusedColumns[i];
-							unusedColumns.RemoveAt(i);
-							//Debug.Log("recycling "+ unusedColumns[i].name);
-							break;
-						}
-					}
-					// otherwise create it
-					if (fieldUi == null) {
-						fieldUi = Instantiate(colS.data.uiBase);
-					}
-					fieldUi.SetActive(true);
-					fieldUi.transform.SetParent(rObj.transform, false);
-					fieldUi.transform.SetSiblingIndex(c);
+					fieldUi = Instantiate(colS.data.uiBase);
 				}
+				fieldUi.SetActive(true);
+				fieldUi.transform.SetParent(rObj.transform, false);
+				fieldUi.transform.SetSiblingIndex(c);
 				object value = columns[c];
 				if (value != null) {
 					UiText.SetText(fieldUi, value.ToString());
 					//sb.Append(value.ToString() + ", ");
+				} else {
+					UiText.SetText(fieldUi, "");
 				}
 				rect = fieldUi.GetComponent<RectTransform>();
-				float w = colS.data.width > 0 ? colS.data.width : rect.sizeDelta.x;
 				rect.anchoredPosition = rowCursor;
-				rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, w);
+				float w = rect.sizeDelta.x;// colS.data.width > 0 ? colS.data.width : rect.sizeDelta.x;
+				if (colS.data.width > 0) {
+					w = colS.data.width;
+					//Show.Log(colS.data.label+" width should be "+w);
+					rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, w);
+				}
 				rowCursor.x += w * rt.localScale.x;
 			}
 			for(int i = 0; i < unusedColumns.Count; ++i) { Destroy(unusedColumns[i]); }
@@ -302,10 +314,10 @@ namespace NonStandard.Ui {
 				});
 				bool haveUi = uiIndex >= 0;
 				if (!haveUi) {
-					Debug.Log("new row");
+					//Debug.Log("new row");
 					GameObject rowUi = CreateRow(rd);
 				} else {
-					Debug.Log("updating "+rd.model);
+					//Debug.Log("updating "+rd.model);
 					RowObject rObj = contentRectangle.GetChild(uiIndex).GetComponent<RowObject>();
 					// if this row doesn't have the right number of columns, or the columns are not the right ones, remake them.
 					//if(rd.columns.Length != rObj.transform.childCount) {
@@ -336,7 +348,6 @@ namespace NonStandard.Ui {
 		public Udash.ColumnSetting GetColumn(int index) { return data.GetColumn(index); }
 
 		public Udash.ColumnSetting AddColumn() {
-			//Show.Log("TODO add column");
 			Udash.ColumnSetting column = new Udash.ColumnSetting {
 				fieldToken = new Token("",0,0),
 				data = new UnityColumnData {
@@ -349,9 +360,28 @@ namespace NonStandard.Ui {
 				defaultValue = (double)0
 			};
 			data.AddColumn(column);
+			MakeSureColumnsMarkedLastAreLast();
 			GenerateHeaders();
 			SyncSpreadSheetUiWith(list);
 			return column;
+		}
+
+		void MakeSureColumnsMarkedLastAreLast() {
+			List<Udash.ColumnSetting> moveToEnd = new List<DataSheet<UnityColumnData>.ColumnSetting>();
+			for (int i = 0; i < data.columnSettings.Count; ++i) {
+				if (data.columnSettings[i].data.alwaysLast) {
+					moveToEnd.Add(data.columnSettings[i]);
+					data.columnSettings.RemoveAt(i);
+					--i;
+				}
+			}
+			if (moveToEnd.Count > 0) {
+				for (int i = 0; i < moveToEnd.Count; ++i) {
+					data.columnSettings.Add(moveToEnd[i]);
+				}
+				moveToEnd.Clear();
+			}
+
 		}
 
 		// TODO allow editing with a special menu

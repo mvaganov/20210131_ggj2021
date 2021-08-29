@@ -1,8 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace NonStandard.Ui {
+namespace NonStandard.GameUi.DataSheet {
 	public class UiTypedEntryPrototype : MonoBehaviour {
 		Dictionary<string, GameObject> cellTypes = new Dictionary<string, GameObject>();
 		public void Init() {

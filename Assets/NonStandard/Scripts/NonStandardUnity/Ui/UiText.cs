@@ -10,7 +10,9 @@ namespace NonStandard.Ui {
 			if (tmp != null) { return tmp.gameObject; }
 			InputField inf = go.GetComponentInChildren<InputField>();
 			if (inf != null) { return inf.gameObject; }
-			return go.GetComponentInChildren<Text>().gameObject;
+			Text txt = go.GetComponentInChildren<Text>();
+			if (txt != null) { return txt.gameObject; }
+			return null;
 		}
 		public static void SetText(GameObject go, string value) {
 			TMPro.TMP_InputField tif = go.GetComponentInChildren<TMPro.TMP_InputField>();
@@ -20,7 +22,7 @@ namespace NonStandard.Ui {
 			InputField inf = go.GetComponentInChildren<InputField>();
 			if (inf != null) { inf.text = value; return; }
 			Text txt = go.GetComponentInChildren<Text>();
-			if (txt != null) { txt.text = value; }
+			if (txt != null) { txt.text = value; return; }
 		}
 		public static string GetText(GameObject go) {
 			TMPro.TMP_InputField tif = go.GetComponentInChildren<TMPro.TMP_InputField>();
@@ -34,38 +36,44 @@ namespace NonStandard.Ui {
 			return null;
 		}
 		public static float GetFontSize(GameObject go) {
-			TMPro.TMP_InputField tif = go.GetComponentInChildren<TMPro.TMP_InputField>();
-			if (tif != null) { return tif.pointSize; }
 			TMPro.TMP_Text tmp = go.GetComponentInChildren<TMPro.TMP_Text>();
 			if (tmp != null) { return tmp.fontSize; }
-			return go.GetComponentInChildren<Text>().fontSize;
+			Text txt = go.GetComponentInChildren<Text>();
+			if (txt != null) { return txt.fontSize; }
+			return -1;
 		}
 		public static void SetFontSize(GameObject go, float value) {
-			TMPro.TMP_InputField tif = go.GetComponentInChildren<TMPro.TMP_InputField>();
-			if (tif != null) { tif.pointSize = value; return; }
 			TMPro.TMP_Text tmp = go.GetComponentInChildren<TMPro.TMP_Text>();
 			if (tmp != null) { tmp.fontSize = value; return; }
-			go.GetComponentInChildren<Text>().fontSize = (int)value;
+			Text txt = go.GetComponentInChildren<Text>();
+			if (txt != null) { txt.fontSize = (int)value; return; }
 		}
 		public static void SetColor(GameObject go, Color value) {
 			TMPro.TMP_Text tmp = go.GetComponentInChildren<TMPro.TMP_Text>();
 			if (tmp != null) { tmp.faceColor = value; return; }
-			go.GetComponentInChildren<Text>().color = value;
+			Text txt = go.GetComponentInChildren<Text>();
+			if (txt != null) { txt.color = value; }
 		}
 		public static Color GetColor(GameObject go) {
 			TMPro.TMP_Text tmp = go.GetComponentInChildren<TMPro.TMP_Text>();
 			if (tmp != null) { return tmp.faceColor; }
-			return go.GetComponentInChildren<Text>().color;
+			Text txt = go.GetComponentInChildren<Text>();
+			if (txt != null) { return txt.color; }
+			return Color.clear;
 		}
 		public static TextAnchor GetAlignment(GameObject go) {
 			TMPro.TMP_Text tmp = go.GetComponentInChildren<TMPro.TMP_Text>();
 			if (tmp != null) { return ConvertTextAnchor(tmp.alignment); }
-			return go.GetComponentInChildren<Text>().alignment;
+			Text txt = go.GetComponentInChildren<Text>();
+			if (txt != null) { return txt.alignment; }
+			return TextAnchor.MiddleCenter;
 		}
 		public static TextAnchor SetAlignment(GameObject go, TextAnchor ta) {
 			TMPro.TMP_Text tmp = go.GetComponentInChildren<TMPro.TMP_Text>();
-			if (tmp != null) { return ConvertTextAnchor(tmp.alignment); }
-			return go.GetComponentInChildren<Text>().alignment = ta;
+			if (tmp != null) { tmp.alignment = ConvertTextAnchor(ta); return ConvertTextAnchor(tmp.alignment); }
+			Text txt = go.GetComponentInChildren<Text>();
+			if (txt != null) { return txt.alignment = ta; }
+			return TextAnchor.MiddleCenter;
 		}
 		public static TextAnchor ConvertTextAnchor(TMPro.TextAlignmentOptions ta) {
 			TextAnchor t = TextAnchor.MiddleCenter;
