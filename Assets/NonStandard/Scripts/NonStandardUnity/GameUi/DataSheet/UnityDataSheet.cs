@@ -76,7 +76,7 @@ namespace NonStandard.GameUi.DataSheet {
 			Show.Log(columnSetup);
 			CodeConvert.TryParse(columnSetup, out UnityDataSheetColumnInitStructure[] columns, null, tokenizer);
 			if (tokenizer.HasError()) {
-				Show.Error("error: " + tokenizer.ErrorString());
+				Show.Error("error: " + tokenizer.GetErrorString());
 				return;
 			}
 
@@ -86,7 +86,7 @@ namespace NonStandard.GameUi.DataSheet {
 			for (int i = 0; i < columns.Length; ++i) {
 				UnityDataSheetColumnInitStructure c = columns[i];
 				c.typeOfValue = c.defaultValue != null ? c.defaultValue.GetType() : null;
-				data.SetColumn(index, new Udash.ColumnSetting {
+				data.SetColumn(index, new Udash.ColumnSetting (data) {
 					fieldToken = c.valueScript,
 					data = new UnityColumnData {
 						label = c.label,
@@ -271,6 +271,31 @@ namespace NonStandard.GameUi.DataSheet {
 			}
 			contentRectangle.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, -cursor.y);
 		}
+		public void RefreshColumnText(int column, TokenErrLog errLog) {
+			for(int i = 0; i < dataRows.Count; ++i) {
+				GameObject fieldUi = dataRows[i].transform.GetChild(column).gameObject;
+				object value = data.RefreshValue(i, column, errLog);
+				if (errLog.HasError()) return;
+				if (value != null) {
+					UiText.SetText(fieldUi, value.ToString());
+					//sb.Append(value.ToString() + ", ");
+				} else {
+					UiText.SetText(fieldUi, "");
+				}
+
+			}
+		}
+		public void ResizeColumnWidth(int column, float oldWidth, float newWidth) {
+			Show.Log("TODO resize width of column "+column+" from "+oldWidth+" to "+newWidth);
+			// go through the header, change the width of the item in question, and push forward every entry after it
+			// do the same for each row.
+		}
+		public void MoveColumn(int oldIndex, int newIndex) {
+			Show.Log("TODO move to new index");
+			// change the index of the column in the header
+			// go through each data row and change the index also
+			// have the data sheet do the same thing at the RowData level
+		}
 		public void RefreshRows() {
 			// map list elements to row UI
 			Dictionary<object, RowObject> srcToRowUiMap = new Dictionary<object, RowObject>();
@@ -348,7 +373,7 @@ namespace NonStandard.GameUi.DataSheet {
 		public Udash.ColumnSetting GetColumn(int index) { return data.GetColumn(index); }
 
 		public Udash.ColumnSetting AddColumn() {
-			Udash.ColumnSetting column = new Udash.ColumnSetting {
+			Udash.ColumnSetting column = new Udash.ColumnSetting(data) {
 				fieldToken = new Token("",0,0),
 				data = new UnityColumnData {
 					label = "new data",
@@ -383,17 +408,6 @@ namespace NonStandard.GameUi.DataSheet {
 			}
 
 		}
-
-		// TODO allow editing with a special menu
-		public void EditColumn(int index) {
-			// data script: text input field
-			// column label text: text input field
-			// column field type: dropdown referencing the children of 'typed item prototype'
-			// default value: text input field
-			// default value type: dropdown referencing types allowed in column field type
-			Show.Log("TODO allow editing with a special menu");
-		}
-
 		// TODO allow columns to be removed
 		public void RemoveColumn(int index) {
 			Show.Log("TODO allow columns to be removed after a confirmation popup");

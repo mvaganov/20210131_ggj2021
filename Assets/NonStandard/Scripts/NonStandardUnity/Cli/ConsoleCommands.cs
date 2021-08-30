@@ -151,7 +151,7 @@ namespace NonStandard.Cli {
 				if (string.IsNullOrEmpty(defaultValue)) { return null; }
 				Tokenizer tokenizer = new Tokenizer();
 				if (!CodeConvert.TryParse(default, out object result, null, tokenizer)) {
-					Debug.LogError(tokenizer.ErrorString());
+					Debug.LogError(tokenizer.GetErrorString());
 				}
 				return result;
 			}

@@ -48,7 +48,7 @@ namespace NonStandard.GameUi.Dialog {
 				if (c != null) {
 					li = listUi.AddItem(option, DialogManager.Instance.GetScriptScope().Format(c.text), () => {
 						Commander.Instance.ParseCommand(new Instruction(c.command, li), Print, out tok);
-						if (tok?.HasError() ?? false) { Print(tok.ErrorString()); }
+						if (tok?.HasError() ?? false) { Print(tok.GetErrorString()); }
 						PossiblyAddParseCommandOutputToDialog(option);
 					}, prefab_buttonUi);
 					currentChoices.Add(li);
@@ -63,7 +63,7 @@ namespace NonStandard.GameUi.Dialog {
 				if (cmd != null) {
 					//NonStandard.Show.Log("executing command "+cmd.command);
 					Commander.Instance.ParseCommand(new Instruction(cmd.command, option), Print, out tok);
-					if (tok?.HasError() ?? false) { Print(Col.r()+tok.ErrorString()); }
+					if (tok?.HasError() ?? false) { Print(Col.r()+tok.GetErrorString()); }
 					PossiblyAddParseCommandOutputToDialog(option);
 					break;
 				}

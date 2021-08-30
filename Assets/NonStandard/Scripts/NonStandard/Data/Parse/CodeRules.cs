@@ -396,7 +396,7 @@ namespace NonStandard.Data.Parse {
 							started = i;
 							ParseResult pr = StringExtension.IntegerParse(str, i + 1);
 							if (pr.IsError) {
-								pr.error.OffsetBy(startI + i, tok.TextRows());
+								pr.error.OffsetBy(startI + i, tok.GetTextRows());
 								tok.AddError(pr.error);
 							} else {
 								tokenId = (int)(long)pr.replacementValue;

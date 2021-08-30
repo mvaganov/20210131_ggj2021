@@ -39,15 +39,15 @@ namespace NonStandard.Data {
 		protected List<int> columnSortOrder = new List<int>();
 
 		public class ColumnSetting {
+			/// <summary>
+			/// data sheet that this column belongs to
+			/// </summary>
+			internal DataSheet<MetaData> dataSheet;
 			private Token _fieldToken;
 			/// <summary>
 			/// what field is being read (or modified) in this column
 			/// </summary>
-			public Token fieldToken { get => _fieldToken; set {
-					_fieldToken = value;
-					RefreshEditPath();
-				}
-			}
+			public Token fieldToken { get => _fieldToken; set { SetFieldToken(value, null); } }
 			/// <summary>
 			/// if this field is editable, this list of members will be used to edit
 			/// </summary>
@@ -81,7 +81,15 @@ namespace NonStandard.Data {
 			/// </summary>
 			public object defaultValue = null;
 
-			object CompileEditPath(object scope) {
+			public void SetFieldToken(Token value, TokenErrLog errLog) {
+				_fieldToken = value;
+				RefreshEditPath();
+				if (dataSheet.rows.Count > 0) {
+					CompileEditPath(dataSheet.rows[0].model, errLog);
+				}
+			}
+
+			object CompileEditPath(object scope, TokenErrLog errLog = null) {
 				//Show.Log("need to compile " + editPath.JoinToString());
 				List<object> compiledPath = new List<object>();
 				object result = ReflectionParseExtension.GetValueFromRawPath(scope, editPath, defaultValue, compiledPath);
@@ -89,6 +97,9 @@ namespace NonStandard.Data {
 				//ReflectionParseExtension.TryGetValueCompiledPath(scope, editPath, out result);
 				//Show.Log("compiled " + editPath.JoinToString(",",o=>o?.GetType()?.ToString() ?? "???")+" : "+result);
 				needsToLoadEditPath = false;
+				if (result == null && errLog != null) {
+					errLog.AddError(0, "could not parse path: "+editPath.JoinToString());
+				}
 				return result;
 			}
 
@@ -172,6 +183,7 @@ namespace NonStandard.Data {
 				}
 				return true;
 			}
+			public ColumnSetting(DataSheet<MetaData> dataSheet) { this.dataSheet = dataSheet; }
 		}
 
 		public DataSheet() { }
@@ -214,7 +226,11 @@ namespace NonStandard.Data {
 			rows.Add(rd);
 			return rd;
 		}
-
+		public object RefreshValue(int row, int col, TokenErrLog errLog) {
+			object value = columnSettings[col].GetValue(errLog, rows[row].model);
+			rows[row].columns[col] = value;
+			return value;
+		}
 		public RowData GenerateRow(object source, TokenErrLog errLog) {
 			if(errLog == null) { errLog = new Tokenizer(); }
 			object[] result = new object[columnSettings.Count];
@@ -286,7 +302,7 @@ namespace NonStandard.Data {
 
 		public void SetColumn(int index, ColumnSetting column) {
 			bool newColumn = index >= columnSettings.Count;
-			while (columnSettings.Count <= index) { columnSettings.Add(new ColumnSetting()); }
+			while (columnSettings.Count <= index) { columnSettings.Add(new ColumnSetting(this)); }
 			for(int r = 0; r < rows.Count; ++r) {
 				if (columnSettings.Count != rows[r].columns.Length) {
 					Array.Resize(ref rows[r].columns, columnSettings.Count);

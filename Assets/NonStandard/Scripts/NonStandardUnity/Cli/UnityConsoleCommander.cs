@@ -20,8 +20,8 @@ namespace NonStandard.Cli {
 			CommanderInstance.ParseCommand(new Commander.Instruction(text, this), console.Write, out Tokenizer t);
 			if (t?.errors?.Count > 0) {
 				console.PushForeColor(ConsoleColor.Red);
-				console.WriteLine(t.ErrorString());
-				Show.Log(t.ErrorString());
+				console.WriteLine(t.GetErrorString());
+				Show.Log(t.GetErrorString());
 				console.PopForeColor();
 			}
 			WhenCommandRuns?.Invoke(text);

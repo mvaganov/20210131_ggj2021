@@ -7,18 +7,18 @@ namespace NonStandard.Data.Parse {
 	public interface TokenErrLog {
 		bool HasError();
 		void AddError(ParseError error);
-		string ErrorString();
-		IList<int> TextRows();
+		string GetErrorString();
+		IList<int> GetTextRows();
 	}
 	public static class TokenizationErrorStorageExtension {
 		public static ParseError AddError(this TokenErrLog self, int index, string message) {
-			ParseError e = new ParseError(index, self.TextRows(), message); self.AddError(e); return e;
+			ParseError e = new ParseError(index, self.GetTextRows(), message); self.AddError(e); return e;
 		}
 		public static ParseError AddError(this TokenErrLog self, Token token, string message) {
 			return AddError(self, token.index, message);
 		}
 		public static bool ShowErrorTo(this TokenErrLog self, Show.PrintFunc show) {
-			string errStr = self.ErrorString();
+			string errStr = self.GetErrorString();
 			if (string.IsNullOrEmpty(errStr)) return false;
 			show.Invoke(errStr); return true;
 		}
@@ -35,7 +35,7 @@ namespace NonStandard.Data.Parse {
 		/// the indexes of where rows end (newline characters), in order.
 		/// </summary>
 		internal List<int> rows = new List<int>();
-		public IList<int> TextRows() => rows;
+		public IList<int> GetTextRows() => rows;
 		public bool HasError() { return errors.Count > 0; }
 		public int TokenCount { get { return tokens.Count; } }
 		/// <param name="i"></param>
@@ -108,11 +108,14 @@ namespace NonStandard.Data.Parse {
 		}
 		public ParseError AddError(Token token, string message) { return AddError(token.index, message); }
 		public void AddError(ParseError error) { errors.Add(error); }
-		public string ErrorString() { return errors.JoinToString("\n"); }
+		public string GetErrorString() { return errors.JoinToString("\n"); }
 		public bool ShowErrorTo(Show.PrintFunc show) {
 			if (errors.Count == 0) return false;
-			show.Invoke(ErrorString()); return true;
+			show.Invoke(GetErrorString()); return true;
 		}
+		/// <param name="str"></param>
+		/// <param name="parsingRules"></param>
+		/// <param name="condition">allows parsing to exit early, if the early part of the string is sufficient for example</param>
 		public void Tokenize(string str, ParseRuleSet parsingRules = null, Func<Tokenizer, bool> condition=null) {
 			this.str = str;
 			errors.Clear();
@@ -123,6 +126,9 @@ namespace NonStandard.Data.Parse {
 		public static Tokenizer Tokenize(string str) {
 			Tokenizer t = new Tokenizer(); t.Tokenize(str, null); return t;
 		}
+		/// <param name="str"></param>
+		/// <param name="condition">allows parsing to exit early, if the early part of the string is sufficient for example</param>
+		/// <returns></returns>
 		public static Tokenizer TokenizeWhile(string str, Func<Tokenizer,bool> condition) {
 			Tokenizer t = new Tokenizer(); t.Tokenize(str, null, condition); return t;
 		}
@@ -190,6 +196,9 @@ namespace NonStandard.Data.Parse {
 				}
 			}
 		}
+		/// <param name="parseRules"></param>
+		/// <param name="index"></param>
+		/// <param name="condition">allows parsing to exit early, if the early part of the string is sufficient for example</param>
 		protected void Tokenize(ParseRuleSet parseRules = null, int index = 0, Func<Tokenizer, bool> condition = null) {
 			tokenStrings.Clear();
 			if (string.IsNullOrEmpty(str)) return;
