@@ -25,7 +25,7 @@ namespace NonStandard.Data.Parse {
 		protected List<ParseState> state = new List<ParseState>();
 		public int[] GetCurrentTokenIndex() {
 			int[] index = new int[state.Count];
-			for(int i = 0; i < state.Count; ++i) {
+			for (int i = 0; i < state.Count; ++i) {
 				index[i] = state[i].tokenIndex;
 			}
 			return index;
@@ -72,7 +72,9 @@ namespace NonStandard.Data.Parse {
 
 		public void SetResultType(Type type) {
 			resultType = type;
-			reflectTable.SetType(type);
+			if (type != null) {
+				reflectTable.SetType(type);
+			}
 		}
 		protected Type SetResultType(string typeName) {
 			Type t = Type.GetType(typeName);
@@ -90,16 +92,13 @@ namespace NonStandard.Data.Parse {
 			}
 			return t;
 		}
-		public bool Init(Type type, List<Token> tokens, object dataStructure, Tokenizer tokenizer, object scope) {
-			resultType = type;
-			tok = tokenizer;
-			state.Clear();
-			AddParseState(tokens);
-			result = dataStructure;
+
+		public bool SetResultTypeFull(Type type) {
 			SetResultType(type);
-			memberType = type.GetIListType();
+			if (type != null) {
+				memberType = type.GetIListType();
+			}
 			memberToken.Invalidate();
-			this.scope = scope;
 			if (memberType != null) {
 				listData = new List<object>();
 			} else {
@@ -119,6 +118,15 @@ namespace NonStandard.Data.Parse {
 				}
 			}
 			return true;
+		}
+		public bool Init(Type type, List<Token> tokens, object dataStructure, Tokenizer tokenizer, object scope) {
+			resultType = type;
+			tok = tokenizer;
+			state.Clear();
+			AddParseState(tokens);
+			result = dataStructure;
+			this.scope = scope;
+			return SetResultTypeFull(type);
 		}
 
 		protected Type FindInternalType() {
@@ -140,7 +148,7 @@ namespace NonStandard.Data.Parse {
 						//Show.Log("internal type " + typeName + " (" + typeName + ")");
 						if (t == null) { AddError("unknown type " + typeName); }
 						return t;
-					}catch(Exception e) {
+					} catch (Exception e) {
 						Show.Error(typeName + " failed to evaluate to a type:" + e);
 						return null;
 					}
@@ -154,8 +162,24 @@ namespace NonStandard.Data.Parse {
 			Token token = Current.Token;
 			ParseRuleSet.Entry e = token.GetAsContextEntry();
 			if (e != null && e.tokens == Current.tokens) { Increment(); } // skip past the opening bracket
-			if(targetType != null) { SetResultType(targetType); }
+			if (targetType != null) { SetResultType(targetType); }
 			FindInternalType(); // first, check if this has a more correct internal type defined
+			if (resultType == typeof(object)) {
+				// if it has colons or equals signs, it's a Dictionary<string,object>
+				bool hasNameBreaks = false;
+				List<Token> tokens = Current.tokens;
+				for (int i = 0; i < tokens.Count; ++i) {
+					string s = tokens[i].GetAsSmallText();
+					if (s == ":" || s == "=") { hasNameBreaks = true; break; }
+				}
+				// if it has commas or generally more than one term, it's a List<object>
+				if (hasNameBreaks) {
+					result = new Dictionary<string, object>();
+				} else {
+					result = new List<object>();
+				}
+				SetResultTypeFull(result.GetType());
+			}
 			if (result == null && listData == null) {
 				AddError("need specific " + resultType + ", eg: \"" + resultType.GetSubClasses().JoinToString("\", \"") + "\"");
 				return false;
@@ -167,7 +191,7 @@ namespace NonStandard.Data.Parse {
 			while (state.Count > 0 && Current.tokenIndex < Current.tokens.Count) {
 				Token token = Current.Token;
 				ParseRuleSet.Entry e = token.GetAsContextEntry();
-				if(e != null && e.tokens == Current.tokens) {
+				if (e != null && e.tokens == Current.tokens) {
 					if (!token.IsContextEnding()) { AddError("unexpected state. we should never see this. ever."); }
 					break;
 				} // found the closing bracket!
@@ -206,7 +230,7 @@ namespace NonStandard.Data.Parse {
 					if (e.IsText()) {
 						memberId = e.GetText();
 					} else {
-						AddError("unable to parse token ("+e.parseRules.name+"), expected member name for " + resultType);
+						AddError("unable to parse token (" + e.parseRules.name + "), expected member name for " + resultType);
 					}
 				} else {
 					memberId = e.Resolve(tok, scope);// "dictionary member value will be resolved later";
@@ -227,8 +251,8 @@ namespace NonStandard.Data.Parse {
 		protected bool CalculateMemberTypeBasedOnName() {
 			if (dictionaryAdd != null) { return true; } // dictionary has no field to find
 			string memberName = memberId as string;
-			if(!reflectTable.TryGetMemberDetails(memberName, out memberType, out field, out prop)) {
-				AddError("could not find \"" + memberName + "\" in " + result.GetType() + 
+			if (!reflectTable.TryGetMemberDetails(memberName, out memberType, out field, out prop)) {
+				AddError("could not find \"" + memberName + "\" in " + result.GetType() +
 					". possbile valid values: " + reflectTable);
 				return false;
 			}
@@ -246,7 +270,7 @@ namespace NonStandard.Data.Parse {
 			memberValue = state;
 			return true;
 		}
-		public static int AssignDictionaryMember(KeyValuePair<Type,Type> dType, MethodInfo dictionaryAddMethod,
+		public static int AssignDictionaryMember(KeyValuePair<Type, Type> dType, MethodInfo dictionaryAddMethod,
 			object dict, object key, object value) {
 			if (!dType.Key.IsAssignableFrom(key.GetType())) { return 1; }
 			if (!dType.Value.IsAssignableFrom(value.GetType())) { return 2; }
@@ -256,7 +280,7 @@ namespace NonStandard.Data.Parse {
 		protected void AssignValueToMember() {
 			if (dictionaryAdd != null) {
 				string error = AssignValueToDictionary(dictionaryTypes, dictionaryAdd, result, memberId, memberValue, memberType);
-				if(error != null) { AddError(error); }
+				if (error != null) { AddError(error); }
 			} else {
 				if (field != null) {
 					AssignField(result, field, memberValue);
@@ -273,10 +297,8 @@ namespace NonStandard.Data.Parse {
 		public static string AssignValueToDictionary(KeyValuePair<Type, Type> dictionaryTypes, MethodInfo dictionaryAdd, object result, object memberId, object memberValue, Type memberType) {
 			try {
 				switch (AssignDictionaryMember(dictionaryTypes, dictionaryAdd, result, memberId, memberValue)) {
-				case 1: return ("unable to convert key \"" + memberId + "\" (" + memberId.GetType() +
-					") to " + dictionaryTypes.Key);
-				case 2: return ("unable to convert \"" + memberId + "\" value (" + memberValue.GetType() +
-					") \"" + memberValue + "\" to type " + memberType);
+				case 1: return ("unable to convert key \"" + memberId + "\" (" + memberId.GetType() + ") to " + dictionaryTypes.Key);
+				case 2: return ("unable to convert \"" + memberId + "\" value (" + memberValue.GetType() + ") \"" + memberValue + "\" to type " + memberType);
 				}
 			} catch (Exception e) {
 				return (memberId + " dictionaryAdd:" + e);
@@ -308,7 +330,7 @@ namespace NonStandard.Data.Parse {
 			memberValue = null;
 			Token token = Current.Token;
 			object meta = token.meta;
-			if(SkipStructuredDelimiters(meta as Delim)) { return true; }
+			if (SkipStructuredDelimiters(meta as Delim)) { return true; }
 			// if we're looking for an unparsed token, we got it! lets go!
 			if (memberType == typeof(Token)) { memberValue = token; return true; }
 			ParseRuleSet.Entry context = meta as ParseRuleSet.Entry;

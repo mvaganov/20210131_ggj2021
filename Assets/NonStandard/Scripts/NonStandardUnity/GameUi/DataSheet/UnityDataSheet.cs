@@ -76,7 +76,7 @@ namespace NonStandard.GameUi.DataSheet {
 			Show.Log(columnSetup);
 			CodeConvert.TryParse(columnSetup, out UnityDataSheetColumnInitStructure[] columns, null, tokenizer);
 			if (tokenizer.HasError()) {
-				Show.Error("error: " + tokenizer.GetErrorString());
+				Show.Error("error parsing column structure: " + tokenizer.GetErrorString());
 				return;
 			}
 
@@ -176,6 +176,9 @@ namespace NonStandard.GameUi.DataSheet {
 				//Show.Log("listing "+chars.JoinToString());
 				Load(chars);
 			});
+			//string test = "{a:1,b:[a,[1,2],{a:a,b:[b]}],c:{a:1,b:2}}";
+			//CodeConvert.TryParse(test, out object obj);
+			//Show.Log(obj.Stringify(pretty:true));
 		}
 
 		public void Load(List<object> source) {

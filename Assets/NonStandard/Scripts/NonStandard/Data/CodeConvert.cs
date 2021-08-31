@@ -12,16 +12,46 @@ namespace NonStandard.Data {
 		}
 		public static bool TryFill<T>(string text, ref T data, object scope, Tokenizer tokenizer = null) {
 			object value = data;
-			bool result = TryParseType(typeof(T), text, ref value, tokenizer);
+			bool result = TryParseType(typeof(T), text, ref value, scope, tokenizer);
 			data = (T)value;
 			return result;
 		}
+		/// <summary>
+		/// used to parse JSON objects, and retrieve
+		/// </summary>
+		/// <param name="text">JSON text</param>
+		/// <param name="data">output</param>
+		/// <param name="tokenizer">optional tokenizer, useful if you want to get errors</param>
+		/// <returns></returns>
+		public static bool TryParse(string text, out object data, Tokenizer tokenizer = null) {
+			object value = null;
+			bool result = TryParseType(typeof(object), text, ref value, null, tokenizer);
+			data = value;
+			return result;
+		}
+		/// <summary>
+		/// used to compile an object out of JSON
+		/// </summary>
+		/// <typeparam name="T">the type being parsed</typeparam>
+		/// <param name="text"></param>
+		/// <param name="data"></param>
+		/// <param name="scope"></param>
+		/// <param name="tokenizer">optional tokenizer, useful if you want to get errors</param>
+		/// <returns></returns>
 		public static bool TryParse<T>(string text, out T data, object scope, Tokenizer tokenizer = null) {
 			object value = null;
 			bool result = TryParseType(typeof(T), text, ref value, scope, tokenizer);
 			data = (T)value;
 			return result;
 		}
+		/// <summary>
+		/// used to resolve tokens
+		/// </summary>
+		/// <param name="token"></param>
+		/// <param name="tokenizer"></param>
+		/// <param name="scriptVariables"></param>
+		/// <param name="result"></param>
+		/// <returns></returns>
 		public static bool TryParse(Token token, TokenErrLog tokenizer, object scriptVariables, out object result) {
 			CodeRules.op_ResolveToken(tokenizer, token, scriptVariables, out result, out Type resultType, false);
 			return resultType != null;
