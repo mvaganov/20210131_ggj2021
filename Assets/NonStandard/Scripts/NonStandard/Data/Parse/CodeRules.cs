@@ -254,7 +254,12 @@ namespace NonStandard.Data.Parse {
 			}
 			ParseRuleSet.Entry e = token.GetAsContextEntry();
 			if (e != null && e.IsText()) { return; } // data is explicitly meant to be a string, done.
-			op_SearchForMember(name, out value, out type, scope);
+			Type t;
+			object v;
+			if(op_SearchForMember(name, out v, out t, scope)) {
+				value = v;
+				type = t;
+			}
 		}
 		public static bool op_SearchForMember(string name, out object value, out Type type, object scope) {
 			switch (name) {
@@ -263,7 +268,7 @@ namespace NonStandard.Data.Parse {
 			case "false": value = false; type = typeof(bool); return true;
 			}
 			type = typeof(string);
-			if(ReflectionParseExtension.TryGetValue(scope, name, out value, out object _)) {
+			if (ReflectionParseExtension.TryGetValue(scope, name, out value, out object _)) {
 				type = (value != null) ? value.GetType() : null;
 				return type != null;
 			}

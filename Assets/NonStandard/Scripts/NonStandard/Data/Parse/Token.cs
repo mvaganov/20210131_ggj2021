@@ -78,9 +78,10 @@ namespace NonStandard.Data.Parse {
 				string str = ToString(s);
 				//Show.Log("@@@  "+str+" "+scope);
 				if (scope != null && fullyResolve) {
-					CodeRules.op_SearchForMember(str, out object value, out Type type, scope);
-					//Show.Log(str+" "+foundIt+" "+value);
-					return value;
+					if (CodeRules.op_SearchForMember(str, out object value, out Type type, scope)) {
+						//Show.Log(str+" "+foundIt+" "+value);
+						return value;
+					}
 				}
 				return str;
 			}
