@@ -151,7 +151,7 @@ namespace NonStandard.Commands {
 			}
 			if (++i >= tokens.Count) { return false; }
 			Token tValue = tokens[i];
-			CodeConvert.TryParse(tokens[i], tokenizer, scriptVariables, out object result);
+			CodeConvert.TryParse(tokens[i], out object result, scriptVariables, tokenizer);
 			Type type = arg.valueType;
 			//Show.Log(resultType + " : " + result.StringifySmall());
 			bool goodArgument = false;

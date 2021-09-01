@@ -278,14 +278,30 @@ namespace NonStandard.Data.Parse {
 			return 0;
 		}
 		protected void AssignValueToMember() {
+			if (memberValue != null) {
+				switch (memberValue) {
+				case ParseRuleSet.Entry e:
+					memberValue = e.Resolve(tok, scope, true, true);
+					break;
+				case Token t:
+					if (memberType != typeof(Token)) {
+						memberValue = t.Resolve(tok, scope, true, true);
+					}
+					break;
+				}
+			}
 			if (dictionaryAdd != null) {
-				string error = AssignValueToDictionary(dictionaryTypes, dictionaryAdd, result, memberId, memberValue, memberType);
-				if (error != null) { AddError(error); }
+				string s = memberId as string;
+				ReflectionParseExtension.TrySetValue_Dictionary(result, ref memberId, memberValue);
+				//string error = AssignValueToDictionary(dictionaryTypes, dictionaryAdd, result, memberId, memberValue, memberType);
+				//if (error != null) { AddError(error); }
 			} else {
 				if (field != null) {
-					AssignField(result, field, memberValue);
+					ReflectionParseExtension.TrySetValueCompiled(result, field, memberValue);
+					//AssignField(result, field, memberValue);
 				} else if (prop != null) {
-					AssignProperty(result, prop, memberValue);
+					ReflectionParseExtension.TrySetValueCompiled(result, prop, memberValue);
+					//AssignProperty(result, prop, memberValue);
 				} else {
 					throw new Exception("huh? how did we get here?");
 				}

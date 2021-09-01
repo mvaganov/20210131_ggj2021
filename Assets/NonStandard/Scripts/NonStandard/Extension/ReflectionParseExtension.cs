@@ -115,7 +115,7 @@ namespace NonStandard.Extension {
 				}
 				pi.SetValue(scope, value);
 				return true;
-			case string s: return TrySetValue_Dictionary(scope, ref s, value);
+			case string s: return TrySetValue_Dictionary(scope, ref path, value);
 			}
 			return false;
 		}
@@ -172,7 +172,7 @@ namespace NonStandard.Extension {
 			path = mi;
 			return result;
 		}
-		public static bool TrySetValue(object scope, string keyName, object value, out object path) {
+		public static bool TrySetValue(object scope, object keyName, object value, out object path) {
 			Type scopeType = scope.GetType();
 			KeyValuePair<Type, Type> dType = scopeType.GetIDictionaryType();
 			bool result;
@@ -211,10 +211,10 @@ namespace NonStandard.Extension {
 			value = null;
 			return false;
 		}
-		public static bool TrySetValue_Object(object scope, string name, object value, out MemberInfo memberInfo, char wildcard = Wildcard) {
+		public static bool TrySetValue_Object(object scope, object key, object value, out MemberInfo memberInfo, char wildcard = Wildcard) {
 			Type scopeType = scope.GetType();
 			memberInfo = null;
-			if (name.Length > 0 && (name[0] == wildcard || name[name.Length - 1] == wildcard)) {
+			if (key is string name && name.Length > 0 && (name[0] == wildcard || name[name.Length - 1] == wildcard)) {
 				FieldInfo[] fields = scopeType.GetFields();
 				string[] names = Array.ConvertAll(fields, f => f.Name);
 				int index = FindIndexWithWildcard(names, name, false, wildcard);
@@ -224,6 +224,7 @@ namespace NonStandard.Extension {
 				index = FindIndexWithWildcard(names, name, false, wildcard);
 				if (index >= 0) { memberInfo = props[index]; props[index].SetValue(scope, value); return true; }
 			} else {
+				name = key.ToString();
 				FieldInfo field = scopeType.GetField(name);
 				if (field != null) { memberInfo = field; field.SetValue(scope, value); return true; }
 				PropertyInfo prop = scopeType.GetProperty(name);
@@ -251,7 +252,7 @@ namespace NonStandard.Extension {
 			}
 			return TryGetValue_DictionaryReflective(scopeType, scope, key, out value);
 		}
-		public static bool TrySetValue_Dictionary(object scope, ref string name, object value, Type scopeType = null, Type keyType = null) {
+		public static bool TrySetValue_Dictionary(object scope, ref object name, object value, Type scopeType = null, Type keyType = null) {
 			if (scopeType == null) { scopeType = scope.GetType(); }
 			if (keyType == null) { keyType = scopeType.GetIDictionaryType().Key; }
 			if (keyType == typeof(string)) { name = ConvertWildcardIntoDictionaryKey(scope, name, scopeType); }
@@ -277,7 +278,7 @@ namespace NonStandard.Extension {
 			}
 			return true;
 		}
-		public static bool TrySetValue_DictionaryReflective(Type scopeType, object scope, string name, object value) {
+		public static bool TrySetValue_DictionaryReflective(Type scopeType, object scope, object name, object value) {
 			KeyValuePair<Type, Type> dTypes = scopeType.GetIDictionaryType();
 			MethodInfo mi = scopeType.GetMethod("Add", new Type[] { dTypes.Key, dTypes.Value });
 			if (mi == null) {
@@ -292,19 +293,21 @@ namespace NonStandard.Extension {
 			}
 			return true;
 		}
-		public static string ConvertWildcardIntoDictionaryKey(object scope, string name, Type scopeType = null, char wildcard = Wildcard) {
+		public static object ConvertWildcardIntoDictionaryKey(object scope, object key, Type scopeType = null, char wildcard = Wildcard) {
 			if (scopeType == null) { scopeType = scope.GetType(); }
-			if (name[0] == wildcard || name[name.Length - 1] == wildcard) {
-				MethodInfo getKey = null;
-				IEnumerator en = (IEnumerator)scopeType.GetMethod("GetEnumerator", Type.EmptyTypes).Invoke(scope, new object[] { });
-				while (en.MoveNext()) {
-					object kvp = en.Current;
-					if (getKey == null) { getKey = kvp.GetType().GetProperty("Key").GetGetMethod(); }
-					string memberName = getKey.Invoke(kvp, null) as string;
-					if (IsWildcardMatch(memberName, name, wildcard)) { return memberName; }
+			if (key is string name) {
+				if (name[0] == wildcard || name[name.Length - 1] == wildcard) {
+					MethodInfo getKey = null;
+					IEnumerator en = (IEnumerator)scopeType.GetMethod("GetEnumerator", Type.EmptyTypes).Invoke(scope, new object[] { });
+					while (en.MoveNext()) {
+						object kvp = en.Current;
+						if (getKey == null) { getKey = kvp.GetType().GetProperty("Key").GetGetMethod(); }
+						string memberName = getKey.Invoke(kvp, null) as string;
+						if (IsWildcardMatch(memberName, name, wildcard)) { return memberName; }
+					}
 				}
 			}
-			return name;
+			return key;
 		}
 	}
 }

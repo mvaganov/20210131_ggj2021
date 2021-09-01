@@ -10,22 +10,32 @@ namespace NonStandard.Data {
 		public static string Stringify(object obj) {
 			return StringifyExtension.Stringify(obj, false, showBoundary: false);
 		}
-		public static bool TryFill<T>(string text, ref T data, object scope, Tokenizer tokenizer = null) {
+		/// <summary>
+		/// used to fill an already allocated object with data derived from a JSON-like script
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="text">JSON-like source text</param>
+		/// <param name="data">output</param>
+		/// <param name="scope">where to search for variables when resolving unescaped-string tokens</param>
+		/// <param name="tokenizer">optional tokenizer, useful if you want to get errors</param>
+		/// <returns></returns>
+		public static bool TryFill<T>(string text, ref T data, object scope = null, Tokenizer tokenizer = null) {
 			object value = data;
 			bool result = TryParseType(typeof(T), text, ref value, scope, tokenizer);
 			data = (T)value;
 			return result;
 		}
 		/// <summary>
-		/// used to parse JSON objects, and retrieve
+		/// used to parse JSON-like objects, and output the results to a new object made of nested <see cref="Dictionary{string, object}"/>, <see cref="List{object}"/>, and primitive value objects
 		/// </summary>
-		/// <param name="text">JSON text</param>
+		/// <param name="text">JSON-like source text</param>
 		/// <param name="data">output</param>
+		/// <param name="scope">where to search for variables when resolving unescaped-string tokens</param>
 		/// <param name="tokenizer">optional tokenizer, useful if you want to get errors</param>
 		/// <returns></returns>
-		public static bool TryParse(string text, out object data, Tokenizer tokenizer = null) {
+		public static bool TryParse(string text, out object data, object scope = null, Tokenizer tokenizer = null) {
 			object value = null;
-			bool result = TryParseType(typeof(object), text, ref value, null, tokenizer);
+			bool result = TryParseType(typeof(object), text, ref value, scope, tokenizer);
 			data = value;
 			return result;
 		}
@@ -33,12 +43,12 @@ namespace NonStandard.Data {
 		/// used to compile an object out of JSON
 		/// </summary>
 		/// <typeparam name="T">the type being parsed</typeparam>
-		/// <param name="text"></param>
-		/// <param name="data"></param>
-		/// <param name="scope"></param>
+		/// <param name="text">JSON-like source text</param>
+		/// <param name="data">output object</param>
+		/// <param name="scope">where to search for variables when resolving unescaped-string tokens</param>
 		/// <param name="tokenizer">optional tokenizer, useful if you want to get errors</param>
-		/// <returns></returns>
-		public static bool TryParse<T>(string text, out T data, object scope, Tokenizer tokenizer = null) {
+		/// <returns>true if data was parsed without error. any errors can be reviewed in the 'tokenizer' parameter</returns>
+		public static bool TryParse<T>(string text, out T data, object scope = null, Tokenizer tokenizer = null) {
 			object value = null;
 			bool result = TryParseType(typeof(T), text, ref value, scope, tokenizer);
 			data = (T)value;
@@ -49,13 +59,22 @@ namespace NonStandard.Data {
 		/// </summary>
 		/// <param name="token"></param>
 		/// <param name="tokenizer"></param>
-		/// <param name="scriptVariables"></param>
-		/// <param name="result"></param>
+		/// <param name="scope"></param>
+		/// <param name="data"></param>
 		/// <returns></returns>
-		public static bool TryParse(Token token, TokenErrLog tokenizer, object scriptVariables, out object result) {
-			CodeRules.op_ResolveToken(tokenizer, token, scriptVariables, out result, out Type resultType, false);
+		public static bool TryParse(Token token, out object data, object scope, TokenErrLog tokenizer) {
+			CodeRules.op_ResolveToken(tokenizer, token, scope, out data, out Type resultType, false);
 			return resultType != null;
 		}
+		/// <summary>
+		/// used to parse when Type is known
+		/// </summary>
+		/// <param name="type"></param>
+		/// <param name="text"></param>
+		/// <param name="data"></param>
+		/// <param name="scope"></param>
+		/// <param name="tokenizer"></param>
+		/// <returns></returns>
 		public static bool TryParseType(Type type, string text, ref object data, object scope, Tokenizer tokenizer = null) {
 			if (text == null || text.Trim().Length == 0) return false;
 			try {
