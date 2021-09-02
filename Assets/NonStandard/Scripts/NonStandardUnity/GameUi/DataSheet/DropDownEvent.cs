@@ -4,6 +4,7 @@ using UnityEngine.Events;
 using TMPro;
 using NonStandard.Utility.UnityEditor;
 using NonStandard.Extension;
+using System;
 
 namespace NonStandard.Ui {
 	public class DropDownEvent : MonoBehaviour {
@@ -12,9 +13,9 @@ namespace NonStandard.Ui {
 		int lastValue = -1;
 		public void PopulateDropdown() {
 			TMP_Dropdown dd = GetComponent<TMP_Dropdown>();
-			PopulateDropdown(dd, options, this, nameof(HandleDropdown));
+			PopulateDropdown(dd, options, this, HandleDropdown);
 		}
-		public static void PopulateDropdown(TMP_Dropdown dd, IList<ModalConfirmation.Entry> options, Object ownerOfDropdownHandler, string dropdownHandlerName) {
+		public static void PopulateDropdown(TMP_Dropdown dd, IList<ModalConfirmation.Entry> options, object ownerOfDropdownHandler, Action<int> action) {
 			dd.ClearOptions();
 			List<TMP_Dropdown.OptionData> opts = dd.options;
 			for (int i = 0; i < options.Count; ++i) {
@@ -22,8 +23,15 @@ namespace NonStandard.Ui {
 				if (opts[i].text != options[i].text) { opts[i].text = options[i].text; }
 				if (opts[i].image != options[i].image) { opts[i].image = options[i].image; }
 			}
-			Show.Log("set " + options.Count + " opt : " + dd + "(" + dd.options.Count + ")\n" + options.Stringify(pretty: true));
-			EventBind.IfNotAlready(dd.onValueChanged, ownerOfDropdownHandler, dropdownHandlerName);
+			//Show.Log("set " + options.Count + " opt : " + dd + "(" + dd.options.Count + ")\n" + options.Stringify(pretty: true));
+#if UNITY_EDITOR
+			UnityEngine.Object uObj = ownerOfDropdownHandler as UnityEngine.Object;
+			if (uObj != null) {
+				EventBind.IfNotAlready(dd.onValueChanged, uObj, action.Method.Name);
+				return;
+			}
+#endif
+			dd.onValueChanged.AddListener(action.Invoke);
 		}
 		public void HandleDropdown(int index) {
 			HandleDropdown(index, options, GetComponent<TMP_Dropdown>(), ref lastValue);

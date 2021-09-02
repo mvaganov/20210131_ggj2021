@@ -53,8 +53,10 @@ public class ModalConfirmation : MonoBehaviour {
 		}
 		public Entry(string text, Action action) {
 			this.text = text;
-			selectionAction = new UnityEvent();
-			selectionAction.AddListener(action.Invoke);
+			if (action != null) {
+				selectionAction = new UnityEvent();
+				selectionAction.AddListener(action.Invoke);
+			}
 		}
 		public void Apply(DescriptionTextWithIcon entryObject) {
 			entryObject.Text = text;

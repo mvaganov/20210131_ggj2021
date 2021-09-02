@@ -3,6 +3,7 @@ using TMPro;
 using NonStandard.Ui;
 using NonStandard.Data.Parse;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 namespace NonStandard.GameUi.DataSheet {
 
@@ -62,8 +63,28 @@ namespace NonStandard.GameUi.DataSheet {
 			columnIndex.onValueChanged.RemoveAllListeners();
 			columnIndex.text = column.ToString();
 			columnIndex.onValueChanged.AddListener(OnIndexEdit);
+			// setup type options dropdown
+			List<ModalConfirmation.Entry> entries = new List<ModalConfirmation.Entry>();
+			int currentIndex = -1;
+			for (int i = 0; i < columnTypes.Length; ++i) {
+				entries.Add(new ModalConfirmation.Entry(columnTypes[i].name, null));
+				if (cHeader.columnSetting.data.uiBase.name.StartsWith(columnTypes[i].uiField.name)) {
+					currentIndex = i;
+				}
+			}
+			Show.Log(currentIndex+" "+ cHeader.columnSetting.data.uiBase.name);
+			DropDownEvent.PopulateDropdown(fieldType, entries, this, SetFieldType);
+			if (currentIndex >= 0) {
+				//fieldType.itemText.text = entries[currentIndex].text;
+				fieldType.captionText.text = entries[currentIndex].text;
+				fieldType.SetValueWithoutNotify(currentIndex);
+			}
 		}
-
+		public void SetFieldType(int index) {
+			Show.Log("SetFieldType "+index);
+			cHeader.columnSetting.data.uiBase = columnTypes[index].uiField;
+			uds.RefreshRowsAndColumns();
+		}
 		public void OnLabelEdit(string text) {
 			cHeader.columnSetting.data.label = text;
 			UiText.SetText(cHeader.gameObject, text);
@@ -78,6 +99,7 @@ namespace NonStandard.GameUi.DataSheet {
 					SetErrorPopup("invalid width: "+newWidth+". Requirement: 0 < value < 2048", true);
 				}
 			}
+			uds.RefreshRowsAndColumns();
 		}
 		public void OnIndexEdit(string text) {
 			int oldIndex = cHeader.transform.GetSiblingIndex();
@@ -93,6 +115,7 @@ namespace NonStandard.GameUi.DataSheet {
 					SetErrorPopup("invalid index: "+newIndex+". Requirement: 0 < index < "+ cHeader.transform.parent.childCount, true);
 				}
 			}
+			uds.RefreshRowsAndColumns();
 		}
 		public void SetErrorPopup(string text, bool isError) {
 			Debug.Log(text);
@@ -131,6 +154,7 @@ namespace NonStandard.GameUi.DataSheet {
 			if (ui == null) { ui = Global.GetComponent<ModalConfirmation>(); }
 			Udash.ColumnSetting cS = uds.GetColumn(column);
 			ui.OkCancel("Are you sure you want to delete column \"" + cS.data.label + "\"?", () => { uds.RemoveColumn(column); });
+			uds.Sort();
 		}
 	}
 }

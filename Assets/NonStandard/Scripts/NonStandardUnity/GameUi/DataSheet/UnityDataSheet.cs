@@ -11,9 +11,21 @@ using UnityEngine;
 namespace NonStandard.GameUi.DataSheet {
 
 	public class UnityColumnData : ColumnData {
+		/// <summary>
+		/// prefab used for the column data elements
+		/// </summary>
 		public GameObject uiBase;
+		/// <summary>
+		/// prefab used for the column header element
+		/// </summary>
 		public GameObject headerBase;
+		/// <summary>
+		/// width of the column
+		/// </summary>
 		public float width;
+		/// <summary>
+		/// if true, will move itself to far right end, even if new elements are added
+		/// </summary>
 		public bool alwaysLast;
 	}
 	//[
@@ -325,7 +337,7 @@ namespace NonStandard.GameUi.DataSheet {
 			contentRectangle.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, -cursor.y);
 		}
 		public void SetSortState(int column, SortState sortState) {
-			SyncSpreadSheetUiWith(list);
+			RefreshRowsAndColumns();
 			data.SetSortState(column, sortState);
 			RefreshRows();
 		}
@@ -368,10 +380,13 @@ namespace NonStandard.GameUi.DataSheet {
 			}
 		}
 		public void Sort() {
-			SyncSpreadSheetUiWith(list);
+			RefreshRowsAndColumns();
 			if (data.Sort()) {
 				RefreshRows();
 			}
+		}
+		public void RefreshRowsAndColumns() {
+			SyncSpreadSheetUiWith(list);
 		}
 		public Udash.ColumnSetting GetColumn(int index) { return data.GetColumn(index); }
 

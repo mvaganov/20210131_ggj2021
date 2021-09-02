@@ -17432,9 +17432,9 @@ MonoBehaviour:
   columnTypes:
   - name: Standard Input
     uiField: {fileID: 1628713023}
-  - name: Read Only
+  - name: Read Only Label
     uiField: {fileID: 712330065}
-  - name: Read Only (centered)
+  - name: Centered Label
     uiField: {fileID: 1413280867}
   - name: Icon Label
     uiField: {fileID: 420151676}
