@@ -1465,7 +1465,7 @@ MonoBehaviour:
   contentRectangle: {fileID: 172956953}
   prefab_dataRow: {fileID: 1837837385}
   headers: []
-  dataRows: []
+  dataRowsUi: []
   uiPrototypes: {fileID: 1714983818}
   columnSetup: "{label:\"\", columnUi:\"braille\", valueScript:null, headerUi:nothing,
     widthOfColumn:30}\r\n{label:\"name\", columnUi:\"label\", valueScript:na\xA4,

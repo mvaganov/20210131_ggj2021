@@ -96,15 +96,17 @@ namespace NonStandard.GameUi.DataSheet {
 					cHeader.columnSetting.data.width = newWidth;
 					uds.ResizeColumnWidth(column, oldWidth, newWidth);
 				} else {
-					SetErrorPopup("invalid width: "+newWidth+". Requirement: 0 < value < 2048", true);
+					SetErrorPopup("invalid width: "+newWidth+". Requirement: 0 < value < 2048", true, columnWidth.gameObject);
+					return;
 				}
 			}
 			uds.RefreshRowsAndColumns();
+			HidePopup();
 		}
 		public void OnIndexEdit(string text) {
 			int oldIndex = cHeader.transform.GetSiblingIndex();
 			if (oldIndex != column) {
-				SetErrorPopup("WOAH PROBLEM! column " + column + " is not the same as childIndex " + oldIndex, true);
+				SetErrorPopup("WOAH PROBLEM! column " + column + " is not the same as childIndex " + oldIndex, true, columnIndex.gameObject);
 				return;
 			}
 			if (int.TryParse(text, out int newIndex)) {
@@ -112,40 +114,56 @@ namespace NonStandard.GameUi.DataSheet {
 					uds.MoveColumn(oldIndex, newIndex);
 					column = newIndex;
 				} else {
-					SetErrorPopup("invalid index: "+newIndex+". Requirement: 0 < index < "+ cHeader.transform.parent.childCount, true);
+					SetErrorPopup("invalid index: "+newIndex+". Requirement: 0 < index < "+ cHeader.transform.parent.childCount, true, columnIndex.gameObject);
+					return;
 				}
 			}
 			uds.RefreshRowsAndColumns();
+			HidePopup();
 		}
-		public void SetErrorPopup(string text, bool isError) {
+		private GameObject lastErrorInput = null;
+		public void SetErrorPopup(string text, bool isError, GameObject errorInputObject) {
 			Debug.Log(text);
 			UiText.SetText(errorPopup, text);
 			errorPopup.gameObject.SetActive(true);
-			Image img = scriptValue.GetComponent<Image>();
+			Image img;
+			if (lastErrorInput != null) {
+				img = lastErrorInput.GetComponent<Image>();
+				img.color = defaultColor;
+			}
+			img = errorInputObject.GetComponent<Image>();
+			if (img.color != errorColor) { defaultColor = img.color; }
 			if (isError) {
 				img.color = errorColor;
 			} else {
 				img.color = defaultColor;
 			}
+			lastErrorInput = errorInputObject;
 		}
 		public void HidePopup() {
 			errorPopup.gameObject.SetActive(false);
+			if (lastErrorInput != null) {
+				Image img = lastErrorInput.GetComponent<Image>();
+				img.color = defaultColor;
+			}
+			lastErrorInput = null;
 		}
 		public void OnScriptValueEdit(string text) {
 			Tokenizer tokenizer = new Tokenizer();
 			tokenizer.Tokenize(text);
+			GameObject go = scriptValue.gameObject;
 			// parse errors
-			if (tokenizer.HasError()) { SetErrorPopup(tokenizer.GetErrorString(), true); return; }
+			if (tokenizer.HasError()) { SetErrorPopup(tokenizer.GetErrorString(), true, go); return; }
 			// just one token
-			if (tokenizer.tokens.Count > 1) { SetErrorPopup("too many tokens: should only be one value", true); return; }
+			if (tokenizer.tokens.Count > 1) { SetErrorPopup("too many tokens: should only be one value", true, go); return; }
 			// try to set the field
 			cHeader.columnSetting.SetFieldToken(tokenizer.tokens[0], tokenizer);
 			// valid variable path
-			if (tokenizer.HasError()) { SetErrorPopup(tokenizer.GetErrorString(), true); return; }
+			if (tokenizer.HasError()) { SetErrorPopup(tokenizer.GetErrorString(), true, go); return; }
 			// refresh column values
 			uds.RefreshColumnText(column, tokenizer);
 			// failed to set values
-			if (tokenizer.HasError()) { SetErrorPopup(tokenizer.GetErrorString(), true); return; }
+			if (tokenizer.HasError()) { SetErrorPopup(tokenizer.GetErrorString(), true, go); return; }
 			// success!
 			HidePopup();
 		}

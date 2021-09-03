@@ -65,7 +65,7 @@ namespace NonStandard.GameUi.DataSheet {
 		public GameObject prefab_dataRow;
 		public Udash data = new Udash();
 		public List<GameObject> headers = new List<GameObject>();
-		public List<GameObject> dataRows = new List<GameObject>();
+		public List<GameObject> dataRowsUi = new List<GameObject>();
 		public UiTypedEntryPrototype uiPrototypes;
 		protected RectTransform rt;
 		protected Tokenizer errLog = new Tokenizer();
@@ -73,10 +73,8 @@ namespace NonStandard.GameUi.DataSheet {
 		[TextArea(1, 10)]
 		public string columnSetup;
 
-		public List<object> list = new List<object>();
-
-		public int GetRow(GameObject rowObject) {
-			return dataRows.IndexOf(rowObject);
+		public int GetRowUiElement(GameObject rowObject) {
+			return dataRowsUi.IndexOf(rowObject);
 		}
 
 		private void Awake() {
@@ -84,17 +82,19 @@ namespace NonStandard.GameUi.DataSheet {
 		}
 		private void Init() {
 			rt = GetComponent<RectTransform>();
-			Tokenizer tokenizer = new Tokenizer();
+			data = new Udash();
+			InitColumnSettings(columnSetup);
+		}
+		void InitColumnSettings(string columnSetup) {
 			Show.Log(columnSetup);
+			Tokenizer tokenizer = new Tokenizer();
 			CodeConvert.TryParse(columnSetup, out UnityDataSheetColumnInitStructure[] columns, null, tokenizer);
 			if (tokenizer.HasError()) {
 				Show.Error("error parsing column structure: " + tokenizer.GetErrorString());
 				return;
 			}
-
-			data = new Udash();
 			int index = 0;
-			data.AddRange(list, tokenizer);
+			//data.AddRange(list, tokenizer);
 			for (int i = 0; i < columns.Length; ++i) {
 				UnityDataSheetColumnInitStructure c = columns[i];
 				c.typeOfValue = c.defaultValue != null ? c.defaultValue.GetType() : null;
@@ -146,6 +146,7 @@ namespace NonStandard.GameUi.DataSheet {
 				}
 				if (header == null) {
 					header = Instantiate(colS.data.headerBase);
+					header.name = header.name.Replace("Clone", colS.data.label);
 					UiText.SetText(header, colS.data.label);
 				}
 				ColumnHeader ch = header.GetComponent<ColumnHeader>();
@@ -194,12 +195,12 @@ namespace NonStandard.GameUi.DataSheet {
 		}
 
 		public void Load(List<object> source) {
-			list = source;
-			data.InitData(list, errLog);
+			//list = source;
+			data.InitData(source, errLog);
 			GenerateDataRows();
 		}
 
-		GameObject CreateRow(RowData rowData, float yPosition = float.NaN) {
+		RowObject CreateRow(RowData rowData, float yPosition = float.NaN) {
 			GameObject rowUi = Instantiate(prefab_dataRow.gameObject);
 			RowObject rObj = rowUi.GetComponent<RowObject>();
 			if (rObj == null) {
@@ -210,7 +211,8 @@ namespace NonStandard.GameUi.DataSheet {
 				throw new Exception("something bad. where is the object that this row is for?");
 			}
 			rowUi.SetActive(true);
-			return UpdateRowData(rObj, rowData, yPosition);
+			UpdateRowData(rObj, rowData, yPosition);
+			return rObj;
 		}
 		public GameObject UpdateRowData(RowObject rObj, RowData rowData, float yPosition = float.NaN) {
 			object[] columns = rowData.columns;
@@ -270,16 +272,16 @@ namespace NonStandard.GameUi.DataSheet {
 			if (!float.IsNaN(yPosition)) {
 				rect.anchoredPosition = new Vector2(0, yPosition);
 			}
-			dataRows.Add(rObj.gameObject);
+			dataRowsUi.Add(rObj.gameObject);
 			return rObj.gameObject;
 		}
 
 		void GenerateDataRows() {
-			dataRows.ForEach(go => { go.transform.SetParent(null); Destroy(go); });
-			dataRows.Clear();
+			dataRowsUi.ForEach(go => { go.transform.SetParent(null); Destroy(go); });
+			dataRowsUi.Clear();
 			Vector2 cursor = Vector2.zero;
 			for (int r = 0; r < data.rows.Count; ++r) {
-				GameObject rowUi = CreateRow(data.rows[r]);
+				GameObject rowUi = CreateRow(data.rows[r]).gameObject;
 				RectTransform rect = rowUi.GetComponent<RectTransform>();
 				rect.anchoredPosition = cursor;
 				cursor.y -= rect.rect.height;
@@ -287,8 +289,8 @@ namespace NonStandard.GameUi.DataSheet {
 			contentRectangle.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, -cursor.y);
 		}
 		public void RefreshColumnText(int column, TokenErrLog errLog) {
-			for(int i = 0; i < dataRows.Count; ++i) {
-				GameObject fieldUi = dataRows[i].transform.GetChild(column).gameObject;
+			for(int i = 0; i < dataRowsUi.Count; ++i) {
+				GameObject fieldUi = dataRowsUi[i].transform.GetChild(column).gameObject;
 				object value = data.RefreshValue(i, column, errLog);
 				if (errLog.HasError()) return;
 				if (value != null) {
@@ -306,10 +308,16 @@ namespace NonStandard.GameUi.DataSheet {
 			// do the same for each row.
 		}
 		public void MoveColumn(int oldIndex, int newIndex) {
-			Show.Log("TODO move to new index");
-			// change the index of the column in the header
-			// go through each data row and change the index also
-			// have the data sheet do the same thing at the RowData level
+			// need to re-arrange headers in data
+			data.MoveColumn(oldIndex, newIndex);
+			// change the index of the column in the header (UI)
+			GameObject go = headers[oldIndex];
+			headers.RemoveAt(oldIndex);
+			headers.Insert(newIndex, go);
+			// regenerate headers based on new column settings
+			GenerateHeaders();
+			// then once all the data and headers are in the right place, refresh the bulk of the UI to match
+			RefreshRowsAndColumns(); // TODO figure out why this isn't working
 		}
 		public void RefreshRows() {
 			// map list elements to row UI
@@ -327,7 +335,7 @@ namespace NonStandard.GameUi.DataSheet {
 			for(int i = 0; i < data.rows.Count; ++i) {
 				RowData rd = data.rows[i];
 				if (!srcToRowUiMap.TryGetValue(rd.model, out RowObject uiElement)) {
-					throw new Exception("could not find "+rd.model+", call "+nameof(SyncSpreadSheetUiWith)+"?");
+					throw new Exception("could not find "+rd.model+", call "+nameof(RefreshAll)+"?");
 				}
 				uiElement.transform.SetSiblingIndex(i);
 				RectTransform rect = uiElement.GetComponent<RectTransform>();
@@ -341,42 +349,56 @@ namespace NonStandard.GameUi.DataSheet {
 			data.SetSortState(column, sortState);
 			RefreshRows();
 		}
-		public void SyncSpreadSheetUiWith(IList<object> list) {
-			// go through the list. if it has an element missing from the spreadsheet, add it to the spreadsheet (including UI)
-			for (int i = 0; i < list.Count; ++i) {
-				RowData rd = data.GetRowData(list[i]); // TODO O^2 operation. should a dictionary cache these relationships? does it matter in practice?
-				//if (rd != null) { Debug.Log(rd.model+" skip!"); continue; }
-				if (rd == null) { rd = data.AddData(list[i], errLog); }
-				int uiIndex = contentRectangle.IndexOfChild(c => {
-					RowObject rObj = c.GetComponent<RowObject>();
-					if (rObj != null && rObj.obj == rd.model) { return true; }
-					return false;
-				});
-				bool haveUi = uiIndex >= 0;
-				if (!haveUi) {
-					//Debug.Log("new row");
-					GameObject rowUi = CreateRow(rd);
-				} else {
-					//Debug.Log("updating "+rd.model);
-					RowObject rObj = contentRectangle.GetChild(uiIndex).GetComponent<RowObject>();
-					// if this row doesn't have the right number of columns, or the columns are not the right ones, remake them.
-					//if(rd.columns.Length != rObj.transform.childCount) {
-						UpdateRowData(rObj, rd);
-					//}
+		public object GetItem(int index) { return data.rows[index].model; }
+		public object SetItem(int index, object dataModel) { return data.rows[index].model = dataModel; }
+		public int IndexOf(object dataModel) { return data.IndexOf(dataModel); }
+		public int IndexOf(Func<object, bool> predicate) { return data.IndexOf(predicate); }
+		public void RefreshAll() {
+			List<RowObject> unusedRows = new List<RowObject>();
+			// go through the spreadsheet UI. if it there is an element that is missing in the data, delete it.
+			for (int i = 0; i < contentRectangle.childCount; ++i) {
+				RowObject rObj = contentRectangle.GetChild(i).GetComponent<RowObject>();
+				if (rObj == null) { throw new Exception("non row element in the spreadsheet UI?"); }
+				int index = IndexOf(rObj.obj);
+				if (index < 0) {
+					rObj.transform.SetParent(null);
+					unusedRows.Add(rObj);
 				}
+				// don't sort here because it's not clear that all of the required elements are in UI
 			}
-			// go through the spreadsheet. if it has an element missing from the list, remove it from the spreadsheet (including UI)
-			for (int i = data.rows.Count-1; i >= 0; --i) {
-				object m = data.rows[i].model;
-				if (list.IndexOf(m) >= 0) { continue; }
-				// if this spreadsheet row object is not in the expected list, remove it
-				data.rows.RemoveAt(i);
-				// also, remove the UI element
-				for(int c = 0; c < contentRectangle.childCount; ++c) {
-					RowObject rObj = contentRectangle.GetChild(c).GetComponent<RowObject>();
-					if (rObj == null) continue;
-					if (rObj.obj == m) { rObj.transform.SetParent(null); Destroy(rObj); }
+			// go through the spreadsheet data. if there is no ui element, create it
+			float y = 0;
+			for (int i = 0; i < data.rows.Count; ++i) {
+				RowData rd = data.rows[i];
+				RowObject rObj = null;
+				if (i < contentRectangle.childCount) {
+					rObj = contentRectangle.GetChild(i).GetComponent<RowObject>();
+					if (rObj.obj != rd.model) { rObj = null; }
 				}
+				if (rObj != null) continue;
+				bool uiExists = false;
+				for (int j = 0; j < contentRectangle.childCount; ++j) {
+					rObj = contentRectangle.GetChild(j).GetComponent<RowObject>();
+					if (rObj.obj == rd.model) { uiExists = true; break; }
+				}
+				bool columnsNeedChecking = true;
+				if (!uiExists) {
+					if (unusedRows.Count > 0) {
+						rObj = unusedRows[unusedRows.Count - 1];
+						rObj.transform.SetParent(contentRectangle);
+						unusedRows.RemoveAt(unusedRows.Count - 1);
+					} else {
+						rObj = CreateRow(data.rows[i], y);
+						columnsNeedChecking = false;
+					}
+				}
+				if (columnsNeedChecking) {
+					// go through the columns and make sure the columns are correctly ordered
+					UpdateRowData(rObj, rd, y);
+				}
+				// sort the ui elements to match the data
+				rObj.transform.SetSiblingIndex(i);
+				y += rObj.GetComponent<RectTransform>().rect.height;
 			}
 		}
 		public void Sort() {
@@ -386,7 +408,7 @@ namespace NonStandard.GameUi.DataSheet {
 			}
 		}
 		public void RefreshRowsAndColumns() {
-			SyncSpreadSheetUiWith(list);
+			RefreshAll();
 		}
 		public Udash.ColumnSetting GetColumn(int index) { return data.GetColumn(index); }
 
@@ -405,7 +427,7 @@ namespace NonStandard.GameUi.DataSheet {
 			data.AddColumn(column);
 			MakeSureColumnsMarkedLastAreLast();
 			GenerateHeaders();
-			SyncSpreadSheetUiWith(list);
+			RefreshAll();
 			return column;
 		}
 

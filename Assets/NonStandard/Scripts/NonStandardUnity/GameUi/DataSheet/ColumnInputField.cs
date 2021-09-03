@@ -24,14 +24,14 @@ namespace NonStandard.GameUi.DataSheet {
 				return;
 			}
 			int col = transform.GetSiblingIndex();
-			int row = uds.GetRow(transform.parent.gameObject);
+			int row = uds.GetRowUiElement(transform.parent.gameObject);
 			Udash.ColumnSetting column = uds.GetColumn(col);
 			if (column.canEdit) {
 				object value = text;
 				if (column.type != null) {
 					CodeConvert.Convert(ref value, column.type);
 				}
-				column.SetValue(uds.list[row], value);
+				column.SetValue(uds.GetItem(row), value);
 				uds.data[row][col] = value;
 			}
 		}

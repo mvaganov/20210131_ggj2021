@@ -125,6 +125,12 @@ namespace NonStandard.Data {
 				return value;
 			}
 
+			/// <summary>
+			/// the <see cref="ColumnSetting"/> implies a data element for a list of objects
+			/// </summary>
+			/// <param name="scope">the specific object to change a value in</param>
+			/// <param name="value">the value to assign</param>
+			/// <returns></returns>
 			public bool SetValue(object scope, object value) {
 				//Show.Log("attempting to set " + _fieldToken.GetAsSmallText() + " to " + value);
 				if (!canEdit) return false;
@@ -193,6 +199,12 @@ namespace NonStandard.Data {
 
 		public object this [int row, int col] { get => Get(row, col); set => Set(row, col, value); }
 		public object[] this [int row] { get => rows[row].columns; }
+
+		public int IndexOf(object dataModel) { return rows.FindIndex(rd => rd.model == dataModel); }
+		public int IndexOf(Func<object, bool> predicate) {
+			for (int i = 0; i < rows.Count; ++i) { if (predicate(rows[i])) { return i; } }
+			return -1;
+		}
 
 		/// <param name="column">which column is having it's sort statechanged</param>
 		/// <param name="sortState">the new <see cref="SortState"/> for this column</param>
@@ -316,5 +328,41 @@ namespace NonStandard.Data {
 		}
 		public void AddColumn(ColumnSetting column) { SetColumn(columnSettings.Count, column); }
 		public ColumnSetting GetColumn(int index) { return columnSettings[index]; }
+
+		public void MoveColumn(int oldIndex, int newIndex) {
+			// change the index of the column in the header (data)
+			ColumnSetting cs = columnSettings[oldIndex];
+			columnSettings.RemoveAt(oldIndex);
+			columnSettings.Insert(newIndex, cs);
+			// go through each data element and change that data
+			for (int r = 0; r < rows.Count; ++r) {
+				object[] cols = rows[r].columns;
+				object toMove = cols[oldIndex];
+				if (newIndex < oldIndex) {
+					// shift elements forward (iterating backward), starting with the one just before oldIndex, until newIndex
+					for (int c = oldIndex; c > newIndex; --c) { cols[c] = c - 1; }
+				} else if (newIndex > oldIndex) {
+					// shift elements backward (iterating forward), starting with the old index
+					for (int c = oldIndex; c < newIndex; ++c) { cols[c] = c + 1; }
+				}
+				cols[newIndex] = toMove;
+			}
+			// and get columnSortOrder working correctly as well.
+			if (oldIndex < newIndex) {
+				for(int i = 0; i < columnSortOrder.Count; ++i) {
+					if (columnSortOrder[i] == oldIndex) { columnSortOrder[i] = newIndex; } else
+					if (columnSortOrder[i] >  oldIndex && columnSortOrder[i] < newIndex) {
+						columnSortOrder[i] = columnSortOrder[i] - 1;
+					}
+				}
+			} else if (oldIndex > newIndex) {
+				for (int i = 0; i < columnSortOrder.Count; ++i) {
+					if (columnSortOrder[i] == oldIndex) { columnSortOrder[i] = newIndex; } else
+					if (columnSortOrder[i] > newIndex && columnSortOrder[i] < oldIndex) {
+						columnSortOrder[i] = columnSortOrder[i] + 1;
+					}
+				}
+			}
+		}
 	}
 }
