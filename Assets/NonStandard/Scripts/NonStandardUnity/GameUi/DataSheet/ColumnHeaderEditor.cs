@@ -4,6 +4,7 @@ using NonStandard.Ui;
 using NonStandard.Data.Parse;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using System;
 
 namespace NonStandard.GameUi.DataSheet {
 
@@ -30,6 +31,12 @@ namespace NonStandard.GameUi.DataSheet {
 		public TMP_Dropdown fieldType;
 		// TODO another scripted value. should also use error popup
 		public TMP_InputField defaultValue;
+		private static Dictionary<string, Type> defaultValueTypes = new Dictionary<string, Type> {
+			["string"] = typeof(string),
+			["number"] = typeof(double),
+			["integer"] = typeof(long),
+			["script"] = typeof(Token),
+		};
 		// TODO generate based on scriptValue. if type is ambiguous, offer [string, number, integer, Token]
 		public TMP_Dropdown valueType;
 		// TODO change cHeader.columnSetting.data.width, refresh rows
@@ -68,6 +75,7 @@ namespace NonStandard.GameUi.DataSheet {
 			int currentIndex = -1;
 			for (int i = 0; i < columnTypes.Length; ++i) {
 				entries.Add(new ModalConfirmation.Entry(columnTypes[i].name, null));
+				//Show.Log(columnTypes[i].name);
 				if (cHeader.columnSetting.data.uiBase.name.StartsWith(columnTypes[i].uiField.name)) {
 					currentIndex = i;
 				}
@@ -78,9 +86,10 @@ namespace NonStandard.GameUi.DataSheet {
 				fieldType.captionText.text = entries[currentIndex].text;
 				fieldType.SetValueWithoutNotify(currentIndex);
 			}
+			// setup value types dropdown
+
 		}
 		public void SetFieldType(int index) {
-			Show.Log("SetFieldType "+index);
 			cHeader.columnSetting.data.uiBase = columnTypes[index].uiField;
 			uds.RefreshRowAndColumnUi();
 		}

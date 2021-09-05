@@ -9,6 +9,7 @@ namespace NonStandard.Data.Parse {
 		void AddError(ParseError error);
 		string GetErrorString();
 		IList<int> GetTextRows();
+		void ClearErrors();
 	}
 	public class TokenErrorlog : TokenErrLog {
 		public List<ParseError> errors = new List<ParseError>();
@@ -18,6 +19,7 @@ namespace NonStandard.Data.Parse {
 		/// </summary>
 		internal List<int> rows = new List<int>();
 
+		public void ClearErrors() { errors.Clear(); }
 		public bool HasError() { return errors.Count > 0; }
 		public ParseError AddError(string message) { return AddError(-1, message); }
 		public ParseError AddError(int index, string message) {

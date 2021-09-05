@@ -36,7 +36,6 @@ namespace NonStandard.Ui {
 			BindDropdownAction(dd, ownerOfDropdownHandler, action);
 		}
 		public static void BindDropdownAction(TMP_Dropdown dd, object ownerOfDropdownHandler, Action<int> action) {
-			dd.ClearOptions();
 			//Show.Log("set " + options.Count + " opt : " + dd + "(" + dd.options.Count + ")\n" + options.Stringify(pretty: true));
 #if UNITY_EDITOR
 			UnityEngine.Object uObj = ownerOfDropdownHandler as UnityEngine.Object;

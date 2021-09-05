@@ -60,11 +60,14 @@ namespace NonStandard.Extension {
 			IList<object> vars = variableNamePath.Split(".");
 			return GetValueFromRawPath(obj, vars, defaultValue, out_path);
 		}
-		public static object GetValueFromRawPath(object obj, IList<object> rawPath, object defaultValue = null, List<object> out_compiledPath = null) {
+		public static object GetValueFromRawPath(object obj, IList<object> rawPath, object defaultValue = null, List<object> out_compiledPath = null, TokenErrLog errLog = null) {
 			object result = obj;
 			for (int i = 0; i < rawPath.Count; ++i) {
 				string pathStr = rawPath[i].ToString();
 				result = GetValueIndividual(obj, pathStr, out object path, defaultValue);
+				if (path == null && errLog != null) {
+					errLog.AddError(i, pathStr);
+				}
 				//Show.Log(obj+"["+ pathStr + "] = ("+path+") \'"+result+"\'");
 				if (out_compiledPath != null) {
 					out_compiledPath.Add(path);
@@ -130,15 +133,25 @@ namespace NonStandard.Extension {
 			result = cursor;
 			return true;
 		}
-		public static bool TrySetValueCompiledPath(object scope, IList<object> alreadyCompiledPath, object result) {
+		public static bool TrySetValueCompiledPath(object scope, IList<object> alreadyCompiledPath, object result, TokenErrLog errLog = null) {
+			void Err(TokenErrLog eLog, int index) {
+				if (eLog == null) { return; }
+				string errStr = "";
+				for (int e = 0; e < index; ++e) {
+					errStr += alreadyCompiledPath[e].ToString() + ".";
+				}
+				eLog.AddError(index, errStr + "failed");
+			}
 			object cursor = scope;
 			int last = alreadyCompiledPath.Count - 1;
 			for (int i = 0; i < last; ++i) {
 				if (!TryGetValueCompiled(cursor, alreadyCompiledPath[i], out cursor)) {
+					Err(errLog, i);
 					return false;
 				}
 			}
 			if (!TrySetValueCompiled(cursor, alreadyCompiledPath[last], result)) {
+				Err(errLog, last);
 				return false;
 			}
 			return true;

@@ -57,7 +57,7 @@ namespace NonStandard.GameUi.DataSheet {
 		public List<GameObject> dataRowsUi = new List<GameObject>();
 		public UiTypedEntryPrototype uiPrototypes;
 		protected RectTransform rt;
-		protected TokenErrorlog errLog = new TokenErrorlog();
+		internal TokenErrorlog errLog = new TokenErrorlog();
 
 		[TextArea(1, 10)]
 		public string columnSetup;
@@ -399,40 +399,11 @@ namespace NonStandard.GameUi.DataSheet {
 		public int IndexOf(object dataModel) { return data.IndexOf(dataModel); }
 		public int IndexOf(Func<object, bool> predicate) { return data.IndexOf(predicate); }
 		public void RefreshRowAndColumnUi() {
-			// put all rows in the correct order, and create missing rows if needed
-			Dictionary<object, RowObject> rowUi = RefreshRowUi();
-			// go through the spreadsheet data. if there is no ui element, create it
+			RefreshRowUi();
 			float y = 0;
 			for (int i = 0; i < data.rows.Count; ++i) {
-				RowData rd = data.rows[i];
-				RowObject rObj = null;
-				//if (i < contentRectangle.childCount) {
-					rObj = contentRectangle.GetChild(i).GetComponent<RowObject>();
-				//	if (rObj.obj != rd.model) { rObj = null; }
-				//}
-				//if (rObj != null) continue;
-				//bool uiExists = false;
-				//for (int j = 0; j < contentRectangle.childCount; ++j) {
-				//	rObj = contentRectangle.GetChild(j).GetComponent<RowObject>();
-				//	if (rObj.obj == rd.model) { uiExists = true; break; }
-				//}
-				//bool columnsNeedChecking = true;
-				//if (!uiExists) {
-				//	if (unusedRows.Count > 0) {
-				//		rObj = unusedRows[unusedRows.Count - 1];
-				//		rObj.transform.SetParent(contentRectangle);
-				//		unusedRows.RemoveAt(unusedRows.Count - 1);
-				//	} else {
-				//		rObj = CreateRow(data.rows[i], y);
-				//		columnsNeedChecking = false;
-				//	}
-				//}
-				//if (columnsNeedChecking) {
-					// go through the columns and make sure the columns are correctly ordered
-					UpdateRowData(rObj, rd, y);
-				//}
-				//// sort the ui elements to match the data
-				//rObj.transform.SetSiblingIndex(i);
+				RowObject rObj = contentRectangle.GetChild(i).GetComponent<RowObject>();
+				UpdateRowData(rObj, data.rows[i], y);
 				y += rObj.GetComponent<RectTransform>().rect.height;
 			}
 		}

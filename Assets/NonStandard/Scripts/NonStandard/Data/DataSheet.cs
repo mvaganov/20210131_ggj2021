@@ -92,7 +92,12 @@ namespace NonStandard.Data {
 			object CompileEditPath(object scope, TokenErrLog errLog = null) {
 				//Show.Log("need to compile " + editPath.JoinToString());
 				List<object> compiledPath = new List<object>();
-				object result = ReflectionParseExtension.GetValueFromRawPath(scope, editPath, defaultValue, compiledPath);
+				errLog?.ClearErrors();
+				object result = ReflectionParseExtension.GetValueFromRawPath(scope, editPath, defaultValue, compiledPath, errLog);
+				if (errLog != null && errLog.HasError()) {
+					editPath = null;
+					return null;
+				}
 				editPath = compiledPath;
 				//ReflectionParseExtension.TryGetValueCompiledPath(scope, editPath, out result);
 				//Show.Log("compiled " + editPath.JoinToString(",",o=>o?.GetType()?.ToString() ?? "???")+" : "+result);
@@ -136,17 +141,15 @@ namespace NonStandard.Data {
 			/// <param name="scope">the specific object to change a value in</param>
 			/// <param name="value">the value to assign</param>
 			/// <returns></returns>
-			public bool SetValue(object scope, object value) {
+			public bool SetValue(object scope, object value, TokenErrLog errLog = null) {
 				//Show.Log("attempting to set " + _fieldToken.GetAsSmallText() + " to " + value);
 				if (!canEdit) return false;
 				if (needsToLoadEditPath) {
 					CompileEditPath(scope);
 				}
 				value = FilterType(value);
-				if (!ReflectionParseExtension.TrySetValueCompiledPath(scope, editPath, value)) {
-					Show.Log("unable to set " + _fieldToken.GetAsSmallText() + " to " + value);
-				}
-				ReflectionParseExtension.TryGetValueCompiledPath(scope, editPath, out object result);
+				ReflectionParseExtension.TrySetValueCompiledPath(scope, editPath, value, errLog);
+				//ReflectionParseExtension.TryGetValueCompiledPath(scope, editPath, out object result);
 				//Show.Log("set " + scope + "." + _fieldToken.GetAsSmallText() + " to " + result);
 				return true;
 			}
