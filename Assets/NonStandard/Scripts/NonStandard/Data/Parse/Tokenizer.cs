@@ -10,6 +10,27 @@ namespace NonStandard.Data.Parse {
 		string GetErrorString();
 		IList<int> GetTextRows();
 	}
+	public class TokenErrorlog : TokenErrLog {
+		public List<ParseError> errors = new List<ParseError>();
+		public IList<int> GetTextRows() => rows;
+		/// <summary>
+		/// the indexes of where rows end (newline characters), in order.
+		/// </summary>
+		internal List<int> rows = new List<int>();
+
+		public bool HasError() { return errors.Count > 0; }
+		public ParseError AddError(string message) { return AddError(-1, message); }
+		public ParseError AddError(int index, string message) {
+			ParseError e = new ParseError(index, rows, message); errors.Add(e); return e;
+		}
+		public ParseError AddError(Token token, string message) { return AddError(token.index, message); }
+		public void AddError(ParseError error) { errors.Add(error); }
+		public string GetErrorString() { return errors.JoinToString("\n"); }
+		public bool ShowErrorTo(Show.PrintFunc show) {
+			if (errors.Count == 0) return false;
+			show.Invoke(GetErrorString()); return true;
+		}
+	}
 	public static class TokenizationErrorStorageExtension {
 		public static ParseError AddError(this TokenErrLog self, int index, string message) {
 			ParseError e = new ParseError(index, self.GetTextRows(), message); self.AddError(e); return e;
@@ -23,20 +44,13 @@ namespace NonStandard.Data.Parse {
 			show.Invoke(errStr); return true;
 		}
 	}
-	public class Tokenizer : TokenErrLog {
+	public class Tokenizer : TokenErrorlog {
 		internal string str;
 		internal List<Token> tokens = new List<Token>(); // actually a tree. each token can point to more token lists
 		/// <summary>
 		/// TODO testme! does this produce all of the tokens in string form?
 		/// </summary>
 		protected List<string> tokenStrings = new List<string>();
-		public List<ParseError> errors = new List<ParseError>();
-		/// <summary>
-		/// the indexes of where rows end (newline characters), in order.
-		/// </summary>
-		internal List<int> rows = new List<int>();
-		public IList<int> GetTextRows() => rows;
-		public bool HasError() { return errors.Count > 0; }
 		public int TokenCount { get { return tokens.Count; } }
 		/// <param name="i"></param>
 		/// <returns>raw token data</returns>
@@ -101,17 +115,6 @@ namespace NonStandard.Data.Parse {
 				token = e.tokens[0];
 			}
 			return ParseError.FilePositionOf(token, rows);
-		}
-		public ParseError AddError(string message) { return AddError(-1, message); }
-		public ParseError AddError(int index, string message) {
-			ParseError e = new ParseError(index, rows, message); errors.Add(e); return e;
-		}
-		public ParseError AddError(Token token, string message) { return AddError(token.index, message); }
-		public void AddError(ParseError error) { errors.Add(error); }
-		public string GetErrorString() { return errors.JoinToString("\n"); }
-		public bool ShowErrorTo(Show.PrintFunc show) {
-			if (errors.Count == 0) return false;
-			show.Invoke(GetErrorString()); return true;
 		}
 		/// <param name="str"></param>
 		/// <param name="parsingRules"></param>

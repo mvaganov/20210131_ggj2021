@@ -4,7 +4,6 @@ using NonStandard.Data;
 
 namespace NonStandard.GameUi.DataSheet {
 	public class ColumnInputField : MonoBehaviour {
-		public object target;
 		public void Reset() {
 			TMPro.TMP_InputField input = GetComponent<TMPro.TMP_InputField>();
 			EventBind.IfNotAlready(input.onValueChanged, this, nameof(AssignFromText));
@@ -24,7 +23,7 @@ namespace NonStandard.GameUi.DataSheet {
 				return;
 			}
 			int col = transform.GetSiblingIndex();
-			int row = uds.GetRowUiElement(transform.parent.gameObject);
+			int row = uds.GetRowIndex(transform.parent.gameObject);
 			Udash.ColumnSetting column = uds.GetColumn(col);
 			if (column.canEdit) {
 				object value = text;
@@ -32,7 +31,7 @@ namespace NonStandard.GameUi.DataSheet {
 					CodeConvert.Convert(ref value, column.type);
 				}
 				column.SetValue(uds.GetItem(row), value);
-				uds.data[row][col] = value;
+				uds.data[row, col] = value;
 			}
 		}
 	}

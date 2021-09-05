@@ -83,7 +83,7 @@ namespace NonStandard.GameUi.DataSheet {
 		public void SetFieldType(int index) {
 			Show.Log("SetFieldType "+index);
 			cHeader.columnSetting.data.uiBase = columnTypes[index].uiField;
-			uds.RefreshRowsAndColumns();
+			uds.RefreshRowAndColumnUi();
 		}
 		public void OnLabelEdit(string text) {
 			cHeader.columnSetting.data.label = text;
@@ -100,7 +100,7 @@ namespace NonStandard.GameUi.DataSheet {
 					return;
 				}
 			}
-			uds.RefreshRowsAndColumns();
+			uds.RefreshRowAndColumnUi();
 			HidePopup();
 		}
 		public void OnIndexEdit(string text) {
@@ -118,7 +118,7 @@ namespace NonStandard.GameUi.DataSheet {
 					return;
 				}
 			}
-			uds.RefreshRowsAndColumns();
+			uds.RefreshRowAndColumnUi();
 			HidePopup();
 		}
 		private GameObject lastErrorInput = null;

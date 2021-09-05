@@ -8,8 +8,10 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// model/view controllers are tricky because cache invalidation is hard.
+/// </summary>
 namespace NonStandard.GameUi.DataSheet {
-
 	public class UnityColumnData : ColumnData {
 		/// <summary>
 		/// prefab used for the column data elements
@@ -28,22 +30,9 @@ namespace NonStandard.GameUi.DataSheet {
 		/// </summary>
 		public bool alwaysLast;
 	}
-	//[
-	//["" "braille" null "nothing" (30)]
-	//["name" "label" (na¤) "collabel" (100) "nameless"]
-	//["speed" "txticon" (move.move.speed/5) "collabel" (30) 0.0]
-	//// skill from skill table
-	//["handicraft" "input" (data.handi¤) "collabel" (80) 0.0]
-	//// TODO add columns by creating new variables in data
-	//["+" "braille" (null) "addcol" (30)]
-	//]
-	/*
-{label:"", columnUi:"braille", valueScript:null, headerUi:nothing, widthOfColumn:30}
-{label:"name", columnUi:"label", valueScript:na¤, headerUi:collabel, widthOfColumn:100}
-{l¤:"speed", c¤:"txticon", v¤:(move.move.speed/5), h¤:collabel, w¤:30, d¤:0.0}
-{l¤:"handicraft", c¤:"input", v¤:(data.handicraft), h¤:collabel, w¤:80, d¤:0.0}
-{l¤:"+", c¤:"braille", v¤:null, h¤:addcol, w¤:30}
-	*/
+	/// <summary>
+	/// structure filled in by column setting script
+	/// </summary>
 	public class UnityDataSheetColumnInitStructure {
 		public string label;
 		/// <summary>
@@ -68,12 +57,12 @@ namespace NonStandard.GameUi.DataSheet {
 		public List<GameObject> dataRowsUi = new List<GameObject>();
 		public UiTypedEntryPrototype uiPrototypes;
 		protected RectTransform rt;
-		protected Tokenizer errLog = new Tokenizer();
+		protected TokenErrorlog errLog = new TokenErrorlog();
 
 		[TextArea(1, 10)]
 		public string columnSetup;
 
-		public int GetRowUiElement(GameObject rowObject) {
+		public int GetRowIndex(GameObject rowObject) {
 			return dataRowsUi.IndexOf(rowObject);
 		}
 
@@ -203,13 +192,9 @@ namespace NonStandard.GameUi.DataSheet {
 		RowObject CreateRow(RowData rowData, float yPosition = float.NaN) {
 			GameObject rowUi = Instantiate(prefab_dataRow.gameObject);
 			RowObject rObj = rowUi.GetComponent<RowObject>();
-			if (rObj == null) {
-				throw new Exception("RowUI prefab must have " + nameof(RowObject) + " component");
-			}
+			if (rObj == null) { throw new Exception("RowUI prefab must have " + nameof(RowObject) + " component"); }
 			rObj.obj = rowData.model;
-			if (rObj.obj == null) {
-				throw new Exception("something bad. where is the object that this row is for?");
-			}
+			if (rObj.obj == null) { throw new Exception("something bad. where is the object that this row is for?"); }
 			rowUi.SetActive(true);
 			UpdateRowData(rObj, rowData, yPosition);
 			return rObj;
@@ -219,14 +204,17 @@ namespace NonStandard.GameUi.DataSheet {
 			//StringBuilder sb = new StringBuilder();
 			Vector2 rowCursor = Vector2.zero;
 			RectTransform rect;
+			// remove all columns from the row (probably temporarily)
 			List<GameObject> unusedColumns = new List<GameObject>();
 			for(int i = 0; i < rObj.transform.childCount; ++i) {
 				GameObject fieldUi = rObj.transform.GetChild(i).gameObject;
-				if (fieldUi != null) {//!fieldUi.name.StartsWith(colS.data.uiBase.name)) {
-					fieldUi.transform.SetParent(null, false);
-					unusedColumns.Add(fieldUi);
-				}
+				if (fieldUi == null) { throw new Exception("a null child in the row? wat"); }
+				unusedColumns.Add(fieldUi);
 			}
+			while(rObj.transform.childCount > 0) {
+				rObj.transform.GetChild(rObj.transform.childCount-1).SetParent(null, false);
+			}
+
 			for (int c = 0; c < columns.Length; ++c) {
 				Udash.ColumnSetting colS = data.columnSettings[c];
 				GameObject fieldUi = null;
@@ -270,7 +258,7 @@ namespace NonStandard.GameUi.DataSheet {
 			rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, rowCursor.x);
 			rect.transform.SetParent(contentRectangle, false);
 			if (!float.IsNaN(yPosition)) {
-				rect.anchoredPosition = new Vector2(0, yPosition);
+				rect.anchoredPosition = new Vector2(0, -yPosition);
 			}
 			dataRowsUi.Add(rObj.gameObject);
 			return rObj.gameObject;
@@ -317,98 +305,131 @@ namespace NonStandard.GameUi.DataSheet {
 			// regenerate headers based on new column settings
 			GenerateHeaders();
 			// then once all the data and headers are in the right place, refresh the bulk of the UI to match
-			RefreshRowsAndColumns(); // TODO figure out why this isn't working
+			RefreshRowAndColumnUi();
 		}
-		public void RefreshRows() {
+		/// <summary>
+		/// uses a dictionary to quickly calculate UI elements for rows, and position them in the view
+		/// </summary>
+		public Dictionary<object, RowObject> RefreshRowUi() {
 			// map list elements to row UI
 			Dictionary<object, RowObject> srcToRowUiMap = new Dictionary<object, RowObject>();
-			for(int i = 0; i < contentRectangle.childCount; ++i) {
+			for (int i = 0; i < contentRectangle.childCount; ++i) {
 				RowObject rObj = contentRectangle.GetChild(i).GetComponent<RowObject>();
 				if (rObj == null) { continue; }
 				if (rObj.obj == null) {
 					throw new Exception("found a row (" + rObj.transform.HierarchyPath() + ") without source object at index "+i);
 				}
+				if (srcToRowUiMap.TryGetValue(rObj.obj, out RowObject uiElement)) {
+					throw new Exception("multiple row elements for row " + i + ": " + rObj.obj);
+				}
 				srcToRowUiMap[rObj.obj] = rObj;
+			}
+			List<RowObject> unused = new List<RowObject>();
+			// check to see if any of the UI rows are not being used by the datasheet (should be removed or replaced)
+			Dictionary<object, RowObject> unusedMapping = srcToRowUiMap.Copy();
+			for (int i = 0; i < data.rows.Count; ++i) {
+				RowData rd = data.rows[i];
+				if (unusedMapping.TryGetValue(rd.model, out RowObject found)) {
+					unusedMapping.Remove(rd.model);
+				}
+			}
+			foreach (KeyValuePair<object, RowObject> kvp in unusedMapping) {
+				unused.Add(kvp.Value);
+				srcToRowUiMap.Remove(kvp.Key);
 			}
 			Vector2 cursor = Vector2.zero;
 			// go through all of the row elements and put the row UI elements in the correct spot
 			for(int i = 0; i < data.rows.Count; ++i) {
 				RowData rd = data.rows[i];
-				if (!srcToRowUiMap.TryGetValue(rd.model, out RowObject uiElement)) {
-					throw new Exception("could not find "+rd.model+", call "+nameof(RefreshAll)+"?");
+				// if this row data is missing a UI element
+				if (!srcToRowUiMap.TryGetValue(rd.model, out RowObject rObj)) {
+					// use one of the unused elements if there is one
+					if (unused.Count > 0) {
+						rObj = unused[unused.Count - 1];
+						unused.RemoveAt(unused.Count - 1);
+						UpdateRowData(rObj, rd, -cursor.y);
+					} else {
+						// create he UI element, and put it into the content rectangle
+						rObj = CreateRow(data.rows[i], -cursor.y);
+					}
+					rObj.transform.SetParent(contentRectangle);
+					srcToRowUiMap[rObj.obj] = rObj;
 				}
-				uiElement.transform.SetSiblingIndex(i);
-				RectTransform rect = uiElement.GetComponent<RectTransform>();
+				rObj.transform.SetSiblingIndex(i);
+				RectTransform rect = rObj.GetComponent<RectTransform>();
 				rect.anchoredPosition = cursor;
 				cursor.y -= rect.rect.height;
 			}
+			if (contentRectangle.childCount > data.rows.Count || unused.Count > 0) {
+				// remove them in reverse order, should be slightly faster
+				for(int i = contentRectangle.childCount-1; i >= data.rows.Count; --i) {
+					RowObject rObj = contentRectangle.GetChild(i).GetComponent<RowObject>();
+					srcToRowUiMap.Remove(rObj.obj);
+					unused.Add(rObj);
+				}
+				Show.Log("deleting extra elements: " + unused.JoinToString(", ", go=> {
+					RowObject ro = go.GetComponent<RowObject>();
+					if (ro == null) return "<null>";
+					if (ro.obj == null) return "<null obj>";
+					return ro.obj.ToString();
+				}));
+				unused.ForEach(go => { go.transform.SetParent(null); Destroy(go); });
+			}
 			contentRectangle.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, -cursor.y);
+			return srcToRowUiMap;
 		}
 		public void SetSortState(int column, SortState sortState) {
-			RefreshRowsAndColumns();
+			RefreshRowAndColumnUi();
 			data.SetSortState(column, sortState);
-			RefreshRows();
+			RefreshRowUi();
 		}
 		public object GetItem(int index) { return data.rows[index].model; }
 		public object SetItem(int index, object dataModel) { return data.rows[index].model = dataModel; }
 		public int IndexOf(object dataModel) { return data.IndexOf(dataModel); }
 		public int IndexOf(Func<object, bool> predicate) { return data.IndexOf(predicate); }
-		public void RefreshAll() {
-			List<RowObject> unusedRows = new List<RowObject>();
-			// go through the spreadsheet UI. if it there is an element that is missing in the data, delete it.
-			for (int i = 0; i < contentRectangle.childCount; ++i) {
-				RowObject rObj = contentRectangle.GetChild(i).GetComponent<RowObject>();
-				if (rObj == null) { throw new Exception("non row element in the spreadsheet UI?"); }
-				int index = IndexOf(rObj.obj);
-				if (index < 0) {
-					rObj.transform.SetParent(null);
-					unusedRows.Add(rObj);
-				}
-				// don't sort here because it's not clear that all of the required elements are in UI
-			}
+		public void RefreshRowAndColumnUi() {
+			// put all rows in the correct order, and create missing rows if needed
+			Dictionary<object, RowObject> rowUi = RefreshRowUi();
 			// go through the spreadsheet data. if there is no ui element, create it
 			float y = 0;
 			for (int i = 0; i < data.rows.Count; ++i) {
 				RowData rd = data.rows[i];
 				RowObject rObj = null;
-				if (i < contentRectangle.childCount) {
+				//if (i < contentRectangle.childCount) {
 					rObj = contentRectangle.GetChild(i).GetComponent<RowObject>();
-					if (rObj.obj != rd.model) { rObj = null; }
-				}
-				if (rObj != null) continue;
-				bool uiExists = false;
-				for (int j = 0; j < contentRectangle.childCount; ++j) {
-					rObj = contentRectangle.GetChild(j).GetComponent<RowObject>();
-					if (rObj.obj == rd.model) { uiExists = true; break; }
-				}
-				bool columnsNeedChecking = true;
-				if (!uiExists) {
-					if (unusedRows.Count > 0) {
-						rObj = unusedRows[unusedRows.Count - 1];
-						rObj.transform.SetParent(contentRectangle);
-						unusedRows.RemoveAt(unusedRows.Count - 1);
-					} else {
-						rObj = CreateRow(data.rows[i], y);
-						columnsNeedChecking = false;
-					}
-				}
-				if (columnsNeedChecking) {
+				//	if (rObj.obj != rd.model) { rObj = null; }
+				//}
+				//if (rObj != null) continue;
+				//bool uiExists = false;
+				//for (int j = 0; j < contentRectangle.childCount; ++j) {
+				//	rObj = contentRectangle.GetChild(j).GetComponent<RowObject>();
+				//	if (rObj.obj == rd.model) { uiExists = true; break; }
+				//}
+				//bool columnsNeedChecking = true;
+				//if (!uiExists) {
+				//	if (unusedRows.Count > 0) {
+				//		rObj = unusedRows[unusedRows.Count - 1];
+				//		rObj.transform.SetParent(contentRectangle);
+				//		unusedRows.RemoveAt(unusedRows.Count - 1);
+				//	} else {
+				//		rObj = CreateRow(data.rows[i], y);
+				//		columnsNeedChecking = false;
+				//	}
+				//}
+				//if (columnsNeedChecking) {
 					// go through the columns and make sure the columns are correctly ordered
 					UpdateRowData(rObj, rd, y);
-				}
-				// sort the ui elements to match the data
-				rObj.transform.SetSiblingIndex(i);
+				//}
+				//// sort the ui elements to match the data
+				//rObj.transform.SetSiblingIndex(i);
 				y += rObj.GetComponent<RectTransform>().rect.height;
 			}
 		}
 		public void Sort() {
-			RefreshRowsAndColumns();
+			RefreshRowAndColumnUi();
 			if (data.Sort()) {
-				RefreshRows();
+				RefreshRowUi();
 			}
-		}
-		public void RefreshRowsAndColumns() {
-			RefreshAll();
 		}
 		public Udash.ColumnSetting GetColumn(int index) { return data.GetColumn(index); }
 
@@ -427,7 +448,7 @@ namespace NonStandard.GameUi.DataSheet {
 			data.AddColumn(column);
 			MakeSureColumnsMarkedLastAreLast();
 			GenerateHeaders();
-			RefreshAll();
+			RefreshRowAndColumnUi();
 			return column;
 		}
 

@@ -112,9 +112,14 @@ namespace NonStandard.Data {
 						result = defaultValue;
 					}
 				} else {
+					bool errorNeedsToBeNoisy = false;
+					if (errLog == null) { errLog = new TokenErrorlog(); errorNeedsToBeNoisy = true; }
 					result = fieldToken.Resolve(errLog, scope, true, true);
 					if (errLog.HasError()) {
 						result = defaultValue;
+						if (errorNeedsToBeNoisy) {
+							throw new Exception("token \'"+fieldToken.GetAsSmallText()+"\' resolve error: "+errLog.GetErrorString());
+						}
 					}
 				}
 				return FilterType(result);
@@ -194,11 +199,41 @@ namespace NonStandard.Data {
 
 		public DataSheet() { }
 
+		/// <param name="row"></param>
+		/// <param name="col"></param>
+		/// <param name="errLog">if null, an exception will be thrown if there is a problem parsing column data</param>
+		/// <returns></returns>
+		public object RefreshValue(int row, int col, TokenErrLog errLog = null) {
+			object value = columnSettings[col].GetValue(errLog, rows[row].model);
+			rows[row].columns[col] = value;
+			return value;
+		}
 		public object Get(int row, int col) { return rows[row].columns[col]; }
-		public void Set(int row, int col, object value) { rows[row].columns[col] = value; }
-
+		public void Set(int row, int col, object value) {
+			RowData rd = rows[row];
+			rd.columns[col] = value;
+			// TODO write to rd.model. if this column is not writable, mark this value as being out-of-sync
+		}
+		/// <summary>
+		/// value at the spreadsheet's given row/col
+		/// </summary>
 		public object this [int row, int col] { get => Get(row, col); set => Set(row, col, value); }
-		public object[] this [int row] { get => rows[row].columns; }
+		/// <summary>
+		/// value at the spreadsheet's given row/col
+		/// </summary>
+		public object this[Coord coord] { get => Get(coord.row, coord.col); set => Set(coord.row, coord.col, value); }
+		/// <summary>
+		/// the object being represented by the given row
+		/// </summary>
+		public object this [int row] { get => rows[row].model; 
+			set {
+				RowData rd = rows[row];
+				rd.model = value;
+				TokenErrorlog err = new TokenErrorlog();
+				AssignData(rd, err);
+				if (err.HasError()) { throw new Exception("tokenization error: "+err.GetErrorString()); }
+			}
+		}
 
 		public int IndexOf(object dataModel) { return rows.FindIndex(rd => rd.model == dataModel); }
 		public int IndexOf(Func<object, bool> predicate) {
@@ -233,40 +268,48 @@ namespace NonStandard.Data {
 			rows.InsertRange(index, newRows);
 		}
 		public void AddRange(IList<object> source, TokenErrLog errLog) { InsertRange(rows.Count, source, errLog); }
-		public RowData AddData(object elementForRow, TokenErrLog errLog) {
+		public RowData AddRow(object elementForRow, TokenErrLog errLog) {
 			RowData rd = GenerateRow(elementForRow, errLog);
 			rows.Add(rd);
 			return rd;
 		}
-		public object RefreshValue(int row, int col, TokenErrLog errLog) {
-			object value = columnSettings[col].GetValue(errLog, rows[row].model);
-			rows[row].columns[col] = value;
-			return value;
+		public RowData AddRow(object model) { return AddRow(model, null); }
+		public RowData InsertRow(int index, object model) {
+			RowData rd = GenerateRow(model, null);
+			rows.Insert(index, rd);
+			return rd;
 		}
-		public RowData GenerateRow(object source, TokenErrLog errLog) {
-			if(errLog == null) { errLog = new Tokenizer(); }
-			object[] result = new object[columnSettings.Count];
-
-			for (int i = 0; i < result.Length; ++i) {
-				//object value = columns[i].fieldToken.Resolve(errLog, source, true, true);
-				object value = columnSettings[i].GetValue(errLog, source);
-				if(value is CodeRules.DefaultString && columnSettings[i].defaultValue != null) {
-					value = columnSettings[i].defaultValue;// (float)0;
+		/// <param name="source"></param>
+		/// <param name="errLog">if null, an exception will be thrown if there is a problem parsing column data</param>
+		/// <returns></returns>
+		public RowData GenerateRow(object source, TokenErrLog errLog = null) {
+			RowData rd = new RowData(source, null);
+			AssignData(rd, errLog);
+			return rd;
+		}
+		/// <summary>
+		/// can't put this into <see cref="RowData"/> class because of Generics ambiguity
+		/// </summary>
+		/// <param name="rd"></param>
+		/// <param name="errLog">if null, an exception will be thrown if there is a problem parsing column data</param>
+		internal void AssignData(RowData rd, TokenErrLog errLog = null) {
+			if (rd.columns == null || rd.columns.Length != columnSettings.Count) {
+				rd.columns = new object[columnSettings.Count];
+			}
+			bool errNeedsToBeNoisy = false;
+			if (errLog == null) { errLog = new Tokenizer(); errNeedsToBeNoisy = true; }
+			for (int i = 0; i < columnSettings.Count; ++i) {
+				object value = columnSettings[i].GetValue(errLog, rd.model);
+				if (errNeedsToBeNoisy && errLog.HasError()) {
+					throw new Exception("error parsing "+columnSettings[i].fieldToken.GetAsSmallText()+":"+errLog.GetErrorString());
 				}
-				result[i] = value;
-				//if (fieldTokens[i].ToString() == "()") { Show.Log("oh hai "+result[i]); }
+				if (value is CodeRules.DefaultString && columnSettings[i].defaultValue != null) {
+					value = columnSettings[i].defaultValue;
+				}
+				rd.columns[i] = value;
 			}
-			return new RowData(source, result);
 		}
-
-		public RowData GetRowData(object model) {
-			for(int i = 0; i < rows.Count; ++i) {
-				if (rows[i].model == model) return rows[i];
-			}
-			return null;
-		}
-
-		public int DefaultSort(object a, object b) {
+		public static int DefaultSorter(object a, object b) {
 			if (a == b) { return 0; }
 			if (a == null && b != null) { return 1; }
 			if (a != null && b == null) { return -1; }
@@ -285,7 +328,7 @@ namespace NonStandard.Data {
 			return 0;
 		}
 
-		public int RowSort(RowData rowA, RowData rowB) {
+		public int RowSorter(RowData rowA, RowData rowB) {
 			for (int i = 0; i < columnSortOrder.Count; ++i) {
 				int index = columnSortOrder[i];
 				if (columnSettings[index].sortState == SortState.None) {
@@ -293,7 +336,7 @@ namespace NonStandard.Data {
 					continue;
 				}
 				Comparison<object> sort = columnSettings[index].sort;
-				if (sort == null) { sort = DefaultSort; }
+				if (sort == null) { sort = DefaultSorter; }
 				int comparison = sort.Invoke(rowA.columns[index], rowB.columns[index]);
 				//Show.Log(comparison+" compare " + rowA.columns[index]+" vs "+ rowB.columns[index]+"   " + rowA.columns[index].GetType() + " vs " + rowB.columns[index].GetType());
 				if (comparison == 0) { continue; }
@@ -307,7 +350,7 @@ namespace NonStandard.Data {
 			if (columnSortOrder == null || columnSortOrder.Count == 0) { return false; }
 			//Show.Log("SORTING "+columnSortOrder.JoinToString(", ",i=>i.ToString()+":"+columnSettings[i].sortState));
 			//StringBuilder sb = new StringBuilder(); sb.Append(rows.JoinToString(",", r => r.model.ToString()) + "\n");
-			rows.Sort(RowSort);
+			rows.Sort(RowSorter);
 			//sb.Append(rows.JoinToString(",", r => r.model.ToString()) + "\n"); Show.Log(sb);
 			return true;
 		}
@@ -315,37 +358,57 @@ namespace NonStandard.Data {
 		public void SetColumn(int index, ColumnSetting column) {
 			bool newColumn = index >= columnSettings.Count;
 			while (columnSettings.Count <= index) { columnSettings.Add(new ColumnSetting(this)); }
-			for(int r = 0; r < rows.Count; ++r) {
-				if (columnSettings.Count != rows[r].columns.Length) {
-					Array.Resize(ref rows[r].columns, columnSettings.Count);
-				}
-			}
 			if (!newColumn) {
 				Show.Log("TODO convert old column data to new column data");
 				//ColumnSetting oldColumn = columnSettings[index];
 			}
 			columnSettings[index] = column;
+			for (int r = 0; r < rows.Count; ++r) {
+				RowData rd = rows[r];
+				if (columnSettings.Count != rd.columns.Length) {
+					AssignData(rd);
+				} else {
+					RefreshValue(r, index);
+				}
+			}
 		}
 		public void AddColumn(ColumnSetting column) { SetColumn(columnSettings.Count, column); }
 		public ColumnSetting GetColumn(int index) { return columnSettings[index]; }
+		/// <summary>
+		/// removes the column by it's index, also removing each corresponding element from each row
+		/// </summary>
+		/// <param name="columnIndex"></param>
+		public void RemoveColumn(int columnIndex) {
+			if(columnIndex < 0 || columnIndex >= columnSettings.Count) {
+				throw new IndexOutOfRangeException(columnIndex+" OOB, should be [0, "+columnSettings.Count+")");
+			}
+			columnSettings.RemoveAt(columnIndex);
+			for (int r = 0; r < rows.Count; ++r) {
+				RowData rd = rows[r];
+				object[] newColumns = new object[columnSettings.Count];
+				for (int i = 0; i < columnIndex; ++i) { newColumns[i] = rd.columns[i]; }
+				for (int i = columnIndex; i < newColumns.Length; ++i) { newColumns[i] = rd.columns[i+1]; }
+			}
+		}
 
 		public void MoveColumn(int oldIndex, int newIndex) {
-			// change the index of the column in the header (data)
+			if (oldIndex == newIndex) return;
+			// change the index of the column in the header
 			ColumnSetting cs = columnSettings[oldIndex];
 			columnSettings.RemoveAt(oldIndex);
 			columnSettings.Insert(newIndex, cs);
 			// go through each data element and change that data
 			for (int r = 0; r < rows.Count; ++r) {
 				object[] cols = rows[r].columns;
-				object toMove = cols[oldIndex];
+				object valueToMove = cols[oldIndex];
 				if (newIndex < oldIndex) {
-					// shift elements forward (iterating backward), starting with the one just before oldIndex, until newIndex
-					for (int c = oldIndex; c > newIndex; --c) { cols[c] = c - 1; }
+					// shift elements forward (iterating backward), starting with the old index
+					for (int c = oldIndex; c > newIndex; --c) { cols[c] = cols[c - 1]; }
 				} else if (newIndex > oldIndex) {
 					// shift elements backward (iterating forward), starting with the old index
-					for (int c = oldIndex; c < newIndex; ++c) { cols[c] = c + 1; }
+					for (int c = oldIndex; c < newIndex; ++c) { cols[c] = cols[c + 1]; }
 				}
-				cols[newIndex] = toMove;
+				cols[newIndex] = valueToMove;
 			}
 			// and get columnSortOrder working correctly as well.
 			if (oldIndex < newIndex) {
