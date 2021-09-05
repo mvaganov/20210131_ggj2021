@@ -25,7 +25,7 @@ namespace NonStandard.GameUi.DataSheet {
 		public void ColumnEdit() {
 			editUi.SetActive(true);
 			editUi.transform.SetParent(transform, false);
-			Debug.Log("path is " + editUi.transform.HierarchyPath());
+			//Debug.Log("path is " + editUi.transform.HierarchyPath());
 			editUi.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
 			ColumnHeaderEditor chEditor = editUi.GetComponent<ColumnHeaderEditor>();
 			chEditor.SetColumnHeader(this, UDS(), Col());

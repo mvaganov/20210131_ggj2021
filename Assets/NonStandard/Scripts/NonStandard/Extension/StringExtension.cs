@@ -20,9 +20,9 @@ namespace NonStandard.Extension {
 		}
 
 		public static readonly string[] whitespace = new string[] { " ", "\t", "\n", "\r" };
-		public static int IndexOfFirst(this string str, string[] delimiter, out int firstDelimeter) {
+		public static int IndexOfFirst(this string str, string[] delimiter, out int firstDelimeter, int startIndex = 0) {
 			firstDelimeter = -1;
-			for(int i = 0; i < str.Length; ++i) {
+			for(int i = startIndex; i < str.Length; ++i) {
 				for(int j = 0; j < delimiter.Length; ++j) {
 					if (str.IsSubstringAt(delimiter[j], i)) {
 						firstDelimeter = j;
@@ -47,12 +47,12 @@ namespace NonStandard.Extension {
 		public static string SubstringBeforeWhitespace(this string str) {
 			return SubstringBeforeFirst(str, whitespace);
 		}
-		public static string SubstringBeforeFirst(this string str, string delimiter) {
-			return SubstringBeforeFirst(str, new string[] { delimiter });
+		public static string SubstringBeforeFirst(this string str, string delimiter, int startIndex = 0) {
+			return SubstringBeforeFirst(str, new string[] { delimiter }, startIndex);
 		}
-		public static string SubstringBeforeFirst(this string str, string[] delimiter) {
+		public static string SubstringBeforeFirst(this string str, string[] delimiter, int startIndex = 0) {
 			if(delimiter == null) { delimiter = whitespace; }
-			int index = IndexOfFirst(str, delimiter, out int which);
+			int index = IndexOfFirst(str, delimiter, out int which, startIndex);
 			if(index >= 0) { return str.Substring(0, index); }
 			return null;
 		}

@@ -15,6 +15,16 @@ namespace NonStandard.Ui {
 			TMP_Dropdown dd = GetComponent<TMP_Dropdown>();
 			PopulateDropdown(dd, options, this, HandleDropdown);
 		}
+		public static void PopulateDropdown(TMP_Dropdown dd, IList<string> options, object ownerOfDropdownHandler, Action<int> action) {
+			dd.ClearOptions();
+			List<TMP_Dropdown.OptionData> opts = dd.options;
+			for (int i = 0; i < options.Count; ++i) {
+				if (i >= opts.Count) { opts.Add(new TMP_Dropdown.OptionData(options[i], null)); }
+				if (opts[i].text != options[i]) { opts[i].text = options[i]; }
+				if (opts[i].image != null) { opts[i].image = null; }
+			}
+			BindDropdownAction(dd, ownerOfDropdownHandler, action);
+		}
 		public static void PopulateDropdown(TMP_Dropdown dd, IList<ModalConfirmation.Entry> options, object ownerOfDropdownHandler, Action<int> action) {
 			dd.ClearOptions();
 			List<TMP_Dropdown.OptionData> opts = dd.options;
@@ -23,6 +33,10 @@ namespace NonStandard.Ui {
 				if (opts[i].text != options[i].text) { opts[i].text = options[i].text; }
 				if (opts[i].image != options[i].image) { opts[i].image = options[i].image; }
 			}
+			BindDropdownAction(dd, ownerOfDropdownHandler, action);
+		}
+		public static void BindDropdownAction(TMP_Dropdown dd, object ownerOfDropdownHandler, Action<int> action) {
+			dd.ClearOptions();
 			//Show.Log("set " + options.Count + " opt : " + dd + "(" + dd.options.Count + ")\n" + options.Stringify(pretty: true));
 #if UNITY_EDITOR
 			UnityEngine.Object uObj = ownerOfDropdownHandler as UnityEngine.Object;

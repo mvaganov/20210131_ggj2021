@@ -106,7 +106,7 @@ namespace NonStandard.GameUi.DataSheet {
 			}
 		}
 
-		void GenerateHeaders() {
+		public void RefreshHeaders() {
 			if (headerRectangle == null) return;
 			Vector2 cursor = Vector2.zero;
 			// put old headers aside. they may be reused.
@@ -123,19 +123,19 @@ namespace NonStandard.GameUi.DataSheet {
 				Udash.ColumnSetting colS = data.columnSettings[i];
 				GameObject header = null;
 				while (i >= headers.Count) { headers.Add(null); }
+				string headerObj = colS.data.headerBase.name;
 				// check if the header we need is in the old header list
-				for(int h = 0; h < unusedHeaders.Count; ++h) {
+				for (int h = 0; h < unusedHeaders.Count; ++h) {
 					GameObject hdr = unusedHeaders[h];
-					if (hdr.name.StartsWith(colS.data.headerBase.name) && UiText.GetText(hdr) == colS.data.label) {
+					if (hdr.name.StartsWith(headerObj) && UiText.GetText(hdr) == colS.data.label) {
 						header = hdr;
 						unusedHeaders.RemoveAt(h);
-						//Debug.Log("recycling "+hdr.name);
 						break;
 					}
 				}
 				if (header == null) {
 					header = Instantiate(colS.data.headerBase);
-					header.name = header.name.Replace("Clone", colS.data.label);
+					header.name = header.name.SubstringBeforeFirst("(", headerObj.Length) + "(" + colS.data.label + ")";
 					UiText.SetText(header, colS.data.label);
 				}
 				ColumnHeader ch = header.GetComponent<ColumnHeader>();
@@ -163,12 +163,22 @@ namespace NonStandard.GameUi.DataSheet {
 			rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, cursor.x);
 		}
 
+		internal int GetMaximumUserColumn() {
+			int max = data.columnSettings.Count;
+			int countLastOnes = 0;
+			for (int i = data.columnSettings.Count - 1; i >= 0; --i) {
+				if (data.columnSettings[i].data.alwaysLast) { ++countLastOnes; }
+			}
+			max -= countLastOnes;
+			return max;
+		}
+
 		private void Start() {
 			if (uiPrototypes == null) {
 				uiPrototypes = Global.GetComponent<UiTypedEntryPrototype>();
 			}
 			Init();
-			GenerateHeaders();
+			RefreshHeaders();
 			Proc.Enqueue(() => {
 				NpcCreation npcs = Global.GetComponent<NpcCreation>();
 				CharacterProxy charMove = Global.GetComponent<CharacterProxy>();
@@ -291,9 +301,10 @@ namespace NonStandard.GameUi.DataSheet {
 			}
 		}
 		public void ResizeColumnWidth(int column, float oldWidth, float newWidth) {
-			Show.Log("TODO resize width of column "+column+" from "+oldWidth+" to "+newWidth);
-			// go through the header, change the width of the item in question, and push forward every entry after it
-			// do the same for each row.
+			//Show.Log("TODO resize width of column "+column+" from "+oldWidth+" to "+newWidth);
+			data.columnSettings[column].data.width = newWidth;
+			RefreshHeaders();
+			RefreshRowAndColumnUi();
 		}
 		public void MoveColumn(int oldIndex, int newIndex) {
 			// need to re-arrange headers in data
@@ -303,7 +314,7 @@ namespace NonStandard.GameUi.DataSheet {
 			headers.RemoveAt(oldIndex);
 			headers.Insert(newIndex, go);
 			// regenerate headers based on new column settings
-			GenerateHeaders();
+			RefreshHeaders();
 			// then once all the data and headers are in the right place, refresh the bulk of the UI to match
 			RefreshRowAndColumnUi();
 		}
@@ -447,7 +458,7 @@ namespace NonStandard.GameUi.DataSheet {
 			};
 			data.AddColumn(column);
 			MakeSureColumnsMarkedLastAreLast();
-			GenerateHeaders();
+			RefreshHeaders();
 			RefreshRowAndColumnUi();
 			return column;
 		}

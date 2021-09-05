@@ -72,10 +72,9 @@ namespace NonStandard.GameUi.DataSheet {
 					currentIndex = i;
 				}
 			}
-			Show.Log(currentIndex+" "+ cHeader.columnSetting.data.uiBase.name);
+			//Show.Log(currentIndex+" "+ cHeader.columnSetting.data.uiBase.name);
 			DropDownEvent.PopulateDropdown(fieldType, entries, this, SetFieldType);
 			if (currentIndex >= 0) {
-				//fieldType.itemText.text = entries[currentIndex].text;
 				fieldType.captionText.text = entries[currentIndex].text;
 				fieldType.SetValueWithoutNotify(currentIndex);
 			}
@@ -93,14 +92,12 @@ namespace NonStandard.GameUi.DataSheet {
 			float oldWidth = cHeader.columnSetting.data.width;
 			if (float.TryParse(text, out float newWidth)) {
 				if (newWidth > 0 && newWidth < 2048) {
-					cHeader.columnSetting.data.width = newWidth;
 					uds.ResizeColumnWidth(column, oldWidth, newWidth);
 				} else {
 					SetErrorPopup("invalid width: "+newWidth+". Requirement: 0 < value < 2048", true, columnWidth.gameObject);
 					return;
 				}
 			}
-			uds.RefreshRowAndColumnUi();
 			HidePopup();
 		}
 		public void OnIndexEdit(string text) {
@@ -109,16 +106,16 @@ namespace NonStandard.GameUi.DataSheet {
 				SetErrorPopup("WOAH PROBLEM! column " + column + " is not the same as childIndex " + oldIndex, true, columnIndex.gameObject);
 				return;
 			}
+			int max = uds.GetMaximumUserColumn();
 			if (int.TryParse(text, out int newIndex)) {
-				if (newIndex > 0 && newIndex < cHeader.transform.parent.childCount) {
+				if (newIndex > 0 && newIndex < max) {
 					uds.MoveColumn(oldIndex, newIndex);
 					column = newIndex;
 				} else {
-					SetErrorPopup("invalid index: "+newIndex+". Requirement: 0 < index < "+ cHeader.transform.parent.childCount, true, columnIndex.gameObject);
+					SetErrorPopup("invalid index: " + newIndex + ". Requirement: 0 < index < " + max, true, columnIndex.gameObject);
 					return;
 				}
 			}
-			uds.RefreshRowAndColumnUi();
 			HidePopup();
 		}
 		private GameObject lastErrorInput = null;
