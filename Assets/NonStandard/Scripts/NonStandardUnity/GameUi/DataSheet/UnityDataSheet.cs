@@ -109,6 +109,7 @@ namespace NonStandard.GameUi.DataSheet {
 				}
 				++index;
 			}
+			RefreshHeaders();
 		}
 
 		public void RefreshHeaders() {
@@ -181,7 +182,6 @@ namespace NonStandard.GameUi.DataSheet {
 				uiPrototypes = Global.GetComponent<UiTypedEntryPrototype>();
 			}
 			Init();
-			RefreshHeaders();
 			Proc.Enqueue(() => {
 				NpcCreation npcs = Global.GetComponent<NpcCreation>();
 				CharacterProxy charMove = Global.GetComponent<CharacterProxy>();
@@ -199,8 +199,7 @@ namespace NonStandard.GameUi.DataSheet {
 		public void Load(List<object> source) {
 			//list = source;
 			data.InitData(source, errLog);
-			//GenerateDataRows();
-			RefreshRowAndColumnUi();
+			Refresh();
 		}
 
 		RowObject CreateRow(RowData rowData, float yPosition = float.NaN) {
@@ -285,21 +284,21 @@ namespace NonStandard.GameUi.DataSheet {
 				}
 			}
 		}
+		public void Refresh() {
+			RefreshHeaders();
+			RefreshRowAndColumnUi();
+		}
 		public void ResizeColumnWidth(int column, float oldWidth, float newWidth) {
 			//Show.Log("TODO resize width of column "+column+" from "+oldWidth+" to "+newWidth);
 			data.columnSettings[column].data.width = newWidth;
-			RefreshHeaders();
-			RefreshRowAndColumnUi();
+			Refresh();
 		}
 		public void MoveColumn(int oldIndex, int newIndex) {
 			// need to re-arrange headers in data
 			data.MoveColumn(oldIndex, newIndex);
 			// change the index of the column in the header (UI)
 			headerRectangle.GetChild(oldIndex).SetSiblingIndex(newIndex);
-			// regenerate headers based on new column settings
-			RefreshHeaders(); // does this need to happen?
-			// then once all the data and headers are in the right place, refresh the bulk of the UI to match
-			RefreshRowAndColumnUi();
+			Refresh();
 		}
 		/// <summary>
 		/// uses a dictionary to quickly calculate UI elements for rows, and position them in the view
@@ -412,8 +411,7 @@ namespace NonStandard.GameUi.DataSheet {
 			};
 			data.AddColumn(column);
 			MakeSureColumnsMarkedLastAreLast();
-			RefreshHeaders();
-			RefreshRowAndColumnUi();
+			Refresh();
 			return column;
 		}
 

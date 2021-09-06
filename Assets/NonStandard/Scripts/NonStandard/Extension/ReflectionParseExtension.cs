@@ -124,7 +124,7 @@ namespace NonStandard.Extension {
 				}
 				if (conversionWorks) {
 					pi.SetValue(scope, value);
-					Show.Log("set " + pi.Name + " to " + value);
+					//Show.Log("set " + pi.Name + " to " + value);
 				}
 				return conversionWorks;
 			case string s: return TrySetValue_Dictionary(scope, ref path, value);

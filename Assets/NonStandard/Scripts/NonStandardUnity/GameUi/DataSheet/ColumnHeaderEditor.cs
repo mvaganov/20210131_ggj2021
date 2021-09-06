@@ -122,20 +122,16 @@ namespace NonStandard.GameUi.DataSheet {
 			}
 			popup.Hide();
 		}
-		public void OnScriptValueEdit(string text) {
+		public void OnScriptValueEdit(string fieldScript) {
 			Tokenizer tokenizer = new Tokenizer();
-			tokenizer.Tokenize(text);
+			tokenizer.Tokenize(fieldScript);
 			GameObject go = scriptValue.gameObject;
 			// parse errors
 			if (tokenizer.HasError()) { popup.Set("err", go, tokenizer.GetErrorString()); return; }
 			// just one token
 			if (tokenizer.tokens.Count > 1) { popup.Set("err", go, "too many tokens: should only be one value"); return; }
-			// try to set the field
-			object value = cHeader.columnSetting.SetFieldToken(tokenizer.tokens[0], tokenizer);
-			// valid variable path
-			if (tokenizer.HasError()) { popup.Set("err", go, tokenizer.GetErrorString()); return; }
-			// update the expected edit type
-			SetExpectedEditType(value);
+			// try to set the field based on field script
+			if(!ProcessFieldScript(tokenizer)) return;
 			// refresh column values
 			uds.RefreshColumnText(column, tokenizer);
 			// failed to set values
@@ -143,8 +139,20 @@ namespace NonStandard.GameUi.DataSheet {
 			// success!
 			popup.Hide();
 		}
+		private bool ProcessFieldScript(Tokenizer tokenizer) {
+			if (tokenizer.tokens.Count == 0) {
+				expectedValueType = null;
+				cHeader.columnSetting.editPath = null;
+				return false;
+			}
+			object value = cHeader.columnSetting.SetFieldToken(tokenizer.tokens[0], tokenizer);
+			// update the expected edit type
+			SetExpectedEditType(value);
+			// valid variable path
+			if (tokenizer.HasError()) { popup.Set("err", scriptValue.gameObject, tokenizer.GetErrorString()); return false; }
+			return true;
+		}
 		public void SetExpectedEditType(object sampleValue) {
-			List<object> editPath = cHeader.columnSetting.editPath;
 			Type sampleValueType = GetEditType();
 			if (sampleValueType == null) {
 				// set to read only

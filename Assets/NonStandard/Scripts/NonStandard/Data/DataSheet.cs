@@ -90,21 +90,20 @@ namespace NonStandard.Data {
 			public object SetFieldToken(Token value, TokenErrLog errLog) {
 				_fieldToken = value;
 				RefreshEditPath();
-				if (editPath != null) {
-					if (dataSheet.rows.Count > 0) {
-						object scope = dataSheet.GetItem(0);
-						CompileEditPath(scope, errLog);
-						if (!errLog.HasError()) {
-							ReflectionParseExtension.TryGetValueCompiledPath(scope, editPath, out object result);
-							//Show.Log(_fieldToken.GetAsSmallText() + " is : " + result + (result != null ? (" (" + result.GetType() + ")") : "(null)"));
-							return result;
-						}
-					}
+				if (editPath != null && dataSheet.rows.Count > 0) {
+					return RefreshStrictlyTypedVariablePathBasedOnDataFromSpreadsheet(errLog);
 				}
 				//else { Show.Log(_fieldToken.GetAsSmallText() + " is read only"); }
 				return null;
 			}
-
+			object RefreshStrictlyTypedVariablePathBasedOnDataFromSpreadsheet(TokenErrLog errLog) {
+				object scope = dataSheet.GetItem(0); // TODO if GetItem(0) failed, try the other items?
+				CompileEditPath(scope, errLog);
+				if (errLog != null && errLog.HasError()) { return null; }
+				ReflectionParseExtension.TryGetValueCompiledPath(scope, editPath, out object result);
+				//Show.Log(_fieldToken.GetAsSmallText() + " is : " + result + (result != null ? (" (" + result.GetType() + ")") : "(null)"));
+				return result;
+			}
 			object CompileEditPath(object scope, TokenErrLog errLog = null) {
 				if (editPath == null) {
 					errLog.AddError(-1, fieldToken.GetAsSmallText() + " is not editable");
@@ -169,6 +168,10 @@ namespace NonStandard.Data {
 				}
 				value = FilterType(value);
 				ReflectionParseExtension.TrySetValueCompiledPath(scope, editPath, value, errLog);
+
+				// TODO if this variable path exists in another column, refresh that column as well.
+				// TODO refresh columns that depend on data from this column.
+
 				//ReflectionParseExtension.TryGetValueCompiledPath(scope, editPath, out object result);
 				//Show.Log("set " + scope + "." + _fieldToken.GetAsSmallText() + " to " + result);
 				return true;
@@ -186,6 +189,9 @@ namespace NonStandard.Data {
 				if (!isValidEditableField) {
 					canEdit = false;
 					needsToLoadEditPath = false;
+
+					// TODO go through all existing columns and check if they edit variables that this field depends on
+
 					return;
 				}
 				canEdit = true;
@@ -199,6 +205,8 @@ namespace NonStandard.Data {
 					//sb.Append(allTokens[i].GetAsSmallText()+"\n");
 				}
 				//Show.Log(sb);
+
+				// TODO remember the raw editPath (it it can be checked by other columns that might depend on this). check if any existing columns depend on this value. check out how BurlyHashTable does this.		
 			}
 			/// <summary>
 			/// asserts that the given token only contains the given valid parser rules
