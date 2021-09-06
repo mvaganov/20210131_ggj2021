@@ -40,7 +40,7 @@ namespace NonStandard.GameUi.DataSheet {
 				}
 				if (validAssignment) { validAssignment = column.SetValue(uds.GetItem(row), value); }
 				if (validAssignment) {
-					uds.data[row, col] = value;
+					uds.data.Set(row, col, value);
 					if (errorMessage == uds.popup.Message) { uds.popup.Hide(); }
 				}
 			}

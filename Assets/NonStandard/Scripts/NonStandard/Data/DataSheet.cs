@@ -248,7 +248,6 @@ namespace NonStandard.Data {
 		public void Set(int row, int col, object value) {
 			RowData rd = rows[row];
 			rd.columns[col] = value;
-			// TODO write to rd.model. if this column is not writable, mark this value as being out-of-sync
 		}
 		/// <summary>
 		/// value at the spreadsheet's given row/col
@@ -350,13 +349,8 @@ namespace NonStandard.Data {
 			if (a == null && b != null) { return 1; }
 			if (a != null && b == null) { return -1; }
 			Type ta = a.GetType(), tb = b.GetType();
-			if ((ta.IsAssignableFrom(typeof(double)) || ta.IsAssignableFrom(typeof(long)))
-			&&  (tb.IsAssignableFrom(typeof(double)) || tb.IsAssignableFrom(typeof(long)))) {
-				ta = tb = typeof(double);
-				CodeConvert.Convert(ref a, ta);
-				CodeConvert.Convert(ref b, tb);
-				//Show.Log(a + "vs" + b);
-			}
+			if (CodeConvert.IsNumeric(ta)) { CodeConvert.Convert(ref a, ta = typeof(double)); }
+			if (CodeConvert.IsNumeric(tb)) { CodeConvert.Convert(ref b, tb = typeof(double)); }
 			if (ta == tb) {
 				if (ta == typeof(double)) { return Comparer<double>.Default.Compare((double)a, (double)b); }
 				if (ta == typeof(string)) { return StringComparer.Ordinal.Compare(a, b); }

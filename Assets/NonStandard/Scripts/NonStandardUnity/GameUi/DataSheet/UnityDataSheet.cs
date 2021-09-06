@@ -283,7 +283,6 @@ namespace NonStandard.GameUi.DataSheet {
 				} else {
 					UiText.SetText(fieldUi, "");
 				}
-
 			}
 		}
 		public void ResizeColumnWidth(int column, float oldWidth, float newWidth) {
