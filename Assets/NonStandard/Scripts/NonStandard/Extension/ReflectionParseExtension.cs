@@ -104,20 +104,29 @@ namespace NonStandard.Extension {
 		/// <param name="value"></param>
 		/// <returns></returns>
 		public static bool TrySetValueCompiled(object scope, object path, object value) {
+			bool conversionWorks = true;
 			switch (path) {
 			case FieldInfo fi:
 				if (value != null && !fi.FieldType.IsAssignableFrom(value.GetType())) {
-					CodeConvert.Convert(ref value, fi.FieldType);
+					conversionWorks = CodeConvert.Convert(ref value, fi.FieldType);
 				}
-				fi.SetValue(scope, value);
-				return true;
+				if (conversionWorks) {
+					//object oldValue = fi.GetValue(scope); Show.Log("old value is " + oldValue);
+					fi.SetValue(scope, value);
+					//Show.Log("set "+fi.Name+" to "+value);
+					//object newValue = fi.GetValue(scope); Show.Log("new value is " + newValue);
+				}
+				return conversionWorks;
 			case PropertyInfo pi:
 				if (!pi.CanWrite) return false;
 				if (value != null && !pi.PropertyType.IsAssignableFrom(value.GetType())) {
-					CodeConvert.Convert(ref value, pi.PropertyType);
+					conversionWorks = CodeConvert.Convert(ref value, pi.PropertyType);
 				}
-				pi.SetValue(scope, value);
-				return true;
+				if (conversionWorks) {
+					pi.SetValue(scope, value);
+					Show.Log("set " + pi.Name + " to " + value);
+				}
+				return conversionWorks;
 			case string s: return TrySetValue_Dictionary(scope, ref path, value);
 			}
 			return false;

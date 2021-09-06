@@ -126,10 +126,44 @@ namespace NonStandard.Data {
 		/// </summary>
 		/// <param name="value"></param>
 		/// <param name="typeToConvertTo"></param>
-		public static void Convert(ref object value, Type typeToConvertTo) {
+		public static bool Convert(ref object value, Type typeToConvertTo) {
 			if (!TryConvert(ref value, typeToConvertTo)) {
-				throw new FormatException("could not convert \"" + value + "\" to type " + typeToConvertTo);
+				//throw new FormatException("could not convert \"" + value + "\" to type " + typeToConvertTo);
+				return false;
 			}
+			return true;
+		}
+		public static bool IsIntegral(Type t) {
+			switch (Type.GetTypeCode(t)) {
+			case TypeCode.Boolean:
+			case TypeCode.SByte:
+			case TypeCode.Byte:
+			case TypeCode.Char:
+			case TypeCode.Int16:
+			case TypeCode.UInt16:
+			case TypeCode.Int32:
+			case TypeCode.UInt32:
+			case TypeCode.Int64:
+			case TypeCode.UInt64:
+				return true;
+			}
+			return false;
+		}
+		public static bool IsNumeric(Type t) {
+			switch (Type.GetTypeCode(t)) {
+			case TypeCode.SByte:
+			case TypeCode.Byte:
+			case TypeCode.Int16:
+			case TypeCode.UInt16:
+			case TypeCode.Int32:
+			case TypeCode.UInt32:
+			case TypeCode.Single:
+			case TypeCode.Int64:
+			case TypeCode.UInt64:
+			case TypeCode.Double:
+				return true;
+			}
+			return false;
 		}
 		public static bool TryConvert(ref object value, Type typeToGet) {
 			if (value != null && value.GetType() == typeToGet) return true;

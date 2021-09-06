@@ -53,17 +53,22 @@ namespace NonStandard.GameUi.DataSheet {
 		public RectTransform contentRectangle;
 		public GameObject prefab_dataRow;
 		public Udash data = new Udash();
-		public List<GameObject> headers = new List<GameObject>();
-		public List<GameObject> dataRowsUi = new List<GameObject>();
 		public UiTypedEntryPrototype uiPrototypes;
 		protected RectTransform rt;
-		internal TokenErrorlog errLog = new TokenErrorlog();
-
+		internal TokenErrorLog errLog = new TokenErrorLog();
+		public UiHoverPopup popup;
 		[TextArea(1, 10)]
 		public string columnSetup;
 
+		public int Count => data.rows.Count;
+
 		public int GetRowIndex(GameObject rowObject) {
-			return dataRowsUi.IndexOf(rowObject);
+			for(int i = 0; i < contentRectangle.childCount; ++i) {
+				if (contentRectangle.GetChild(i).gameObject == rowObject) {
+					return i;
+				}
+			}
+			return -1;
 		}
 
 		private void Awake() {
@@ -111,18 +116,17 @@ namespace NonStandard.GameUi.DataSheet {
 			Vector2 cursor = Vector2.zero;
 			// put old headers aside. they may be reused.
 			List<GameObject> unusedHeaders = new List<GameObject>();
-			for (int i = 0; i < headers.Count; ++i) {
-				GameObject header = headers[i];
-				if (header != null) {
-					header.transform.SetParent(null, false);
-					unusedHeaders.Add(header);
-				}
+			for (int i = 0; i < headerRectangle.childCount; ++i) {
+				GameObject header = headerRectangle.GetChild(i).gameObject;
+				if (header != null) { unusedHeaders.Add(header); }
 			}
-			headers.Clear();
+			while(headerRectangle.childCount > 0) {
+				Transform t = headerRectangle.GetChild(headerRectangle.childCount-1);
+				t.SetParent(null, false);
+			}
 			for (int i = 0; i < data.columnSettings.Count; ++i) {
 				Udash.ColumnSetting colS = data.columnSettings[i];
 				GameObject header = null;
-				while (i >= headers.Count) { headers.Add(null); }
 				string headerObj = colS.data.headerBase.name;
 				// check if the header we need is in the old header list
 				for (int h = 0; h < unusedHeaders.Count; ++h) {
@@ -143,7 +147,6 @@ namespace NonStandard.GameUi.DataSheet {
 				header.SetActive(true);
 				header.transform.SetParent(headerRectangle, false);
 				header.transform.SetSiblingIndex(i);
-				headers[i] = header;
 				RectTransform rect = header.GetComponent<RectTransform>();
 				rect.anchoredPosition = cursor;
 				float w = rect.sizeDelta.x;
@@ -196,7 +199,8 @@ namespace NonStandard.GameUi.DataSheet {
 		public void Load(List<object> source) {
 			//list = source;
 			data.InitData(source, errLog);
-			GenerateDataRows();
+			//GenerateDataRows();
+			RefreshRowAndColumnUi();
 		}
 
 		RowObject CreateRow(RowData rowData, float yPosition = float.NaN) {
@@ -211,7 +215,6 @@ namespace NonStandard.GameUi.DataSheet {
 		}
 		public GameObject UpdateRowData(RowObject rObj, RowData rowData, float yPosition = float.NaN) {
 			object[] columns = rowData.columns;
-			//StringBuilder sb = new StringBuilder();
 			Vector2 rowCursor = Vector2.zero;
 			RectTransform rect;
 			// remove all columns from the row (probably temporarily)
@@ -233,7 +236,6 @@ namespace NonStandard.GameUi.DataSheet {
 					if (unusedColumns[i].name.StartsWith(colS.data.uiBase.name)) {
 						fieldUi = unusedColumns[i];
 						unusedColumns.RemoveAt(i);
-						//Debug.Log("recycling "+ unusedColumns[i].name);
 						break;
 					}
 				}
@@ -247,49 +249,33 @@ namespace NonStandard.GameUi.DataSheet {
 				object value = columns[c];
 				if (value != null) {
 					UiText.SetText(fieldUi, value.ToString());
-					//sb.Append(value.ToString() + ", ");
 				} else {
 					UiText.SetText(fieldUi, "");
 				}
 				rect = fieldUi.GetComponent<RectTransform>();
 				rect.anchoredPosition = rowCursor;
-				float w = rect.sizeDelta.x;// colS.data.width > 0 ? colS.data.width : rect.sizeDelta.x;
+				float w = rect.sizeDelta.x;
 				if (colS.data.width > 0) {
 					w = colS.data.width;
-					//Show.Log(colS.data.label+" width should be "+w);
 					rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, w);
 				}
 				rowCursor.x += w * rt.localScale.x;
 			}
 			for(int i = 0; i < unusedColumns.Count; ++i) { Destroy(unusedColumns[i]); }
 			unusedColumns.Clear();
-			//Show.Log(sb);
 			rect = rObj.GetComponent<RectTransform>();
 			rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, rowCursor.x);
 			rect.transform.SetParent(contentRectangle, false);
 			if (!float.IsNaN(yPosition)) {
 				rect.anchoredPosition = new Vector2(0, -yPosition);
 			}
-			dataRowsUi.Add(rObj.gameObject);
 			return rObj.gameObject;
 		}
 
-		void GenerateDataRows() {
-			dataRowsUi.ForEach(go => { go.transform.SetParent(null); Destroy(go); });
-			dataRowsUi.Clear();
-			Vector2 cursor = Vector2.zero;
-			for (int r = 0; r < data.rows.Count; ++r) {
-				GameObject rowUi = CreateRow(data.rows[r]).gameObject;
-				RectTransform rect = rowUi.GetComponent<RectTransform>();
-				rect.anchoredPosition = cursor;
-				cursor.y -= rect.rect.height;
-			}
-			contentRectangle.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, -cursor.y);
-		}
 		public void RefreshColumnText(int column, TokenErrLog errLog) {
-			for(int i = 0; i < dataRowsUi.Count; ++i) {
-				GameObject fieldUi = dataRowsUi[i].transform.GetChild(column).gameObject;
-				object value = data.RefreshValue(i, column, errLog);
+			for(int row = 0; row < contentRectangle.childCount; ++row) {
+				GameObject fieldUi = contentRectangle.GetChild(row).GetChild(column).gameObject;
+				object value = data.RefreshValue(row, column, errLog);
 				if (errLog.HasError()) return;
 				if (value != null) {
 					UiText.SetText(fieldUi, value.ToString());
@@ -310,11 +296,9 @@ namespace NonStandard.GameUi.DataSheet {
 			// need to re-arrange headers in data
 			data.MoveColumn(oldIndex, newIndex);
 			// change the index of the column in the header (UI)
-			GameObject go = headers[oldIndex];
-			headers.RemoveAt(oldIndex);
-			headers.Insert(newIndex, go);
+			headerRectangle.GetChild(oldIndex).SetSiblingIndex(newIndex);
 			// regenerate headers based on new column settings
-			RefreshHeaders();
+			RefreshHeaders(); // does this need to happen?
 			// then once all the data and headers are in the right place, refresh the bulk of the UI to match
 			RefreshRowAndColumnUi();
 		}
@@ -424,8 +408,8 @@ namespace NonStandard.GameUi.DataSheet {
 					headerBase = uiPrototypes.GetElement("collabel"),
 					width = -1,
 				},
-				type = typeof(double),
-				defaultValue = (double)0
+				type = typeof(string),
+				defaultValue = ""
 			};
 			data.AddColumn(column);
 			MakeSureColumnsMarkedLastAreLast();

@@ -1,6 +1,7 @@
 ﻿using NonStandard.Utility.UnityEditor;
 using UnityEngine;
 using NonStandard.Data;
+using NonStandard.Data.Parse;
 
 namespace NonStandard.GameUi.DataSheet {
 	public class ColumnInputField : MonoBehaviour {
@@ -13,6 +14,7 @@ namespace NonStandard.GameUi.DataSheet {
 			UnityDataSheet uds = GetComponentInParent<UnityDataSheet>();
 			uds?.Sort();
 		}
+		string errorMessage;
 		public void AssignFromText(string text) {
 			//TMPro.TMP_InputField input = GetComponent<TMPro.TMP_InputField>();
 			//Show.Log("assign "+text+" instead of "+input.text);
@@ -27,11 +29,20 @@ namespace NonStandard.GameUi.DataSheet {
 			Udash.ColumnSetting column = uds.GetColumn(col);
 			if (column.canEdit) {
 				object value = text;
+				bool validAssignment = true;
 				if (column.type != null) {
-					CodeConvert.Convert(ref value, column.type);
+					if(!CodeConvert.Convert(ref value, column.type)) {
+						errorMessage = "could not assign \"" + text + "\" to " + column.type;
+						uds.errLog.AddError(-1, errorMessage);
+						validAssignment = false;
+						uds.popup.Set("err", gameObject, errorMessage);
+					}
 				}
-				column.SetValue(uds.GetItem(row), value);
-				uds.data[row, col] = value;
+				if (validAssignment) { validAssignment = column.SetValue(uds.GetItem(row), value); }
+				if (validAssignment) {
+					uds.data[row, col] = value;
+					if (errorMessage == uds.popup.Message) { uds.popup.Hide(); }
+				}
 			}
 		}
 	}

@@ -5,6 +5,8 @@ using NonStandard.Data.Parse;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System;
+using System.Reflection;
+using NonStandard.Data;
 
 namespace NonStandard.GameUi.DataSheet {
 
@@ -14,40 +16,33 @@ namespace NonStandard.GameUi.DataSheet {
 		private ColumnHeader cHeader;
 		public UnityDataSheet uds;
 		public int column;
+		public Type expectedValueType;
 		[System.Serializable] public struct ValidColumnEntry {
 			public string name;
 			public GameObject uiField;
 		}
-		public ValidColumnEntry[] columnTypes;
+		public List<ValidColumnEntry> columnTypes = new List<ValidColumnEntry>();
 
 		public Color errorColor = new Color(1,.75f,.75f);
-		protected Color defaultColor;
-		// TODO when this is changed, it should compile a Token. errors should make the field pink, and display the error popup. if valid, refresh valueType dropdown
+		// compiles Token. errors make the field pink, and display the error popup. if valid, refresh valueType dropdown
 		public TMP_InputField scriptValue;
-		// TODO should only appear if scriptValue is focused
-		public GameObject errorPopup;
+		public UiHoverPopup popup;
 		public TMP_InputField columnLabel;
 		// TODO pick option from validColumnTypes
 		public TMP_Dropdown fieldType;
 		// TODO another scripted value. should also use error popup
 		public TMP_InputField defaultValue;
-		private static Dictionary<string, Type> defaultValueTypes = new Dictionary<string, Type> {
-			["string"] = typeof(string),
-			["number"] = typeof(double),
-			["integer"] = typeof(long),
-			["script"] = typeof(Token),
-		};
 		// TODO generate based on scriptValue. if type is ambiguous, offer [string, number, integer, Token]
 		public TMP_Dropdown valueType;
-		// TODO change cHeader.columnSetting.data.width, refresh rows
+		// change cHeader.columnSetting.data.width, refresh rows
 		public TMP_InputField columnWidth;
-		// TODO be smart. ignore erroneous values. move column and refresh on change.
+		// ignore erroneous values. move column and refresh on change.
 		public TMP_InputField columnIndex;
 		// TODO confirm dialog. if confirmed, remove from UnityDataSheet and update everything
 		public Button trashColumn;
 
 		public void Start() {
-			defaultColor = scriptValue.GetComponent<Image>().color;
+			popup.defaultColor = scriptValue.GetComponent<Image>().color;
 		}
 
 		public void SetColumnHeader(ColumnHeader columnHeader, UnityDataSheet uds, int column) {
@@ -56,8 +51,11 @@ namespace NonStandard.GameUi.DataSheet {
 			cHeader = columnHeader;
 			// setup script value
 			scriptValue.onValueChanged.RemoveAllListeners();
-			scriptValue.text = cHeader.columnSetting.fieldToken.Stringify();
+			string text = cHeader.columnSetting.fieldToken.Stringify();
+			scriptValue.text = text;
 			scriptValue.onValueChanged.AddListener(OnScriptValueEdit);
+			// implicitly setup value types dropdown
+			OnScriptValueEdit(text);
 			// setup column label
 			columnLabel.onValueChanged.RemoveAllListeners();
 			columnLabel.text = cHeader.columnSetting.data.label;
@@ -71,24 +69,21 @@ namespace NonStandard.GameUi.DataSheet {
 			columnIndex.text = column.ToString();
 			columnIndex.onValueChanged.AddListener(OnIndexEdit);
 			// setup type options dropdown
-			List<ModalConfirmation.Entry> entries = new List<ModalConfirmation.Entry>();
-			int currentIndex = -1;
-			for (int i = 0; i < columnTypes.Length; ++i) {
-				entries.Add(new ModalConfirmation.Entry(columnTypes[i].name, null));
-				//Show.Log(columnTypes[i].name);
-				if (cHeader.columnSetting.data.uiBase.name.StartsWith(columnTypes[i].uiField.name)) {
-					currentIndex = i;
-				}
-			}
+			//List<ModalConfirmation.Entry> entries = new List<ModalConfirmation.Entry>();
+			//int currentIndex = -1;
+			//for (int i = 0; i < columnTypes.Count; ++i) {
+			//	entries.Add(new ModalConfirmation.Entry(columnTypes[i].name, null));
+			//	//Show.Log(columnTypes[i].name);
+			//	if (cHeader.columnSetting.data.uiBase.name.StartsWith(columnTypes[i].uiField.name)) {
+			//		currentIndex = i;
+			//	}
+			//}
+			List<ModalConfirmation.Entry> entries = columnTypes.ConvertAll(c => new ModalConfirmation.Entry(c.name, null));
+			int currentIndex = columnTypes.FindIndex(c=> cHeader.columnSetting.data.uiBase.name.StartsWith(c.uiField.name));
 			//Show.Log(currentIndex+" "+ cHeader.columnSetting.data.uiBase.name);
-			DropDownEvent.PopulateDropdown(fieldType, entries, this, SetFieldType);
-			if (currentIndex >= 0) {
-				fieldType.captionText.text = entries[currentIndex].text;
-				fieldType.SetValueWithoutNotify(currentIndex);
-			}
-			// setup value types dropdown
-
+			DropDownEvent.PopulateDropdown(fieldType, entries, this, SetFieldType, currentIndex);
 		}
+
 		public void SetFieldType(int index) {
 			cHeader.columnSetting.data.uiBase = columnTypes[index].uiField;
 			uds.RefreshRowAndColumnUi();
@@ -103,16 +98,16 @@ namespace NonStandard.GameUi.DataSheet {
 				if (newWidth > 0 && newWidth < 2048) {
 					uds.ResizeColumnWidth(column, oldWidth, newWidth);
 				} else {
-					SetErrorPopup("invalid width: "+newWidth+". Requirement: 0 < value < 2048", true, columnWidth.gameObject);
+					popup.Set("err", columnWidth.gameObject, "invalid width: " + newWidth + ". Requirement: 0 < value < 2048");
 					return;
 				}
 			}
-			HidePopup();
+			popup.Hide();
 		}
 		public void OnIndexEdit(string text) {
 			int oldIndex = cHeader.transform.GetSiblingIndex();
 			if (oldIndex != column) {
-				SetErrorPopup("WOAH PROBLEM! column " + column + " is not the same as childIndex " + oldIndex, true, columnIndex.gameObject);
+				popup.Set("err", columnIndex.gameObject, "WOAH PROBLEM! column " + column + " is not the same as childIndex " + oldIndex);
 				return;
 			}
 			int max = uds.GetMaximumUserColumn();
@@ -121,58 +116,89 @@ namespace NonStandard.GameUi.DataSheet {
 					uds.MoveColumn(oldIndex, newIndex);
 					column = newIndex;
 				} else {
-					SetErrorPopup("invalid index: " + newIndex + ". Requirement: 0 < index < " + max, true, columnIndex.gameObject);
+					popup.Set("err", columnIndex.gameObject,"invalid index: " + newIndex + ". Requirement: 0 < index < " + max);
 					return;
 				}
 			}
-			HidePopup();
-		}
-		private GameObject lastErrorInput = null;
-		public void SetErrorPopup(string text, bool isError, GameObject errorInputObject) {
-			Debug.Log(text);
-			UiText.SetText(errorPopup, text);
-			errorPopup.gameObject.SetActive(true);
-			Image img;
-			if (lastErrorInput != null) {
-				img = lastErrorInput.GetComponent<Image>();
-				img.color = defaultColor;
-			}
-			img = errorInputObject.GetComponent<Image>();
-			if (img.color != errorColor) { defaultColor = img.color; }
-			if (isError) {
-				img.color = errorColor;
-			} else {
-				img.color = defaultColor;
-			}
-			lastErrorInput = errorInputObject;
-		}
-		public void HidePopup() {
-			errorPopup.gameObject.SetActive(false);
-			if (lastErrorInput != null) {
-				Image img = lastErrorInput.GetComponent<Image>();
-				img.color = defaultColor;
-			}
-			lastErrorInput = null;
+			popup.Hide();
 		}
 		public void OnScriptValueEdit(string text) {
 			Tokenizer tokenizer = new Tokenizer();
 			tokenizer.Tokenize(text);
 			GameObject go = scriptValue.gameObject;
 			// parse errors
-			if (tokenizer.HasError()) { SetErrorPopup(tokenizer.GetErrorString(), true, go); return; }
+			if (tokenizer.HasError()) { popup.Set("err", go, tokenizer.GetErrorString()); return; }
 			// just one token
-			if (tokenizer.tokens.Count > 1) { SetErrorPopup("too many tokens: should only be one value", true, go); return; }
+			if (tokenizer.tokens.Count > 1) { popup.Set("err", go, "too many tokens: should only be one value"); return; }
 			// try to set the field
-			cHeader.columnSetting.SetFieldToken(tokenizer.tokens[0], tokenizer);
+			object value = cHeader.columnSetting.SetFieldToken(tokenizer.tokens[0], tokenizer);
 			// valid variable path
-			if (tokenizer.HasError()) { SetErrorPopup(tokenizer.GetErrorString(), true, go); return; }
+			if (tokenizer.HasError()) { popup.Set("err", go, tokenizer.GetErrorString()); return; }
+			// update the expected edit type
+			SetExpectedEditType(value);
 			// refresh column values
 			uds.RefreshColumnText(column, tokenizer);
 			// failed to set values
-			if (tokenizer.HasError()) { SetErrorPopup(tokenizer.GetErrorString(), true, go); return; }
+			if (tokenizer.HasError()) { popup.Set("err", go, tokenizer.GetErrorString()); return; }
 			// success!
-			HidePopup();
+			popup.Hide();
 		}
+		public void SetExpectedEditType(object sampleValue) {
+			List<object> editPath = cHeader.columnSetting.editPath;
+			Type sampleValueType = GetEditType();
+			if (sampleValueType == null) {
+				// set to read only
+				expectedValueType = null;
+				DropDownEvent.PopulateDropdown(valueType, new string[] { "read only" }, this, null, 0);
+			} else {
+				if (sampleValueType != expectedValueType) {
+					// set to specific type
+					if (sampleValueType == typeof(object)) {
+						sampleValueType = sampleValue.GetType();
+						int defaultChoice = -1;
+						if (defaultChoice < 0 && CodeConvert.IsIntegral(sampleValueType)) {
+							defaultChoice = defaultValueTypes.FindIndex(kvp=>kvp.Key == typeof(long));
+						}
+						if (defaultChoice < 0 && CodeConvert.IsNumeric(sampleValueType)) {
+							defaultChoice = defaultValueTypes.FindIndex(kvp => kvp.Key == typeof(double));
+						}
+						if (defaultChoice < 0) {// && sampleValueType == typeof(string)) {
+							defaultChoice = defaultValueTypes.FindIndex(kvp => kvp.Key == typeof(string));
+						}
+						List<string> options = defaultValueTypes.ConvertAll(kvp => kvp.Value);
+						DropDownEvent.PopulateDropdown(valueType, options, this, SetEditType, defaultChoice);
+						cHeader.columnSetting.type = defaultValueTypes[defaultChoice].Key;
+					} else {
+						DropDownEvent.PopulateDropdown(valueType, new string[] { sampleValueType.ToString() }, this, null, 0);
+						cHeader.columnSetting.type = sampleValueType;
+					}
+					expectedValueType = sampleValueType;
+				}
+			}
+		}
+		public Type GetEditType() {
+			List<object> editPath = cHeader.columnSetting.editPath;
+			if (editPath == null || editPath.Count == 0) {
+				return null;
+			} else {
+				object lastPathComponent = editPath[editPath.Count - 1];
+				switch (lastPathComponent) {
+				case FieldInfo fi: return fi.FieldType;
+				case PropertyInfo pi: return pi.PropertyType;
+				case string s: return typeof(object);
+				}
+			}
+			return null;
+		}
+		private void SetEditType(int index) { cHeader.columnSetting.type = defaultValueTypes[index].Key; }
+		private static List<KeyValuePair<Type, string>> defaultValueTypes = new List<KeyValuePair<Type, string>> {
+			new KeyValuePair<Type, string>(typeof(object), "unknown"),
+			new KeyValuePair<Type, string>(typeof(string), "string"),
+			new KeyValuePair<Type, string>(typeof(double),"number"),
+			new KeyValuePair<Type, string>(typeof(long),"integer"),
+			new KeyValuePair<Type, string>(typeof(Token), "script"),
+			new KeyValuePair<Type, string>(null, "read only"),
+		};
 		public void ColumnRemove() {
 			ModalConfirmation ui = confirmRemoveUi;
 			if (ui == null) { ui = Global.GetComponent<ModalConfirmation>(); }

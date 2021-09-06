@@ -15,7 +15,15 @@ namespace NonStandard.Ui {
 			TMP_Dropdown dd = GetComponent<TMP_Dropdown>();
 			PopulateDropdown(dd, options, this, HandleDropdown);
 		}
-		public static void PopulateDropdown(TMP_Dropdown dd, IList<string> options, object ownerOfDropdownHandler, Action<int> action) {
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="dd"></param>
+		/// <param name="options"></param>
+		/// <param name="ownerOfDropdownHandler"></param>
+		/// <param name="action"></param>
+		/// <param name="currentIndex">sets the dropdown to this value. if negative value, this is ignored</param>
+		public static void PopulateDropdown(TMP_Dropdown dd, IList<string> options, object ownerOfDropdownHandler, Action<int> action, int currentIndex = -1) {
 			dd.ClearOptions();
 			List<TMP_Dropdown.OptionData> opts = dd.options;
 			for (int i = 0; i < options.Count; ++i) {
@@ -24,8 +32,20 @@ namespace NonStandard.Ui {
 				if (opts[i].image != null) { opts[i].image = null; }
 			}
 			BindDropdownAction(dd, ownerOfDropdownHandler, action);
+			if (currentIndex >= 0) {
+				dd.captionText.text = opts[currentIndex].text;
+				dd.SetValueWithoutNotify(currentIndex);
+			}
 		}
-		public static void PopulateDropdown(TMP_Dropdown dd, IList<ModalConfirmation.Entry> options, object ownerOfDropdownHandler, Action<int> action) {
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="dd"></param>
+		/// <param name="options"></param>
+		/// <param name="ownerOfDropdownHandler"></param>
+		/// <param name="action"></param>
+		/// <param name="currentIndex">sets the dropdown to this value. if negative value, this is ignored</param>
+		public static void PopulateDropdown(TMP_Dropdown dd, IList<ModalConfirmation.Entry> options, object ownerOfDropdownHandler, Action<int> action, int currentIndex = -1) {
 			dd.ClearOptions();
 			List<TMP_Dropdown.OptionData> opts = dd.options;
 			for (int i = 0; i < options.Count; ++i) {
@@ -34,8 +54,13 @@ namespace NonStandard.Ui {
 				if (opts[i].image != options[i].image) { opts[i].image = options[i].image; }
 			}
 			BindDropdownAction(dd, ownerOfDropdownHandler, action);
+			if (currentIndex >= 0) {
+				dd.captionText.text = opts[currentIndex].text;
+				dd.SetValueWithoutNotify(currentIndex);
+			}
 		}
 		public static void BindDropdownAction(TMP_Dropdown dd, object ownerOfDropdownHandler, Action<int> action) {
+			if (ownerOfDropdownHandler == null || action == null) return;
 			//Show.Log("set " + options.Count + " opt : " + dd + "(" + dd.options.Count + ")\n" + options.Stringify(pretty: true));
 #if UNITY_EDITOR
 			UnityEngine.Object uObj = ownerOfDropdownHandler as UnityEngine.Object;
@@ -44,6 +69,7 @@ namespace NonStandard.Ui {
 				return;
 			}
 #endif
+			dd.onValueChanged.RemoveAllListeners();
 			dd.onValueChanged.AddListener(action.Invoke);
 		}
 		public void HandleDropdown(int index) {

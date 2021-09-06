@@ -11,7 +11,7 @@ namespace NonStandard.Data.Parse {
 		IList<int> GetTextRows();
 		void ClearErrors();
 	}
-	public class TokenErrorlog : TokenErrLog {
+	public class TokenErrorLog : TokenErrLog {
 		public List<ParseError> errors = new List<ParseError>();
 		public IList<int> GetTextRows() => rows;
 		/// <summary>
@@ -46,7 +46,7 @@ namespace NonStandard.Data.Parse {
 			show.Invoke(errStr); return true;
 		}
 	}
-	public class Tokenizer : TokenErrorlog {
+	public class Tokenizer : TokenErrorLog {
 		internal string str;
 		internal List<Token> tokens = new List<Token>(); // actually a tree. each token can point to more token lists
 		/// <summary>
@@ -355,6 +355,11 @@ namespace NonStandard.Data.Parse {
 				for (int i = 0; i < paths.Count; ++i) {
 					ParseRuleSet.Entry pathNode = null;
 					Token t = GetTokenAt(tokens, paths[i].path, ref pathNode);
+					if (t == Token.None) {
+						t = pathNode?.GetBeginToken() ?? this.tokens[0];
+						AddError(t, "can't resolve "+t.GetAsSmallText()+", missing token");
+						return;
+					}
 					if (paths[i].token.index != t.index) {
 						operatorWasLostInTheShuffle = true;
 						continue;// break instead?
@@ -385,7 +390,9 @@ namespace NonStandard.Data.Parse {
 			});
 		}
 		Token GetTokenAt(List<Token> currentPath, IList<int> index, ref ParseRuleSet.Entry lastPathNode) {
-			Token t = currentPath[index[0]];
+			int i = index[0];
+			if (i < 0 || i >= currentPath.Count) { return Token.None; }
+			Token t = currentPath[i];
 			if (index.Count == 1) return t;
 			index = index.GetRange(1, index.Count - 1);
 			lastPathNode = t.GetAsContextEntry();

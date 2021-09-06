@@ -290,6 +290,12 @@ namespace NonStandard.Data.Parse {
 
 		public static void op_BinaryArgs(TokenErrLog tok, ParseRuleSet.Entry e, object scope, out object left, out object right, out Type lType, out Type rType) {
 			SingleArg(tok, e.tokens[0], scope, out left, out lType);
+			if(e.Length < 3) {
+				tok.AddError(e.tokens[1], "missing right argument for binary operator");
+				right = null;
+				rType = null;
+				return;
+			}
 			SingleArg(tok, e.tokens[2], scope, out right, out rType);
 		}
 		public static void SingleArg(TokenErrLog tok, Token token, object scope, out object value, out Type valType) {

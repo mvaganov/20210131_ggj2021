@@ -96,7 +96,7 @@ namespace NonStandard.Character {
 
 
 		// TODO move to NonStandard.Character.CharacterMoveControls
-		[System.Serializable] public struct CharacterMoveControls {
+		[System.Serializable] public class CharacterMoveControls {
 			public float speed;
 			[Tooltip("anything steeper than this cannot be moved on")]
 			public float maxStableAngle;

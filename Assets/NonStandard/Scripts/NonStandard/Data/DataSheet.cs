@@ -81,15 +81,35 @@ namespace NonStandard.Data {
 			/// </summary>
 			public object defaultValue = null;
 
-			public void SetFieldToken(Token value, TokenErrLog errLog) {
+			/// <summary>
+			/// set the script that determines what the values in this column are
+			/// </summary>
+			/// <param name="value"></param>
+			/// <param name="errLog"></param>
+			/// <returns>a sample value (the first value possible)</returns>
+			public object SetFieldToken(Token value, TokenErrLog errLog) {
 				_fieldToken = value;
 				RefreshEditPath();
-				if (dataSheet.rows.Count > 0) {
-					CompileEditPath(dataSheet.rows[0].model, errLog);
+				if (editPath != null) {
+					if (dataSheet.rows.Count > 0) {
+						object scope = dataSheet.GetItem(0);
+						CompileEditPath(scope, errLog);
+						if (!errLog.HasError()) {
+							ReflectionParseExtension.TryGetValueCompiledPath(scope, editPath, out object result);
+							//Show.Log(_fieldToken.GetAsSmallText() + " is : " + result + (result != null ? (" (" + result.GetType() + ")") : "(null)"));
+							return result;
+						}
+					}
 				}
+				//else { Show.Log(_fieldToken.GetAsSmallText() + " is read only"); }
+				return null;
 			}
 
 			object CompileEditPath(object scope, TokenErrLog errLog = null) {
+				if (editPath == null) {
+					errLog.AddError(-1, fieldToken.GetAsSmallText() + " is not editable");
+					return null;
+				}
 				//Show.Log("need to compile " + editPath.JoinToString());
 				List<object> compiledPath = new List<object>();
 				errLog?.ClearErrors();
@@ -118,7 +138,7 @@ namespace NonStandard.Data {
 					}
 				} else {
 					bool errorNeedsToBeNoisy = false;
-					if (errLog == null) { errLog = new TokenErrorlog(); errorNeedsToBeNoisy = true; }
+					if (errLog == null) { errLog = new TokenErrorLog(); errorNeedsToBeNoisy = true; }
 					result = fieldToken.Resolve(errLog, scope, true, true);
 					if (errLog.HasError()) {
 						result = defaultValue;
@@ -207,9 +227,22 @@ namespace NonStandard.Data {
 		/// <param name="errLog">if null, an exception will be thrown if there is a problem parsing column data</param>
 		/// <returns></returns>
 		public object RefreshValue(int row, int col, TokenErrLog errLog = null) {
-			object value = columnSettings[col].GetValue(errLog, rows[row].model);
-			rows[row].columns[col] = value;
-			return value;
+			if (col < 0 || col >= columnSettings.Count) {
+				errLog.AddError(-1, "incorrect column: " + col + "\nlimit [0, " + columnSettings.Count + ")");
+				return null;
+			}
+			if (row < 0 || row >= rows.Count) {
+				errLog.AddError(-1, "incorrect row: " + row + "\nlimit [0, " + rows.Count + ")");
+				return null;
+			}
+			try {
+				object value = columnSettings[col].GetValue(errLog, rows[row].model);
+				rows[row].columns[col] = value;
+				return value;
+			} catch (Exception e) {
+				errLog.AddError(-1, "could not set [" + row + "," + col + "]: " + e.ToString());
+			}
+			return null;
 		}
 		public object Get(int row, int col) { return rows[row].columns[col]; }
 		public void Set(int row, int col, object value) {
@@ -228,16 +261,16 @@ namespace NonStandard.Data {
 		/// <summary>
 		/// the object being represented by the given row
 		/// </summary>
-		public object this [int row] { get => rows[row].model; 
+		public object this [int row] { get => GetItem(row);
 			set {
 				RowData rd = rows[row];
 				rd.model = value;
-				TokenErrorlog err = new TokenErrorlog();
+				TokenErrorLog err = new TokenErrorLog();
 				AssignData(rd, err);
 				if (err.HasError()) { throw new Exception("tokenization error: "+err.GetErrorString()); }
 			}
 		}
-
+		public object GetItem(int row) { return rows[row].model; }
 		public int IndexOf(object dataModel) { return rows.FindIndex(rd => rd.model == dataModel); }
 		public int IndexOf(Func<object, bool> predicate) {
 			for (int i = 0; i < rows.Count; ++i) { if (predicate(rows[i])) { return i; } }
