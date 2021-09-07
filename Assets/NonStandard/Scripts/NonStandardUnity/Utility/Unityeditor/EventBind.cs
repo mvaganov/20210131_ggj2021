@@ -30,19 +30,23 @@ namespace NonStandard.Utility.UnityEditor {
 			On(@event, target, methodName);
 			return true;
 		}
-		public static void On(UnityEvent @event, object target, Action action) {
+		public static void On(UnityEvent @event, object target, UnityAction action) {
 #if UNITY_EDITOR
-			new EventBind(target, action.Method.Name).Bind(@event);
-#else
-			@event.AddListener(action.Invoke);
+			if (target != null) {
+				new EventBind(target, action.Method.Name).Bind(@event);
+				return;
+			}
 #endif
+			@event.AddListener(action.Invoke);
 		}
-		public static void On<T>(UnityEvent<T> @event, object target, Action<T> action) {
+		public static void On<T>(UnityEvent<T> @event, object target, UnityAction<T> action) {
 #if UNITY_EDITOR
-			new EventBind(target, action.Method.Name).Bind(@event);
-#else
-			@event.AddListener(action.Invoke);
+			if (target != null) {
+				new EventBind(target, action.Method.Name).Bind(@event);
+				return;
+			}
 #endif
+			@event.AddListener(action.Invoke);
 		}
 		public static void On<T>(UnityEvent<T> @event, object target, string methodName) {
 			new EventBind(target, methodName).Bind(@event);

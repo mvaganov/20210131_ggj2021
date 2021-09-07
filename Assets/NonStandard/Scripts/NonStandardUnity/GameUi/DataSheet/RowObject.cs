@@ -1,2 +1,4 @@
 ﻿using UnityEngine;
-public class RowObject : MonoBehaviour { public object obj; }
+namespace NonStandard.GameUi.DataSheet {
+	public class RowObject : MonoBehaviour { public object obj; }
+}

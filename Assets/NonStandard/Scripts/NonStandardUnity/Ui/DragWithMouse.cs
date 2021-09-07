@@ -9,12 +9,12 @@ namespace NonStandard.Ui {
 		public static GameObject beingDragged = null;
 		protected virtual void Awake() {
 			rt = GetComponent<RectTransform>();
-			AddPointerEvent(EventTriggerType.Drag, OnDrag);
-			AddPointerEvent(EventTriggerType.PointerUp, PointerUp);
+			AddPointerEvent(EventTriggerType.Drag, this, OnDrag);
+			AddPointerEvent(EventTriggerType.PointerUp, this, PointerUp);
 		}
 
-		public void AddPointerEvent(EventTriggerType type, UnityAction<BaseEventData> pointerEvent) {
-			PointerTrigger.AddEvent(gameObject, type, pointerEvent);
+		public void AddPointerEvent(EventTriggerType type, Object target, UnityAction<BaseEventData> pointerEvent) {
+			PointerTrigger.AddEvent(gameObject, type, target, pointerEvent);
 		}
 		public virtual void PointerUp(BaseEventData data) {
 			if (beingDragged == gameObject) {

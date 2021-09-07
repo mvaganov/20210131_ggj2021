@@ -54,14 +54,14 @@ namespace NonStandard.Ui.Mouse {
 
 		protected override void Awake() {
 			rt = GetComponent<RectTransform>();
-			AddPointerEvent(EventTriggerType.PointerDown, PointerDown);
-			AddPointerEvent(EventTriggerType.BeginDrag, BeginDrag);
-			AddPointerEvent(EventTriggerType.Drag, OnDrag);
-			//AddPointerEvent(EventTriggerType.EndDrag, OnEndDrag);
-			AddPointerEvent(EventTriggerType.PointerUp, PointerUp);
-			//AddPointerEvent(EventTriggerType.Move, CursorChangeOnMove);
-			AddPointerEvent(EventTriggerType.PointerEnter, PointerEnter);
-			AddPointerEvent(EventTriggerType.PointerExit, PointerExit);
+			AddPointerEvent(EventTriggerType.PointerDown, this, PointerDown);
+			AddPointerEvent(EventTriggerType.BeginDrag, this, BeginDrag);
+			AddPointerEvent(EventTriggerType.Drag, this, OnDrag);
+			//AddPointerEvent(EventTriggerType.EndDrag, this, OnEndDrag);
+			AddPointerEvent(EventTriggerType.PointerUp, this, PointerUp);
+			//AddPointerEvent(EventTriggerType.Move, this, CursorChangeOnMove);
+			AddPointerEvent(EventTriggerType.PointerEnter, this, PointerEnter);
+			AddPointerEvent(EventTriggerType.PointerExit, this, PointerExit);
 			enabled = false;
 		}
 

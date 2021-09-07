@@ -12,9 +12,9 @@ namespace NonStandard.TouchGui {
 		public override void Start() {
 			base.Start();
 			rectTransform = GetComponent<RectTransform>();
-			Ui.PointerTrigger.AddEvent(gameObject, UnityEngine.EventSystems.EventTriggerType.PointerDown, PointerDown);
-			Ui.PointerTrigger.AddEvent(gameObject, UnityEngine.EventSystems.EventTriggerType.Drag, PointerDrag);
-			Ui.PointerTrigger.AddEvent(gameObject, UnityEngine.EventSystems.EventTriggerType.PointerUp, PointerUp);
+			Ui.PointerTrigger.AddEvent(gameObject, UnityEngine.EventSystems.EventTriggerType.PointerDown, this, PointerDown);
+			Ui.PointerTrigger.AddEvent(gameObject, UnityEngine.EventSystems.EventTriggerType.Drag, this, PointerDrag);
+			Ui.PointerTrigger.AddEvent(gameObject, UnityEngine.EventSystems.EventTriggerType.PointerUp, this, PointerUp);
 		}
 		public override void PointerDown(UnityEngine.EventSystems.BaseEventData data) {
 			UnityEngine.EventSystems.PointerEventData pd = data as UnityEngine.EventSystems.PointerEventData;

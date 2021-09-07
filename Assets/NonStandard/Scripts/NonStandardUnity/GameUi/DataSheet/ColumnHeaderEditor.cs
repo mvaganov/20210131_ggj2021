@@ -10,6 +10,7 @@ using NonStandard.Data;
 
 namespace NonStandard.GameUi.DataSheet {
 
+	// TODO an optional extra field for icon, to replace the button/cell image
 	public class ColumnHeaderEditor : MonoBehaviour {
 		public ModalConfirmation confirmRemoveUi;
 		public GameObject columnHeaderObject;
