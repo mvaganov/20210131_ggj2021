@@ -235,11 +235,11 @@ namespace NonStandard.Data {
 		/// <param name="errLog">if null, an exception will be thrown if there is a problem parsing column data</param>
 		/// <returns></returns>
 		public object RefreshValue(int row, int col, TokenErrLog errLog = null) {
-			if (col < 0 || col >= columnSettings.Count) {
+			if ((col < 0 || col >= columnSettings.Count) && errLog != null) {
 				errLog.AddError(-1, "incorrect column: " + col + "\nlimit [0, " + columnSettings.Count + ")");
 				return null;
 			}
-			if (row < 0 || row >= rows.Count) {
+			if ((row < 0 || row >= rows.Count) && errLog != null) {
 				errLog.AddError(-1, "incorrect row: " + row + "\nlimit [0, " + rows.Count + ")");
 				return null;
 			}
@@ -248,9 +248,20 @@ namespace NonStandard.Data {
 				rows[row].columns[col] = value;
 				return value;
 			} catch (Exception e) {
-				errLog.AddError(-1, "could not set [" + row + "," + col + "]: " + e.ToString());
+				string errorMessage = "could not set [" + row + "," + col + "]: " + e.ToString();
+				if (errLog != null) { errLog.AddError(-1, errorMessage); } else {
+					throw new Exception(errorMessage);
+				}
 			}
 			return null;
+		}
+		public void RefreshAll(TokenErrLog errLog = null) {
+			for(int r = 0; r < rows.Count; ++r) {
+				for (int c = 0; c < columnSettings.Count; ++c) {
+					object value = columnSettings[c].GetValue(errLog, rows[r].model);
+					rows[r].columns[c] = value;
+				}
+			}
 		}
 		public object Get(int row, int col) { return rows[row].columns[col]; }
 		public void Set(int row, int col, object value) {

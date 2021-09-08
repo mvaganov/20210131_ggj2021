@@ -9,7 +9,7 @@ namespace NonStandard.GameUi.DataSheet {
 			UnityDataSheet uds = UDS();
 			if (uds == null) { return; }
 			Button b = GetComponent<Button>();
-			EventBind.On(b.onClick, uds, uds.Refresh);
+			EventBind.On(b.onClick, uds, uds.FullRefresh);
 		}
 		private void Start() {
 			Init();

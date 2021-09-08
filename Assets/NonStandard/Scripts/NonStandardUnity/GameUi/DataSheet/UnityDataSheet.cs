@@ -288,6 +288,11 @@ namespace NonStandard.GameUi.DataSheet {
 			RefreshHeaders();
 			RefreshRowAndColumnUi();
 		}
+
+		public void FullRefresh() {
+			data.RefreshAll();
+			Refresh();
+		}
 		public void ResizeColumnWidth(int column, float oldWidth, float newWidth) {
 			//Show.Log("TODO resize width of column "+column+" from "+oldWidth+" to "+newWidth);
 			data.columnSettings[column].data.width = newWidth;
