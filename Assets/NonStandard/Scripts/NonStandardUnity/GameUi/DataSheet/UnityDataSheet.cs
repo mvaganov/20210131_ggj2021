@@ -305,6 +305,12 @@ namespace NonStandard.GameUi.DataSheet {
 			headerRectangle.GetChild(oldIndex).SetSiblingIndex(newIndex);
 			Refresh();
 		}
+
+		public void MoveRow(int oldIndex, int newIndex) {
+			data.MoveRow(oldIndex, newIndex);
+			contentRectangle.GetChild(oldIndex).SetSiblingIndex(newIndex);
+			RefreshRowUi();
+		}
 		/// <summary>
 		/// uses a dictionary to quickly calculate UI elements for rows, and position them in the view
 		/// </summary>

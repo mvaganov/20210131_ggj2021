@@ -403,6 +403,11 @@ namespace NonStandard.Character {
 			private void JumpUpdate(long now, float gForce, float speed, bool jpress, Transform t, ref Vector3 vel) {
 				if (!heightSet) {
 					CalcJumpOverTime(now - jumpTime, gForce, out float y, out float yVelocity);
+					if (float.IsNaN(y)) {
+						//Show.Log("bad y value... "+yVelocity); // TODO figure out why a bad value happens sometimes?
+						y = 0;
+						yVelocity = 0;
+					}
 					Vector3 p = t.position;
 					p.y = position.y + y;
 					t.position = p;

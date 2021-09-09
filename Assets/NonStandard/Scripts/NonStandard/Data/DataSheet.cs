@@ -476,5 +476,17 @@ namespace NonStandard.Data {
 				}
 			}
 		}
+		public void MoveRow(int oldIndex, int newIndex) {
+			if (oldIndex == newIndex) return;
+			RowData valueToMove = rows[oldIndex];
+			if (newIndex < oldIndex) {
+				// shift elements forward (iterating backward), starting with the old index
+				for (int c = oldIndex; c > newIndex; --c) { rows[c] = rows[c - 1]; }
+			} else if (newIndex > oldIndex) {
+				// shift elements backward (iterating forward), starting with the old index
+				for (int c = oldIndex; c < newIndex; ++c) { rows[c] = rows[c + 1]; }
+			}
+			rows[newIndex] = valueToMove;
+		}
 	}
 }
