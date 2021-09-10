@@ -1,5 +1,4 @@
-﻿using NonStandard.Extension;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -11,7 +10,7 @@ namespace NonStandard.Data {
 	/// </summary>
 	/// <typeparam name="KEY"></typeparam>
 	/// <typeparam name="VAL"></typeparam>
-	public class BurlyHashTable<KEY, VAL> : IDictionary<KEY, VAL> where KEY : IComparable<KEY> {
+	public class ComputeHashTable<KEY, VAL> : IDictionary<KEY, VAL> where KEY : IComparable<KEY> {
 		/// <summary>
 		/// user can define their own hash function
 		/// </summary>
@@ -38,113 +37,11 @@ namespace NonStandard.Data {
 		public void FunctionAssignException() { onAssignmentToFunction = ResultOfAssigningToFunction.ThrowException; }
 		public void FunctionAssignOverwrite() { onAssignmentToFunction = ResultOfAssigningToFunction.OverwriteFunction; }
 		int Hash(KEY key) { return Math.Abs(hFunc != null ? hFunc(key) : key.GetHashCode()); }
-		public class KV {
+		public class KV : Computable<KEY,VAL> {
 			public readonly int hash;
-			public readonly KEY _key;
-			public VAL _val;
-			/// <summary>
-			/// callback whenever any change is made. onChange(oldValue, newValue)
-			/// </summary>
-			public KeyValueChangeCallback onChange;
-			/// <summary>
-			/// values that depend on this value. if this value changes, these need to be notified. we are the sunlight, these are the plant.
-			/// </summary>
-			public List<KV> dependents;
-			/// <summary>
-			/// values that this value relies on. if these values change, this needs to be notified. we are the plant, these are the sunlight.
-			/// </summary>
-			public List<KV> reliesOn;
-			/// <summary>
-			/// dirty flag, set when values this value relies on are changed. the sunlight told us it is changing, we need to adjust!
-			/// </summary>
-			private bool needsDependencyRecalculation = true;
-			/// <summary>
-			/// if false, this is a simple value. if true, this value is calculated using a lambda expression
-			/// </summary>
-			public bool IsComputed => compute != null;
-			private Func<VAL> compute;
-			private bool RemoveDependent(KV kv) { return (dependents != null) ? dependents.Remove(kv) : false; }
-			private void AddDependent(KV kv) { if (dependents == null) { dependents = new List<KV>(); } dependents.Add(kv); }
-			/// <summary>
-			/// the function used to compute this value. when set, the function is executed, and it's execution path is tested
-			/// </summary>
-			public Func<VAL> Compute {
-				get { return compute; }
-				set {
-					compute = value;
-					path.Clear();
-					if (reliesOn != null) {
-						reliesOn.ForEach(kv => kv.RemoveDependent(this));
-						reliesOn.Clear();
-					}
-					watchingPath = true;
-					_val = val;
-					watchingPath = false;
-					if (reliesOn == null) {
-						reliesOn = new List<KV>();
-					}
-					path.Remove(this);
-					reliesOn.AddRange(path);
-					if (reliesOn != null) { reliesOn.ForEach(kv => kv.AddDependent(this)); }
-					path.Clear();
-				}
-			}
-
-			private static List<KV> path = new List<KV>();
-			private static bool watchingPath = false;
-
-			public KEY key { get { return _key; } }
-			public VAL val {
-				get {
-					if (watchingPath) {
-						path.Add(this);
-						needsDependencyRecalculation = true;
-						string err = null;
-						if (path.Contains(this)) { err += "recursion"; }
-						if (path.Count >= maxComputeDepth) { err += "max compute depth reached"; }
-						if (!string.IsNullOrEmpty(err)) {
-							throw new Exception(err + string.Join("->", path.ConvertAll(kv => kv._key.ToString()).ToArray()) + "~>" + key);
-						}
-					}
-					if(IsComputed && needsDependencyRecalculation) { SetInternal(compute.Invoke()); needsDependencyRecalculation = false; }
-					return _val;
-				}
-			}
-			/// <summary>
-			/// hidden to the outside world so we cna be sure parent listener/callbacks are called
-			/// </summary>
-			internal void SetInternal(VAL newValue) {
-				if ((_val == null && newValue != null) || (_val != null && !_val.Equals(newValue))) {
-					if (dependents != null) dependents.ForEach(dep => dep.needsDependencyRecalculation = true);
-					VAL oldValue = _val;
-					_val = newValue;
-					if (onChange != null) onChange.Invoke(key, oldValue, newValue);
-				}
-			}
 			public KV(int hash, KEY k) : this(hash, k, default(VAL)) { }
-			public KV(int h, KEY k, VAL v) { _key = k; _val = v; hash = h; }
+			public KV(int h, KEY k, VAL v) : base(k,v) { hash = h; }
 			public override string ToString() { return key + "(" + hash + "):" + val; }
-			public string ToString(bool showDependencies, bool showDependents) {
-				StringBuilder sb = new StringBuilder();
-				sb.Append(key).Append(":").Append(val);
-				if (showDependencies) { showDependencies = reliesOn != null && reliesOn.Count != 0; }
-				if (showDependents) { showDependents = dependents != null && dependents.Count != 0; }
-				if (showDependencies || showDependents) {
-					sb.Append(" /*");
-					if (showDependencies) {
-						sb.Append(" relies on: ");
-						//for(int i = 0; i < reliesOn.Count; ++i) { if(i>0) sb.Append(", "); sb.Append(reliesOn[i].key); }
-						reliesOn.JoinToString(sb, ", ", r=>r.key.ToString());
-					}
-					if (showDependents) {
-						sb.Append(" dependents: ");
-						//for (int i = 0; i < dependents.Count; ++i) { if (i > 0) sb.Append(", "); sb.Append(dependents[i].key); }
-						dependents.JoinToString(sb, ", ", d => d.key.ToString());
-					}
-					sb.Append(" */");
-				}
-				return sb.ToString();
-			}
 			public class Comparer : IComparer<KV> {
 				public int Compare(KV x, KV y) { return x.hash.CompareTo(y.hash); }
 			}
@@ -153,9 +50,9 @@ namespace NonStandard.Data {
 		}
 		private KV Kv(KEY key) { return new KV(Hash(key), key); }
 		private KV Kv(KEY key, VAL val) { return new KV(Hash(key), key, val); }
-		public BurlyHashTable(HashFunction_t hashFunc, int bCount = defaultBuckets) { hFunc = hashFunc; BucketCount = bCount; }
-		public BurlyHashTable() { }
-		public BurlyHashTable(int bucketCount) { BucketCount = bucketCount; }
+		public ComputeHashTable(HashFunction_t hashFunc, int bCount = defaultBuckets) { hFunc = hashFunc; BucketCount = bCount; }
+		public ComputeHashTable() { }
+		public ComputeHashTable(int bucketCount) { BucketCount = bucketCount; }
 		public int Count {
 			get {
 				int sum = 0;
@@ -333,9 +230,9 @@ namespace NonStandard.Data {
 		public IEnumerator<KeyValuePair<KEY, VAL>> GetEnumerator() { return new Enumerator(this); }
 		IEnumerator IEnumerable.GetEnumerator() { return new Enumerator(this); }
 		public class Enumerator : IEnumerator<KeyValuePair<KEY, VAL>> {
-			BurlyHashTable<KEY, VAL> htable;
+			ComputeHashTable<KEY, VAL> htable;
 			int index = -1; // MoveNext() is always called before the enumeration begins, to see if any values exist
-			public Enumerator(BurlyHashTable<KEY, VAL> htable) { this.htable = htable; }
+			public Enumerator(ComputeHashTable<KEY, VAL> htable) { this.htable = htable; }
 			public KeyValuePair<KEY, VAL> Current { get { return htable.orderedPairs[index]; } }
 			object IEnumerator.Current { get { return Current; } }
 			public void Dispose() { htable = null; }

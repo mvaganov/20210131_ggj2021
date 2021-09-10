@@ -30,6 +30,13 @@ namespace NonStandard.Utility.UnityEditor {
 			On(@event, target, methodName);
 			return true;
 		}
+		public static bool IfNotAlready<T>(UnityEvent<T> @event, UnityEngine.Object target, UnityAction<T> action) {
+			for (int i = 0; i < @event.GetPersistentEventCount(); ++i) {
+				if (@event.GetPersistentTarget(i) == target && @event.GetPersistentMethodName(i) == action.Method.Name) { return false; }
+			}
+			On(@event, target, action);
+			return true;
+		}
 		public static void On(UnityEvent @event, object target, UnityAction action) {
 #if UNITY_EDITOR
 			if (target != null) {

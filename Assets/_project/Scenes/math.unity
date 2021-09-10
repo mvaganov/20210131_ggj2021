@@ -252,23 +252,21 @@ MonoBehaviour:
   moveV: 0
   speed: 5
   jump:
+    isJumping: 0
+    peaked: 0
+    heightSet: 0
+    pressed: 0
+    showJumpArc: 0
+    forgiveLateJumps: 1
+    enabled: 1
     minJumpHeight: 0.015625
     maxJumpHeight: 2
-    jumpMaxPressDuration: 0.25
+    fullJumpPressDuration: 0.25
     doubleJumps: 0
     TimedJumpPress: 0
     targetJumpHeight: 0
     position: {x: 0, y: 0, z: 0}
-    jumpTime: 0
-    peakTime: 0
-    stableTime: 0
     usedDoubleJumps: 0
-    isJumping: 0
-    peaked: 0
-    heightSet: 0
-    Pressed: 0
-    showJumpArc: 0
-    forgiveLateJumps: 1
 --- !u!54 &230466702
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -558,6 +556,7 @@ GameObject:
   - component: {fileID: 554217185}
   - component: {fileID: 554217184}
   - component: {fileID: 554217183}
+  - component: {fileID: 554217187}
   m_Layer: 0
   m_Name: Cube (1)
   m_TagString: Untagged
@@ -639,6 +638,25 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &554217187
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 554217182}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7bd8ba2fb0435214b9a3fe20c49f2374, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dict:
+    onAssignmentToFunction: 0
+  values: 
+  parseResults: null
+  dictionaryTostringChangeListener:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &671509335
 GameObject:
   m_ObjectHideFlags: 0

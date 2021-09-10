@@ -1,9 +1,47 @@
-﻿using UnityEngine;
+﻿using NonStandard.Data;
+using NonStandard.Utility.UnityEditor;
+using System;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace NonStandard.Ui {
-	public static class UiText {
+	public class UiText : MonoBehaviour {
+		public UnityEvent_string setText;
+		public Func<string> getText = null;
+		private void Reset() { Init(); }
+		public void Init() {
+			TMPro.TMP_InputField tif = GetComponentInChildren<TMPro.TMP_InputField>();
+			if (tif != null) { EventBind.IfNotAlready(setText, tif, "set_text"); getText = () => tif.text; }
+			TMPro.TMP_Text tmp = GetComponentInChildren<TMPro.TMP_Text>();
+			if (tmp != null) { EventBind.IfNotAlready(setText, tmp, "set_text"); getText = () => tmp.text; }
+			InputField inf = GetComponentInChildren<InputField>();
+			if (inf != null) { EventBind.IfNotAlready(setText, inf, "set_text"); getText = () => inf.text; }
+			Text txt = GetComponentInChildren<Text>();
+			if (txt != null) { EventBind.IfNotAlready(setText, txt, "set_text"); getText = () => txt.text; }
+			Image img = GetComponentInChildren<Image>();
+			SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
+			if (img != null || sr != null) { EventBind.IfNotAlready(setText, this, SetImageByName); getText = GetImageName; }
+		}
+		public void SetImageByName(string name) {
+			Image img = GetComponentInChildren<Image>();
+			if (img != null) { img.sprite = GetImageByName(name); return; }
+			SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
+			if (sr != null) { sr.sprite = GetImageByName(name); return; }
+		}
+		public string GetImageName() {
+			Image img = GetComponentInChildren<Image>();
+			if (img != null) { return img.sprite.name; }
+			SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
+			if (sr != null) { return sr.sprite.name; }
+			return null;
+		}
+		public Sprite GetImageByName(string img) {
+			Show.Log("need to get image "+img);
+			return null;
+		}
 		public static GameObject GetTextObject(GameObject go) {
+			UiText uit = go.GetComponentInChildren<UiText>();
+			if (uit != null) { return uit.gameObject; }
 			TMPro.TMP_InputField tif = go.GetComponentInChildren<TMPro.TMP_InputField>();
 			if (tif != null) { return tif.gameObject; }
 			TMPro.TMP_Text tmp = go.GetComponentInChildren<TMPro.TMP_Text>();
@@ -15,6 +53,8 @@ namespace NonStandard.Ui {
 			return null;
 		}
 		public static void SetText(GameObject go, string value) {
+			UiText uit = go.GetComponentInChildren<UiText>();
+			if (uit != null) { uit.setText.Invoke(value); return; }
 			TMPro.TMP_InputField tif = go.GetComponentInChildren<TMPro.TMP_InputField>();
 			if (tif != null) { tif.text = value; return; }
 			TMPro.TMP_Text tmp = go.GetComponentInChildren<TMPro.TMP_Text>();
@@ -25,6 +65,8 @@ namespace NonStandard.Ui {
 			if (txt != null) { txt.text = value; return; }
 		}
 		public static string GetText(GameObject go) {
+			UiText uit = go.GetComponentInChildren<UiText>();
+			if (uit != null && uit.getText != null) { return uit.getText.Invoke(); }
 			TMPro.TMP_InputField tif = go.GetComponentInChildren<TMPro.TMP_InputField>();
 			if (tif != null) { return tif.text; }
 			TMPro.TMP_Text tmp = go.GetComponentInChildren<TMPro.TMP_Text>();

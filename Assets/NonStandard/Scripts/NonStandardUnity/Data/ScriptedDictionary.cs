@@ -1,4 +1,5 @@
-﻿using NonStandard.Data.Parse;
+﻿//#define TEST
+using NonStandard.Data.Parse;
 using NonStandard.Extension;
 using NonStandard.Process;
 using System.Collections;
@@ -9,7 +10,7 @@ using UnityEngine.Events;
 namespace NonStandard.Data {
 
 	[System.Serializable, StringifyHideType]
-	public class HashTable_stringobject : BurlyHashTable<string, object> { }
+	public class HashTable_stringobject : ComputeHashTable<string, object> { }
 	public class ScriptedDictionary : MonoBehaviour, IDictionary<string, object>
 	{
 		[SerializeField, HideInInspector] protected HashTable_stringobject dict = new HashTable_stringobject();
@@ -69,18 +70,26 @@ namespace NonStandard.Data {
 				}
 			};
 			dict.FunctionAssignIgnore();
-			//string[] mainStats = new string[] { "str", "con", "dex", "int", "wis", "cha" };
-			//int[] scores = { 8, 8, 18, 12, 9, 14 };
-			//for(int i = 0; i < mainStats.Length; ++i) {
-			//	dict[mainStats[i]] = scores[i];
-			//}
-			//for (int i = 0; i < mainStats.Length; ++i) {
-			//	string s = mainStats[i];
-			//	dict.Set("_"+s, ()=>CalcStatModifier(s));
-			//}
-			//AddTo("cha", 4);
+#if TEST
+			string[] mainStats = new string[] { "str", "con", "dex", "int", "wis", "cha" };
+			int[] scores = { 8, 8, 18, 12, 9, 14 };
+			for (int i = 0; i < mainStats.Length; ++i) {
+				dict[mainStats[i]] = scores[i];
+			}
+			for (int i = 0; i < mainStats.Length; ++i) {
+				string s = mainStats[i];
+				dict.Set("_" + s, () => CalcStatModifier(s));
+			}
+			AddTo("cha", 4);
+#endif
 			dict.NotifyStart();
 		}
+#if TEST
+		private int CalcStatModifier(string s) {
+			return (int)Mathf.Floor((NumValue(s) - 10) / 2);
+		}
+#endif
+
 		public float NumValue(string fieldName) {
 			object val;
 			if (!dict.TryGetValue(fieldName, out val)) return 0;
@@ -91,10 +100,6 @@ namespace NonStandard.Data {
 			//Show.Log(fieldName + " " + bonus + " " + Show.GetStack(6));
 			dict[fieldName] = NumValue(fieldName) + bonus;
 		}
-		private int CalcStatModifier(string s) {
-			return (int)Mathf.Floor((NumValue(s) - 10) / 2);
-		}
-
 		public string Format(string text) {
 			Tokenizer tok = new Tokenizer();
 			string resolvedText = CodeConvert.Format(text, dict, tok);
