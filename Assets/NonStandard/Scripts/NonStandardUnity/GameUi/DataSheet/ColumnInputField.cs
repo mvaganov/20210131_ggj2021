@@ -38,7 +38,16 @@ namespace NonStandard.GameUi.DataSheet {
 						uds.popup.Set("err", gameObject, errorMessage);
 					}
 				}
-				if (validAssignment) { validAssignment = column.SetValue(uds.GetItem(row), value); }
+				if (validAssignment) {
+					TokenErrLog errLog = new TokenErrorLog();
+					validAssignment = column.SetValue(uds.GetItem(row), value, errLog); 
+					if (errLog.HasError()) {
+						errorMessage = errLog.GetErrorString();
+						validAssignment = false;
+						uds.popup.Set("err", gameObject, errorMessage);
+					}
+				}
+
 				if (validAssignment) {
 					uds.data.Set(row, col, value);
 					if (errorMessage == uds.popup.Message) { uds.popup.Hide(); }

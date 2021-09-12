@@ -7,10 +7,10 @@ using System.Collections.Generic;
 using System;
 using System.Reflection;
 using NonStandard.Data;
+using NonStandard.Utility.UnityEditor;
+using NonStandard.Extension;
 
 namespace NonStandard.GameUi.DataSheet {
-
-	// TODO an optional extra field for icon, to replace the button/cell image
 	public class ColumnHeaderEditor : MonoBehaviour {
 		public ModalConfirmation confirmRemoveUi;
 		public GameObject columnHeaderObject;
@@ -54,37 +54,46 @@ namespace NonStandard.GameUi.DataSheet {
 			scriptValue.onValueChanged.RemoveAllListeners();
 			string text = cHeader.columnSetting.fieldToken.Stringify();
 			scriptValue.text = text;
-			scriptValue.onValueChanged.AddListener(OnScriptValueEdit);
+			EventBind.On(scriptValue.onValueChanged, this, OnScriptValueEdit);
 			// implicitly setup value types dropdown
 			OnScriptValueEdit(text);
 			// setup column label
 			columnLabel.onValueChanged.RemoveAllListeners();
 			columnLabel.text = cHeader.columnSetting.data.label;
-			columnLabel.onValueChanged.AddListener(OnLabelEdit);
+			EventBind.On(columnLabel.onValueChanged, this, OnLabelEdit);
 			// setup column width
 			columnWidth.onValueChanged.RemoveAllListeners();
 			columnWidth.text = cHeader.columnSetting.data.width.ToString();
-			columnWidth.onValueChanged.AddListener(OnColumnWidthEdit);
+			EventBind.On(columnWidth.onValueChanged, this, OnColumnWidthEdit);
 			// setup column index
 			columnIndex.onValueChanged.RemoveAllListeners();
 			columnIndex.text = column.ToString();
-			columnIndex.onValueChanged.AddListener(OnIndexEdit);
-			// setup type options dropdown
-			//List<ModalConfirmation.Entry> entries = new List<ModalConfirmation.Entry>();
-			//int currentIndex = -1;
-			//for (int i = 0; i < columnTypes.Count; ++i) {
-			//	entries.Add(new ModalConfirmation.Entry(columnTypes[i].name, null));
-			//	//Show.Log(columnTypes[i].name);
-			//	if (cHeader.columnSetting.data.uiBase.name.StartsWith(columnTypes[i].uiField.name)) {
-			//		currentIndex = i;
-			//	}
-			//}
+			EventBind.On(columnIndex.onValueChanged, this, OnIndexEdit);
+			// setup column type
 			List<ModalConfirmation.Entry> entries = columnTypes.ConvertAll(c => new ModalConfirmation.Entry(c.name, null));
 			int currentIndex = columnTypes.FindIndex(c=> cHeader.columnSetting.data.uiBase.name.StartsWith(c.uiField.name));
-			//Show.Log(currentIndex+" "+ cHeader.columnSetting.data.uiBase.name);
 			DropDownEvent.PopulateDropdown(fieldType, entries, this, SetFieldType, currentIndex);
+			// setup default value
+			object defVal = cHeader.columnSetting.defaultValue;
+			if (defVal != null) {
+				defaultValue.text = defVal.ToString();
+			} else {
+				defaultValue.text = "";
+			}
+			defaultValue.onValueChanged.RemoveAllListeners();
+			EventBind.On(defaultValue.onValueChanged, this, OnSetDefaultValue);
+			// setup column destroy option
+			trashColumn.onClick.RemoveAllListeners();
+			EventBind.On(trashColumn.onClick, this, ColumnRemove);
 		}
-
+		public void OnSetDefaultValue(string text) {
+			object value = null;
+			Tokenizer tokenizer = new Tokenizer();
+			CodeConvert.TryParseType(expectedValueType, text, ref value, null, tokenizer);
+			// parse errors
+			if (tokenizer.HasError()) { popup.Set("err", defaultValue.gameObject, tokenizer.GetErrorString()); return; }
+			cHeader.columnSetting.defaultValue = value;
+		}
 		public void SetFieldType(int index) {
 			cHeader.columnSetting.data.uiBase = columnTypes[index].uiField;
 			uds.RefreshRowAndColumnUi();
@@ -213,7 +222,7 @@ namespace NonStandard.GameUi.DataSheet {
 			if (ui == null) { ui = Global.GetComponent<ModalConfirmation>(); }
 			Udash.ColumnSetting cS = uds.GetColumn(column);
 			ui.OkCancel("Are you sure you want to delete column \"" + cS.data.label + "\"?", () => { uds.RemoveColumn(column); });
-			uds.Sort();
+			uds.Refresh();
 		}
 	}
 }

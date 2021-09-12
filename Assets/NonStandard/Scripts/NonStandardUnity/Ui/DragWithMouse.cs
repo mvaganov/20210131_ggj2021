@@ -28,7 +28,9 @@ namespace NonStandard.Ui {
 			rt.localPosition += (Vector3)data.delta;
 			if(rt.parent != null) {
 				RectTransform parentRt = rt.parent.GetComponent<RectTransform>();
-				KeepInBounds(parentRt.rect);
+				if (parentRt != null) {
+					KeepInBounds(parentRt.rect);
+				}
 			}
 			beingDragged = gameObject;
 		}

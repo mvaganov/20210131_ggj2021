@@ -227,7 +227,7 @@ namespace NonStandard.GameUi.DataSheet {
 				rObj.transform.GetChild(rObj.transform.childCount-1).SetParent(null, false);
 			}
 
-			for (int c = 0; c < columns.Length; ++c) {
+			for (int c = 0; c < data.columnSettings.Count; ++c) {
 				Udash.ColumnSetting colS = data.columnSettings[c];
 				GameObject fieldUi = null;
 				// check if there's a version of it from earlier
@@ -310,6 +310,20 @@ namespace NonStandard.GameUi.DataSheet {
 			data.MoveRow(oldIndex, newIndex);
 			contentRectangle.GetChild(oldIndex).SetSiblingIndex(newIndex);
 			RefreshRowUi();
+		}
+		public void RemoveRow(int index) {
+			Transform child = contentRectangle.transform.GetChild(index);
+			child.SetParent(null);
+			Destroy(child.gameObject);
+			data.RemoveRow(index);
+			RefreshRowUi();
+		}
+		public void RemoveColumn(int index) {
+			Transform column = headerRectangle.transform.GetChild(index);
+			column.SetParent(null);
+			Destroy(column.gameObject);
+			data.RemoveColumn(index);
+			Refresh();
 		}
 		/// <summary>
 		/// uses a dictionary to quickly calculate UI elements for rows, and position them in the view
@@ -442,10 +456,6 @@ namespace NonStandard.GameUi.DataSheet {
 				moveToEnd.Clear();
 			}
 
-		}
-		// TODO allow columns to be removed
-		public void RemoveColumn(int index) {
-			Show.Log("TODO allow columns to be removed after a confirmation popup");
 		}
 	}
 }

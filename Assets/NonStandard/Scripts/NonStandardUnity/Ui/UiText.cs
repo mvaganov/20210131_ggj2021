@@ -18,27 +18,11 @@ namespace NonStandard.Ui {
 			if (inf != null) { EventBind.IfNotAlready(setText, inf, "set_text"); getText = () => inf.text; }
 			Text txt = GetComponentInChildren<Text>();
 			if (txt != null) { EventBind.IfNotAlready(setText, txt, "set_text"); getText = () => txt.text; }
-			Image img = GetComponentInChildren<Image>();
-			SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
-			if (img != null || sr != null) { EventBind.IfNotAlready(setText, this, SetImageByName); getText = GetImageName; }
+			if (UiImage.HasImageHolder(gameObject)) { EventBind.IfNotAlready(setText, this, SetImageByName); getText = GetImageName; }
 		}
-		public void SetImageByName(string name) {
-			Image img = GetComponentInChildren<Image>();
-			if (img != null) { img.sprite = GetImageByName(name); return; }
-			SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
-			if (sr != null) { sr.sprite = GetImageByName(name); return; }
-		}
-		public string GetImageName() {
-			Image img = GetComponentInChildren<Image>();
-			if (img != null) { return img.sprite.name; }
-			SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
-			if (sr != null) { return sr.sprite.name; }
-			return null;
-		}
-		public Sprite GetImageByName(string img) {
-			Show.Log("need to get image "+img);
-			return null;
-		}
+		public void SetImageByName(string name) { UiImage.SetSpriteByName(gameObject, name); }
+		public string GetImageName() { return UiImage.GetImageName(gameObject); }
+		public static bool HasText(GameObject go) { return GetTextObject(go) != null; }
 		public static GameObject GetTextObject(GameObject go) {
 			UiText uit = go.GetComponentInChildren<UiText>();
 			if (uit != null) { return uit.gameObject; }

@@ -71,20 +71,32 @@ namespace NonStandard.Data {
 
 		// compute logic //////////////////////////////////////////////////
 
-		private static List<Computable<KEY, VAL>> path = new List<Computable<KEY, VAL>>();
-		private static bool watchingPath = false;
+		private static Dictionary<System.Threading.Thread, List<Computable<KEY, VAL>>> pathNotes = 
+			new Dictionary<System.Threading.Thread, List<Computable<KEY, VAL>>>();
+		private static Dictionary<System.Threading.Thread, bool> watchingPaths = new Dictionary<System.Threading.Thread, bool>();
 		public const int maxComputeDepth = 1000;
 
+		private void FollowComputePath() {
+			System.Threading.Thread t = System.Threading.Thread.CurrentThread;
+			if (!watchingPaths.TryGetValue(t, out bool watchingPath)) { watchingPath = false; }
+			if (!watchingPath) { return; }
+			if (!pathNotes.TryGetValue(t, out List<Computable<KEY, VAL>> path)) {
+				path = new List<Computable<KEY, VAL>>();
+				pathNotes[System.Threading.Thread.CurrentThread] = path;
+			}
+			string err = null;
+			if (path.Contains(this)) { err += "recursion"; }
+			if (path.Count >= maxComputeDepth) { err += "max compute depth reached"; }
+			if (!string.IsNullOrEmpty(err)) {
+				throw new Exception(err + string.Join("->", path.ConvertAll(kv => kv._val.ToString()).ToArray()) + "~>" + GetValue());
+			}
+			needsDependencyRecalculation = true;
+			path.Add(this);
+		}
+
 		public VAL GetValue() {
-			if (watchingPath) {
-				string err = null;
-				if (path.Contains(this)) { err += "recursion"; }
-				if (path.Count >= maxComputeDepth) { err += "max compute depth reached"; }
-				if (!string.IsNullOrEmpty(err)) {
-					throw new Exception(err + string.Join("->", path.ConvertAll(kv => kv._val.ToString()).ToArray()) + "~>" + GetValue());
-				}
-				needsDependencyRecalculation = true;
-				path.Add(this);
+			if (watchingPaths.Count > 0) {
+				FollowComputePath();
 			}
 			if (IsComputed && needsDependencyRecalculation) {
 				SetInternal(compute.Invoke());
@@ -118,9 +130,11 @@ namespace NonStandard.Data {
 			dependents.Add(kv);
 		}
 		public void SetCompute(Func<VAL> value) {
-			watchingPath = true; // TODO use watchingPath as a semaphore? this method will break if it's multi-threaded
+			System.Threading.Thread t = System.Threading.Thread.CurrentThread;
+			watchingPaths[t] = true;
 			compute = value;
-			path.Clear();
+			List<Computable<KEY, VAL>> path = new List<Computable<KEY, VAL>>();
+			pathNotes[t] = path;
 			if (reliesOn != null) {
 				reliesOn.ForEach(kv => kv.RemoveDependent(this));
 				reliesOn.Clear();
@@ -133,7 +147,8 @@ namespace NonStandard.Data {
 			reliesOn.AddRange(path);
 			reliesOn.ForEach(kv => kv.AddDependent(this));
 			path.Clear();
-			watchingPath = false;
+			watchingPaths.Remove(t);
+			pathNotes.Remove(t);
 		}
 		public override string ToString() { return key + ":" + val; }
 

@@ -167,7 +167,12 @@ namespace NonStandard.Data {
 					CompileEditPath(scope);
 				}
 				value = FilterType(value);
-				ReflectionParseExtension.TrySetValueCompiledPath(scope, editPath, value, errLog);
+				if (editPath != null) {
+					ReflectionParseExtension.TrySetValueCompiledPath(scope, editPath, value, errLog);
+				} else {
+					errLog.AddError(-1, "Cannot set value for " + _fieldToken.Stringify());
+					return false;
+				}
 
 				// TODO if this variable path exists in another column, refresh that column as well.
 				// TODO refresh columns that depend on data from this column.
@@ -437,9 +442,12 @@ namespace NonStandard.Data {
 				object[] newColumns = new object[columnSettings.Count];
 				for (int i = 0; i < columnIndex; ++i) { newColumns[i] = rd.columns[i]; }
 				for (int i = columnIndex; i < newColumns.Length; ++i) { newColumns[i] = rd.columns[i+1]; }
+				rd.columns = newColumns;
 			}
 		}
-
+		public void RemoveRow(int index) {
+			rows.RemoveAt(index);
+		}
 		public void MoveColumn(int oldIndex, int newIndex) {
 			if (oldIndex == newIndex) return;
 			// change the index of the column in the header
