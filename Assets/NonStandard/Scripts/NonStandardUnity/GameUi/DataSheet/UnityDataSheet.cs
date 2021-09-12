@@ -164,7 +164,7 @@ namespace NonStandard.GameUi.DataSheet {
 				Destroy(header);
 			}
 			unusedHeaders.Clear();
-			rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, cursor.x);
+			contentRectangle.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, cursor.x);
 		}
 
 		internal int GetMaximumUserColumn() {

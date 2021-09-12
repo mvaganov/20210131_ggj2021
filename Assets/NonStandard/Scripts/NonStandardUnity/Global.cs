@@ -17,9 +17,9 @@ namespace NonStandard {
 			return _instance;
 		}
 		public static GameObject Get() { return Instance().gameObject; }
-		public static T Get<T>(bool includeInactive = true) where T : Component {
-			return null;
-		}
+		//public static T Get<T>(bool includeInactive = true) where T : Component {
+		//	return null;
+		//}
 		public static T GetComponent<T>(bool includeInactive = true) where T : Component {
 			T found = Get<T>(null);
 			if (found != null) return found;
@@ -49,6 +49,13 @@ namespace NonStandard {
 		void Start() {
 			Instance();
 			if (globs.IndexOf(this) < 0) { globs.Add(this); }
+			Component[] components = GetComponents<Component>();
+			for(int i = 0; i < components.Length; ++i) {
+				System.Type t = components[i].GetType();
+				if (!directory.TryGetValue(t, out object foundIt)) {
+					directory[t] = components[i];
+				}
+			}
 		}
 	}
 }

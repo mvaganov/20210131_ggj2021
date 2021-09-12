@@ -14,7 +14,6 @@ namespace NonStandard.GameUi.DataSheet {
 			public Vector3 startingLocalPositionForStartElement;
 		}
 		private DragAction drag = null;
-		// TODO drag-and-drop interface to re-order elements
 		// TODO some kind of variable to keep track of drag order
 		private void Start() {
 			PointerTrigger.AddEvent(gameObject, EventTriggerType.PointerDown, this, PointerDown);
@@ -27,10 +26,12 @@ namespace NonStandard.GameUi.DataSheet {
 		private Rect FrameRect() {
 			ScrollRect sr = GetComponentInParent<ScrollRect>();
 			if(sr != null) {
-				RectTransform rt = sr.viewport.GetComponent<RectTransform>();
-				Rect r = rt.rect;
-				r.size *= rt.lossyScale;
-				r.position += FramePosition(rt);// (Vector2)rt.position + new Vector2(0, rt.rect.height / 2);
+				RectTransform viewport = sr.viewport.GetComponent<RectTransform>();
+				Rect r = viewport.rect;
+				r.position += FramePosition(viewport);// (Vector2)rt.position + new Vector2(0, rt.rect.height / 2);
+				r.size *= viewport.lossyScale;
+				//r.position *= rt.lossyScale;
+
 				return r;
 			}
 			return new Rect();
@@ -38,6 +39,7 @@ namespace NonStandard.GameUi.DataSheet {
 		private void PointerDown(BaseEventData bed) {
 			PointerEventData ped = bed as PointerEventData;
 			//Show.Log("click DOWN at " + ped.position+" "+ FrameRect().Contains(ped.position));
+			ClearDrag();
 			drag = new DragAction(transform.parent.GetSiblingIndex());
 			UnityDataSheet uds = GetComponentInParent<UnityDataSheet>();
 			GameObject rObj = Instantiate(uds.prefab_dataRow);
@@ -65,12 +67,34 @@ namespace NonStandard.GameUi.DataSheet {
 			//float calculatedRowCount = tableHeight / rowHeight;
 			p.y = ped.position.y;
 			drag.startElement.position = p;
-		//	float index = -(y+drag.startElement.localPosition.y) / rowHeight;
+
+			ScrollRect sr = GetComponentInParent<ScrollRect>();
+			RectTransform viewport = sr.viewport.GetComponent<RectTransform>();
+			Vector3 point = viewport.InverseTransformPoint(ped.position);
+
+			bool isInFrame = viewport.rect.Contains(point);//frameRect.Contains(ped.position);
+			if (!isInFrame) {
+				const float scrollSpeed = 2;
+				float y = point.y, yMin = viewport.rect.yMin, yMax = viewport.rect.yMax, yDelta = 0;
+				float x = point.x, xMin = viewport.rect.xMin, xMax = viewport.rect.xMax, xDelta = 0;
+				//Show.Log("yMin:"+viewport.rect.yMin + "  yMax:" + viewport.rect.yMax+"  y:" + point.y);
+				if (y < yMin) { yDelta += (yMin - y); }
+				if (y > yMax) { yDelta += (yMax - y); }
+				if (x < xMin) { xDelta += (xMin - x); }
+				if (x > xMax) { xDelta += (xMax - x); }
+				if (yDelta != 0 || xDelta != 0) { sr.velocity = new Vector2(xDelta, yDelta) * scrollSpeed; }
+			}
+			//	float index = -(y+drag.startElement.localPosition.y) / rowHeight;
 			//Show.Log($"rh{rowHeight}  th{tableHeight}  rc{rowCount}  crc{calculatedRowCount}  i{index}");
 		}
 		void StateOfDrag(PointerEventData ped, out int oldIndex, out int newIndex, out bool insideFrame) {
-			insideFrame = FrameRect().Contains(ped.position);
-
+			ScrollRect sr = GetComponentInParent<ScrollRect>();
+			RectTransform viewport = sr.viewport.GetComponent<RectTransform>();
+			Vector3 point = viewport.InverseTransformPoint(ped.position);
+			insideFrame = viewport.rect.Contains(point);
+			if (drag == null) { throw new System.Exception("missing drag datum"); }
+			if (drag.startElement == null) { throw new System.Exception("dunno what started this?"); }
+			if (drag.startElement.parent == null) { throw new System.Exception("weird hierarchy?"); }
 			RectTransform rowRt = drag.startElement.parent.GetComponent<RectTransform>();
 			float rowHeight = rowRt.sizeDelta.y;
 			float y = rowRt.localPosition.y;
@@ -78,8 +102,8 @@ namespace NonStandard.GameUi.DataSheet {
 			newIndex = (int)(-(y + drag.startElement.localPosition.y) / rowHeight);
 		}
 		private void PointerUp(BaseEventData bed) {
+			if (drag == null) { return; } // ignore invalid releases
 			PointerEventData ped = bed as PointerEventData;
-
 			StateOfDrag(ped, out int oldIndex, out int newIndex, out bool inFrame);
 			//Show.Log($"old{oldIndex}  new{newIndex}  in{inFrame}");
 			if (inFrame) {
@@ -90,6 +114,10 @@ namespace NonStandard.GameUi.DataSheet {
 			}
 
 			//Show.Log("click UP at " + ped.position + " " + FrameRect().Contains(ped.position));
+			ClearDrag();
+		}
+		void ClearDrag() {
+			if (drag == null) return;
 			drag.startElement.localPosition = drag.startingLocalPositionForStartElement;
 			Destroy(drag.predictionRect.gameObject);
 			drag = null;

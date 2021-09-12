@@ -1,4 +1,5 @@
 ﻿using NonStandard;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -48,7 +49,9 @@ public class PixelInteraction : MonoBehaviour {
         }
     }
 
-    public static bool C32Equals(Color32 a, Color32 b) { return a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a; }
+	internal void DrawRect(Rect r, Color color) { Lines.DrawAABB(rect, r.min, r.max, color); }
+
+	public static bool C32Equals(Color32 a, Color32 b) { return a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a; }
     /// <param name="rectTransform">rectangle to draw on. should have RawImage (or no Renderer at all)</param>
     /// <param name="buffer">used to write pixel data</param>
     /// <param name="color">what color to fill. if no value given, will set entire texture to <see cref="UnityEngine.Color.clear"/></param>
