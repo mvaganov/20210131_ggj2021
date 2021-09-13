@@ -10,7 +10,8 @@ namespace NonStandard.Ui {
 		public static Dictionary<string, Sprite> allSprites = new Dictionary<string, Sprite>();
 
 		private void Start() {
-			Object[] spriteList = FindObjectsOfTypeIncludingAssets(typeof(Sprite));
+			Object[] spriteList = Resources.FindObjectsOfTypeAll(typeof(Sprite));//FindObjectsOfTypeIncludingAssets(typeof(Sprite));
+			// Show.Log(spriteList.JoinToString("\n", s => s.name));
 			for (int i = 0; i < spriteList.Length; ++i) {
 				allSprites[spriteList[i].name] = spriteList[i] as Sprite;
 			}

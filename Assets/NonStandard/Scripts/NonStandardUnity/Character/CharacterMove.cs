@@ -341,23 +341,23 @@ namespace NonStandard.Character {
 			[HideInInspector] public float targetJumpHeight;
 			[HideInInspector] public Vector3 position;
 			/// <summary>when jump was started, ideally when the button was pressed</summary>
-			protected long jumpTime;
+			protected ulong jumpTime;
 			/// <summary>when jump should reach apex</summary>
-			protected long peakTime;
+			protected ulong peakTime;
 			/// <summary>when jump start position was last recognized as stable</summary>
-			protected long stableTime;
+			protected ulong stableTime;
 			/// <summary>when the jump button was pressed</summary>
-			protected long timePressed;
+			protected ulong timePressed;
 			/// <summary>How many double jumps have happend since being on the ground</summary>
 			[HideInInspector] public int usedDoubleJumps;
 			/// <summary>debug artifact, for seeing the jump arc</summary>
 			[HideInInspector] Lines.Wire jumpArc;
 			public bool Pressed {
 				get { return pressed; }
-				set { if (value && !pressed) { timePressed = Proc.Time; } pressed = value; }
+				set { if (value && !pressed) { timePressed = Proc.Now; } pressed = value; }
 			}
 			public void Start(Vector3 p) {
-				jumpTime = Proc.Time;
+				jumpTime = Proc.Now;
 				peakTime = 0;
 				isJumping = true;
 				peaked = false;
@@ -373,13 +373,13 @@ namespace NonStandard.Character {
 				if (!enabled) return;
 				bool peakedAtStart = peaked, jumpingAtStart = isJumping;
 				bool jpress = pressed;
-				long now = Proc.Time;
+				ulong now = Proc.Now;
 				if (TimedJumpPress > 0) {
 					jpress = true; TimedJumpPress -= Time.deltaTime; if (TimedJumpPress < 0) { TimedJumpPress = 0; }
 				}
 				bool lateButForgiven = false;
-				long late = 0;
-				if (cm.move.isStableOnGround) { usedDoubleJumps = 0; } else if (jpress && forgiveLateJumps && (late = System.Environment.TickCount - stableTime) < jumpLagForgivenessMs) {
+				ulong late = 0;
+				if (cm.move.isStableOnGround) { usedDoubleJumps = 0; } else if (jpress && forgiveLateJumps && (late = Proc.Now - stableTime) < jumpLagForgivenessMs) {
 					stableTime = 0;
 					cm.move.isStableOnGround = lateButForgiven = true;
 				}
@@ -400,11 +400,12 @@ namespace NonStandard.Character {
 				}
 			}
 
-			private void JumpUpdate(long now, float gForce, float speed, bool jpress, Transform t, ref Vector3 vel) {
+			private void JumpUpdate(ulong now, float gForce, float speed, bool jpress, Transform t, ref Vector3 vel) {
 				if (!heightSet) {
 					CalcJumpOverTime(now - jumpTime, gForce, out float y, out float yVelocity);
 					if (float.IsNaN(y)) {
-						//Show.Log("bad y value... "+yVelocity); // TODO figure out why a bad value happens sometimes?
+						Show.Log("if you see this error message, there might be a timing problem\n"+
+							(now - jumpTime)+" bad y value... "+yVelocity+"  "+ peakTime+" vs "+now); // TODO why bad value happens sometimes?
 						y = 0;
 						yVelocity = 0;
 					}
@@ -420,14 +421,14 @@ namespace NonStandard.Character {
 				peaked = heightSet && now >= peakTime;
 				isJumping = !peaked && jpress;
 			}
-			private void CalcJumpOverTime(long jumpMsSoFar, float gForce, out float yPos, out float yVel) {
+			private void CalcJumpOverTime(ulong jumpMsSoFar, float gForce, out float yPos, out float yVel) {
 				float jumptiming = jumpMsSoFar / 1000f;
 				float jumpP = Mathf.Min(jumptiming / fullJumpPressDuration, 1);
 				if (jumpP >= 1) { heightSet = true; }
 				targetJumpHeight = (maxJumpHeight - minJumpHeight) * jumpP + minJumpHeight;
 				float jVelocity = CalcJumpVelocity(targetJumpHeight, gForce);
 				float jtime = 500 * CalcStandardDuration_WithJumpVelocity(jVelocity, gForce);
-				peakTime = jumpTime + (int)jtime;
+				peakTime = jumpTime + (uint)jtime;
 				yPos = CalcHeightAt_WithJumpVelocity(jVelocity, jumptiming, targetJumpHeight, gForce);
 				yVel = CalcVelocityAt_WithJumpVelocity(jVelocity, jumptiming, gForce);
 			}
@@ -454,7 +455,7 @@ namespace NonStandard.Character {
 			}
 			public void MarkStableJumpPoint(Vector3 position) {
 				this.position = position;
-				stableTime = Proc.Time;
+				stableTime = Proc.Now;
 			}
 			/// <param name="pos">starting position of the jump</param>
 			/// <param name="dir"></param>

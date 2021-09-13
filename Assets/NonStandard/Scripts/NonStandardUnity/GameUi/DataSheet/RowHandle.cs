@@ -9,9 +9,54 @@ namespace NonStandard.GameUi.DataSheet {
 			public int fromIndex;
 			public int toIndex;
 			public RectTransform predictionRect;
-			public DragAction(int startIndex) { fromIndex = toIndex = startIndex; }
+			public DragAction(Transform transform) {
+				fromIndex = toIndex = transform.parent.GetSiblingIndex();
+				UnityDataSheet uds = transform.GetComponentInParent<UnityDataSheet>();
+				GameObject rObj = Instantiate(uds.prefab_dataRow);
+				rObj.SetActive(true);
+				rObj.transform.SetParent(transform, false);
+				predictionRect = rObj.GetComponent<RectTransform>();
+				RectTransform pRect = transform.parent.GetComponent<RectTransform>();
+				//Show.Log(pRect.sizeDelta.x);
+				predictionRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, pRect.sizeDelta.x);
+				predictionRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, pRect.sizeDelta.y);
+				predictionRect.anchoredPosition = Vector2.zero;
+				startElement = transform.GetComponent<RectTransform>();
+				startingLocalPositionForStartElement = startElement.localPosition;
+				sr = transform.GetComponentInParent<ScrollRect>();
+				viewport = sr.viewport.GetComponent<RectTransform>();
+			}
+			public void PointerDrag(PointerEventData ped) {
+				Vector2 p = startElement.position;
+				p.y = ped.position.y;
+				startElement.position = p;
+				Vector3 point = viewport.InverseTransformPoint(ped.position);
+				Rect rect = viewport.rect;
+				bool isInFrame = rect.Contains(point);//frameRect.Contains(ped.position);
+				if (isInFrame) {
+					scrollVelocity = Vector2.zero;
+					return;
+				}
+				const float scrollSpeed = 2;
+				float y = point.y, yMin = rect.yMin, yMax = rect.yMax, yDelta = 0;
+				float x = point.x, xMin = rect.xMin, xMax = rect.xMax, xDelta = 0;
+				//Show.Log("yMin:"+viewport.rect.yMin + "  yMax:" + viewport.rect.yMax+"  y:" + point.y);
+				if (y < yMin) { yDelta += (yMin - y); }
+				if (y > yMax) { yDelta += (yMax - y); }
+				if (x < xMin) { xDelta += (xMin - x); }
+				if (x > xMax) { xDelta += (xMax - x); }
+				if (yDelta != 0 || xDelta != 0) { scrollVelocity = new Vector2(xDelta, yDelta) * scrollSpeed; }
+			}
+
 			public RectTransform startElement;
 			public Vector3 startingLocalPositionForStartElement;
+			public Vector2 scrollVelocity = Vector2.zero;
+			public ScrollRect sr;
+			public RectTransform viewport;
+
+			public void Update() {
+				if (scrollVelocity != Vector2.zero) { sr.velocity = scrollVelocity; }
+			}
 		}
 		private DragAction drag = null;
 		// TODO some kind of variable to keep track of drag order
@@ -20,72 +65,20 @@ namespace NonStandard.GameUi.DataSheet {
 			PointerTrigger.AddEvent(gameObject, EventTriggerType.Drag, this, PointerDrag);
 			PointerTrigger.AddEvent(gameObject, EventTriggerType.PointerUp, this, PointerUp);
 		}
-		private Vector2 FramePosition(RectTransform viewport) {
-			return (Vector2)viewport.position;// + new Vector2(0, viewport.rect.height * viewport.lossyScale.y / 2);
-		}
-		private Rect FrameRect() {
-			ScrollRect sr = GetComponentInParent<ScrollRect>();
-			if(sr != null) {
-				RectTransform viewport = sr.viewport.GetComponent<RectTransform>();
-				Rect r = viewport.rect;
-				r.position += FramePosition(viewport);// (Vector2)rt.position + new Vector2(0, rt.rect.height / 2);
-				r.size *= viewport.lossyScale;
-				//r.position *= rt.lossyScale;
-
-				return r;
-			}
-			return new Rect();
-		}
 		private void PointerDown(BaseEventData bed) {
 			PointerEventData ped = bed as PointerEventData;
 			//Show.Log("click DOWN at " + ped.position+" "+ FrameRect().Contains(ped.position));
 			ClearDrag();
-			drag = new DragAction(transform.parent.GetSiblingIndex());
-			UnityDataSheet uds = GetComponentInParent<UnityDataSheet>();
-			GameObject rObj = Instantiate(uds.prefab_dataRow);
-			rObj.SetActive(true);
-			rObj.transform.SetParent(transform,false);
-			drag.predictionRect = rObj.GetComponent<RectTransform>();
-			RectTransform pRect = transform.parent.GetComponent<RectTransform>();
-			//Show.Log(pRect.sizeDelta.x);
-			drag.predictionRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, pRect.sizeDelta.x);
-			drag.predictionRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, pRect.sizeDelta.y);
-			drag.predictionRect.anchoredPosition = Vector2.zero;
-			drag.startElement = GetComponent<RectTransform>();
-			drag.startingLocalPositionForStartElement = drag.startElement.localPosition;
-			// TODO mark the row being moved. maybe make it dark? or hide the braille icon?
+			drag = new DragAction(transform);
+			enabled = true;
 		}
 		private void PointerDrag(BaseEventData bed) {
-			PointerEventData ped = bed as PointerEventData;
-			//Show.Log(FrameRect().Contains(ped.position) + " drag " + ped.position+ " "+ped.delta + " " + FrameRect());
-			Vector2 p = drag.startElement.position;
-		//	RectTransform rowRt = drag.startElement.parent.GetComponent<RectTransform>();
-		//	float rowHeight = rowRt.sizeDelta.y;
-		//	float y = rowRt.localPosition.y;
-			//float tableHeight = drag.startElement.parent.parent.GetComponent<RectTransform>().sizeDelta.y;
-			//int rowCount = drag.startElement.parent.parent.childCount;
-			//float calculatedRowCount = tableHeight / rowHeight;
-			p.y = ped.position.y;
-			drag.startElement.position = p;
-
-			ScrollRect sr = GetComponentInParent<ScrollRect>();
-			RectTransform viewport = sr.viewport.GetComponent<RectTransform>();
-			Vector3 point = viewport.InverseTransformPoint(ped.position);
-
-			bool isInFrame = viewport.rect.Contains(point);//frameRect.Contains(ped.position);
-			if (!isInFrame) {
-				const float scrollSpeed = 2;
-				float y = point.y, yMin = viewport.rect.yMin, yMax = viewport.rect.yMax, yDelta = 0;
-				float x = point.x, xMin = viewport.rect.xMin, xMax = viewport.rect.xMax, xDelta = 0;
-				//Show.Log("yMin:"+viewport.rect.yMin + "  yMax:" + viewport.rect.yMax+"  y:" + point.y);
-				if (y < yMin) { yDelta += (yMin - y); }
-				if (y > yMax) { yDelta += (yMax - y); }
-				if (x < xMin) { xDelta += (xMin - x); }
-				if (x > xMax) { xDelta += (xMax - x); }
-				if (yDelta != 0 || xDelta != 0) { sr.velocity = new Vector2(xDelta, yDelta) * scrollSpeed; }
-			}
-			//	float index = -(y+drag.startElement.localPosition.y) / rowHeight;
-			//Show.Log($"rh{rowHeight}  th{tableHeight}  rc{rowCount}  crc{calculatedRowCount}  i{index}");
+			drag.PointerDrag(bed as PointerEventData);
+			drag.Update();
+		}
+		private void Update() {
+			if (drag == null) return;
+			drag.Update();
 		}
 		void StateOfDrag(PointerEventData ped, out int oldIndex, out int newIndex, out bool insideFrame) {
 			ScrollRect sr = GetComponentInParent<ScrollRect>();
@@ -112,9 +105,9 @@ namespace NonStandard.GameUi.DataSheet {
 					uds.MoveRow(oldIndex, newIndex);
 				}
 			}
-
 			//Show.Log("click UP at " + ped.position + " " + FrameRect().Contains(ped.position));
 			ClearDrag();
+			enabled = false;
 		}
 		void ClearDrag() {
 			if (drag == null) return;
