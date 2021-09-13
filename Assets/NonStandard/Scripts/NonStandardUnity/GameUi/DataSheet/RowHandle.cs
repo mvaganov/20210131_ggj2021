@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 namespace NonStandard.GameUi.DataSheet {
 	public class RowHandle : MonoBehaviour {
+		// TODO some kind of variable to keep track of drag order too.
+		private DragAction drag = null;
 		public class DragAction {
 			public int fromIndex;
 			public int toIndex;
@@ -27,25 +29,14 @@ namespace NonStandard.GameUi.DataSheet {
 				viewport = sr.viewport.GetComponent<RectTransform>();
 			}
 			public void PointerDrag(PointerEventData ped) {
+				const float scrollSpeed = 2;
 				Vector2 p = startElement.position;
 				p.y = ped.position.y;
 				startElement.position = p;
-				Vector3 point = viewport.InverseTransformPoint(ped.position);
-				Rect rect = viewport.rect;
-				bool isInFrame = rect.Contains(point);//frameRect.Contains(ped.position);
-				if (isInFrame) {
-					scrollVelocity = Vector2.zero;
-					return;
+				Direction2D dir = DragWithMouse.CalculatePointerOutOfBounds(viewport, ped.position, out Vector2 offset);
+				if (dir != Direction2D.None) {
+					scrollVelocity = offset * scrollSpeed;
 				}
-				const float scrollSpeed = 2;
-				float y = point.y, yMin = rect.yMin, yMax = rect.yMax, yDelta = 0;
-				float x = point.x, xMin = rect.xMin, xMax = rect.xMax, xDelta = 0;
-				//Show.Log("yMin:"+viewport.rect.yMin + "  yMax:" + viewport.rect.yMax+"  y:" + point.y);
-				if (y < yMin) { yDelta += (yMin - y); }
-				if (y > yMax) { yDelta += (yMax - y); }
-				if (x < xMin) { xDelta += (xMin - x); }
-				if (x > xMax) { xDelta += (xMax - x); }
-				if (yDelta != 0 || xDelta != 0) { scrollVelocity = new Vector2(xDelta, yDelta) * scrollSpeed; }
 			}
 
 			public RectTransform startElement;
@@ -58,8 +49,6 @@ namespace NonStandard.GameUi.DataSheet {
 				if (scrollVelocity != Vector2.zero) { sr.velocity = scrollVelocity; }
 			}
 		}
-		private DragAction drag = null;
-		// TODO some kind of variable to keep track of drag order
 		private void Start() {
 			PointerTrigger.AddEvent(gameObject, EventTriggerType.PointerDown, this, PointerDown);
 			PointerTrigger.AddEvent(gameObject, EventTriggerType.Drag, this, PointerDrag);

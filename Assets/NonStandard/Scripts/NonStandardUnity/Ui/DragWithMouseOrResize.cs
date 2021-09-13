@@ -5,12 +5,15 @@ using UnityEngine.UI;
 namespace NonStandard.Ui.Mouse {
 	public class DragWithMouseOrResize : DragWithMouse {
 		private bool pointerDown;
-		public bool disableReize = true;
+		public bool disableReize;
 		public bool dynamicMouseCursor = true;
 		public float resizeEdgeRadius = 10;
 		public Vector2 minimumSize = new Vector2(-1, -1);
 		[Tooltip("if negative values, calculate a minimum size based on child elements")]
 		private Vector2 startSize;
+		/// <summary>
+		/// multiple resizable windows can overlap, which means each one can have a different cursor state.
+		/// </summary>
 		private Direction2D mouseCursorState = Direction2D.None;
 		private Direction2D heldDir = Direction2D.None;
 
@@ -62,7 +65,7 @@ namespace NonStandard.Ui.Mouse {
 			//AddPointerEvent(EventTriggerType.Move, this, CursorChangeOnMove);
 			AddPointerEvent(EventTriggerType.PointerEnter, this, PointerEnter);
 			AddPointerEvent(EventTriggerType.PointerExit, this, PointerExit);
-			enabled = false;
+			//enabled = false;
 		}
 
 		void Start() {
@@ -93,6 +96,7 @@ namespace NonStandard.Ui.Mouse {
 			if (heldDir == Direction2D.None) {
 				heldDir = mouseCursorState;
 			}
+			data.Use();
 		}
 
 		public virtual void BeginDrag(BaseEventData data) {
@@ -101,6 +105,7 @@ namespace NonStandard.Ui.Mouse {
 				MouseCursor mc = MouseCursor.Instance;
 				if (mc != null) { mc.SetCursor(this, MouseCursor.CursorType.Move); }
 			}
+			data.Use();
 		}
 
 		public override void OnDrag(BaseEventData basedata) {
@@ -113,6 +118,7 @@ namespace NonStandard.Ui.Mouse {
 				ResizeRect(data.delta, heldDir);
 			}
 			beingDragged = gameObject;
+			data.Use();
 		}
 
 		//public override void OnEndDrag(BaseEventData data) { base.OnEndDrag(data); }
@@ -134,34 +140,46 @@ namespace NonStandard.Ui.Mouse {
 		}
 
 		public virtual void PointerEnter(BaseEventData data) {
-			//Debug.Log("enter "+this);
-			enabled = resizeEdgeRadius != 0;
+			// Show.Log("enter " + this);
+			if (disableReize) { mouseCursorState = Direction2D.None; return; }
+			//enabled = resizeEdgeRadius != 0;
 		}
 		public virtual void PointerExit(BaseEventData data) {
-			//Debug.Log("exit "+this);
+			// Show.Log("exit " + this);
+			//Direction2D dir = DragWithMouse.CalculatePointerOutOfBounds(rt, (data as PointerEventData).position, out Vector2 offset, -resizeEdgeRadius);
+			//Show.Log(dir+" "+offset);
+			if (disableReize) { mouseCursorState = Direction2D.None; return; }
 			if (dynamicMouseCursor) {
 				MouseCursor mc = MouseCursor.Instance;
 				if (mc != null) { mc.UnsetCursor(this); }
 			}
-			if (heldDir == Direction2D.None) {
-				mouseCursorState = Direction2D.None;
-				enabled = false;
-			}
+			//if (heldDir == Direction2D.None) {
+			//	mouseCursorState = Direction2D.None;
+			//	enabled = false;
+			//}
 		}
 
 		public virtual void CursorChangeOnMove(BaseEventData data) {
 			MouseCursor mc = MouseCursor.Instance;
-			Vector3[] corners = new Vector3[4];
-			rt.GetWorldCorners(corners);
-			Vector2 min = corners[1], max = corners[3];
-			Vector2 mousePosition = Input.mousePosition; // data.position;
-			mouseCursorState = CalculateEdgeDirection(mousePosition, min, max, resizeEdgeRadius);
+			//Vector3[] corners = new Vector3[4];
+			//rt.GetWorldCorners(corners);
+			//Vector2 min = corners[1], max = corners[3];
+			//Vector2 mousePosition = Input.mousePosition; // data.position;
+			//mouseCursorState = CalculateEdgeDirection(mousePosition, min, max, resizeEdgeRadius);
+			Vector2 pos = Input.mousePosition;
+			if (data is PointerEventData ped) { pos = ped.position; }
+			mouseCursorState = CalculatePointerOutOfBounds(rt, pos, out Vector2 offset, -resizeEdgeRadius);
+			float r2 = resizeEdgeRadius * 2;
+			if (Mathf.Abs(offset.x) > resizeEdgeRadius || Mathf.Abs(offset.y) > resizeEdgeRadius) {
+				mouseCursorState = Direction2D.None;
+			}
 			if (!dynamicMouseCursor || mc == null) return;
 			if (mouseCursorState != Direction2D.None) {
 				mc.SetCursor(this, mouseCursorState);
 			} else {
 				mc.SetCursor(this, MouseCursor.CursorType.Cursor);
 			}
+			data?.Use();
 		}
 	}
 }
