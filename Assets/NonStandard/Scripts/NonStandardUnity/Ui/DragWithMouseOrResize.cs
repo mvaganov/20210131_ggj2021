@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using NonStandard.Data;
+using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -17,6 +18,8 @@ namespace NonStandard.Ui.Mouse {
 		private Direction2D mouseCursorState = Direction2D.None;
 		private Direction2D heldDir = Direction2D.None;
 
+		public UnityEvent_Vector2 onResize = new UnityEvent_Vector2();
+
 		public static void ResizeRect(RectTransform rectTransform, Vector2 move, Direction2D dir) {
 			Vector2 min = rectTransform.offsetMin, max = rectTransform.offsetMax;
 			if ((dir & Direction2D.Bottom) != 0) { min.y += move.y; }
@@ -32,6 +35,7 @@ namespace NonStandard.Ui.Mouse {
 			if (size.width < minimumSize.x || size.height < minimumSize.y) {
 				ResizeRect(rt, -move, dir);
 			}
+			onResize?.Invoke(rt.rect.size);
 		}
 
 		public static Direction2D CalculateEdgeDirection(Vector2 p, Vector2 min, Vector2 max, float edgeRadius) {
@@ -180,6 +184,10 @@ namespace NonStandard.Ui.Mouse {
 				mc.SetCursor(this, MouseCursor.CursorType.Cursor);
 			}
 			data?.Use();
+		}
+
+		public void RefreshContentRect(RectTransform contentRect) {
+			contentRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, contentRect.rect.width);
 		}
 	}
 }

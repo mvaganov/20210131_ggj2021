@@ -59,7 +59,7 @@ namespace NonStandard.GameUi.DataSheet {
 		public UiHoverPopup popup;
 		[TextArea(1, 10)]
 		public string columnSetup;
-
+		Vector2 contentAreaSize;
 		public int Count => data.rows.Count;
 
 		public int GetRowIndex(GameObject rowObject) {
@@ -159,12 +159,17 @@ namespace NonStandard.GameUi.DataSheet {
 				}
 				cursor.x += w * rt.localScale.x;
 			}
-			for(int i = 0; i < unusedHeaders.Count; ++i) {
+			contentAreaSize.x = cursor.x;
+			for (int i = 0; i < unusedHeaders.Count; ++i) {
 				GameObject header = unusedHeaders[i];
 				Destroy(header);
 			}
 			unusedHeaders.Clear();
 			contentRectangle.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, cursor.x);
+		}
+		public void RefreshContentSize() {
+			contentRectangle.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, contentAreaSize.x);
+			contentRectangle.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, contentAreaSize.y);
 		}
 
 		internal int GetMaximumUserColumn() {
@@ -393,6 +398,7 @@ namespace NonStandard.GameUi.DataSheet {
 				}));
 				unused.ForEach(go => { go.transform.SetParent(null); Destroy(go); });
 			}
+			contentAreaSize.y = -cursor.y;
 			contentRectangle.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, -cursor.y);
 			return srcToRowUiMap;
 		}
