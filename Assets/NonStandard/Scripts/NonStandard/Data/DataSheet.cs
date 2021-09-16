@@ -318,6 +318,9 @@ namespace NonStandard.Data {
 			rows = new List<RowData>();
 			InsertRange(0, source, errLog);
 		}
+		public void Clear() {
+			rows.Clear();
+		}
 
 		public void InsertRange(int index, IList<object> source, TokenErrLog errLog) {
 			RowData[] newRows = new RowData[source.Count];

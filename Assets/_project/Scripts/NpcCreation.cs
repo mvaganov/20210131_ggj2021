@@ -1,4 +1,5 @@
-﻿using NonStandard.Character;
+﻿using NonStandard;
+using NonStandard.Character;
 using NonStandard.Data;
 using NonStandard.Data.Parse;
 using NonStandard.GameUi;
@@ -48,5 +49,11 @@ public class NpcCreation : MonoBehaviour
 			npcs.Add(npc.GetComponent<CharacterRoot>());
 		}
 
+	}
+
+	public void PopulateWithCharacters(List<object> chars) {
+		CharacterProxy charMove = Global.GetComponent<CharacterProxy>();
+		chars.Add(charMove.Target);
+		chars.AddRange(npcs);
 	}
 }

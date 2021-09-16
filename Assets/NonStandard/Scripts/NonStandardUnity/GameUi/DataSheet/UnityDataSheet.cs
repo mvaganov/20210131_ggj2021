@@ -59,6 +59,7 @@ namespace NonStandard.GameUi.DataSheet {
 		public UiHoverPopup popup;
 		[TextArea(1, 10)]
 		public string columnSetup;
+		public UnityEvent_List_object dataPopulator = new UnityEvent_List_object();
 		Vector2 contentAreaSize;
 		public int Count => data.rows.Count;
 
@@ -110,6 +111,53 @@ namespace NonStandard.GameUi.DataSheet {
 				++index;
 			}
 			RefreshHeaders();
+		}
+
+		public void RefreshData() {
+			// get the data
+			List<object> objects = new List<object>();
+			dataPopulator.Invoke(objects);
+			// take stock of what objects are here
+			HashSet<object> manifest = new HashSet<object>();
+			for(int i = 0; i < data.rows.Count; ++i) {
+				object o = data.rows[i].model;
+				if (o != null) {
+					if (manifest.Contains(o)) { throw new Exception("old data contains duplicate "+o+" at index "+i); }
+					manifest.Add(o);
+				}
+			}
+			// now check which ones are not in the new list, and which ones are missing in the new list
+			Dictionary<object, int> toAdd = new Dictionary<object, int>();
+			for (int i = 0; i < objects.Count; ++i) {
+				object o = objects[i];
+				if (!manifest.Contains(o)) {
+					if (toAdd.TryGetValue(o, out int index)) { throw new Exception("new data contains duplicate " + o + " at index " + 
+						index+ " and index " + i); }
+					toAdd[o] = i;
+				} else {
+					manifest.Remove(o);
+				}
+			}
+			// remove the old values that are not in the new set
+			for(int i = data.rows.Count-1; i >= 0; --i) {
+				if (manifest.Contains(data.rows[i].model)) {
+					data.rows.RemoveAt(i);
+				}
+			}
+			// add the new values that should be in the new set, in the order they appeared from the new data
+			List<KeyValuePair<object, int>> values = toAdd.GetPairs();
+			values.Sort((a, b) => a.Value.CompareTo(b.Value));
+			for(int i = 0; i < values.Count; ++i) {
+				int index = values[i].Value;
+				if (index < data.rows.Count) {
+					data.InsertRow(index, values[i].Key);
+				} else {
+					data.AddRow(values[i].Key);
+				}
+			}
+			FullRefresh();
+			//data.Clear();
+			//Load(objects);
 		}
 
 		public void RefreshHeaders() {
@@ -188,13 +236,14 @@ namespace NonStandard.GameUi.DataSheet {
 			}
 			Init();
 			Proc.Enqueue(() => {
-				NpcCreation npcs = Global.GetComponent<NpcCreation>();
-				CharacterProxy charMove = Global.GetComponent<CharacterProxy>();
-				List<object> chars = new List<object>();
-				chars.Add(charMove.Target);
-				chars.AddRange(npcs.npcs);
-				//Show.Log("listing "+chars.JoinToString());
-				Load(chars);
+				//NpcCreation npcs = Global.GetComponent<NpcCreation>();
+				//CharacterProxy charMove = Global.GetComponent<CharacterProxy>();
+				//List<object> chars = new List<object>();
+				//chars.Add(charMove.Target);
+				//chars.AddRange(npcs.npcs);
+				////Show.Log("listing "+chars.JoinToString());
+				////Load(chars);
+				RefreshData();
 			});
 			//string test = "{a:1,b:[a,[1,2],{a:a,b:[b]}],c:{a:1,b:2}}";
 			//CodeConvert.TryParse(test, out object obj);
@@ -204,7 +253,8 @@ namespace NonStandard.GameUi.DataSheet {
 		public void Load(List<object> source) {
 			//list = source;
 			data.InitData(source, errLog);
-			Refresh();
+			if (errLog.HasError()) { popup.Set("err", null, errLog.GetErrorString()); }
+			RefreshUi();
 		}
 
 		RowObject CreateRow(RowData rowData, float yPosition = float.NaN) {
@@ -289,26 +339,26 @@ namespace NonStandard.GameUi.DataSheet {
 				}
 			}
 		}
-		public void Refresh() {
+		public void RefreshUi() {
 			RefreshHeaders();
 			RefreshRowAndColumnUi();
 		}
 
 		public void FullRefresh() {
 			data.RefreshAll();
-			Refresh();
+			RefreshUi();
 		}
 		public void ResizeColumnWidth(int column, float oldWidth, float newWidth) {
 			//Show.Log("TODO resize width of column "+column+" from "+oldWidth+" to "+newWidth);
 			data.columnSettings[column].data.width = newWidth;
-			Refresh();
+			RefreshUi();
 		}
 		public void MoveColumn(int oldIndex, int newIndex) {
 			// need to re-arrange headers in data
 			data.MoveColumn(oldIndex, newIndex);
 			// change the index of the column in the header (UI)
 			headerRectangle.GetChild(oldIndex).SetSiblingIndex(newIndex);
-			Refresh();
+			RefreshUi();
 		}
 
 		public void MoveRow(int oldIndex, int newIndex) {
@@ -328,7 +378,7 @@ namespace NonStandard.GameUi.DataSheet {
 			column.SetParent(null);
 			Destroy(column.gameObject);
 			data.RemoveColumn(index);
-			Refresh();
+			RefreshUi();
 		}
 		/// <summary>
 		/// uses a dictionary to quickly calculate UI elements for rows, and position them in the view
@@ -442,7 +492,7 @@ namespace NonStandard.GameUi.DataSheet {
 			};
 			data.AddColumn(column);
 			MakeSureColumnsMarkedLastAreLast();
-			Refresh();
+			RefreshUi();
 			return column;
 		}
 

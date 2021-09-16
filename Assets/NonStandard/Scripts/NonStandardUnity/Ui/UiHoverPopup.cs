@@ -28,12 +28,14 @@ public class UiHoverPopup : MonoBehaviour {
 		UiText.SetText(gameObject, text);
 		gameObject.SetActive(true);
 		UncolorLastInput();
-		Image img = errorInputObject.GetComponent<Image>();
-		if (mt != null && img.color != mt.color) { defaultColor = img.color; }
-		if (mt != null) {
-			img.color = mt.color;
-		} else {
-			img.color = defaultColor;
+		if (errorInputObject != null) {
+			Image img = errorInputObject.GetComponent<Image>();
+			if (mt != null && img.color != mt.color) { defaultColor = img.color; }
+			if (mt != null) {
+				img.color = mt.color;
+			} else {
+				img.color = defaultColor;
+			}
 		}
 		lastErrorInput = errorInputObject;
 	}
