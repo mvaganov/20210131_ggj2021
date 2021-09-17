@@ -1,6 +1,8 @@
 ﻿using NonStandard;
+using NonStandard.Character;
 using NonStandard.GameUi;
 using NonStandard.Ui;
+using NonStandard.Utility.UnityEditor;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -33,6 +35,10 @@ public class Team : MonoBehaviour {
 		if (members.IndexOf(memberObject) < 0) {
 			members.Add(memberObject);
 			teamMember.onJoinTeam?.Invoke(this);
+		}
+		CharacterRoot cr = memberObject.GetComponent<CharacterRoot>();
+		if (cr) {
+			EventBind.IfNotAlready(cr.activateFunction, this, ActivateTeamMember);
 		}
 		if(members.Count > 1) {
 			prev?.gameObject.SetActive(true);

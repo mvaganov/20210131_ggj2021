@@ -81,6 +81,8 @@ namespace NonStandard.Data {
 			/// </summary>
 			public object defaultValue = null;
 
+			// TODO onClick, a string to parse as a function to execute
+
 			/// <summary>
 			/// set the script that determines what the values in this column are
 			/// </summary>
