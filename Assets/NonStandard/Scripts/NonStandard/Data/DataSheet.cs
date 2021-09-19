@@ -16,9 +16,9 @@ namespace NonStandard.Data {
 		public string description;
 	}
 	public class RowData {
-		public object model;
+		public object obj;
 		public object[] columns;
-		public RowData(object model, object[] columns) { this.model = model; this.columns = columns; }
+		public RowData(object model, object[] columns) { this.obj = model; this.columns = columns; }
 	}
 	public class DataSheet : DataSheet<ColumnData> {
 		public DataSheet() : base() { }
@@ -251,7 +251,7 @@ namespace NonStandard.Data {
 				return null;
 			}
 			try {
-				object value = columnSettings[col].GetValue(errLog, rows[row].model);
+				object value = columnSettings[col].GetValue(errLog, rows[row].obj);
 				rows[row].columns[col] = value;
 				return value;
 			} catch (Exception e) {
@@ -265,7 +265,7 @@ namespace NonStandard.Data {
 		public void RefreshAll(ITokenErrLog errLog = null) {
 			for(int r = 0; r < rows.Count; ++r) {
 				for (int c = 0; c < columnSettings.Count; ++c) {
-					object value = columnSettings[c].GetValue(errLog, rows[r].model);
+					object value = columnSettings[c].GetValue(errLog, rows[r].obj);
 					rows[r].columns[c] = value;
 				}
 			}
@@ -289,14 +289,14 @@ namespace NonStandard.Data {
 		public object this [int row] { get => GetItem(row);
 			set {
 				RowData rd = rows[row];
-				rd.model = value;
+				rd.obj = value;
 				TokenErrorLog err = new TokenErrorLog();
 				AssignData(rd, err);
 				if (err.HasError()) { throw new Exception("tokenization error: "+err.GetErrorString()); }
 			}
 		}
-		public object GetItem(int row) { return rows[row].model; }
-		public int IndexOf(object dataModel) { return rows.FindIndex(rd => rd.model == dataModel); }
+		public object GetItem(int row) { return rows[row].obj; }
+		public int IndexOf(object dataModel) { return rows.FindIndex(rd => rd.obj == dataModel); }
 		public int IndexOf(Func<object, bool> predicate) {
 			for (int i = 0; i < rows.Count; ++i) { if (predicate(rows[i])) { return i; } }
 			return -1;
@@ -363,7 +363,7 @@ namespace NonStandard.Data {
 			bool errNeedsToBeNoisy = false;
 			if (errLog == null) { errLog = new Tokenizer(); errNeedsToBeNoisy = true; }
 			for (int i = 0; i < columnSettings.Count; ++i) {
-				object value = columnSettings[i].GetValue(errLog, rd.model);
+				object value = columnSettings[i].GetValue(errLog, rd.obj);
 				if (errNeedsToBeNoisy && errLog.HasError()) {
 					throw new Exception("error parsing "+columnSettings[i].fieldToken.GetAsSmallText()+":"+errLog.GetErrorString());
 				}

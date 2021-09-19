@@ -143,7 +143,7 @@ namespace NonStandard.GameUi.DataSheet {
 			// take stock of what objects are here
 			HashSet<object> manifest = new HashSet<object>();
 			for(int i = 0; i < data.rows.Count; ++i) {
-				object o = data.rows[i].model;
+				object o = data.rows[i].obj;
 				if (o != null) {
 					if (manifest.Contains(o)) { throw new Exception("old data contains duplicate "+o+" at index "+i); }
 					manifest.Add(o);
@@ -163,7 +163,7 @@ namespace NonStandard.GameUi.DataSheet {
 			}
 			// remove the old values that are not in the new set
 			for(int i = data.rows.Count-1; i >= 0; --i) {
-				if (manifest.Contains(data.rows[i].model)) {
+				if (manifest.Contains(data.rows[i].obj)) {
 					data.rows.RemoveAt(i);
 				}
 			}
@@ -277,8 +277,8 @@ namespace NonStandard.GameUi.DataSheet {
 			GameObject rowUi = Instantiate(prefab_dataRow.gameObject);
 			RowObject rObj = rowUi.GetComponent<RowObject>();
 			if (rObj == null) { throw new Exception("RowUI prefab must have " + nameof(RowObject) + " component"); }
-			rObj.obj = rowData.model;
-			if (rObj.obj == null) { throw new Exception("something bad. where is the object that this row is for?"); }
+			rObj.rowData = rowData;
+			if (rObj.rowData == null) { throw new Exception("something bad. where is the object that this row is for?"); }
 			rowUi.SetActive(true);
 			UpdateRowData(rObj, rowData, yPosition);
 			return rObj;
@@ -319,7 +319,7 @@ namespace NonStandard.GameUi.DataSheet {
 					ClickableScriptedCell clickable = fieldUi.GetComponent<ClickableScriptedCell>();
 					if (fieldUi != null) { Destroy(clickable); }
 					clickable = fieldUi.AddComponent<ClickableScriptedCell>();
-					clickable.Set(rowData.model, colS.data.onClick);
+					clickable.Set(rowData.obj, colS.data.onClick);
 					UiClick.AddOnClickIfNotAlready(fieldUi, clickable, clickable.OnClick, true);
 				}
 
@@ -347,7 +347,9 @@ namespace NonStandard.GameUi.DataSheet {
 			rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, rowCursor.x);
 			rect.transform.SetParent(contentRectangle, false);
 			if (!float.IsNaN(yPosition)) {
-				rect.anchoredPosition = new Vector2(0, -yPosition);
+				//rect.anchoredPosition = new Vector2(0, -yPosition);
+				//rect.localPosition = new Vector2(0, -yPosition);
+				rObj.LocalPosition = new Vector2(0, -yPosition);
 			}
 			return rObj.gameObject;
 		}
@@ -428,8 +430,8 @@ namespace NonStandard.GameUi.DataSheet {
 			Dictionary<object, RowObject> unusedMapping = srcToRowUiMap.Copy();
 			for (int i = 0; i < data.rows.Count; ++i) {
 				RowData rd = data.rows[i];
-				if (unusedMapping.TryGetValue(rd.model, out RowObject found)) {
-					unusedMapping.Remove(rd.model);
+				if (unusedMapping.TryGetValue(rd.obj, out RowObject found)) {
+					unusedMapping.Remove(rd.obj);
 				}
 			}
 			foreach (KeyValuePair<object, RowObject> kvp in unusedMapping) {
@@ -441,7 +443,7 @@ namespace NonStandard.GameUi.DataSheet {
 			for(int i = 0; i < data.rows.Count; ++i) {
 				RowData rd = data.rows[i];
 				// if this row data is missing a UI element
-				if (!srcToRowUiMap.TryGetValue(rd.model, out RowObject rObj)) {
+				if (!srcToRowUiMap.TryGetValue(rd.obj, out RowObject rObj)) {
 					// use one of the unused elements if there is one
 					if (unused.Count > 0) {
 						rObj = unused[unused.Count - 1];
@@ -456,7 +458,9 @@ namespace NonStandard.GameUi.DataSheet {
 				}
 				rObj.transform.SetSiblingIndex(i);
 				RectTransform rect = rObj.GetComponent<RectTransform>();
-				rect.anchoredPosition = cursor;
+				//rect.anchoredPosition = cursor;
+				//rect.localPosition = cursor;
+				rObj.LocalPosition = cursor;
 				cursor.y -= rect.rect.height;
 			}
 			if (contentRectangle.childCount > data.rows.Count || unused.Count > 0) {
@@ -483,8 +487,8 @@ namespace NonStandard.GameUi.DataSheet {
 			data.SetSortState(column, sortState);
 			RefreshRowUi();
 		}
-		public object GetItem(int index) { return data.rows[index].model; }
-		public object SetItem(int index, object dataModel) { return data.rows[index].model = dataModel; }
+		public object GetItem(int index) { return data.rows[index].obj; }
+		public object SetItem(int index, object dataModel) { return data.rows[index].obj = dataModel; }
 		public int IndexOf(object dataModel) { return data.IndexOf(dataModel); }
 		public int IndexOf(Func<object, bool> predicate) { return data.IndexOf(predicate); }
 		public void RefreshRowAndColumnUi() {
