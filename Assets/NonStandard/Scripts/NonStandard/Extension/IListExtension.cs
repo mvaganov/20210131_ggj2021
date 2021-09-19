@@ -58,6 +58,11 @@ namespace NonStandard.Extension {
 			for (int i = 0; i < list.Count; ++i) { if (predicate(list[i])) return list[i]; }
 			return default(T);
 		}
+		public static List<T> FindAll<T>(this IList<T> list, Func<T, bool> predicate) {
+			List<T> result = new List<T>();
+			for (int i = 0; i < list.Count; ++i) { if (predicate(list[i])) result.Add(list[i]); }
+			return result;
+		}
 		public static int CountEach<T>(this IList<T> list, Func<T, bool> predicate) {
 			int count = 0;
 			for (int i = 0; i < list.Count; ++i) { if (predicate(list[i])) ++count; }

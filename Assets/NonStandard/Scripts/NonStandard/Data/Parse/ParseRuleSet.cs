@@ -234,21 +234,23 @@ namespace NonStandard.Data.Parse {
 				result = null;
 				//Show.Log("parse " + argsToken.Stringify() + " as arguments of " + funcName);
 				if (scope == null) { tok.AddError(argsToken, $"can't execute function \'{funcName}\' without scope"); return false; }
-				MethodInfo[] methods = scope.GetType().GetMethods();
-				List<MethodInfo> possibleMethods = new List<MethodInfo>();
-				for(int i =0; i < methods.Length; ++i) {
-					if(methods[i].Name == funcName) {
-						possibleMethods.Add(methods[i]);
-					}
-				}
+				List<MethodInfo> possibleMethods = scope.GetType().GetMethods().FindAll(m => m.Name == funcName);
 				if (possibleMethods.Count == 0) {
 					tok.AddError(argsToken, $"missing function \'{funcName}\' in {scope.GetType()}");
 					return false;
 				}
-				// convert arguments to list
+				List<object> args = ResolveFunctionArgumentList(argsToken, scope, tok, fullyResolve);
+				if(!DetermineAppropriateMethodOptions(funcName, argsToken, possibleMethods, out List<ParameterInfo[]> validParams, args, tok)) {
+					return false;
+				}
+				if (!ResolveOverloadedMethod(args, possibleMethods, validParams, out MethodInfo mi, out object[] finalArgs, tok, argsToken)) {
+					return false;
+				}
+				// lets do it!
+				return ExecuteMethod(scope, mi, finalArgs, out result, tok, argsToken);
+			}
+			private static List<object> ResolveFunctionArgumentList(Token argsToken, object scope, ITokenErrLog tok, bool fullyResolve) {
 				object argsRaw = argsToken.Resolve(tok, scope, true, fullyResolve);
-				//CodeRules.op_Resolve_SimplifyListOfArguments(tok, ref argsRaw, scope);
-
 				if (argsRaw == null) { argsRaw = new List<object>(); }
 				List<object> args = argsRaw as List<object>;
 				if (args == null) {
@@ -256,13 +258,16 @@ namespace NonStandard.Data.Parse {
 				}
 				// remove commas if they are comma tokens before and after being parsed
 				Entry beforeParse = argsToken.GetAsContextEntry();
-				for (int i = args.Count-1; i >= 0; --i) {
-					if ((args[i] as string) == "," && beforeParse.tokens[i+1].StringifySmall() == ",") { args.RemoveAt(i); }
+				for (int i = args.Count - 1; i >= 0; --i) {
+					if ((args[i] as string) == "," && beforeParse.tokens[i + 1].StringifySmall() == ",") { args.RemoveAt(i); }
 				}
+				return args;
+			}
+			private static bool DetermineAppropriateMethodOptions(string funcName, Token argsToken, List<MethodInfo> possibleMethods, out List<ParameterInfo[]> validParams, IList<object> args, ITokenErrLog tok) {
 				ParameterInfo[] pi;
-				List<ParameterInfo[]> validParams = new List<ParameterInfo[]>();
+				validParams = new List<ParameterInfo[]>();
 				List<ParameterInfo[]> invalidParams = new List<ParameterInfo[]>();
-				for (int i = possibleMethods.Count-1; i >= 0; --i) {
+				for (int i = possibleMethods.Count - 1; i >= 0; --i) {
 					pi = possibleMethods[i].GetParameters();
 					if (pi.Length != args.Count) {
 						possibleMethods.RemoveAt(i);
@@ -273,38 +278,47 @@ namespace NonStandard.Data.Parse {
 				}
 				// check arguments. start with the argument count
 				if (possibleMethods.Count == 0) {
-					tok.AddError(argsToken, $"'{funcName}' needs {invalidParams.JoinToString(" or ",par=>par.Length.ToString())} arguments, not {args.Count} from {args.StringifySmall()}");
+					tok.AddError(argsToken, $"'{funcName}' needs {invalidParams.JoinToString(" or ", par => par.Length.ToString())} arguments, not {args.Count} from {args.StringifySmall()}");
 					return false;
 				}
-				// check argument types by converting to each parameter type set till one works without error
-				object[] finalArgs = new object[args.Count];
-				MethodInfo mi = null;
+				return true;
+			}
+			private static bool ResolveOverloadedMethod(List<object> args, List<MethodInfo> possibleMethods, List<ParameterInfo[]> validParams, out MethodInfo mi, out object[] finalArgs, ITokenErrLog tok, Token argsToken) {
+				mi = null;
+				finalArgs = new object[args.Count];
 				for (int paramSet = 0; paramSet < validParams.Count; ++paramSet) {
 					bool typesOk = true;
-					pi = validParams[paramSet];
-					for (int i = 0; i < args.Count; ++i) {
-						try {
-							finalArgs[i] = Convert.ChangeType(args[i], pi[i].ParameterType);
-						} catch (Exception) {
-							// it's only a problem if there are no other options
-							if (paramSet == validParams.Count-1) {
-								tok.AddError(argsToken, $"can't convert \'{args[i]}\' to {pi[i].ParameterType} for {funcName}{argsToken.Stringify()}");
-							}
-							typesOk = false;
-							break;
-						}
+					ParameterInfo[] pi = validParams[paramSet];
+					int a;
+					if((a = TryConvertArgs(args, finalArgs, pi, tok, argsToken)) != args.Count
+					// it's only a problem if there are no other options
+					&& paramSet == validParams.Count - 1) {
+						tok.AddError(argsToken, $"can't convert \'{args[a]}\' to {pi[a].ParameterType} for {possibleMethods[paramSet].Name}{argsToken.Stringify()}");
 					}
 					if (typesOk) {
 						mi = possibleMethods[paramSet];
-						break;
+						return true;
 					}
 				}
-				if (mi == null) { return false; }
-				// lets do it!
+				return false;
+			}
+			private static int TryConvertArgs(IList<object> args, IList<object> finalArgs, ParameterInfo[] pi, ITokenErrLog tok, Token argsToken) {
+				for (int i = 0; i < args.Count; ++i) {
+					try {
+						finalArgs[i] = Convert.ChangeType(args[i], pi[i].ParameterType);
+					} catch (Exception) {
+						return i;
+					}
+				}
+				return args.Count;
+			}
+			private static bool ExecuteMethod(object scope, MethodInfo mi, object[] finalArgs, out object result, ITokenErrLog tok, Token argsToken) {
 				try {
 					result = mi.Invoke(scope, finalArgs);
 				} catch (Exception e) {
+					result = null;
 					tok.AddError(argsToken, e.ToString());
+					return false;
 				}
 				return true;
 			}
