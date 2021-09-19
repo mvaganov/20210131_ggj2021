@@ -14,6 +14,6 @@ namespace NonStandard.Character {
 		}
 		public void Awake() { Init(); }
 		public void Start() { Init(); }
-		public void DoActivate() { activateFunction.Invoke(gameObject); }
+		public void DoActivateTrigger() { activateFunction.Invoke(gameObject); }
 	}
 }

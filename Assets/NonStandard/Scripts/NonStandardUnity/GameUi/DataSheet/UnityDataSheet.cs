@@ -26,6 +26,10 @@ namespace NonStandard.GameUi.DataSheet {
 		/// </summary>
 		public float width;
 		/// <summary>
+		/// a script to execute when this element is clicked. row object as scope
+		/// </summary>
+		public Token onClick;
+		/// <summary>
 		/// if true, will move itself to far right end, even if new elements are added
 		/// </summary>
 		public bool alwaysLast;
@@ -45,6 +49,7 @@ namespace NonStandard.GameUi.DataSheet {
 		public float widthOfColumn;
 		public string headerUi;
 		public bool alwaysLast;
+		public Token onClick = Token.None;
 	}
 	public class Udash : DataSheet<UnityColumnData> { }
 	public class UnityDataSheet : MonoBehaviour {
@@ -100,6 +105,7 @@ namespace NonStandard.GameUi.DataSheet {
 						uiBase = uiPrototypes.GetElement(c.columnUi),
 						headerBase = uiPrototypes.GetElement(c.headerUi),
 						width = -1,
+						onClick = c.onClick,
 						alwaysLast = c.alwaysLast
 					},
 					type = c.typeOfValue,
@@ -267,6 +273,18 @@ namespace NonStandard.GameUi.DataSheet {
 			UpdateRowData(rObj, rowData, yPosition);
 			return rObj;
 		}
+		public class ClickableScriptedCell : MonoBehaviour {
+			public Token script;
+			public object scope;
+			public void Set(object scope, Token script) { this.scope = scope; this.script = script; }
+			/// <summary>
+			/// how to execute an onClick action
+			/// </summary>
+			/// <param name="scope"></param>
+			public void OnClick() {
+				Show.Log("onClick " + scope + "." + script.Stringify());
+			}
+		}
 		public GameObject UpdateRowData(RowObject rObj, RowData rowData, float yPosition = float.NaN) {
 			object[] columns = rowData.columns;
 			Vector2 rowCursor = Vector2.zero;
@@ -297,6 +315,16 @@ namespace NonStandard.GameUi.DataSheet {
 				if (fieldUi == null) {
 					fieldUi = Instantiate(colS.data.uiBase);
 				}
+
+				if (colS.data.onClick != Token.None) {
+					UiClick.ClearOnClick(fieldUi);
+					ClickableScriptedCell clickable = fieldUi.GetComponent<ClickableScriptedCell>();
+					if (fieldUi != null) { Destroy(clickable); }
+					clickable = fieldUi.AddComponent<ClickableScriptedCell>();
+					clickable.Set(rowData.model, colS.data.onClick);
+					UiClick.AddOnClickIfNotAlready(fieldUi, clickable, clickable.OnClick, true);
+				}
+
 				fieldUi.SetActive(true);
 				fieldUi.transform.SetParent(rObj.transform, false);
 				fieldUi.transform.SetSiblingIndex(c);

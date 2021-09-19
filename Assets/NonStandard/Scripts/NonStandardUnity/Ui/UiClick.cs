@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using NonStandard.Utility.UnityEditor;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -31,6 +33,28 @@ namespace NonStandard.Ui {
 			//	Debug.Log(raycastResult.JoinToString(", ", r => r.gameObject.name));
 			//}
 			return raycastResult.Count > 0;
+		}
+		public static void ClearOnClick(GameObject obj) {
+			Button button = obj.GetComponentInChildren<Button>();
+			if (button != null) { button.onClick.RemoveAllListeners(); }
+			// also clear EventTriggers
+			EventTrigger et = obj.GetComponentInChildren<EventTrigger>();
+			if (et != null) {
+				EventTrigger.Entry entry = et.triggers.Find(t => t.eventID == EventTriggerType.PointerClick);
+				if (entry != null) {
+					entry.callback.RemoveAllListeners();
+				}
+			}
+		}
+		public static void AddOnClickIfNotAlready(GameObject obj, Object target, UnityAction action, bool listenWithEventSystemAsFallback = false) {
+			Button button = obj.GetComponent<Button>();
+			if (button != null) {
+				EventBind.IfNotAlready(button.onClick, target, action);
+				return;
+			}
+			if (listenWithEventSystemAsFallback) {
+				PointerTrigger.AddEventIfNotAlready(obj, EventTriggerType.PointerClick, target, e => action.Invoke());
+			}
 		}
 	}
 }
