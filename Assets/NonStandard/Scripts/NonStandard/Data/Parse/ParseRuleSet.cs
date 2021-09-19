@@ -218,36 +218,42 @@ namespace NonStandard.Data.Parse {
 					object result = t.Resolve(tok, scope, true, fullyResolve);
 					results.Add(result);
 					// if this token resolves to a string, and the immediate next one resolves to a list of some kind
-					if (result is string funcName && i < found.Count-1 && found[i]+1 == found[i+1]) {
-						Token argsToken = tokens[found[i + 1]];
-						Entry e = argsToken.GetAsContextEntry();
-						if (e != null && e.IsEnclosure) {
-							++i;
-							if (TryExecuteFunction(scope, funcName, argsToken, out object funcResult, tok, fullyResolve)) {
-								results[results.Count - 1] = funcResult;
-							}
-						}
+					string funcName = GetMethodCall(result, i, tokens, found);
+					if (funcName != null && TryExecuteFunction(scope, funcName, tokens[found[++i]], out object funcResult, tok, fullyResolve)) {
+						results[results.Count - 1] = funcResult;
 					}
 				}
 			}
+			private static string GetMethodCall(object result, int i, List<Token> tokens, List<int> found) {
+				if (result is string funcName && i < found.Count - 1 && found[i] + 1 == found[i + 1]) {
+					Token argsToken = tokens[found[i + 1]];
+					Entry e = argsToken.GetAsContextEntry();
+					if (e != null && e.IsEnclosure) {
+						return funcName;
+					}
+				}
+				return null;
+			}
 			private static bool TryExecuteFunction(object scope, string funcName, Token argsToken, out object result, ITokenErrLog tok, bool fullyResolve) {
 				result = null;
-				//Show.Log("parse " + argsToken.Stringify() + " as arguments of " + funcName);
-				if (scope == null) { tok.AddError(argsToken, $"can't execute function \'{funcName}\' without scope"); return false; }
-				List<MethodInfo> possibleMethods = scope.GetType().GetMethods().FindAll(m => m.Name == funcName);
+				if (!DeterminePossibleMethods(scope, funcName, out List<MethodInfo> possibleMethods, tok, argsToken)) { return false; }
+				List<object> args = ResolveFunctionArgumentList(argsToken, scope, tok, fullyResolve);
+				if (!DetermineValidMethods(funcName, argsToken, possibleMethods, out List<ParameterInfo[]> validParams, args, tok)) { return false; }
+				if (!DetermineMethod(args, possibleMethods, validParams, out MethodInfo mi, out object[] finalArgs, tok, argsToken)) { return false; }
+				return ExecuteMethod(scope, mi, finalArgs, out result, tok, argsToken);
+			}
+			private static bool DeterminePossibleMethods(object scope, string funcName, out List<MethodInfo> possibleMethods, ITokenErrLog tok, Token argsToken) {
+				if (scope == null) {
+					tok.AddError(argsToken, $"can't execute function \'{funcName}\' without scope");
+					possibleMethods = null;
+					return false;
+				}
+				possibleMethods = scope.GetType().GetMethods().FindAll(m => m.Name == funcName);
 				if (possibleMethods.Count == 0) {
 					tok.AddError(argsToken, $"missing function \'{funcName}\' in {scope.GetType()}");
 					return false;
 				}
-				List<object> args = ResolveFunctionArgumentList(argsToken, scope, tok, fullyResolve);
-				if(!DetermineAppropriateMethodOptions(funcName, argsToken, possibleMethods, out List<ParameterInfo[]> validParams, args, tok)) {
-					return false;
-				}
-				if (!ResolveOverloadedMethod(args, possibleMethods, validParams, out MethodInfo mi, out object[] finalArgs, tok, argsToken)) {
-					return false;
-				}
-				// lets do it!
-				return ExecuteMethod(scope, mi, finalArgs, out result, tok, argsToken);
+				return true;
 			}
 			private static List<object> ResolveFunctionArgumentList(Token argsToken, object scope, ITokenErrLog tok, bool fullyResolve) {
 				object argsRaw = argsToken.Resolve(tok, scope, true, fullyResolve);
@@ -263,7 +269,7 @@ namespace NonStandard.Data.Parse {
 				}
 				return args;
 			}
-			private static bool DetermineAppropriateMethodOptions(string funcName, Token argsToken, List<MethodInfo> possibleMethods, out List<ParameterInfo[]> validParams, IList<object> args, ITokenErrLog tok) {
+			private static bool DetermineValidMethods(string funcName, Token argsToken, List<MethodInfo> possibleMethods, out List<ParameterInfo[]> validParams, IList<object> args, ITokenErrLog tok) {
 				ParameterInfo[] pi;
 				validParams = new List<ParameterInfo[]>();
 				List<ParameterInfo[]> invalidParams = new List<ParameterInfo[]>();
@@ -283,7 +289,7 @@ namespace NonStandard.Data.Parse {
 				}
 				return true;
 			}
-			private static bool ResolveOverloadedMethod(List<object> args, List<MethodInfo> possibleMethods, List<ParameterInfo[]> validParams, out MethodInfo mi, out object[] finalArgs, ITokenErrLog tok, Token argsToken) {
+			private static bool DetermineMethod(List<object> args, List<MethodInfo> possibleMethods, List<ParameterInfo[]> validParams, out MethodInfo mi, out object[] finalArgs, ITokenErrLog tok, Token argsToken) {
 				mi = null;
 				finalArgs = new object[args.Count];
 				for (int paramSet = 0; paramSet < validParams.Count; ++paramSet) {
