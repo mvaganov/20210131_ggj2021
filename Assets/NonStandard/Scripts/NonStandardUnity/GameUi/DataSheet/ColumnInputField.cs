@@ -39,7 +39,7 @@ namespace NonStandard.GameUi.DataSheet {
 					}
 				}
 				if (validAssignment) {
-					TokenErrLog errLog = new TokenErrorLog();
+					ITokenErrLog errLog = new TokenErrorLog();
 					validAssignment = column.SetValue(uds.GetItem(row), value, errLog); 
 					if (errLog.HasError()) {
 						errorMessage = errLog.GetErrorString();

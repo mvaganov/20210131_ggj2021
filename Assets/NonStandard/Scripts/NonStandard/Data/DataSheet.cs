@@ -89,7 +89,7 @@ namespace NonStandard.Data {
 			/// <param name="value"></param>
 			/// <param name="errLog"></param>
 			/// <returns>a sample value (the first value possible)</returns>
-			public object SetFieldToken(Token value, TokenErrLog errLog) {
+			public object SetFieldToken(Token value, ITokenErrLog errLog) {
 				_fieldToken = value;
 				RefreshEditPath();
 				if (editPath != null && dataSheet.rows.Count > 0) {
@@ -98,7 +98,7 @@ namespace NonStandard.Data {
 				//else { Show.Log(_fieldToken.GetAsSmallText() + " is read only"); }
 				return null;
 			}
-			object RefreshStrictlyTypedVariablePathBasedOnDataFromSpreadsheet(TokenErrLog errLog) {
+			object RefreshStrictlyTypedVariablePathBasedOnDataFromSpreadsheet(ITokenErrLog errLog) {
 				object scope = dataSheet.GetItem(0); // TODO if GetItem(0) failed, try the other items?
 				CompileEditPath(scope, errLog);
 				if (errLog != null && errLog.HasError()) { return null; }
@@ -106,7 +106,7 @@ namespace NonStandard.Data {
 				//Show.Log(_fieldToken.GetAsSmallText() + " is : " + result + (result != null ? (" (" + result.GetType() + ")") : "(null)"));
 				return result;
 			}
-			object CompileEditPath(object scope, TokenErrLog errLog = null) {
+			object CompileEditPath(object scope, ITokenErrLog errLog = null) {
 				if (editPath == null) {
 					errLog.AddError(-1, fieldToken.GetAsSmallText() + " is not editable");
 					return null;
@@ -129,7 +129,7 @@ namespace NonStandard.Data {
 				return result;
 			}
 
-			public object GetValue(TokenErrLog errLog, object scope) {
+			public object GetValue(ITokenErrLog errLog, object scope) {
 				object result;
 				if (needsToLoadEditPath) {
 					result = CompileEditPath(scope);
@@ -162,7 +162,7 @@ namespace NonStandard.Data {
 			/// <param name="scope">the specific object to change a value in</param>
 			/// <param name="value">the value to assign</param>
 			/// <returns></returns>
-			public bool SetValue(object scope, object value, TokenErrLog errLog = null) {
+			public bool SetValue(object scope, object value, ITokenErrLog errLog = null) {
 				//Show.Log("attempting to set " + _fieldToken.GetAsSmallText() + " to " + value);
 				if (!canEdit) return false;
 				if (needsToLoadEditPath) {
@@ -241,7 +241,7 @@ namespace NonStandard.Data {
 		/// <param name="col"></param>
 		/// <param name="errLog">if null, an exception will be thrown if there is a problem parsing column data</param>
 		/// <returns></returns>
-		public object RefreshValue(int row, int col, TokenErrLog errLog = null) {
+		public object RefreshValue(int row, int col, ITokenErrLog errLog = null) {
 			if ((col < 0 || col >= columnSettings.Count) && errLog != null) {
 				errLog.AddError(-1, "incorrect column: " + col + "\nlimit [0, " + columnSettings.Count + ")");
 				return null;
@@ -262,7 +262,7 @@ namespace NonStandard.Data {
 			}
 			return null;
 		}
-		public void RefreshAll(TokenErrLog errLog = null) {
+		public void RefreshAll(ITokenErrLog errLog = null) {
 			for(int r = 0; r < rows.Count; ++r) {
 				for (int c = 0; c < columnSettings.Count; ++c) {
 					object value = columnSettings[c].GetValue(errLog, rows[r].model);
@@ -316,7 +316,7 @@ namespace NonStandard.Data {
 			Sort();
 		}
 
-		public void InitData(IList<object> source, TokenErrLog errLog) {
+		public void InitData(IList<object> source, ITokenErrLog errLog) {
 			rows = new List<RowData>();
 			InsertRange(0, source, errLog);
 		}
@@ -324,15 +324,15 @@ namespace NonStandard.Data {
 			rows.Clear();
 		}
 
-		public void InsertRange(int index, IList<object> source, TokenErrLog errLog) {
+		public void InsertRange(int index, IList<object> source, ITokenErrLog errLog) {
 			RowData[] newRows = new RowData[source.Count];
 			for (int i = 0; i < source.Count; ++i) {
 				newRows[i] = GenerateRow(source[i], errLog);
 			}
 			rows.InsertRange(index, newRows);
 		}
-		public void AddRange(IList<object> source, TokenErrLog errLog) { InsertRange(rows.Count, source, errLog); }
-		public RowData AddRow(object elementForRow, TokenErrLog errLog) {
+		public void AddRange(IList<object> source, ITokenErrLog errLog) { InsertRange(rows.Count, source, errLog); }
+		public RowData AddRow(object elementForRow, ITokenErrLog errLog) {
 			RowData rd = GenerateRow(elementForRow, errLog);
 			rows.Add(rd);
 			return rd;
@@ -346,7 +346,7 @@ namespace NonStandard.Data {
 		/// <param name="source"></param>
 		/// <param name="errLog">if null, an exception will be thrown if there is a problem parsing column data</param>
 		/// <returns></returns>
-		public RowData GenerateRow(object source, TokenErrLog errLog = null) {
+		public RowData GenerateRow(object source, ITokenErrLog errLog = null) {
 			RowData rd = new RowData(source, null);
 			AssignData(rd, errLog);
 			return rd;
@@ -356,7 +356,7 @@ namespace NonStandard.Data {
 		/// </summary>
 		/// <param name="rd"></param>
 		/// <param name="errLog">if null, an exception will be thrown if there is a problem parsing column data</param>
-		internal void AssignData(RowData rd, TokenErrLog errLog = null) {
+		internal void AssignData(RowData rd, ITokenErrLog errLog = null) {
 			if (rd.columns == null || rd.columns.Length != columnSettings.Count) {
 				rd.columns = new object[columnSettings.Count];
 			}

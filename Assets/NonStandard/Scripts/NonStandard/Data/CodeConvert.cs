@@ -62,7 +62,7 @@ namespace NonStandard.Data {
 		/// <param name="scope"></param>
 		/// <param name="data"></param>
 		/// <returns></returns>
-		public static bool TryParse(Token token, out object data, object scope, TokenErrLog tokenizer) {
+		public static bool TryParse(Token token, out object data, object scope, ITokenErrLog tokenizer) {
 			CodeRules.op_ResolveToken(tokenizer, token, scope, out data, out Type resultType, false);
 			return resultType != null;
 		}

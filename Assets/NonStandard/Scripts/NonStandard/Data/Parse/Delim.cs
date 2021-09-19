@@ -19,7 +19,7 @@ namespace NonStandard.Data.Parse {
 		}
 	}
 	public class DelimOp : Delim {
-		public delegate object TokenResolver(TokenErrLog errLog, ParseRuleSet.Entry ruleContext, object variableContext);
+		public delegate object TokenResolver(ITokenErrLog errLog, ParseRuleSet.Entry ruleContext, object variableContext);
 		public delegate ParseRuleSet.Entry SyntaxContextGetter(Tokenizer tokenizer, List<Token> tokens, int index);
 
 		public int order;

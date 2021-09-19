@@ -14,6 +14,14 @@ namespace NonStandard.Character {
 		}
 		public void Awake() { Init(); }
 		public void Start() { Init(); }
-		public void DoActivateTrigger() { activateFunction.Invoke(gameObject); }
+		public void DoActivateTrigger() {
+			if (activateFunction.GetPersistentEventCount() == 0) {
+				Show.Log("empty activation function?");
+			}
+			activateFunction.Invoke(gameObject);
+		}
+		public void DoActivateTrigger(int a, int b) {
+			Show.Log(a + b);
+		}
 	}
 }

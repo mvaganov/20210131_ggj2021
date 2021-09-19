@@ -60,7 +60,7 @@ namespace NonStandard.Extension {
 			IList<object> vars = variableNamePath.Split(".");
 			return GetValueFromRawPath(obj, vars, defaultValue, out_path);
 		}
-		public static object GetValueFromRawPath(object obj, IList<object> rawPath, object defaultValue = null, List<object> out_compiledPath = null, TokenErrLog errLog = null) {
+		public static object GetValueFromRawPath(object obj, IList<object> rawPath, object defaultValue = null, List<object> out_compiledPath = null, ITokenErrLog errLog = null) {
 			object result = obj;
 			for (int i = 0; i < rawPath.Count; ++i) {
 				string pathStr = rawPath[i].ToString();
@@ -142,8 +142,8 @@ namespace NonStandard.Extension {
 			result = cursor;
 			return true;
 		}
-		public static bool TrySetValueCompiledPath(object scope, IList<object> alreadyCompiledPath, object result, TokenErrLog errLog = null) {
-			void Err(TokenErrLog eLog, int index) {
+		public static bool TrySetValueCompiledPath(object scope, IList<object> alreadyCompiledPath, object result, ITokenErrLog errLog = null) {
+			void Err(ITokenErrLog eLog, int index) {
 				if (eLog == null) { return; }
 				string errStr = "";
 				for (int e = 0; e < index; ++e) {

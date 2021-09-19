@@ -17,7 +17,7 @@ namespace NonStandard.Data.Parse {
 		public string DebugPrint(int depth = 0, string indent = "  ", string separator = ", ") {
 			return Tokenizer.DebugPrint(tokens, depth, indent, separator);
 		}
-		public List<object> Resolve(TokenErrLog errLog, object scope = null) {
+		public List<object> Resolve(ITokenErrLog errLog, object scope = null) {
 			List<object> results = new List<object>();
 			ParseRuleSet.Entry.ResolveTerms(errLog, scope, tokens, 0, tokens.Count, results);
 			return results;

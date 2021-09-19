@@ -51,6 +51,23 @@ namespace NonStandard.GameUi.DataSheet {
 		public bool alwaysLast;
 		public Token onClick = Token.None;
 	}
+	public class ClickableScriptedCell : MonoBehaviour {
+		public Token script;
+		public object scope;
+		public void Set(object scope, Token script) { this.scope = scope; this.script = script; }
+		/// <summary>
+		/// how to execute an onClick action
+		/// </summary>
+		/// <param name="scope"></param>
+		public void OnClick() {
+			//Show.Log("onClick " + scope + "." + script.Stringify());
+			TokenErrorLog tok = new TokenErrorLog();
+			object r = script.Resolve(tok, scope, true, true);
+			if (tok.HasError()) {
+				Show.Warning(tok.GetErrorString());
+			}
+		}
+	}
 	public class Udash : DataSheet<UnityColumnData> { }
 	public class UnityDataSheet : MonoBehaviour {
 		const int columnTitleIndex = 0, uiTypeIndex = 1, valueIndex = 2, headerUiType = 3, columnWidth = 4, defaultValueIndex = 5;
@@ -242,13 +259,6 @@ namespace NonStandard.GameUi.DataSheet {
 			}
 			Init();
 			Proc.Enqueue(() => {
-				//NpcCreation npcs = Global.GetComponent<NpcCreation>();
-				//CharacterProxy charMove = Global.GetComponent<CharacterProxy>();
-				//List<object> chars = new List<object>();
-				//chars.Add(charMove.Target);
-				//chars.AddRange(npcs.npcs);
-				////Show.Log("listing "+chars.JoinToString());
-				////Load(chars);
 				RefreshData();
 			});
 			//string test = "{a:1,b:[a,[1,2],{a:a,b:[b]}],c:{a:1,b:2}}";
@@ -272,18 +282,6 @@ namespace NonStandard.GameUi.DataSheet {
 			rowUi.SetActive(true);
 			UpdateRowData(rObj, rowData, yPosition);
 			return rObj;
-		}
-		public class ClickableScriptedCell : MonoBehaviour {
-			public Token script;
-			public object scope;
-			public void Set(object scope, Token script) { this.scope = scope; this.script = script; }
-			/// <summary>
-			/// how to execute an onClick action
-			/// </summary>
-			/// <param name="scope"></param>
-			public void OnClick() {
-				Show.Log("onClick " + scope + "." + script.Stringify());
-			}
 		}
 		public GameObject UpdateRowData(RowObject rObj, RowData rowData, float yPosition = float.NaN) {
 			object[] columns = rowData.columns;
@@ -354,7 +352,7 @@ namespace NonStandard.GameUi.DataSheet {
 			return rObj.gameObject;
 		}
 
-		public void RefreshColumnText(int column, TokenErrLog errLog) {
+		public void RefreshColumnText(int column, ITokenErrLog errLog) {
 			for(int row = 0; row < contentRectangle.childCount; ++row) {
 				GameObject fieldUi = contentRectangle.GetChild(row).GetChild(column).gameObject;
 				object value = data.RefreshValue(row, column, errLog);

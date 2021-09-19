@@ -4,14 +4,14 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace NonStandard.Data.Parse {
-	public interface TokenErrLog {
+	public interface ITokenErrLog {
 		bool HasError();
 		void AddError(ParseError error);
 		string GetErrorString();
 		IList<int> GetTextRows();
 		void ClearErrors();
 	}
-	public class TokenErrorLog : TokenErrLog {
+	public class TokenErrorLog : ITokenErrLog {
 		public List<ParseError> errors = new List<ParseError>();
 		public IList<int> GetTextRows() => rows;
 		/// <summary>
@@ -34,13 +34,13 @@ namespace NonStandard.Data.Parse {
 		}
 	}
 	public static class TokenizationErrorStorageExtension {
-		public static ParseError AddError(this TokenErrLog self, int index, string message) {
+		public static ParseError AddError(this ITokenErrLog self, int index, string message) {
 			ParseError e = new ParseError(index, self.GetTextRows(), message); self.AddError(e); return e;
 		}
-		public static ParseError AddError(this TokenErrLog self, Token token, string message) {
+		public static ParseError AddError(this ITokenErrLog self, Token token, string message) {
 			return AddError(self, token.index, message);
 		}
-		public static bool ShowErrorTo(this TokenErrLog self, Show.PrintFunc show) {
+		public static bool ShowErrorTo(this ITokenErrLog self, Show.PrintFunc show) {
 			string errStr = self.GetErrorString();
 			if (string.IsNullOrEmpty(errStr)) return false;
 			show.Invoke(errStr); return true;

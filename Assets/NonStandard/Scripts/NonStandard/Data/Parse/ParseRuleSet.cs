@@ -1,6 +1,7 @@
 ﻿using NonStandard.Extension;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 
 namespace NonStandard.Data.Parse {
@@ -188,7 +189,7 @@ namespace NonStandard.Data.Parse {
 				}
 			}
 			public string GetText() { return Unescape(); }
-			public object Resolve(TokenErrLog tok, object scope, bool simplify = true, bool fullyResolve = false) {
+			public object Resolve(ITokenErrLog tok, object scope, bool simplify = true, bool fullyResolve = false) {
 				DelimOp op = sourceMeta as DelimOp;
 				if(op != null) { 
 					return op.resolve.Invoke(tok, this, scope);
@@ -204,20 +205,110 @@ namespace NonStandard.Data.Parse {
 					found.Add(i);
 				}
 			}
-			public static List<object> ResolveTerms(TokenErrLog tok, object scope, List<Token> tokens, bool fullyResolve = false) {
+			public static List<object> ResolveTerms(ITokenErrLog tok, object scope, List<Token> tokens, bool fullyResolve = false) {
 				List<object> results = new List<object>();
 				ResolveTerms(tok, scope, tokens, 0, tokens.Count, results, fullyResolve);
 				return results;
 			}
-			public static void ResolveTerms(TokenErrLog tok, object scope, List<Token> tokens, int start, int length, List<object> results, bool fullyResolve = false) {
+			public static void ResolveTerms(ITokenErrLog tok, object scope, List<Token> tokens, int start, int length, List<object> results, bool fullyResolve = false) {
 				List<int> found = new List<int>();
 				FindTerms(tokens, start, length, found);
 				for (int i = 0; i < found.Count; ++i) {
 					Token t = tokens[found[i]];
-					results.Add(t.Resolve(tok, scope, true, fullyResolve));
+					object result = t.Resolve(tok, scope, true, fullyResolve);
+					results.Add(result);
+					// if this token resolves to a string, and the immediate next one resolves to a list of some kind
+					if (result is string funcName && i < found.Count-1 && found[i]+1 == found[i+1]) {
+						Token argsToken = tokens[found[i + 1]];
+						Entry e = argsToken.GetAsContextEntry();
+						if (e != null && e.IsEnclosure) {
+							++i;
+							if (TryExecuteFunction(scope, funcName, argsToken, out object funcResult, tok, fullyResolve)) {
+								results[results.Count - 1] = funcResult;
+							}
+						}
+					}
 				}
 			}
-			public static object Resolve(TokenErrLog tok, object scope, List<Token> tokens, bool simplify = true, bool fullyResolve = false) {
+			private static bool TryExecuteFunction(object scope, string funcName, Token argsToken, out object result, ITokenErrLog tok, bool fullyResolve) {
+				result = null;
+				//Show.Log("parse " + argsToken.Stringify() + " as arguments of " + funcName);
+				if (scope == null) { tok.AddError(argsToken, $"can't execute function \'{funcName}\' without scope"); return false; }
+				MethodInfo[] methods = scope.GetType().GetMethods();
+				List<MethodInfo> possibleMethods = new List<MethodInfo>();
+				for(int i =0; i < methods.Length; ++i) {
+					if(methods[i].Name == funcName) {
+						possibleMethods.Add(methods[i]);
+					}
+				}
+				if (possibleMethods.Count == 0) {
+					tok.AddError(argsToken, $"missing function \'{funcName}\' in {scope.GetType()}");
+					return false;
+				}
+				// convert arguments to list
+				object argsRaw = argsToken.Resolve(tok, scope, true, fullyResolve);
+				//CodeRules.op_Resolve_SimplifyListOfArguments(tok, ref argsRaw, scope);
+
+				if (argsRaw == null) { argsRaw = new List<object>(); }
+				List<object> args = argsRaw as List<object>;
+				if (args == null) {
+					args = new List<object> { argsRaw };
+				}
+				// remove commas if they are comma tokens before and after being parsed
+				Entry beforeParse = argsToken.GetAsContextEntry();
+				for (int i = args.Count-1; i >= 0; --i) {
+					if ((args[i] as string) == "," && beforeParse.tokens[i+1].StringifySmall() == ",") { args.RemoveAt(i); }
+				}
+				ParameterInfo[] pi;
+				List<ParameterInfo[]> validParams = new List<ParameterInfo[]>();
+				List<ParameterInfo[]> invalidParams = new List<ParameterInfo[]>();
+				for (int i = possibleMethods.Count-1; i >= 0; --i) {
+					pi = possibleMethods[i].GetParameters();
+					if (pi.Length != args.Count) {
+						possibleMethods.RemoveAt(i);
+						invalidParams.Add(pi);
+						continue;
+					}
+					validParams.Add(pi);
+				}
+				// check arguments. start with the argument count
+				if (possibleMethods.Count == 0) {
+					tok.AddError(argsToken, $"'{funcName}' needs {invalidParams.JoinToString(" or ",par=>par.Length.ToString())} arguments, not {args.Count} from {args.StringifySmall()}");
+					return false;
+				}
+				// check argument types by converting to each parameter type set till one works without error
+				object[] finalArgs = new object[args.Count];
+				MethodInfo mi = null;
+				for (int paramSet = 0; paramSet < validParams.Count; ++paramSet) {
+					bool typesOk = true;
+					pi = validParams[paramSet];
+					for (int i = 0; i < args.Count; ++i) {
+						try {
+							finalArgs[i] = Convert.ChangeType(args[i], pi[i].ParameterType);
+						} catch (Exception) {
+							// it's only a problem if there are no other options
+							if (paramSet == validParams.Count-1) {
+								tok.AddError(argsToken, $"can't convert \'{args[i]}\' to {pi[i].ParameterType} for {funcName}{argsToken.Stringify()}");
+							}
+							typesOk = false;
+							break;
+						}
+					}
+					if (typesOk) {
+						mi = possibleMethods[paramSet];
+						break;
+					}
+				}
+				if (mi == null) { return false; }
+				// lets do it!
+				try {
+					result = mi.Invoke(scope, finalArgs);
+				} catch (Exception e) {
+					tok.AddError(argsToken, e.ToString());
+				}
+				return true;
+			}
+			public static object Resolve(ITokenErrLog tok, object scope, List<Token> tokens, bool simplify = true, bool fullyResolve = false) {
 				List<object> result = ResolveTerms(tok, scope, tokens, fullyResolve);
 				if (simplify) { switch (result.Count) { case 0: return null; case 1: return result[0]; } }
 				return result;

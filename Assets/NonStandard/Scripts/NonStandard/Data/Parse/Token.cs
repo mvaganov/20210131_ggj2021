@@ -70,7 +70,7 @@ namespace NonStandard.Data.Parse {
 				}
 			}
 		}
-		public object Resolve(TokenErrLog tok, object scope, bool simplify = true, bool fullyResolve = false) {
+		public object Resolve(ITokenErrLog tok, object scope, bool simplify = true, bool fullyResolve = false) {
 			if (index == -1 && length == -1) return meta;
 			if (meta == null) throw new NullReferenceException("can't resolve NULL token");
 			switch (meta) {
