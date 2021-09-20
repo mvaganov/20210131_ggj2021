@@ -152,7 +152,7 @@ namespace NonStandard.Extension {
 				if (!showNulls && v == null) { continue; }
 				if (filter == null) {
 					string keyToString = k.ToString();
-					if ((k is string && keyToString.ContainsNonAlphaCharacters()) || CodeRules.Default.GetDelimiter(keyToString) != null) {
+					if (k is string && (keyToString.ContainsNonAlphaCharacters() || CodeRules.Default.GetDelimiter(keyToString) != null)) {
 						keyToString = keyToString.StringifySmall();
 					}
 					sb.Append(keyToString).Append(pretty ? " : " : ":");
