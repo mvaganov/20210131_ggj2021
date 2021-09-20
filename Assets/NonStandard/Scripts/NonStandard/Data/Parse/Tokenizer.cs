@@ -214,7 +214,7 @@ namespace NonStandard.Data.Parse {
 			ParseRuleSet currentContext = parseRules;
 			while (index < str.Length && (condition == null || condition.Invoke(this))) {
 				char c = str[index];
-				Delim delim = currentContext.GetDelimiterAt(str, index);
+				Delim delim = currentContext.GetDelimiterAt(str, index, tokenBegin);
 				if (delim != null) {
 					FinishToken(index, ref tokenBegin); // finish whatever token was being read before this delimeter
 					HandleDelimiter(delim, ref index, contextStack, ref currentContext, parseRules);

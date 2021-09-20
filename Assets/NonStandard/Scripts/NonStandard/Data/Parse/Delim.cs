@@ -13,9 +13,9 @@ namespace NonStandard.Data.Parse {
 		public string contextName;
 		public bool isStart, isEnd;
 		public DelimCtx(string delim, string name = null, string desc = null, ParseRule parseRule = null,
-			string ctx = null, bool s = false, bool e = false, SyntaxRequirement addReq = null, bool printable = true)
-			: base(delim, name, desc, parseRule, addReq, printable) {
-			contextName = ctx; isStart = s; isEnd = e;
+			string ctx = null, bool start = false, bool end = false, SyntaxRequirement addReq = null, bool printable = true, bool breaking = true)
+			: base(delim, name, desc, parseRule, addReq, printable, breaking) {
+			contextName = ctx; isStart = start; isEnd = end;
 		}
 	}
 	public class DelimOp : Delim {
@@ -38,8 +38,12 @@ namespace NonStandard.Data.Parse {
 		public ParseRule parseRule = null;
 		public SyntaxRequirement extraReq = null;
 		public bool printable = true;
-		public Delim(string delim, string name = null, string desc = null, ParseRule parseRule = null, SyntaxRequirement addReq = null, bool printable = true) {
-			text = delim; this.name = name; description = desc; this.parseRule = parseRule; extraReq = addReq; this.printable = printable;
+		/// <summary>
+		/// if not breaking, will ignore this delimiter if a token has started being parsed. For example, setting breaking to false for the delimiter "True" means "isItTrue" should be one token, instead of 2 ("isIt" and "True")
+		/// </summary>
+		public bool breaking = true;
+		public Delim(string delim, string name = null, string desc = null, ParseRule parseRule = null, SyntaxRequirement addReq = null, bool printable = true, bool breaking = true) {
+			text = delim; this.name = name; description = desc; this.parseRule = parseRule; extraReq = addReq; this.printable = printable; this.breaking = breaking;
 		}
 		/// <summary>
 		/// checks if this delimiter is found in the given string, at the given index

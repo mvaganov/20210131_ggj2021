@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NonStandard.Data.Parse;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -151,9 +152,11 @@ namespace NonStandard.Extension {
 				if (!showNulls && v == null) { continue; }
 				if (filter == null) {
 					string keyToString = k.ToString();
-					if (k is string && keyToString.ContainsNonAlphaCharacters()) { keyToString = keyToString.StringifySmall(); }
+					if ((k is string && keyToString.ContainsNonAlphaCharacters()) || CodeRules.Default.GetDelimiter(keyToString) != null) {
+						keyToString = keyToString.StringifySmall();
+					}
 					sb.Append(keyToString).Append(pretty ? " : " : ":");
-					sb.Append(Stringify(v, pretty, showType, showNulls, true, depth + 1, rStack));
+					sb.Append(Stringify(v, pretty, showType, showNulls, showBoundary:true, depth + 1, rStack));
 					printed = true;
 				} else {
 					printed = FilterElement(sb, obj, k, v, pretty, showType, showNulls, false, depth, rStack, filter);

@@ -1,6 +1,5 @@
 ﻿using NonStandard.Extension;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
@@ -9,24 +8,24 @@ namespace NonStandard.Data.Parse {
 	class CodeRules {
 
 		public static ParseRuleSet
-			String, Char, Number, Hexadecimal, Expression, SquareBrace, GenericArgs, CodeBody,
+			String, Char, Number, Hexadecimal, Boolean, Expression, SquareBrace, GenericArgs, CodeBody,
 			CodeInString, Sum, Difference, Product, Quotient, Modulus, Power, LogicalAnd, LogicalOr,
 			Assignment, Equal, LessThan, GreaterThan, LessThanOrEqual, GreaterThanOrEqual, MembershipOperator,
 			NotEqual, XmlCommentLine, CommentLine, CommentBlock, Default;
 
-		public static Delim[] _string_delimiter = new Delim[] { new DelimCtx("\"", ctx: "string", s: true, e: true), };
-		public static Delim[] _char_delimiter = new Delim[] { new DelimCtx("\'", ctx: "char", s: true, e: true), };
+		public static Delim[] _string_delimiter = new Delim[] { new DelimCtx("\"", ctx: "string", start: true, end: true), };
+		public static Delim[] _char_delimiter = new Delim[] { new DelimCtx("\'", ctx: "char", start: true, end: true), };
 		public static Delim[] _char_escape_sequence = new Delim[] { new Delim("\\", parseRule: StringExtension.UnescapeStringSequenceAt) };
-		public static Delim[] _expression_delimiter = new Delim[] { new DelimCtx("(", ctx: "()", s: true), new DelimCtx(")", ctx: "()", e: true) };
-		public static Delim[] _code_body_delimiter = new Delim[] { new DelimCtx("{", ctx: "{}", s: true), new DelimCtx("}", ctx: "{}", e: true) };
+		public static Delim[] _expression_delimiter = new Delim[] { new DelimCtx("(", ctx: "()", start: true), new DelimCtx(")", ctx: "()", end: true) };
+		public static Delim[] _code_body_delimiter = new Delim[] { new DelimCtx("{", ctx: "{}", start: true), new DelimCtx("}", ctx: "{}", end: true) };
 		public static Delim[] _string_code_body_delimiter = new Delim[] {
 			//new DelimCtx("\"", ctx: "codeInString", s: true, e: true), 
 			new Delim("{{",parseRule:(str,i)=>new ParseResult(2,"{")),
 			new Delim("}}",parseRule:(str,i)=>new ParseResult(2,"}")),
-			new DelimCtx("{", ctx: "{}", s: true), 
-			new DelimCtx("}", ctx: "{}", e: true) };
-		public static Delim[] _square_brace_delimiter = new Delim[] { new DelimCtx("[", ctx: "[]", s: true), new DelimCtx("]", ctx: "[]", e: true) };
-		public static Delim[] _triangle_brace_delimiter = new Delim[] { new DelimCtx("<", ctx: "<>", s: true), new DelimCtx(">", ctx: "<>", e: true) };
+			new DelimCtx("{", ctx: "{}", start: true), 
+			new DelimCtx("}", ctx: "{}", end: true) };
+		public static Delim[] _square_brace_delimiter = new Delim[] { new DelimCtx("[", ctx: "[]", start: true), new DelimCtx("]", ctx: "[]", end: true) };
+		public static Delim[] _triangle_brace_delimiter = new Delim[] { new DelimCtx("<", ctx: "<>", start: true), new DelimCtx(">", ctx: "<>", end: true) };
 		public static Delim[] _ternary_operator_delimiter = new Delim[] { "?", ":", "??" };
 		public static Delim[] _instruction_finished_delimiter = new Delim[] { ";" };
 		public static Delim[] _instruction_finished_delimiter_ignore_rest = new Delim[] { new Delim(";", parseRule: IgnoreTheRestOfThis) };
@@ -75,12 +74,16 @@ namespace NonStandard.Data.Parse {
 			new DelimCtx("7",ctx:"number",parseRule:StringExtension.NumericParse),
 			new DelimCtx("8",ctx:"number",parseRule:StringExtension.NumericParse),
 			new DelimCtx("9",ctx:"number",parseRule:StringExtension.NumericParse) };
-		public static Delim[] _block_comment_delimiter = new Delim[] { new DelimCtx("/*", ctx: "/**/", s: true), new DelimCtx("*/", ctx: "/**/", e: true) };
-		public static Delim[] _line_comment_delimiter = new Delim[] { new DelimCtx("//", ctx: "//", s: true) };
-		public static Delim[] _XML_line_comment_delimiter = new Delim[] { new DelimCtx("///", ctx: "///", s: true) };
-		public static Delim[] _end_of_line_comment = new Delim[] { new DelimCtx("\n", ctx: "//", e: true, printable: false), new DelimCtx("\r", ctx: "//", e: true,printable:false) };
-		public static Delim[] _erroneous_end_of_string = new Delim[] { new DelimCtx("\n", ctx: "string", e: true, printable: false), new DelimCtx("\r", ctx: "string", e: true, printable: false) };
-		public static Delim[] _end_of_XML_line_comment = new Delim[] { new DelimCtx("\n", ctx: "///", e: true, printable: false), new DelimCtx("\r", ctx: "///", e: true, printable: false) };
+		public static Delim[] _boolean = new Delim[] {
+			new DelimCtx("False",ctx:"bool",parseRule:(str,i)=>new ParseResult(5,false),breaking:false),
+			new DelimCtx("True",ctx:"bool",parseRule:(str,i)=>new ParseResult(4,true),breaking:false),
+		};
+		public static Delim[] _block_comment_delimiter = new Delim[] { new DelimCtx("/*", ctx: "/**/", start: true), new DelimCtx("*/", ctx: "/**/", end: true) };
+		public static Delim[] _line_comment_delimiter = new Delim[] { new DelimCtx("//", ctx: "//", start: true) };
+		public static Delim[] _XML_line_comment_delimiter = new Delim[] { new DelimCtx("///", ctx: "///", start: true) };
+		public static Delim[] _end_of_line_comment = new Delim[] { new DelimCtx("\n", ctx: "//", end: true, printable: false), new DelimCtx("\r", ctx: "//", end: true,printable:false) };
+		public static Delim[] _erroneous_end_of_string = new Delim[] { new DelimCtx("\n", ctx: "string", end: true, printable: false), new DelimCtx("\r", ctx: "string", end: true, printable: false) };
+		public static Delim[] _end_of_XML_line_comment = new Delim[] { new DelimCtx("\n", ctx: "///", end: true, printable: false), new DelimCtx("\r", ctx: "///", end: true, printable: false) };
 		public static Delim[] _line_comment_continuation = new Delim[] { new Delim("\\", parseRule: CommentEscape) };
 		public static Delim[] _data_keyword = new Delim[] { "null", "true", "false", "bool", "int", "short", "string", "long", "byte",
 			"float", "double", "uint", "ushort", "sbyte", "char", "if", "else", "void", "var", "new", "as", };
@@ -104,7 +107,7 @@ namespace NonStandard.Data.Parse {
 			_expression_delimiter, _code_body_delimiter, _square_brace_delimiter, _ternary_operator_delimiter,
 			_instruction_finished_delimiter, _list_item_delimiter, _membership_operator, _prefix_unary_operator,
 			_binary_operator, _binary_logic_operatpor, _assignment_operator, _lambda_operator, _math_operator,
-			_block_comment_delimiter, _line_comment_delimiter, _number);
+			_block_comment_delimiter, _line_comment_delimiter, _number, _boolean);
 		public static Delim[] LineCommentDelimiters = CombineDelims(_line_comment_continuation, _end_of_line_comment);
 		public static Delim[] XmlCommentDelimiters = CombineDelims(_line_comment_continuation,
 			_end_of_XML_line_comment);
@@ -116,6 +119,7 @@ namespace NonStandard.Data.Parse {
 			Char = new ParseRuleSet("char");
 			Number = new ParseRuleSet("number");
 			Hexadecimal = new ParseRuleSet("0x");
+			Boolean = new ParseRuleSet("bool");
 			Expression = new ParseRuleSet("()");
 			SquareBrace = new ParseRuleSet("[]");
 			GenericArgs = new ParseRuleSet("<>");
@@ -149,6 +153,7 @@ namespace NonStandard.Data.Parse {
 			CommentLine.Whitespace = CodeRules.WhitespaceNone;
 			String.Whitespace = CodeRules.WhitespaceNone;
 			String.Delimiters = CodeRules.StringLiteralDelimiters;
+//			Boolean.Delimiters = CombineDelims(_boolean);
 			//Char.whitespace = CodeRules.WhitespaceNone;
 			//Char.delimiters = CodeRules.StringLiteralDelimiters;
 			Number.Whitespace = CodeRules.WhitespaceNone;
@@ -264,8 +269,8 @@ namespace NonStandard.Data.Parse {
 		public static bool op_SearchForMember(string name, out object value, out Type type, object scope) {
 			switch (name) {
 			case "null": value= null;  type = null;         return true;
-			case "true": value = true;  type = typeof(bool); return true;
-			case "false": value = false; type = typeof(bool); return true;
+			case "True": value = true;  type = typeof(bool); return true;
+			case "False": value = false; type = typeof(bool); return true;
 			}
 			type = typeof(string);
 			if (ReflectionParseExtension.TryGetValue(scope, name, out value, out object _)) {

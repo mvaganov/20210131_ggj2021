@@ -9,7 +9,7 @@ namespace NonStandard.Data.Parse {
 		protected static Dictionary<string, ParseRuleSet> allContexts = new Dictionary<string, ParseRuleSet>();
 		public string name = "default";
 		protected char[] whitespace;
-		protected Delim[] delimiters;
+		internal Delim[] delimiters;
 		private List<ParseRuleSet> delimiterFallback = new List<ParseRuleSet>();
 
 		//public static Dictionary<string, ParseRuleSet> GetAllContexts() { return allContexts; }
@@ -86,20 +86,39 @@ namespace NonStandard.Data.Parse {
 			}
 			return -1;
 		}
-		public Delim GetDelimiterAt(string str, int index) {
+		public Delim GetDelimiter(string str) { return GetDelimiterAt(str, 0, -1); }
+		public Delim GetDelimiterAt(string str, int index, int currentTokenStartedAt) {
 			int i = IndexOfDelimeterAt(str, index);
-			if (i < 0) {
-				if (delimiterFallback != null) {
-					for(i = 0; i < delimiterFallback.Count; ++i) {
-						Delim d = delimiterFallback[i].GetDelimiterAt(str, index);
-						if (d != null) {
-							return d;
+			Delim delim = (delimiters != null && i >= 0) ? delimiters[i] : null;
+			// if this is a non-breaking delimeter...
+			if (delim != null && !delim.breaking) {
+				//Show.Log(delim.text);
+				// ...that has been found within a non-delimiter token
+				if (currentTokenStartedAt >= 0) {
+					delim = null; // nope, not a delimeter
+				} else {
+					int nextIndex = index + delim.text.Length;
+					if (str.Length > nextIndex) {
+						bool whitespaceIsNext = IsWhitespace(str[nextIndex]);
+						// ...that has a non-breaking delimiter immediately after it
+						//Show.Log("checking after " + delim.text + ": " + str.Substring(index + delim.text.Length));
+						Delim nextPossibleDelim = GetDelimiterAt(str, nextIndex, index);
+						if (!whitespaceIsNext && (nextPossibleDelim == null || !nextPossibleDelim.breaking)) {
+							delim = null; // nope, not a delimiter
 						}
 					}
 				}
-				return null;
 			}
-			return delimiters[i];
+			// if a delimiter could not be found and there are fall-back delimiter parsers to check
+			if (delim == null && delimiterFallback != null) {
+				for(i = 0; i < delimiterFallback.Count; ++i) {
+					Delim d = delimiterFallback[i].GetDelimiterAt(str, index, currentTokenStartedAt);
+					if (d != null) {
+						return d;
+					}
+				}
+			}
+			return delim;
 		}
 		public void AddDelimiterFallback(ParseRuleSet ruleSet) {
 			delimiterFallback.Add(ruleSet);
