@@ -1943,8 +1943,9 @@ MonoBehaviour:
     headerUi:collabel, widthOfColumn:100}\r\n{l\xA4:\"speed\", c\xA4:\"txticon\",
     v\xA4:(move.move.speed/5), h\xA4:collabel, w\xA4:30, d\xA4:0.0}\r\n{l\xA4:\"handicraft\",
     c\xA4:\"input\", v\xA4:(data.handicraft), h\xA4:collabel, w\xA4:80, d\xA4:0.0}\r\n{l\xA4:\"activate\",
-    c\xA4:\"btncntr\", v\xA4:\"ask for help\", h\xA4:collabel, w\xA4:100, onClick:{DoActivateTrigger()}}\n{l\xA4:\"+\",
-    c\xA4:\"nothing\", v\xA4:null, h\xA4:addcol, w\xA4:30,alwaysLast:1}\r"
+    c\xA4:\"btncntr\", v\xA4:if(False)\"ask for help\"else{0}, h\xA4:collabel, w\xA4:100,
+    onClick:{DoActivateTrigger()}}\n{l\xA4:\"+\", c\xA4:\"nothing\", v\xA4:null,
+    h\xA4:addcol, w\xA4:30,alwaysLast:1}\r"
   dataPopulator:
     m_PersistentCalls:
       m_Calls:

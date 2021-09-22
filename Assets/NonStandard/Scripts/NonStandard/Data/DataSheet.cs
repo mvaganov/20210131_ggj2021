@@ -57,6 +57,10 @@ namespace NonStandard.Data {
 			/// </summary>
 			public bool canEdit;
 			/// <summary>
+			/// if the <see cref="_fieldToken"/> is an if-statement, then the field needs to be re-evaluated for each row.
+			/// </summary>
+			public bool mustReEvauluateFieldBecauseOfConditionalLogic;
+			/// <summary>
 			/// the edit path is loaded if no edit path exists when values change
 			/// </summary>
 			public bool needsToLoadEditPath;
@@ -91,7 +95,7 @@ namespace NonStandard.Data {
 			/// <returns>a sample value (the first value possible)</returns>
 			public object SetFieldToken(Token value, ITokenErrLog errLog) {
 				_fieldToken = value;
-				RefreshEditPath();
+				RefreshEditPath(true);
 				if (editPath != null && dataSheet.rows.Count > 0) {
 					return RefreshStrictlyTypedVariablePathBasedOnDataFromSpreadsheet(errLog);
 				}
@@ -164,6 +168,7 @@ namespace NonStandard.Data {
 			/// <returns></returns>
 			public bool SetValue(object scope, object value, ITokenErrLog errLog = null) {
 				//Show.Log("attempting to set " + _fieldToken.GetAsSmallText() + " to " + value);
+				if (mustReEvauluateFieldBecauseOfConditionalLogic) { RefreshEditPath(false); }
 				if (!canEdit) return false;
 				if (needsToLoadEditPath) {
 					CompileEditPath(scope);
@@ -184,8 +189,18 @@ namespace NonStandard.Data {
 				return true;
 			}
 
-			public void RefreshEditPath() {
+			public void RefreshEditPath(bool preprocessing) {
 				// the field can have an editPath if it doesn't contain any binary operators except for member operators
+				ParseRuleSet.Entry conditionalLogic = _fieldToken.GetAsContextEntry();
+				if (conditionalLogic != null && conditionalLogic.parseRules == CodeRules.IfStatement) {
+					if (preprocessing) {
+						mustReEvauluateFieldBecauseOfConditionalLogic = true;
+						editPath = null;
+						return;
+					} else {
+						Show.Log("TODO need to get the field being pointed at by "+_fieldToken.StringifySmall());
+					}
+				}
 				List<Token> allTokens = new List<Token>();
 				bool isValidEditableField = TokenOnlyContains(_fieldToken, new ParseRuleSet[] { 
 					CodeRules.Expression, CodeRules.MembershipOperator, CodeRules.SquareBrace }, allTokens);

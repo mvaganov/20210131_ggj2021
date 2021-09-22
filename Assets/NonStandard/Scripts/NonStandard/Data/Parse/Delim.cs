@@ -25,8 +25,8 @@ namespace NonStandard.Data.Parse {
 		public int order;
 		public SyntaxContextGetter isSyntaxValid = null;
 		public TokenResolver resolve = null;
-		public DelimOp(string delim, string name = null, string desc = null, ParseRule parseRule = null, SyntaxRequirement addReq = null, int order = 100, SyntaxContextGetter syntax = null, TokenResolver resolve = null)
-			: base(delim, name, desc, parseRule, addReq) {
+		public DelimOp(string delim, string name = null, string desc = null, ParseRule parseRule = null, SyntaxRequirement addReq = null, int order = 100, SyntaxContextGetter syntax = null, TokenResolver resolve = null, bool printable = true, bool breaking = true)
+			: base(delim, name, desc, parseRule, addReq, printable, breaking) {
 			this.order = order; isSyntaxValid = syntax; this.resolve = resolve;
 		}
 	}

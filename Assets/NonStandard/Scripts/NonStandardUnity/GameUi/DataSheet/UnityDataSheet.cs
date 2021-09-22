@@ -40,9 +40,9 @@ namespace NonStandard.GameUi.DataSheet {
 	public class UnityDataSheetColumnInitStructure {
 		public string label;
 		/// <summary>
-		/// could be a string, number, expression
+		/// could be a string, number, expression, TODO or conditional (like an if statement). in the case of a conditional, pick the right option!
 		/// </summary>
-		public Token valueScript;
+		public Token valueScript; //do this next
 		public object defaultValue;
 		public Type typeOfValue;
 		public string columnUi;

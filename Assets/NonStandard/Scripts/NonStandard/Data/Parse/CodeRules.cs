@@ -11,7 +11,7 @@ namespace NonStandard.Data.Parse {
 			String, Char, Number, Hexadecimal, Boolean, Expression, SquareBrace, GenericArgs, CodeBody,
 			CodeInString, Sum, Difference, Product, Quotient, Modulus, Power, LogicalAnd, LogicalOr,
 			Assignment, Equal, LessThan, GreaterThan, LessThanOrEqual, GreaterThanOrEqual, MembershipOperator,
-			NotEqual, XmlCommentLine, CommentLine, CommentBlock, Default;
+			IfStatement, NotEqual, XmlCommentLine, CommentLine, CommentBlock, Default;
 
 		public static Delim[] _string_delimiter = new Delim[] { new DelimCtx("\"", ctx: "string", start: true, end: true), };
 		public static Delim[] _char_delimiter = new Delim[] { new DelimCtx("\'", ctx: "char", start: true, end: true), };
@@ -32,9 +32,12 @@ namespace NonStandard.Data.Parse {
 		public static Delim[] _list_item_delimiter = new Delim[] { "," };
 		public static Delim[] _membership_operator = new Delim[] {
 			new DelimOp(".", "member",syntax:CodeRules.opinit_mem,resolve:CodeRules.op_member, order:10),
-			new Delim("->", "pointee"),
-			new Delim("::", "scope resolution"),
-			new Delim("?.", "null conditional")
+			new DelimOp("->", "pointee",syntax:CodeRules.opinit_mem,resolve:CodeRules.op_member, order:11),
+			new DelimOp("::", "scope resolution",syntax:CodeRules.opinit_mem,resolve:CodeRules.op_member, order:12),
+			new DelimOp("?.", "null conditional",syntax:CodeRules.opinit_mem,resolve:CodeRules.op_member, order:13)
+		};
+		public static Delim[] _conditional_operator = new Delim[] {
+			new DelimOp("if", "if statement",syntax:CodeRules.opinit_if_,resolve:CodeRules.op_if_statement, order:10, breaking:false),
 		};
 		public static Delim[] _prefix_unary_operator = new Delim[] { "++", "--", "!", "-", "~" };
 		public static Delim[] _postfix_unary_operator = new Delim[] { "++", "--" };
@@ -107,7 +110,7 @@ namespace NonStandard.Data.Parse {
 			_expression_delimiter, _code_body_delimiter, _square_brace_delimiter, _ternary_operator_delimiter,
 			_instruction_finished_delimiter, _list_item_delimiter, _membership_operator, _prefix_unary_operator,
 			_binary_operator, _binary_logic_operatpor, _assignment_operator, _lambda_operator, _math_operator,
-			_block_comment_delimiter, _line_comment_delimiter, _number, _boolean);
+			_block_comment_delimiter, _line_comment_delimiter, _number, _boolean, _conditional_operator);
 		public static Delim[] LineCommentDelimiters = CombineDelims(_line_comment_continuation, _end_of_line_comment);
 		public static Delim[] XmlCommentDelimiters = CombineDelims(_line_comment_continuation,
 			_end_of_XML_line_comment);
@@ -138,6 +141,7 @@ namespace NonStandard.Data.Parse {
 			LessThan = new ParseRuleSet("less than", CodeRules.None);
 			GreaterThan = new ParseRuleSet("greater than", CodeRules.None);
 			MembershipOperator = new ParseRuleSet("membership operator", CodeRules.None);
+			IfStatement = new ParseRuleSet("if statement", CodeRules.None);
 			LessThanOrEqual = new ParseRuleSet("less than or equal", CodeRules.None);
 			GreaterThanOrEqual = new ParseRuleSet("greater than or equal", CodeRules.None);
 			NotEqual = new ParseRuleSet("not equal", CodeRules.None);
@@ -197,27 +201,45 @@ namespace NonStandard.Data.Parse {
 			delims.Sort();
 			return delims.ToArray();
 		}
-
+		private static readonly string[] _if_operand_names = new string[] { "syntax", "conditional perand", "true case" };
+		private static readonly string[] _ifelse_operand_names = new string[] { "syntax", "conditional perand", "true case", "else clause", "false case"};
+		private static readonly string[] _binary_operand_names = new string[] { "left operand", "syntax", "right operand" };
+		public static ParseRuleSet.Entry opinit_IfStatementGeneral(List<Token> tokens, Tokenizer tok, int index, string contextName) {
+			if(tokens.Count > index+4 && tokens[index+3].StringifySmall() == "else") {
+				return opinit_GenericOp(tokens, tok, index, contextName, 0, _ifelse_operand_names);
+			}
+			// TODO if there is an else, use _ifelse_operand_names
+			return opinit_GenericOp(tokens, tok, index, contextName, 0, _if_operand_names);
+		}
 		public static ParseRuleSet.Entry opinit_Binary(List<Token> tokens, Tokenizer tok, int index, string contextName) {
+			return opinit_GenericOp(tokens, tok, index, contextName, -1, _binary_operand_names);
+		}
+		public static ParseRuleSet.Entry opinit_GenericOp(List<Token> tokens, Tokenizer tok, int index, string contextName,
+			int whereContextBegins, string[] operandNames) {
 			Token t = tokens[index];
 			ParseRuleSet.Entry e = tokens[index].GetAsContextEntry();
 			if (e != null) {
-				if (e.parseRules.name != contextName) { throw new Exception(tok.AddError(t,
-					"expected context: "+contextName+", found "+e.parseRules.name).ToString()); }
+				if (e.parseRules.name != contextName) {
+					throw new Exception(tok.AddError(t, "expected context: " + contextName + ", found " + e.parseRules.name).ToString());
+				}
 				return e;
 			}
-			if (index - 1 < 0) { tok.AddError(t, "missing left operand"); return null; }
-			if (index + 1 >= tokens.Count) { tok.AddError(t, "missing right operand"); return null; }
+			for(int i = 0; i < operandNames.Length; ++i) {
+				int id = whereContextBegins + i;
+				if (id == 0) { continue; }
+				id += index;
+				if (id < 0 || id >= tokens.Count) { tok.AddError(t, "missing "+operandNames[i]); return null; }
+			}
 			ParseRuleSet foundContext = ParseRuleSet.GetContext(contextName);
 			if (foundContext == null) { throw new Exception(tok.AddError(t, "context '" + contextName + "' does not exist").ToString()); }
 			ParseRuleSet.Entry parent = null; int pIndex;
 			for (pIndex = 0; pIndex < tokens.Count; ++pIndex) {
 				e = tokens[pIndex].GetAsContextEntry();
-				if(e != null && e.tokens == tokens) { parent = e; break; }
+				if (e != null && e.tokens == tokens) { parent = e; break; }
 			}
-			if (pIndex == index) { throw new Exception(tok.AddError(t,"parent context recursion").ToString()); }
-			e = foundContext.GetEntry(tokens, index - 1, t.meta, parent);
-			e.tokenCount = 3;
+			if (pIndex == index) { throw new Exception(tok.AddError(t, "parent context recursion").ToString()); }
+			e = foundContext.GetEntry(tokens, index + whereContextBegins, t.meta, parent);
+			e.tokenCount = operandNames.Length;
 			t.meta = e;
 			tokens[index] = t;
 			tok.ExtractContextAsSubTokenList(e);
@@ -240,6 +262,7 @@ namespace NonStandard.Data.Parse {
 		public static ParseRuleSet.Entry opinit_lte(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "less than or equal"); }
 		public static ParseRuleSet.Entry opinit_gte(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "greater than or equal"); }
 		public static ParseRuleSet.Entry opinit_mem(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "membership operator"); }
+		public static ParseRuleSet.Entry opinit_if_(Tokenizer tok, List<Token> tokens, int index) { return opinit_IfStatementGeneral(tokens, tok, index, "if statement"); }
 
 		/// <param name="tok"></param>
 		/// <param name="token"></param>
@@ -295,16 +318,16 @@ namespace NonStandard.Data.Parse {
 		}
 
 		public static void op_BinaryArgs(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, out object left, out object right, out Type lType, out Type rType) {
-			SingleArg(tok, e.tokens[0], scope, out left, out lType);
+			SingleArgPreferDouble(tok, e.tokens[0], scope, out left, out lType);
 			if(e.Length < 3) {
 				tok.AddError(e.tokens[1], "missing right argument for binary operator");
 				right = null;
 				rType = null;
 				return;
 			}
-			SingleArg(tok, e.tokens[2], scope, out right, out rType);
+			SingleArgPreferDouble(tok, e.tokens[2], scope, out right, out rType);
 		}
-		public static void SingleArg(ITokenErrLog tok, Token token, object scope, out object value, out Type valType) {
+		public static void SingleArgPreferDouble(ITokenErrLog tok, Token token, object scope, out object value, out Type valType) {
 			op_ResolveToken(tok, token, scope, out value, out valType);
 			if (valType != typeof(string) && valType != typeof(double) && CodeConvert.IsConvertable(valType)) {
 				CodeConvert.TryConvert(ref value, typeof(double)); valType = typeof(double);
@@ -515,9 +538,32 @@ namespace NonStandard.Data.Parse {
 			public override string ToString() { return str; }
 			public DefaultString(string str) { this.str = str; }
 		}
+		public static object op_if_statement(ITokenErrLog tok, ParseRuleSet.Entry e, object scope) {
+			object conditionResult, resultEvaluated; Type cType, rType;
+			Token condition = e.tokens[1];
+			Token resultToEvaluate = e.tokens[2];
+			op_ResolveToken(tok, condition, scope, out conditionResult, out cType);
+			Show.Log("this is where the if statement gets parsed, and returns "+resultToEvaluate.StringifySmall()+" if "+condition.StringifySmall()+" is true");
+			if (conditionResult != null && ((conditionResult is string ts && ts != "") || (conditionResult is bool tb && tb != false))) {
+				op_ResolveToken(tok, resultToEvaluate, scope, out resultEvaluated, out rType);
+				return resultEvaluated;
+			}
+			if (e.tokens.Count <= 4) { return null; }
+			resultToEvaluate = e.tokens[4];
+			if (conditionResult == null || (conditionResult is string fs && fs == "") || (conditionResult is bool fb && fb == false)) {
+				op_ResolveToken(tok, resultToEvaluate, scope, out resultEvaluated, out rType);
+				Show.Log("resolved else: " + resultToEvaluate.StringifySmall()+" as "+resultEvaluated);
+				return resultEvaluated;
+			}
+			Show.Log(condition.StringifySmall()+" is neither True, nor False. what is it?");
+			//if (e.tokens.Count > 2 && e.tokens[3].GetAsBasicToken() == "else") {
+			//	Show.Log("and it has an else to return if the condition failed");
+			//}
+			return null;
+		}
 		public static object op_member(ITokenErrLog tok, ParseRuleSet.Entry e, object scope) {
 			object left; Type lType;
-			SingleArg(tok, e.tokens[0], scope, out left, out lType); //op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
+			SingleArgPreferDouble(tok, e.tokens[0], scope, out left, out lType); //op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			//Show.Log(e.tokens[0].ToString()+ e.tokens[1].ToString()+ e.tokens[2].ToString()+"~~~"+ lType +" "+left+" . "+rType+" "+right);
 			string name = e.tokens[2].ToString();
 			object val = ReflectionParseExtension.GetValue(left, name, new DefaultString(name));
