@@ -63,7 +63,7 @@ namespace NonStandard.Data.Parse {
 		/// <param name="i"></param>
 		/// <param name="scope"></param>
 		/// <returns></returns>
-		public object GetResolvedToken(int i, object scope = null) { return GetToken(i).Resolve(this, scope, true, true); }
+		public object GetResolvedToken(int i, object scope = null) { return GetToken(i).Resolve(this, scope, true); }
 		/// <summary>
 		/// this is probably the method you're looking for. Get a string from the list of tokens, resolving it if it's a variable.
 		/// </summary>

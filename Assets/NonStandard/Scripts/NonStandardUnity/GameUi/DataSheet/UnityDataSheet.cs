@@ -62,7 +62,7 @@ namespace NonStandard.GameUi.DataSheet {
 		public void OnClick() {
 			//Show.Log("onClick " + scope + "." + script.Stringify());
 			TokenErrorLog tok = new TokenErrorLog();
-			object r = script.Resolve(tok, scope, true, true);
+			object r = script.Resolve(tok, scope, true);
 			if (tok.HasError()) {
 				Show.Warning(tok.GetErrorString());
 			}

@@ -95,7 +95,7 @@ namespace NonStandard.Data {
 			/// <returns>a sample value (the first value possible)</returns>
 			public object SetFieldToken(Token value, ITokenErrLog errLog) {
 				_fieldToken = value;
-				RefreshEditPath(true);
+				RefreshEditPath(true, null, errLog);
 				if (editPath != null && dataSheet.rows.Count > 0) {
 					return RefreshStrictlyTypedVariablePathBasedOnDataFromSpreadsheet(errLog);
 				}
@@ -135,6 +135,9 @@ namespace NonStandard.Data {
 
 			public object GetValue(ITokenErrLog errLog, object scope) {
 				object result;
+				if (mustReEvauluateFieldBecauseOfConditionalLogic) {
+					RefreshEditPath(false, scope, errLog);
+				}
 				if (needsToLoadEditPath) {
 					result = CompileEditPath(scope);
 				} else if (editPath != null) {
@@ -144,7 +147,7 @@ namespace NonStandard.Data {
 				} else {
 					bool errorNeedsToBeNoisy = false;
 					if (errLog == null) { errLog = new TokenErrorLog(); errorNeedsToBeNoisy = true; }
-					result = fieldToken.Resolve(errLog, scope, true, true);
+					result = fieldToken.Resolve(errLog, scope, true);
 					if (errLog.HasError()) {
 						result = defaultValue;
 						if (errorNeedsToBeNoisy) {
@@ -168,7 +171,9 @@ namespace NonStandard.Data {
 			/// <returns></returns>
 			public bool SetValue(object scope, object value, ITokenErrLog errLog = null) {
 				//Show.Log("attempting to set " + _fieldToken.GetAsSmallText() + " to " + value);
-				if (mustReEvauluateFieldBecauseOfConditionalLogic) { RefreshEditPath(false); }
+				if (mustReEvauluateFieldBecauseOfConditionalLogic) {
+					RefreshEditPath(false, scope, errLog);
+				}
 				if (!canEdit) return false;
 				if (needsToLoadEditPath) {
 					CompileEditPath(scope);
@@ -189,20 +194,29 @@ namespace NonStandard.Data {
 				return true;
 			}
 
-			public void RefreshEditPath(bool preprocessing) {
+			public void RefreshEditPath(bool preprocessing, object rowObject, ITokenErrLog errLog) {
 				// the field can have an editPath if it doesn't contain any binary operators except for member operators
 				ParseRuleSet.Entry conditionalLogic = _fieldToken.GetAsContextEntry();
+				Token fieldToProcess = _fieldToken;
 				if (conditionalLogic != null && conditionalLogic.parseRules == CodeRules.IfStatement) {
 					if (preprocessing) {
 						mustReEvauluateFieldBecauseOfConditionalLogic = true;
 						editPath = null;
 						return;
 					} else {
-						Show.Log("TODO need to get the field being pointed at by "+_fieldToken.StringifySmall());
+						//Show.Log("TODO need to get the field being pointed at by "+_fieldToken.StringifySmall());
+						object result = conditionalLogic.Resolve(errLog, rowObject, true, thing => {
+							if (thing is ParseRuleSet.Entry e && e.parseRules == CodeRules.IfStatement) {
+								//Show.Log("it's an if statement!");
+								return false;
+							}
+							return true; // get the first thing that isn't an if-statement
+						});
+						fieldToProcess = (Token)result;
 					}
 				}
 				List<Token> allTokens = new List<Token>();
-				bool isValidEditableField = TokenOnlyContains(_fieldToken, new ParseRuleSet[] { 
+				bool isValidEditableField = TokenOnlyContains(fieldToProcess, new ParseRuleSet[] { 
 					CodeRules.Expression, CodeRules.MembershipOperator, CodeRules.SquareBrace }, allTokens);
 				//StringBuilder sb = new StringBuilder();
 				//sb.Append(fieldToken.GetAsSmallText() + " " + isValidEditableField + "\n");

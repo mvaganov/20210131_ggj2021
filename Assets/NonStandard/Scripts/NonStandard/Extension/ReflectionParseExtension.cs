@@ -318,7 +318,7 @@ namespace NonStandard.Extension {
 		public static object ConvertWildcardIntoDictionaryKey(object scope, object key, Type scopeType = null, char wildcard = Wildcard) {
 			if (scopeType == null) { scopeType = scope.GetType(); }
 			if (key is string name) {
-				if (name[0] == wildcard || name[name.Length - 1] == wildcard) {
+				if (name.Length > 0 && (name[0] == wildcard || name[name.Length - 1] == wildcard)) {
 					MethodInfo getKey = null;
 					IEnumerator en = (IEnumerator)scopeType.GetMethod("GetEnumerator", Type.EmptyTypes).Invoke(scope, new object[] { });
 					while (en.MoveNext()) {

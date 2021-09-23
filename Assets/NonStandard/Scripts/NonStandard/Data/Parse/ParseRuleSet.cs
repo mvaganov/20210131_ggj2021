@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 
 namespace NonStandard.Data.Parse {
+	public delegate bool ResolvedEnoughDelegate(object currentStateOfData);
 	public class ParseRuleSet {
 		protected static Dictionary<string, ParseRuleSet> allContexts = new Dictionary<string, ParseRuleSet>();
 		public string name = "default";
@@ -208,13 +209,38 @@ namespace NonStandard.Data.Parse {
 				}
 			}
 			public string GetText() { return Unescape(); }
-			public object Resolve(ITokenErrLog tok, object scope, bool simplify = true, bool fullyResolve = false) {
+			public object Resolve(ITokenErrLog tok, object scope, bool simplify = true, ResolvedEnoughDelegate isItResolvedEnough = null) {
 				DelimOp op = sourceMeta as DelimOp;
 				if(op != null) { 
-					return op.resolve.Invoke(tok, this, scope);
+					return op.resolve.Invoke(tok, this, scope, isItResolvedEnough);
 				}
 				if (IsText()) { return Unescape(); }
-				return Resolve(tok, scope, tokens, simplify, fullyResolve);
+				return Resolve(tok, scope, tokens, simplify, isItResolvedEnough);
+			}
+			public static object Resolve(ITokenErrLog tok, object scope, List<Token> tokens, bool simplify = true, ResolvedEnoughDelegate isItResolvedEnough = null) {
+				List<object> result = ResolveTerms(tok, scope, tokens, isItResolvedEnough);
+				if (isItResolvedEnough != null && isItResolvedEnough.Invoke(result)) return result;
+				if (simplify) { switch (result.Count) { case 0: return null; case 1: return result[0]; } }
+				return result;
+			}
+			public static List<object> ResolveTerms(ITokenErrLog tok, object scope, List<Token> tokens, ResolvedEnoughDelegate isItResolvedEnough = null) {
+				List<object> results = new List<object>();
+				ResolveTerms(tok, scope, tokens, 0, tokens.Count, results, isItResolvedEnough);
+				return results;
+			}
+			public static void ResolveTerms(ITokenErrLog tok, object scope, List<Token> tokens, int start, int length, List<object> results, ResolvedEnoughDelegate isItResolvedEnough = null) {
+				List<int> found = new List<int>();
+				FindTerms(tokens, start, length, found);
+				for (int i = 0; i < found.Count; ++i) {
+					Token t = tokens[found[i]];
+					object result = t.Resolve(tok, scope, true, isItResolvedEnough);
+					results.Add(result);
+					// if this token resolves to a string, and the immediate next one resolves to a list of some kind
+					string funcName = GetMethodCall(result, i, tokens, found);
+					if (funcName != null && TryExecuteFunction(scope, funcName, tokens[found[++i]], out object funcResult, tok, isItResolvedEnough)) {
+						results[results.Count - 1] = funcResult;
+					}
+				}
 			}
 			public static void FindTerms(List<Token> tokens, int start, int length, List<int> found) {
 				for(int i = 0; i < length; ++i) {
@@ -222,25 +248,6 @@ namespace NonStandard.Data.Parse {
 					Entry e = t.GetAsContextEntry();
 					if (e != null && t.IsValid) { continue; } // skip entry tokens (count entry sub-lists
 					found.Add(i);
-				}
-			}
-			public static List<object> ResolveTerms(ITokenErrLog tok, object scope, List<Token> tokens, bool fullyResolve = false) {
-				List<object> results = new List<object>();
-				ResolveTerms(tok, scope, tokens, 0, tokens.Count, results, fullyResolve);
-				return results;
-			}
-			public static void ResolveTerms(ITokenErrLog tok, object scope, List<Token> tokens, int start, int length, List<object> results, bool fullyResolve = false) {
-				List<int> found = new List<int>();
-				FindTerms(tokens, start, length, found);
-				for (int i = 0; i < found.Count; ++i) {
-					Token t = tokens[found[i]];
-					object result = t.Resolve(tok, scope, true, fullyResolve);
-					results.Add(result);
-					// if this token resolves to a string, and the immediate next one resolves to a list of some kind
-					string funcName = GetMethodCall(result, i, tokens, found);
-					if (funcName != null && TryExecuteFunction(scope, funcName, tokens[found[++i]], out object funcResult, tok, fullyResolve)) {
-						results[results.Count - 1] = funcResult;
-					}
 				}
 			}
 			private static string GetMethodCall(object result, int i, List<Token> tokens, List<int> found) {
@@ -253,10 +260,10 @@ namespace NonStandard.Data.Parse {
 				}
 				return null;
 			}
-			private static bool TryExecuteFunction(object scope, string funcName, Token argsToken, out object result, ITokenErrLog tok, bool fullyResolve) {
+			private static bool TryExecuteFunction(object scope, string funcName, Token argsToken, out object result, ITokenErrLog tok, ResolvedEnoughDelegate isItResolvedEnough) {
 				result = null;
 				if (!DeterminePossibleMethods(scope, funcName, out List<MethodInfo> possibleMethods, tok, argsToken)) { return false; }
-				List<object> args = ResolveFunctionArgumentList(argsToken, scope, tok, fullyResolve);
+				List<object> args = ResolveFunctionArgumentList(argsToken, scope, tok, isItResolvedEnough);
 				if (!DetermineValidMethods(funcName, argsToken, possibleMethods, out List<ParameterInfo[]> validParams, args, tok)) { return false; }
 				if (!DetermineMethod(args, possibleMethods, validParams, out MethodInfo mi, out object[] finalArgs, tok, argsToken)) { return false; }
 				return ExecuteMethod(scope, mi, finalArgs, out result, tok, argsToken);
@@ -274,8 +281,8 @@ namespace NonStandard.Data.Parse {
 				}
 				return true;
 			}
-			private static List<object> ResolveFunctionArgumentList(Token argsToken, object scope, ITokenErrLog tok, bool fullyResolve) {
-				object argsRaw = argsToken.Resolve(tok, scope, true, fullyResolve);
+			private static List<object> ResolveFunctionArgumentList(Token argsToken, object scope, ITokenErrLog tok, ResolvedEnoughDelegate isItResolvedEnough) {
+				object argsRaw = argsToken.Resolve(tok, scope, true, isItResolvedEnough);
 				if (argsRaw == null) { argsRaw = new List<object>(); }
 				List<object> args = argsRaw as List<object>;
 				if (args == null) {
@@ -347,12 +354,6 @@ namespace NonStandard.Data.Parse {
 				}
 				return true;
 			}
-			public static object Resolve(ITokenErrLog tok, object scope, List<Token> tokens, bool simplify = true, bool fullyResolve = false) {
-				List<object> result = ResolveTerms(tok, scope, tokens, fullyResolve);
-				if (simplify) { switch (result.Count) { case 0: return null; case 1: return result[0]; } }
-				return result;
-			}
-
 			//public int FindTerms() { return CountTerms(tokens, tokenStart, tokenCount); }
 			public bool IsText() { return parseRules == CodeRules.String || parseRules == CodeRules.Char; }
 			public bool IsEnclosure { get { return parseRules == CodeRules.Expression || parseRules == CodeRules.CodeBody || parseRules == CodeRules.SquareBrace; } }

@@ -281,11 +281,11 @@ namespace NonStandard.Data.Parse {
 			if (memberValue != null) {
 				switch (memberValue) {
 				case ParseRuleSet.Entry e:
-					memberValue = e.Resolve(tok, scope, true, true);
+					memberValue = e.Resolve(tok, scope, true);
 					break;
 				case Token t:
 					if (memberType != typeof(Token)) {
-						memberValue = t.Resolve(tok, scope, true, true);
+						memberValue = t.Resolve(tok, scope, true);
 					}
 					break;
 				}

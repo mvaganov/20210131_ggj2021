@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace NonStandard.GameUi.DataSheet {
 	public class RowHandle : MonoBehaviour {
-		public const bool ChangeIndexDuringDrag = true;
+		public static bool ChangeIndexDuringDrag = true;
 		private DragAction drag = null;
 		public class DragAction {
 			public int fromIndex;

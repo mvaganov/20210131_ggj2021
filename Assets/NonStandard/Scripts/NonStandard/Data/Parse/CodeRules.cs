@@ -270,9 +270,10 @@ namespace NonStandard.Data.Parse {
 		/// <param name="value"></param>
 		/// <param name="type"></param>
 		/// <param name="simplify">if true, and the result is a list with one item, the list is stripped away and the single item is returned</param>
-		public static void op_ResolveToken(ITokenErrLog tok, Token token, object scope, out object value, out Type type, bool simplify=true) {
+		public static void op_ResolveToken(ITokenErrLog tok, Token token, object scope, out object value, out Type type, bool simplify=true, ResolvedEnoughDelegate isItResolvedEnough = null) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(token)) { value = token; type = token.GetType(); return; }
 //			Show.Log("resolving: " + token.ToString());
-			value = token.Resolve(tok, scope, simplify);
+			value = token.Resolve(tok, scope, simplify, isItResolvedEnough);
 			type = (value != null) ? value.GetType() : null;
 			if (scope == null || type == null) { return; } // no scope, or no data, easy. we're done.
 			string name = value as string;
@@ -290,7 +291,7 @@ namespace NonStandard.Data.Parse {
 			}
 		}
 		public static bool op_SearchForMember(string name, out object value, out Type type, object scope) {
-			switch (name) {
+			switch (name) { // TODO can this switch be removed because the tokens are in CodeRules?
 			case "null": value= null;  type = null;         return true;
 			case "True": value = true;  type = typeof(bool); return true;
 			case "False": value = false; type = typeof(bool); return true;
@@ -318,23 +319,29 @@ namespace NonStandard.Data.Parse {
 		}
 
 		public static void op_BinaryArgs(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, out object left, out object right, out Type lType, out Type rType) {
-			SingleArgPreferDouble(tok, e.tokens[0], scope, out left, out lType);
+			SingleArgPreferDouble(tok, e.tokens[0], scope, out left, out lType, null);
 			if(e.Length < 3) {
 				tok.AddError(e.tokens[1], "missing right argument for binary operator");
 				right = null;
 				rType = null;
 				return;
 			}
-			SingleArgPreferDouble(tok, e.tokens[2], scope, out right, out rType);
+			SingleArgPreferDouble(tok, e.tokens[2], scope, out right, out rType, null);
 		}
-		public static void SingleArgPreferDouble(ITokenErrLog tok, Token token, object scope, out object value, out Type valType) {
-			op_ResolveToken(tok, token, scope, out value, out valType);
+		public static void SingleArgPreferDouble(ITokenErrLog tok, Token token, object scope, out object value, out Type valType, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(token)) { value = token; valType = token.GetType(); return; }
+			op_ResolveToken(tok, token, scope, out value, out valType, true, isItResolvedEnough);
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(value)) { return; }
 			if (valType != typeof(string) && valType != typeof(double) && CodeConvert.IsConvertable(valType)) {
 				CodeConvert.TryConvert(ref value, typeof(double)); valType = typeof(double);
 			}
 		}
-		public static object op_asn(ITokenErrLog tok, ParseRuleSet.Entry e, object scope) { return "="; }
-		public static object op_mul(ITokenErrLog tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_asn(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
+			return "=";
+		}
+		public static object op_mul(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			do {
@@ -375,7 +382,8 @@ namespace NonStandard.Data.Parse {
 			tok.AddError(e.tokens[1], "unable to multiply " + lType + " and " + rType);
 			return e;
 		}
-		public static object op_add(ITokenErrLog tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_add(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			if (lType == typeof(string) || rType == typeof(string)) { return left.ToString() + right.ToString(); }
@@ -387,7 +395,8 @@ namespace NonStandard.Data.Parse {
 			tok.AddError(e.tokens[1], "unable to add " + lType + " and " + rType + " : " + left + " + " + right);
 			return e;
 		}
-		public static object op_dif(ITokenErrLog tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_dif(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			do {
@@ -401,7 +410,8 @@ namespace NonStandard.Data.Parse {
 			tok.AddError(e.tokens[1], "unable to subtract " + lType + " and " + rType + " : " + left + " - " + right);
 			return e;
 		}
-		public static object op_div(ITokenErrLog tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_div(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			do {
@@ -487,7 +497,8 @@ namespace NonStandard.Data.Parse {
 			} while (index < format.Length);
 			return sb.ToString();
 		}
-		public static object op_mod(ITokenErrLog tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_mod(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			do {
@@ -512,7 +523,8 @@ namespace NonStandard.Data.Parse {
 			tok.AddError(e.tokens[1], "unable to modulo " + lType + " and " + rType + " : " + left + " % " + right);
 			return e;
 		}
-		public static object op_pow(ITokenErrLog tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_pow(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			do {
@@ -538,20 +550,21 @@ namespace NonStandard.Data.Parse {
 			public override string ToString() { return str; }
 			public DefaultString(string str) { this.str = str; }
 		}
-		public static object op_if_statement(ITokenErrLog tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_if_statement(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
 			object conditionResult, resultEvaluated; Type cType, rType;
 			Token condition = e.tokens[1];
 			Token resultToEvaluate = e.tokens[2];
 			op_ResolveToken(tok, condition, scope, out conditionResult, out cType);
 			Show.Log("this is where the if statement gets parsed, and returns "+resultToEvaluate.StringifySmall()+" if "+condition.StringifySmall()+" is true");
 			if (conditionResult != null && ((conditionResult is string ts && ts != "") || (conditionResult is bool tb && tb != false))) {
-				op_ResolveToken(tok, resultToEvaluate, scope, out resultEvaluated, out rType);
+				op_ResolveToken(tok, resultToEvaluate, scope, out resultEvaluated, out rType, true, isItResolvedEnough);
 				return resultEvaluated;
 			}
 			if (e.tokens.Count <= 4) { return null; }
 			resultToEvaluate = e.tokens[4];
 			if (conditionResult == null || (conditionResult is string fs && fs == "") || (conditionResult is bool fb && fb == false)) {
-				op_ResolveToken(tok, resultToEvaluate, scope, out resultEvaluated, out rType);
+				op_ResolveToken(tok, resultToEvaluate, scope, out resultEvaluated, out rType, true, isItResolvedEnough);
 				Show.Log("resolved else: " + resultToEvaluate.StringifySmall()+" as "+resultEvaluated);
 				return resultEvaluated;
 			}
@@ -561,9 +574,10 @@ namespace NonStandard.Data.Parse {
 			//}
 			return null;
 		}
-		public static object op_member(ITokenErrLog tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_member(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
 			object left; Type lType;
-			SingleArgPreferDouble(tok, e.tokens[0], scope, out left, out lType); //op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
+			SingleArgPreferDouble(tok, e.tokens[0], scope, out left, out lType, isItResolvedEnough); //op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			//Show.Log(e.tokens[0].ToString()+ e.tokens[1].ToString()+ e.tokens[2].ToString()+"~~~"+ lType +" "+left+" . "+rType+" "+right);
 			string name = e.tokens[2].ToString();
 			object val = ReflectionParseExtension.GetValue(left, name, new DefaultString(name));
@@ -572,12 +586,14 @@ namespace NonStandard.Data.Parse {
 			}
 			return val;
 		}
-		public static object op_and(ITokenErrLog tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_and(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			return op_reduceToBoolean(left, lType) && op_reduceToBoolean(right, rType);
 		}
-		public static object op_or_(ITokenErrLog tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_or_(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
 			object left, right; Type lType, rType;
 			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			return op_reduceToBoolean(left, lType) || op_reduceToBoolean(right, rType);
@@ -591,27 +607,33 @@ namespace NonStandard.Data.Parse {
 			tok.AddError(e.tokens[1].index, "can't operate ("+lType+")"+left+" "+e.tokens[1]+" ("+rType+")"+right+" with scope("+scope+")");
 			return false;
 		}
-		public static object op_equ(ITokenErrLog tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_equ(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
 			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp == 0; }
 			return e;
 		}
-		public static object op_neq(ITokenErrLog tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_neq(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
 			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp != 0; }
 			return e;
 		}
-		public static object op_lt_(ITokenErrLog tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_lt_(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
 			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp < 0; }
 			return e;
 		}
-		public static object op_gt_(ITokenErrLog tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_gt_(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
 			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp > 0; }
 			return e;
 		}
-		public static object op_lte(ITokenErrLog tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_lte(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
 			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp <= 0; }
 			return e;
 		}
-		public static object op_gte(ITokenErrLog tok, ParseRuleSet.Entry e, object scope) {
+		public static object op_gte(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
 			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp >= 0; }
 			return e;
 		}
