@@ -7,6 +7,7 @@ using NonStandard.Ui;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// model/view controllers are tricky because cache invalidation is hard.
@@ -38,7 +39,7 @@ namespace NonStandard.GameUi.DataSheet {
 	/// structure filled in by column setting script
 	/// </summary>
 	public class UnityDataSheetColumnInitStructure {
-		public string label;
+		public Token label;
 		/// <summary>
 		/// could be a string, number, expression, TODO or conditional (like an if statement). in the case of a conditional, pick the right option!
 		/// </summary>
@@ -54,19 +55,24 @@ namespace NonStandard.GameUi.DataSheet {
 	public class ClickableScriptedCell : MonoBehaviour {
 		public Token script;
 		public object scope;
+		public string debugMetaData;
 		public void Set(object scope, Token script) { this.scope = scope; this.script = script; }
 		/// <summary>
 		/// how to execute an onClick action
 		/// </summary>
 		/// <param name="scope"></param>
 		public void OnClick() {
+			Show.Log(debugMetaData);
 			//Show.Log("onClick " + scope + "." + script.Stringify());
 			TokenErrorLog tok = new TokenErrorLog();
-			object r = script.Resolve(tok, scope);
+			if (script.meta != null) {
+				object r = script.Resolve(tok, scope);
+			}
 			if (tok.HasError()) {
 				Show.Warning(tok.GetErrorString());
 			}
 		}
+		public void OnClick(BaseEventData bed) { OnClick(); }
 	}
 	public class Udash : DataSheet<UnityColumnData> { }
 	public class UnityDataSheet : MonoBehaviour {
@@ -198,14 +204,18 @@ namespace NonStandard.GameUi.DataSheet {
 				Transform t = headerRectangle.GetChild(headerRectangle.childCount-1);
 				t.SetParent(null, false);
 			}
+			errLog.ClearErrors();
 			for (int i = 0; i < data.columnSettings.Count; ++i) {
 				Udash.ColumnSetting colS = data.columnSettings[i];
 				GameObject header = null;
 				string headerObj = colS.data.headerBase.name;
 				// check if the header we need is in the old header list
+				object headerTextResult = colS.data.label.Resolve(errLog, data);
+				if (errLog.HasError()) { popup.Set("err", null, errLog.GetErrorString()); return; }
+				string headerTextString = headerTextResult?.ToString() ?? null;
 				for (int h = 0; h < unusedHeaders.Count; ++h) {
 					GameObject hdr = unusedHeaders[h];
-					if (hdr.name.StartsWith(headerObj) && UiText.GetText(hdr) == colS.data.label) {
+					if (hdr.name.StartsWith(headerObj) && UiText.GetText(hdr) == headerTextString) {
 						header = hdr;
 						unusedHeaders.RemoveAt(h);
 						break;
@@ -214,7 +224,7 @@ namespace NonStandard.GameUi.DataSheet {
 				if (header == null) {
 					header = Instantiate(colS.data.headerBase);
 					header.name = header.name.SubstringBeforeFirst("(", headerObj.Length) + "(" + colS.data.label + ")";
-					UiText.SetText(header, colS.data.label);
+					UiText.SetText(header, headerTextString);
 				}
 				ColumnHeader ch = header.GetComponent<ColumnHeader>();
 				if (ch != null) { ch.columnSetting = colS; }
@@ -239,6 +249,7 @@ namespace NonStandard.GameUi.DataSheet {
 			}
 			unusedHeaders.Clear();
 			contentRectangle.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, cursor.x);
+			popup.Hide();
 		}
 		public void RefreshContentSize() {
 			contentRectangle.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, contentAreaSize.x);
@@ -271,8 +282,9 @@ namespace NonStandard.GameUi.DataSheet {
 		public void Load(List<object> source) {
 			//list = source;
 			data.InitData(source, errLog);
-			if (errLog.HasError()) { popup.Set("err", null, errLog.GetErrorString()); }
+			if (errLog.HasError()) { popup.Set("err", null, errLog.GetErrorString()); return; }
 			RefreshUi();
+			popup.Hide();
 		}
 
 		RowObject CreateRow(RowData rowData, float yPosition = float.NaN) {
@@ -316,13 +328,16 @@ namespace NonStandard.GameUi.DataSheet {
 					fieldUi = Instantiate(colS.data.uiBase);
 				}
 
-				if (colS.data.onClick != Token.None) {
+				if (colS.data.onClick.IsSimpleString) {
 					UiClick.ClearOnClick(fieldUi);
 					ClickableScriptedCell clickable = fieldUi.GetComponent<ClickableScriptedCell>();
 					if (fieldUi != null) { Destroy(clickable); }
 					clickable = fieldUi.AddComponent<ClickableScriptedCell>();
 					clickable.Set(rowData.obj, colS.data.onClick);
-					UiClick.AddOnClickIfNotAlready(fieldUi, clickable, clickable.OnClick, true);
+					clickable.debugMetaData = colS.data.onClick.StringifySmall();
+					if (!UiClick.AddOnButtonClickIfNotAlready(fieldUi, clickable, clickable.OnClick)) {
+						UiClick.AddOnPanelClickIfNotAlready(fieldUi, clickable, clickable.OnClick);
+					}
 				}
 
 				fieldUi.SetActive(true);
@@ -512,9 +527,9 @@ namespace NonStandard.GameUi.DataSheet {
 
 		public Udash.ColumnSetting AddColumn() {
 			Udash.ColumnSetting column = new Udash.ColumnSetting(data) {
-				fieldToken = new Token("",0,0),
+				fieldToken = new Token(""),
 				data = new UnityColumnData {
-					label = "new data",
+					label = new Token("new data"),
 					uiBase = uiPrototypes.GetElement("input"),
 					headerBase = uiPrototypes.GetElement("collabel"),
 					width = -1,

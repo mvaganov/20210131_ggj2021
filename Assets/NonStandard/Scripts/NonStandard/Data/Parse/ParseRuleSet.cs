@@ -96,7 +96,7 @@ namespace NonStandard.Data.Parse {
 			int i = IndexOfDelimeterAt(str, index);
 			Delim delim = (delimiters != null && i >= 0) ? delimiters[i] : null;
 			// if this is a non-breaking delimeter...
-			if (delim != null && !delim.breaking) {
+			if (delim != null && !delim.breaking) { // TODO put this body in a nicely named function
 				//Show.Log(delim.text);
 				// ...that has been found within a non-delimiter token
 				if (currentTokenStartedAt >= 0) {
@@ -115,7 +115,7 @@ namespace NonStandard.Data.Parse {
 				}
 			}
 			// if a delimiter could not be found and there are fall-back delimiter parsers to check
-			if (delim == null && delimiterFallback != null) {
+			if (delim == null && delimiterFallback != null && delimiterFallback.Count > 0) {
 				for(i = 0; i < delimiterFallback.Count; ++i) {
 					Delim d = delimiterFallback[i].GetDelimiterAt(str, index, currentTokenStartedAt);
 					if (d != null) {
@@ -220,7 +220,7 @@ namespace NonStandard.Data.Parse {
 				}
 				List<object> finalTerms = ResolveTerms(tok, scope, tokens, isItResolvedEnough);
 				object result = finalTerms;
-				if(parseRules.Simplify != null) {
+				if(parseRules != null && parseRules.Simplify != null) {
 					if (isItResolvedEnough != null && isItResolvedEnough.Invoke(result)) { return result; }
 					result = parseRules.Simplify.Invoke(finalTerms);
 				}

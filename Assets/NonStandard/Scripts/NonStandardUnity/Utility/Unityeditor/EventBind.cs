@@ -20,7 +20,10 @@ namespace NonStandard.Utility.UnityEditor {
 		}
 		public UnityAction<T> GetAction<T>(object target, string setMethodName) {
 			System.Reflection.MethodInfo targetinfo = UnityEvent.GetValidMethodInfo(target, setMethodName, new Type[] { typeof(T) });
-			if (targetinfo == null) { Debug.LogError("no method " + setMethodName + "(" + typeof(T).Name + ") in " + target.ToString()); }
+			if (targetinfo == null) {
+				Debug.LogError("no method \"" + setMethodName + "\" (" + typeof(T).Name + ") in " + target.ToString());
+				return null;
+			}
 			return Delegate.CreateDelegate(typeof(UnityAction<T>), target, targetinfo, false) as UnityAction<T>;
 		}
 		public static bool IfNotAlready<T>(UnityEvent<T> @event, UnityEngine.Object target, string methodName) {

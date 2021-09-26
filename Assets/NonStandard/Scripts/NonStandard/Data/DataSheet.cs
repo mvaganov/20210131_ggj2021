@@ -9,11 +9,11 @@ namespace NonStandard.Data {
 		/// <summary>
 		/// label at the top of the column
 		/// </summary>
-		public string label;
+		public Token label;
 		/// <summary>
 		/// hover-over description for column label
 		/// </summary>
-		public string description;
+		public Token description;
 	}
 	public class RowData {
 		public object obj;

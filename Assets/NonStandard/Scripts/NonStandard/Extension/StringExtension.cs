@@ -267,6 +267,7 @@ namespace NonStandard.Extension {
 				return str.NumberParse(index + 1, digitCount, 8, false).AddToLength(1).ForceCharSubstitute();
 			}
 			}
+			r.lengthParsed = 1;
 			return r.SetError("unknown escape sequence", 1, 0, 1);
 		}
 

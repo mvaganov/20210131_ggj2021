@@ -15,6 +15,7 @@ namespace NonStandard.Data.Parse {
 		/// </summary>
 		public object meta; // 64 bits
 		public Token(object meta, int i, int len) { this.meta = meta; index = i; length = len; }
+		public Token(string text) { this.meta = text; index = 0; length = text.Length; }
 		private static Token _None = new Token(null, -1, -1);
 		public static Token None => _None;
 		public int GetBeginIndex() { return index; }
@@ -124,6 +125,9 @@ namespace NonStandard.Data.Parse {
 			if (ctx != null) { return ctx.GetEndToken() == this || ctx.GetBeginToken() == this; }
 			return false;
 		}
+		/// <summary>
+		/// a token can be valid without meta data, as a simple marker. but if it has invalid marks, and no data, it's bad.
+		/// </summary>
 		public bool IsValid { get { return index >= 0 && length >= 0; } }
 		public bool IsSimpleString { get { return index >= 0 && length >= 0 && 
 					(meta is string || meta is ParseRuleSet.Entry pce && pce.TextRaw != null); } }

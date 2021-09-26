@@ -105,6 +105,14 @@ namespace NonStandard.Data.Parse {
 			this.tokenStrings = toCopy.tokenStrings.Copy();
 			this.rows = toCopy.rows.Copy();
 		}
+		public Token GetMasterToken() {
+			ParseRuleSet.Entry e = new ParseRuleSet.Entry();
+			e.tokens = tokens;
+			e.tokenStart = 0;
+			e.tokenCount = tokens.Count;
+			Token t = new Token(e, 0, str.Length);
+			return t;
+		}
 		public void FilePositionOf(Token token, out int row, out int col) {
 			ParseError.FilePositionOf(token, rows, out row, out col);
 		}
@@ -212,13 +220,16 @@ namespace NonStandard.Data.Parse {
 			else { contextStack.Add(parseRules.GetEntry(tokens, -1, null)); }
 			int tokenBegin = -1;
 			ParseRuleSet currentContext = parseRules;
+			int lastIndex = index-1;
 			while (index < str.Length && (condition == null || condition.Invoke(this))) {
+				if (index <= lastIndex) { throw new Exception("tokenize algorithm problem, the index isn't advancing"); }
 				char c = str[index];
-				Delim delim = currentContext.GetDelimiterAt(str, index, tokenBegin);
+				bool isWhiteSpace = currentContext.IsWhitespace(c);
+				Delim delim = !isWhiteSpace ? currentContext.GetDelimiterAt(str, index, tokenBegin) : null;
 				if (delim != null) {
 					FinishToken(index, ref tokenBegin); // finish whatever token was being read before this delimeter
 					HandleDelimiter(delim, ref index, contextStack, ref currentContext, parseRules);
-				} else if (!currentContext.IsWhitespace(c)) {
+				} else if (!isWhiteSpace) {
 					if (tokenBegin < 0) { tokenBegin = index; }
 				} else {
 					FinishToken(index, ref tokenBegin); // handle whitespace

@@ -9,6 +9,7 @@ using System.Reflection;
 using NonStandard.Data;
 using NonStandard.Utility.UnityEditor;
 using NonStandard.Extension;
+using NonStandard.Process;
 
 namespace NonStandard.GameUi.DataSheet {
 	public class ColumnHeaderEditor : MonoBehaviour {
@@ -50,6 +51,7 @@ namespace NonStandard.GameUi.DataSheet {
 			this.uds = uds;
 			this.column = column;
 			cHeader = columnHeader;
+			TokenErrorLog errLog = new TokenErrorLog();
 			// setup script value
 			scriptValue.onValueChanged.RemoveAllListeners();
 			string text = cHeader.columnSetting.fieldToken.Stringify();
@@ -59,7 +61,9 @@ namespace NonStandard.GameUi.DataSheet {
 			OnScriptValueEdit(text);
 			// setup column label
 			columnLabel.onValueChanged.RemoveAllListeners();
-			columnLabel.text = cHeader.columnSetting.data.label;
+			object labelText = cHeader.columnSetting.data.label.Resolve(errLog, uds.data);
+			if (errLog.HasError()) { popup.Set("err", defaultValue.gameObject, errLog.GetErrorString()+Proc.Now); return; }
+			columnLabel.text = labelText.ToString();
 			EventBind.On(columnLabel.onValueChanged, this, OnLabelEdit);
 			// setup column width
 			columnWidth.onValueChanged.RemoveAllListeners();
@@ -85,6 +89,7 @@ namespace NonStandard.GameUi.DataSheet {
 			// setup column destroy option
 			trashColumn.onClick.RemoveAllListeners();
 			EventBind.On(trashColumn.onClick, this, ColumnRemove);
+			popup.Hide();
 		}
 		public void OnSetDefaultValue(string text) {
 			object value = null;
@@ -93,14 +98,27 @@ namespace NonStandard.GameUi.DataSheet {
 			// parse errors
 			if (tokenizer.HasError()) { popup.Set("err", defaultValue.gameObject, tokenizer.GetErrorString()); return; }
 			cHeader.columnSetting.defaultValue = value;
+			popup.Hide();
 		}
 		public void SetFieldType(int index) {
 			cHeader.columnSetting.data.uiBase = columnTypes[index].uiField;
 			uds.RefreshRowAndColumnUi();
 		}
 		public void OnLabelEdit(string text) {
-			cHeader.columnSetting.data.label = text;
-			UiText.SetText(cHeader.gameObject, text);
+			Tokenizer tokenizer = Tokenizer.Tokenize(text);
+			if (tokenizer.HasError()) { popup.Set("err", defaultValue.gameObject, tokenizer.GetErrorString()); return; }
+			Token token = Token.None;
+			switch (tokenizer.tokens.Count) {
+			case 0: break;
+			case 1: token = tokenizer.tokens[0]; break;
+			default: token = new Token(text); break;
+			}
+			cHeader.columnSetting.data.label = token;
+			object result = token.Resolve(tokenizer, uds.data);
+			if (tokenizer.HasError()) { popup.Set("err", defaultValue.gameObject, tokenizer.GetErrorString()); return; }
+			string resultText = result?.ToString() ?? "";
+			UiText.SetText(cHeader.gameObject, resultText);
+			popup.Hide();
 		}
 		public void OnColumnWidthEdit(string text) {
 			float oldWidth = cHeader.columnSetting.data.width;
@@ -160,6 +178,7 @@ namespace NonStandard.GameUi.DataSheet {
 			SetExpectedEditType(value);
 			// valid variable path
 			if (tokenizer.HasError()) { popup.Set("err", scriptValue.gameObject, tokenizer.GetErrorString()); return false; }
+			popup.Hide();
 			return true;
 		}
 		public void SetExpectedEditType(object sampleValue) {

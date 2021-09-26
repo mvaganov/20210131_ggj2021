@@ -46,15 +46,16 @@ namespace NonStandard.Ui {
 				}
 			}
 		}
-		public static void AddOnClickIfNotAlready(GameObject obj, Object target, UnityAction action, bool listenWithEventSystemAsFallback = false) {
+		public static bool AddOnButtonClickIfNotAlready(GameObject obj, Object target, UnityAction action) {
 			Button button = obj.GetComponent<Button>();
 			if (button != null) {
 				EventBind.IfNotAlready(button.onClick, target, action);
-				return;
+				return true;
 			}
-			if (listenWithEventSystemAsFallback) {
-				PointerTrigger.AddEventIfNotAlready(obj, EventTriggerType.PointerClick, target, e => action.Invoke());
-			}
+			return false;
+		}
+		public static void AddOnPanelClickIfNotAlready(GameObject obj, Object target, UnityAction<BaseEventData> action) {
+			PointerTrigger.AddEventIfNotAlready(obj, EventTriggerType.PointerClick, target, action);
 		}
 	}
 }
