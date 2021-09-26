@@ -281,11 +281,11 @@ namespace NonStandard.Data.Parse {
 			if (memberValue != null) {
 				switch (memberValue) {
 				case ParseRuleSet.Entry e:
-					memberValue = e.Resolve(tok, scope, true);
+					memberValue = e.Resolve(tok, scope);
 					break;
 				case Token t:
 					if (memberType != typeof(Token)) {
-						memberValue = t.Resolve(tok, scope, true);
+						memberValue = t.Resolve(tok, scope);
 					}
 					break;
 				}
@@ -414,16 +414,16 @@ namespace NonStandard.Data.Parse {
 			return false;
 		}
 
-		public static bool TryConvert(Type memberType, List<Token> tokens, ParseRuleSet.Entry context, object scope, Tokenizer tok, ref object memberValue) {
-			if (CodeConvert.IsConvertable(memberType)) {
-				//Show.Log(memberId + " :: " + memberValue);
-				memberValue = context.Resolve(tok, scope);
-			} else {
-				//Show.Log(memberId+" : "+memberValue);
-				if (!CodeConvert.TryParseTokens(memberType, tokens, ref memberValue, scope, tok)) { return false; }
-			}
-			return true;
-		}
+		//public static bool TryConvert(Type memberType, List<Token> tokens, ParseRuleSet.Entry context, object scope, Tokenizer tok, ref object memberValue) {
+		//	if (CodeConvert.IsConvertable(memberType)) {
+		//		//Show.Log(memberId + " :: " + memberValue);
+		//		memberValue = context.Resolve(tok, scope);
+		//	} else {
+		//		//Show.Log(memberId+" : "+memberValue);
+		//		if (!CodeConvert.TryParseTokens(memberType, tokens, ref memberValue, scope, tok)) { return false; }
+		//	}
+		//	return true;
+		//}
 
 		protected void AddError(string message) { tok.AddError(Current.Token, message); }
 	}

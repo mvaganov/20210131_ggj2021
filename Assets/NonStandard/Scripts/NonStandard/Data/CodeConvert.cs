@@ -63,7 +63,7 @@ namespace NonStandard.Data {
 		/// <param name="data"></param>
 		/// <returns></returns>
 		public static bool TryParse(Token token, out object data, object scope, ITokenErrLog tokenizer) {
-			CodeRules.op_ResolveToken(tokenizer, token, scope, out data, out Type resultType, false);
+			CodeRules.op_ResolveToken(tokenizer, token, scope, out data, out Type resultType);
 			return resultType != null;
 		}
 		/// <summary>
@@ -127,7 +127,8 @@ namespace NonStandard.Data {
 		/// <param name="value"></param>
 		/// <param name="typeToConvertTo"></param>
 		public static bool Convert(ref object value, Type typeToConvertTo) {
-			if (!TryConvert(ref value, typeToConvertTo)) {
+			if (!TryConvert(value, out object result, typeToConvertTo)) {
+				value = result;
 				//throw new FormatException("could not convert \"" + value + "\" to type " + typeToConvertTo);
 				return false;
 			}
@@ -165,12 +166,34 @@ namespace NonStandard.Data {
 			}
 			return false;
 		}
+		public static bool TryConvert<TYPE>(object value, out TYPE desiredValue) {
+			Type typeToGet = typeof(TYPE);
+			if (TryConvert(value, out object result, typeToGet)) {
+				desiredValue = (TYPE)result;
+				return true;
+			}
+			desiredValue = default;
+			return false;
+		}
 		public static bool TryConvert(ref object value, Type typeToGet) {
-			if (value != null && value.GetType() == typeToGet) return true;
+			if (TryConvert(value, out object result, typeToGet)) {
+				value = result;
+				return true;
+			}
+			return false;
+		}
+		public static bool TryConvert(object value, out object desiredValue, Type typeToGet) {
+		//public static bool TryConvert(ref object value, Type typeToGet) {
+		//	if (value != null && value.GetType() == typeToGet) return true;
+			if (value != null && value.GetType() == typeToGet) { desiredValue = value; return true; }
+			desiredValue = default;
 			try {
 				if (typeToGet.IsEnum) {
 					string str = value as string;
-					if (str != null) { return ReflectionParseExtension.TryConvertEnumWildcard(typeToGet, str, out value); }
+					if (str != null && ReflectionParseExtension.TryConvertEnumWildcard(typeToGet, str, out desiredValue)) {
+						return true;
+					}
+					return false;
 				}
 				switch (Type.GetTypeCode(typeToGet)) {
 				case TypeCode.Boolean:
@@ -186,10 +209,10 @@ namespace NonStandard.Data {
 				case TypeCode.UInt64:
 				case TypeCode.Double:
 				case TypeCode.String:
-					value = System.Convert.ChangeType(value, typeToGet);
+					desiredValue = System.Convert.ChangeType(value, typeToGet);
 					break;
 				default:
-					if (TryConvertIList(ref value, typeToGet)) { 
+					if (TryConvertIList(value, out desiredValue, typeToGet)) {
 						return true;
 					}
 					return false;
@@ -198,9 +221,17 @@ namespace NonStandard.Data {
 			return true;
 		}
 		public static bool TryConvertIList(ref object value, Type resultListType, Type resultElementType = null) {
+			if(TryConvertIList(value, out object result, resultListType, resultElementType)) {
+				value = result;
+				return true;
+			}
+			return false;
+		}
+		public static bool TryConvertIList(object valueIn, out object valueOut, Type resultListType, Type resultElementType = null) {
+			valueOut = null; 
 			Type outputListElementType = resultElementType != null ? resultElementType : resultListType.GetIListType();
 			if (outputListElementType == null) { return false; }
-			IList ilist = (IList)value;
+			IList ilist = (IList)valueIn;
 			if (resultListType.IsArray) {
 				try {
 					Array oArray = Array.CreateInstance(outputListElementType, ilist.Count);
@@ -210,7 +241,7 @@ namespace NonStandard.Data {
 							oArray.SetValue(element, i);
 						}
 					}
-					value = oArray;
+					valueOut = oArray;
 				} catch (Exception e) {
 					Show.Error("array creation:" + e);
 					return false;
@@ -225,7 +256,7 @@ namespace NonStandard.Data {
 							olist.Add(element);
 						}
 					}
-					value = olist;
+					valueOut = olist;
 				} catch (Exception e) {
 					Show.Error("List creation:" + e);
 					return false;

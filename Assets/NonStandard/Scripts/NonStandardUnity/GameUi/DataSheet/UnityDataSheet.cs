@@ -16,11 +16,11 @@ namespace NonStandard.GameUi.DataSheet {
 		/// <summary>
 		/// prefab used for the column data elements
 		/// </summary>
-		public GameObject uiBase;
+		public GameObject uiBase; // TODO make this a Token, which supports if-statements, like valueScript -> fieldToken
 		/// <summary>
 		/// prefab used for the column header element
 		/// </summary>
-		public GameObject headerBase;
+		public GameObject headerBase; // TODO make this a Token, which supports if-statements, like valueScript -> fieldToken
 		/// <summary>
 		/// width of the column
 		/// </summary>
@@ -28,7 +28,7 @@ namespace NonStandard.GameUi.DataSheet {
 		/// <summary>
 		/// a script to execute when this element is clicked. row object as scope
 		/// </summary>
-		public Token onClick;
+		public Token onClick;// TODO make this a Token, which supports if-statements, like valueScript -> fieldToken
 		/// <summary>
 		/// if true, will move itself to far right end, even if new elements are added
 		/// </summary>
@@ -42,14 +42,14 @@ namespace NonStandard.GameUi.DataSheet {
 		/// <summary>
 		/// could be a string, number, expression, TODO or conditional (like an if statement). in the case of a conditional, pick the right option!
 		/// </summary>
-		public Token valueScript; //do this next
-		public object defaultValue;
+		public Token valueScript;
+		public object defaultValue; // TODO make this a Token, like valueScript -> fieldToken
 		public Type typeOfValue;
-		public string columnUi;
+		public string columnUi; // TODO make this a Token, like valueScript -> fieldToken
 		public float widthOfColumn;
-		public string headerUi;
+		public string headerUi; // TODO make this a Token, like valueScript -> fieldToken
 		public bool alwaysLast;
-		public Token onClick = Token.None;
+		public Token onClick = Token.None; // TODO make this a Token, which supports if-statements, like valueScript -> fieldToken
 	}
 	public class ClickableScriptedCell : MonoBehaviour {
 		public Token script;
@@ -62,7 +62,7 @@ namespace NonStandard.GameUi.DataSheet {
 		public void OnClick() {
 			//Show.Log("onClick " + scope + "." + script.Stringify());
 			TokenErrorLog tok = new TokenErrorLog();
-			object r = script.Resolve(tok, scope, true);
+			object r = script.Resolve(tok, scope);
 			if (tok.HasError()) {
 				Show.Warning(tok.GetErrorString());
 			}
@@ -115,8 +115,8 @@ namespace NonStandard.GameUi.DataSheet {
 			for (int i = 0; i < columns.Length; ++i) {
 				UnityDataSheetColumnInitStructure c = columns[i];
 				c.typeOfValue = c.defaultValue != null ? c.defaultValue.GetType() : null;
-				data.SetColumn(index, new Udash.ColumnSetting (data) {
-					fieldToken = c.valueScript,
+				Udash.ColumnSetting columnSetting = new Udash.ColumnSetting(data) {
+					//fieldToken = c.valueScript,
 					data = new UnityColumnData {
 						label = c.label,
 						uiBase = uiPrototypes.GetElement(c.columnUi),
@@ -127,7 +127,9 @@ namespace NonStandard.GameUi.DataSheet {
 					},
 					type = c.typeOfValue,
 					defaultValue = c.defaultValue
-				});
+				};
+				columnSetting.SetFieldToken(c.valueScript, tokenizer);
+				data.SetColumn(index, columnSetting);
 				if (c.widthOfColumn > 0) {
 					data.columnSettings[index].data.width = c.widthOfColumn;
 				}

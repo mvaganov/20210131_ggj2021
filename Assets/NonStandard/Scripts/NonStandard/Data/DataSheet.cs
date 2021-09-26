@@ -83,7 +83,7 @@ namespace NonStandard.Data {
 			/// <summary>
 			/// what to resolve in this column if the path is missing or erroneous
 			/// </summary>
-			public object defaultValue = null;
+			public object defaultValue = null; // TODO make this a Token that supports if-statements, like _fieldToken
 
 			// TODO onClick, a string to parse as a function to execute
 
@@ -147,7 +147,7 @@ namespace NonStandard.Data {
 				} else {
 					bool errorNeedsToBeNoisy = false;
 					if (errLog == null) { errLog = new TokenErrorLog(); errorNeedsToBeNoisy = true; }
-					result = fieldToken.Resolve(errLog, scope, true);
+					result = fieldToken.Resolve(errLog, scope);
 					if (errLog.HasError()) {
 						result = defaultValue;
 						if (errorNeedsToBeNoisy) {
@@ -193,27 +193,37 @@ namespace NonStandard.Data {
 				//Show.Log("set " + scope + "." + _fieldToken.GetAsSmallText() + " to " + result);
 				return true;
 			}
-
-			public void RefreshEditPath(bool preprocessing, object rowObject, ITokenErrLog errLog) {
-				// the field can have an editPath if it doesn't contain any binary operators except for member operators
-				ParseRuleSet.Entry conditionalLogic = _fieldToken.GetAsContextEntry();
-				Token fieldToProcess = _fieldToken;
+			public static bool ResolveToNonIfStatement(object thing) {
+				if (thing is ParseRuleSet.Entry e && e.parseRules == CodeRules.IfStatement) { return false; } // IfStatement code rules are not "resolved enough"
+				return true; // get the first thing that isn't an if-statement
+			}
+			/// <summary>
+			/// 
+			/// </summary>
+			/// <param name="fieldToProcess">field with the conditional statement filter</param>
+			/// <param name="errLog">where to put errors encountered during parsing</param>
+			/// <param name="scope">where to get variables that need to be resolved in the token</param>
+			/// <param name="checkOnly">if true, will not fully resolve the token, only identify that it needs to be resolved later</param>
+			/// <returns></returns>
+			public static bool ResolveConditionalFilter(ref Token fieldToProcess, ITokenErrLog errLog, object scope, bool checkOnly = false) {
+				ParseRuleSet.Entry conditionalLogic = fieldToProcess.GetAsContextEntry();
 				if (conditionalLogic != null && conditionalLogic.parseRules == CodeRules.IfStatement) {
-					if (preprocessing) {
-						mustReEvauluateFieldBecauseOfConditionalLogic = true;
-						editPath = null;
-						return;
-					} else {
-						//Show.Log("TODO need to get the field being pointed at by "+_fieldToken.StringifySmall());
-						object result = conditionalLogic.Resolve(errLog, rowObject, true, thing => {
-							if (thing is ParseRuleSet.Entry e && e.parseRules == CodeRules.IfStatement) {
-								//Show.Log("it's an if statement!");
-								return false;
-							}
-							return true; // get the first thing that isn't an if-statement
-						});
-						fieldToProcess = (Token)result;
-					}
+					if (!checkOnly) { return true; }
+					//fieldToProcess.Resolve(errLog, scope, ResolveToNonIfStatement);
+					object result = conditionalLogic.Resolve(errLog, scope, ResolveToNonIfStatement);
+					fieldToProcess = (Token)result;
+					return true;
+				}
+				return false;
+			}
+			public void RefreshEditPath(bool preprocessingHeader, object rowObject, ITokenErrLog errLog) {
+				// the field can have an editPath if it doesn't contain any binary operators except for member operators
+				Token fieldToProcess = _fieldToken;
+				if (ResolveConditionalFilter(ref fieldToProcess, errLog, rowObject, preprocessingHeader) && preprocessingHeader) {
+					// if this is just pre-processing the header, we know enough that we need to recalculate this field each time. that's enough.
+					mustReEvauluateFieldBecauseOfConditionalLogic = true;
+					editPath = null;
+					return;
 				}
 				List<Token> allTokens = new List<Token>();
 				bool isValidEditableField = TokenOnlyContains(fieldToProcess, new ParseRuleSet[] { 

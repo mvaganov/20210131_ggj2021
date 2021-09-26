@@ -16,7 +16,10 @@ namespace NonStandard.Data.Parse {
 		public static Delim[] _string_delimiter = new Delim[] { new DelimCtx("\"", ctx: "string", start: true, end: true), };
 		public static Delim[] _char_delimiter = new Delim[] { new DelimCtx("\'", ctx: "char", start: true, end: true), };
 		public static Delim[] _char_escape_sequence = new Delim[] { new Delim("\\", parseRule: StringExtension.UnescapeStringSequenceAt) };
-		public static Delim[] _expression_delimiter = new Delim[] { new DelimCtx("(", ctx: "()", start: true), new DelimCtx(")", ctx: "()", end: true) };
+		public static Delim[] _expression_delimiter = new Delim[] {
+			new DelimCtx("(", ctx: "()", start: true),
+			new DelimCtx(")", ctx: "()", end: true)
+		};
 		public static Delim[] _code_body_delimiter = new Delim[] { new DelimCtx("{", ctx: "{}", start: true), new DelimCtx("}", ctx: "{}", end: true) };
 		public static Delim[] _string_code_body_delimiter = new Delim[] {
 			//new DelimCtx("\"", ctx: "codeInString", s: true, e: true), 
@@ -161,6 +164,10 @@ namespace NonStandard.Data.Parse {
 			//Char.whitespace = CodeRules.WhitespaceNone;
 			//Char.delimiters = CodeRules.StringLiteralDelimiters;
 			Number.Whitespace = CodeRules.WhitespaceNone;
+			Expression.Simplify = CodeRules.SimplifySingleTermParenthesis;
+			CodeBody.Simplify = CodeRules.SimplifySingleTermParenthesis;
+			String.Simplify = CodeRules.SimplifyCompositeStringLiteral;
+			Char.Simplify = CodeRules.SimplifyCompositeStringLiteral;
 
 			Type t = typeof(CodeRules);
 			MemberInfo[] mInfo = t.GetMembers();
@@ -264,16 +271,28 @@ namespace NonStandard.Data.Parse {
 		public static ParseRuleSet.Entry opinit_mem(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "membership operator"); }
 		public static ParseRuleSet.Entry opinit_if_(Tokenizer tok, List<Token> tokens, int index) { return opinit_IfStatementGeneral(tokens, tok, index, "if statement"); }
 
+		public static object SimplifySingleTermParenthesis(List<object> terms) {
+			if (terms != null) { switch (terms.Count) { case 0: return null; case 1: return terms[0]; } }
+			return terms;
+		}
+		public static object SimplifyCompositeStringLiteral(List<object> terms) {
+			StringBuilder sb = new StringBuilder();
+			//if (terms.Count > 1 && terms.Count < 5) { Show.Log(terms.JoinToString()); }
+			for (int i = 0; i < terms.Count; ++i) { sb.Append(terms[i].ToString()); }
+			return sb.ToString();
+
+		}
+
 		/// <param name="tok"></param>
 		/// <param name="token"></param>
 		/// <param name="scope"></param>
 		/// <param name="value"></param>
 		/// <param name="type"></param>
 		/// <param name="simplify">if true, and the result is a list with one item, the list is stripped away and the single item is returned</param>
-		public static void op_ResolveToken(ITokenErrLog tok, Token token, object scope, out object value, out Type type, bool simplify=true, ResolvedEnoughDelegate isItResolvedEnough = null) {
+		public static void op_ResolveToken(ITokenErrLog tok, Token token, object scope, out object value, out Type type, ResolvedEnoughDelegate isItResolvedEnough = null) {
 			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(token)) { value = token; type = token.GetType(); return; }
 //			Show.Log("resolving: " + token.ToString());
-			value = token.Resolve(tok, scope, simplify, isItResolvedEnough);
+			value = token.Resolve(tok, scope, isItResolvedEnough);
 			type = (value != null) ? value.GetType() : null;
 			if (scope == null || type == null) { return; } // no scope, or no data, easy. we're done.
 			string name = value as string;
@@ -330,7 +349,7 @@ namespace NonStandard.Data.Parse {
 		}
 		public static void SingleArgPreferDouble(ITokenErrLog tok, Token token, object scope, out object value, out Type valType, ResolvedEnoughDelegate isItResolvedEnough) {
 			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(token)) { value = token; valType = token.GetType(); return; }
-			op_ResolveToken(tok, token, scope, out value, out valType, true, isItResolvedEnough);
+			op_ResolveToken(tok, token, scope, out value, out valType, isItResolvedEnough);
 			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(value)) { return; }
 			if (valType != typeof(string) && valType != typeof(double) && CodeConvert.IsConvertable(valType)) {
 				CodeConvert.TryConvert(ref value, typeof(double)); valType = typeof(double);
@@ -557,18 +576,29 @@ namespace NonStandard.Data.Parse {
 			Token resultToEvaluate = e.tokens[2];
 			op_ResolveToken(tok, condition, scope, out conditionResult, out cType);
 			Show.Log("this is where the if statement gets parsed, and returns "+resultToEvaluate.StringifySmall()+" if "+condition.StringifySmall()+" is true");
-			if (conditionResult != null && ((conditionResult is string ts && ts != "") || (conditionResult is bool tb && tb != false))) {
-				op_ResolveToken(tok, resultToEvaluate, scope, out resultEvaluated, out rType, true, isItResolvedEnough);
+			bool convertedToDouble = false;
+			double td = 0;
+			if (conditionResult != null && (
+				(conditionResult is string ts && ts != "") ||
+				(conditionResult is bool tb && tb != false) ||
+				((convertedToDouble = CodeConvert.TryConvert(conditionResult, out td)) && td != 0)
+			)) {
+				op_ResolveToken(tok, resultToEvaluate, scope, out resultEvaluated, out rType, isItResolvedEnough);
 				return resultEvaluated;
 			}
 			if (e.tokens.Count <= 4) { return null; }
 			resultToEvaluate = e.tokens[4];
-			if (conditionResult == null || (conditionResult is string fs && fs == "") || (conditionResult is bool fb && fb == false)) {
-				op_ResolveToken(tok, resultToEvaluate, scope, out resultEvaluated, out rType, true, isItResolvedEnough);
+			if (conditionResult == null || 
+				(conditionResult is string fs && fs == "") ||
+				(conditionResult is bool fb && fb == false) ||
+				((convertedToDouble || CodeConvert.TryConvert(conditionResult, out td)) && td == 0)
+			) {
+				op_ResolveToken(tok, resultToEvaluate, scope, out resultEvaluated, out rType, isItResolvedEnough);
 				Show.Log("resolved else: " + resultToEvaluate.StringifySmall()+" as "+resultEvaluated);
 				return resultEvaluated;
 			}
-			Show.Log(condition.StringifySmall()+" is neither True, nor False. what is it?");
+			Show.Log(condition.StringifySmall()+" resolves to "+ conditionResult.StringifySmall() + ", which is neither True, nor False. what is it?");
+			op_ResolveToken(tok, condition, scope, out conditionResult, out cType);
 			//if (e.tokens.Count > 2 && e.tokens[3].GetAsBasicToken() == "else") {
 			//	Show.Log("and it has an else to return if the condition failed");
 			//}

@@ -12,6 +12,10 @@ namespace NonStandard.Data.Parse {
 		protected char[] whitespace;
 		internal Delim[] delimiters;
 		private List<ParseRuleSet> delimiterFallback = new List<ParseRuleSet>();
+		/// <summary>
+		/// an optional function to simplify results
+		/// </summary>
+		public Func<List<object>, object> Simplify;
 
 		//public static Dictionary<string, ParseRuleSet> GetAllContexts() { return allContexts; }
 		public static ParseRuleSet GetContext(string name) { allContexts.TryGetValue(name, out ParseRuleSet value); return value; }
@@ -209,18 +213,17 @@ namespace NonStandard.Data.Parse {
 				}
 			}
 			public string GetText() { return Unescape(); }
-			public object Resolve(ITokenErrLog tok, object scope, bool simplify = true, ResolvedEnoughDelegate isItResolvedEnough = null) {
+			public object Resolve(ITokenErrLog tok, object scope, ResolvedEnoughDelegate isItResolvedEnough = null) {
 				DelimOp op = sourceMeta as DelimOp;
 				if(op != null) { 
 					return op.resolve.Invoke(tok, this, scope, isItResolvedEnough);
 				}
-				if (IsText()) { return Unescape(); }
-				return Resolve(tok, scope, tokens, simplify, isItResolvedEnough);
-			}
-			public static object Resolve(ITokenErrLog tok, object scope, List<Token> tokens, bool simplify = true, ResolvedEnoughDelegate isItResolvedEnough = null) {
-				List<object> result = ResolveTerms(tok, scope, tokens, isItResolvedEnough);
-				if (isItResolvedEnough != null && isItResolvedEnough.Invoke(result)) return result;
-				if (simplify) { switch (result.Count) { case 0: return null; case 1: return result[0]; } }
+				List<object> finalTerms = ResolveTerms(tok, scope, tokens, isItResolvedEnough);
+				object result = finalTerms;
+				if(parseRules.Simplify != null) {
+					if (isItResolvedEnough != null && isItResolvedEnough.Invoke(result)) { return result; }
+					result = parseRules.Simplify.Invoke(finalTerms);
+				}
 				return result;
 			}
 			public static List<object> ResolveTerms(ITokenErrLog tok, object scope, List<Token> tokens, ResolvedEnoughDelegate isItResolvedEnough = null) {
@@ -233,7 +236,7 @@ namespace NonStandard.Data.Parse {
 				FindTerms(tokens, start, length, found);
 				for (int i = 0; i < found.Count; ++i) {
 					Token t = tokens[found[i]];
-					object result = t.Resolve(tok, scope, true, isItResolvedEnough);
+					object result = t.Resolve(tok, scope, isItResolvedEnough);
 					results.Add(result);
 					// if this token resolves to a string, and the immediate next one resolves to a list of some kind
 					string funcName = GetMethodCall(result, i, tokens, found);
@@ -282,7 +285,7 @@ namespace NonStandard.Data.Parse {
 				return true;
 			}
 			private static List<object> ResolveFunctionArgumentList(Token argsToken, object scope, ITokenErrLog tok, ResolvedEnoughDelegate isItResolvedEnough) {
-				object argsRaw = argsToken.Resolve(tok, scope, true, isItResolvedEnough);
+				object argsRaw = argsToken.Resolve(tok, scope, isItResolvedEnough);
 				if (argsRaw == null) { argsRaw = new List<object>(); }
 				List<object> args = argsRaw as List<object>;
 				if (args == null) {

@@ -70,7 +70,7 @@ namespace NonStandard.Data.Parse {
 				}
 			}
 		}
-		public object Resolve(ITokenErrLog tok, object scope, bool simplify = true, ResolvedEnoughDelegate isItResolvedEnough = null) {
+		public object Resolve(ITokenErrLog tok, object scope, ResolvedEnoughDelegate isItResolvedEnough = null) {
 			if (isItResolvedEnough != null && isItResolvedEnough(this)) return this;
 			if (index == -1 && length == -1) return meta;
 			if (meta == null) throw new NullReferenceException("can't resolve NULL token");
@@ -88,7 +88,7 @@ namespace NonStandard.Data.Parse {
 			}
 			case TokenSubstitution ss: return ss.value;
 			case Delim d: return d.text;
-			case ParseRuleSet.Entry pce: return pce.Resolve(tok, scope, simplify, isItResolvedEnough);
+			case ParseRuleSet.Entry pce: return pce.Resolve(tok, scope, isItResolvedEnough);
 			}
 			throw new DecoderFallbackException();
 		}

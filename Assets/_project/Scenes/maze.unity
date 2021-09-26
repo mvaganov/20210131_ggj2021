@@ -1943,9 +1943,9 @@ MonoBehaviour:
     headerUi:collabel, widthOfColumn:100}\r\n{l\xA4:\"speed\", c\xA4:\"txticon\",
     v\xA4:(move.move.speed/5), h\xA4:collabel, w\xA4:30, d\xA4:0.0}\r\n{l\xA4:\"handicraft\",
     c\xA4:\"input\", v\xA4:(data.handicraft), h\xA4:collabel, w\xA4:80, d\xA4:0.0}\r\n{l\xA4:\"activate\",
-    c\xA4:\"btncntr\", v\xA4:if(False)\"ask for help\"else{0}, h\xA4:collabel, w\xA4:100,
-    onClick:{DoActivateTrigger()}}\n{l\xA4:\"+\", c\xA4:\"nothing\", v\xA4:null,
-    h\xA4:addcol, w\xA4:30,alwaysLast:1}\r"
+    c\xA4:\"btncntr\", v\xA4:if(name==\"athlete\")(\"as\"+\"k for \\nhelp\")else{0},
+    h\xA4:collabel, w\xA4:100, onClick:{DoActivateTrigger()}}\n{l\xA4:\"+\", c\xA4:\"nothing\",
+    v\xA4:null, h\xA4:addcol, w\xA4:30,alwaysLast:1}\r"
   dataPopulator:
     m_PersistentCalls:
       m_Calls:
@@ -29928,7 +29928,7 @@ PrefabInstance:
     - target: {fileID: 293089605395451360, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0.000022888184
+      value: 0.000030517578
       objectReference: {fileID: 0}
     - target: {fileID: 293089605395451360, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
@@ -30078,7 +30078,7 @@ PrefabInstance:
     - target: {fileID: 5049753555242306429, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -0.00073314534
+      value: -0.0009507254
       objectReference: {fileID: 0}
     - target: {fileID: 5049753555429590707, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
@@ -30202,12 +30202,12 @@ PrefabInstance:
     - target: {fileID: 5049753556087296664, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0.00001335144
+      value: -0.0000076293945
       objectReference: {fileID: 0}
     - target: {fileID: 5049753556087296664, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -0.000076293945
+      value: 0.00012207031
       objectReference: {fileID: 0}
     - target: {fileID: 5049753556127801996, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}

@@ -45,7 +45,7 @@ namespace NonStandard.Cli {
 			UnityConsole console = GetComponent<UnityConsole>();
 			StringBuilder sb = new StringBuilder();
 			for (int i = 1; i < e.tok.tokens.Count; ++i) {
-				object result = e.tok.tokens[i].Resolve(e.tok, e.src, false);
+				object result = e.tok.tokens[i].Resolve(e.tok, e.src);
 				if (result == null) { result = ""; }
 				if (!(result is string)) { result = result.StringifySmall(); }
 				sb.Append(result.ToString());
