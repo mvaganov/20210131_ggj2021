@@ -93,6 +93,11 @@ namespace NonStandard.Data.Parse {
 			}
 			throw new DecoderFallbackException();
 		}
+		public string ResolveString(ITokenErrLog tok, object scope, ResolvedEnoughDelegate isItResolvedEnough = null) {
+			object result = Resolve(tok, scope, isItResolvedEnough);
+			if (result == null) return null;
+			return result.ToString();
+		}
 		public string GetAsSmallText() {
 			ParseRuleSet.Entry e = GetAsContextEntry();
 			if (e != null) {

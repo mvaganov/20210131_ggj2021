@@ -17,7 +17,7 @@ namespace NonStandard.GameUi.DataSheet {
 		/// <summary>
 		/// prefab used for the column data elements
 		/// </summary>
-		public GameObject uiBase; // TODO make this a Token, which supports if-statements, like valueScript -> fieldToken
+		public Token uiBase;
 		/// <summary>
 		/// prefab used for the column header element
 		/// </summary>
@@ -46,7 +46,7 @@ namespace NonStandard.GameUi.DataSheet {
 		public Token valueScript;
 		public object defaultValue; // TODO make this a Token, like valueScript -> fieldToken
 		public Type typeOfValue;
-		public string columnUi; // TODO make this a Token, like valueScript -> fieldToken
+		public Token columnUi; // TODO make this a Token, like valueScript -> fieldToken
 		public float widthOfColumn;
 		public string headerUi; // TODO make this a Token, like valueScript -> fieldToken
 		public bool alwaysLast;
@@ -125,7 +125,7 @@ namespace NonStandard.GameUi.DataSheet {
 					//fieldToken = c.valueScript,
 					data = new UnityColumnData {
 						label = c.label,
-						uiBase = uiPrototypes.GetElement(c.columnUi),
+						uiBase = c.columnUi,
 						headerBase = uiPrototypes.GetElement(c.headerUi),
 						width = -1,
 						onClick = c.onClick,
@@ -311,13 +311,14 @@ namespace NonStandard.GameUi.DataSheet {
 			while(rObj.transform.childCount > 0) {
 				rObj.transform.GetChild(rObj.transform.childCount-1).SetParent(null, false);
 			}
-
+			TokenErrorLog errLog = new TokenErrorLog();
 			for (int c = 0; c < data.columnSettings.Count; ++c) {
 				Udash.ColumnSetting colS = data.columnSettings[c];
 				GameObject fieldUi = null;
+				string columnUiName = colS.data.uiBase.ResolveString(errLog, rowData.obj);
 				// check if there's a version of it from earlier
 				for (int i = 0; i < unusedColumns.Count; ++i) {
-					if (unusedColumns[i].name.StartsWith(colS.data.uiBase.name)) {
+					if (unusedColumns[i].name.StartsWith(columnUiName)) {
 						fieldUi = unusedColumns[i];
 						unusedColumns.RemoveAt(i);
 						break;
@@ -325,7 +326,8 @@ namespace NonStandard.GameUi.DataSheet {
 				}
 				// otherwise create it
 				if (fieldUi == null) {
-					fieldUi = Instantiate(colS.data.uiBase);
+					GameObject prefab = uiPrototypes.GetElement(columnUiName);
+					fieldUi = Instantiate(prefab);
 				}
 
 				if (colS.data.onClick.IsSimpleString) {
@@ -530,7 +532,7 @@ namespace NonStandard.GameUi.DataSheet {
 				fieldToken = new Token(""),
 				data = new UnityColumnData {
 					label = new Token("new data"),
-					uiBase = uiPrototypes.GetElement("input"),
+					uiBase = new Token("input"),
 					headerBase = uiPrototypes.GetElement("collabel"),
 					width = -1,
 				},

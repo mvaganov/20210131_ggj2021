@@ -75,7 +75,7 @@ namespace NonStandard.GameUi.DataSheet {
 			EventBind.On(columnIndex.onValueChanged, this, OnIndexEdit);
 			// setup column type
 			List<ModalConfirmation.Entry> entries = columnTypes.ConvertAll(c => new ModalConfirmation.Entry(c.name, null));
-			int currentIndex = columnTypes.FindIndex(c=> cHeader.columnSetting.data.uiBase.name.StartsWith(c.uiField.name));
+			int currentIndex = columnTypes.FindIndex(c=> cHeader.columnSetting.data.uiBase.ResolveString(errLog, null).StartsWith(c.uiField.name));
 			DropDownEvent.PopulateDropdown(fieldType, entries, this, SetFieldType, currentIndex);
 			// setup default value
 			object defVal = cHeader.columnSetting.defaultValue;
@@ -101,7 +101,7 @@ namespace NonStandard.GameUi.DataSheet {
 			popup.Hide();
 		}
 		public void SetFieldType(int index) {
-			cHeader.columnSetting.data.uiBase = columnTypes[index].uiField;
+			cHeader.columnSetting.data.uiBase = new Token(columnTypes[index].uiField.name);
 			uds.RefreshRowAndColumnUi();
 		}
 		public void OnLabelEdit(string text) {

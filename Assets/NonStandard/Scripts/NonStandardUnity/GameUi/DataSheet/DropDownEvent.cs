@@ -5,15 +5,32 @@ using TMPro;
 using NonStandard.Utility.UnityEditor;
 using NonStandard.Extension;
 using System;
+using NonStandard.Data;
 
 namespace NonStandard.Ui {
 	public class DropDownEvent : MonoBehaviour {
-		[ContextMenuItem("PopulateDropdown", "PopulateDropdown")]
 		public List<ModalConfirmation.Entry> options;
+		[ContextMenuItem("PopulateDropdown", "PopulateDropdown")]
+		public bool initOptionsOnStart;
 		int lastValue = -1;
+
+		public UnityEvent_string onSelection;
+
+		void Start() {
+			if (initOptionsOnStart) { PopulateDropdown(); }
+			if (onSelection.GetPersistentEventCount() > 0) {
+				TMP_Dropdown dd = GetComponent<TMP_Dropdown>();
+				BindDropdownAction(dd, this, HandleDropdown_OnSelection);
+				HandleDropdown_OnSelection(dd.value);
+			}
+		}
+		public void Refresh_OnSelection() {
+			TMP_Dropdown dd = GetComponent<TMP_Dropdown>();
+			HandleDropdown_OnSelection(dd.value);
+		}
 		public void PopulateDropdown() {
 			TMP_Dropdown dd = GetComponent<TMP_Dropdown>();
-			PopulateDropdown(dd, options, this, HandleDropdown);
+			PopulateDropdown(dd, options, this, HandleDropdown_Options);
 		}
 		/// <summary>
 		/// 
@@ -72,14 +89,28 @@ namespace NonStandard.Ui {
 			dd.onValueChanged.RemoveAllListeners();
 			dd.onValueChanged.AddListener(action.Invoke);
 		}
-		public void HandleDropdown(int index) {
-			HandleDropdown(index, options, GetComponent<TMP_Dropdown>(), ref lastValue);
+		public void HandleDropdown_Options(int index) {
+			TMP_Dropdown dd = GetComponent<TMP_Dropdown>();
+			HandleDropdown(index, options, dd, ref lastValue);
+		}
+		public void HandleDropdown_OnSelection(int index) {
+			TMP_Dropdown dd = GetComponent<TMP_Dropdown>();
+			HandleDropdown(index, dd, onSelection);
+			lastValue = index;
+		}
+		public static void HandleDropdown(int index, TMP_Dropdown dd, UnityEvent_string stringNotify) {
+			if (stringNotify.GetPersistentEventCount() == 0) { return; }
+			TMP_Dropdown.OptionData o = dd.options[index];
+			stringNotify.Invoke(o.text);
 		}
 		public static void HandleDropdown(int index, IList<ModalConfirmation.Entry> options, TMP_Dropdown dd, ref int lastDropdownValue) {
+			int optCount = options != null ? options.Count : dd.options.Count;
 			if (index < 0 || index >= options.Count) {
 				Show.Error("index " + index + " out of range [0, " + options.Count + ")");
 			}
-			ModalConfirmation.Entry e = options[index];
+
+			ModalConfirmation.Entry e = (options != null && index < options.Count) ? options[index] : null;
+			//if (e != null) return;
 			UnityEvent ue = e.selectionAction;
 			if (ue != null) { ue.Invoke(); }
 			if (e.eventOnly) {
@@ -87,6 +118,7 @@ namespace NonStandard.Ui {
 			} else {
 				lastDropdownValue = index;
 			}
+
 		}
 	}
 }
