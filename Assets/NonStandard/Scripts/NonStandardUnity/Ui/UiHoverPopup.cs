@@ -44,5 +44,5 @@ public class UiHoverPopup : MonoBehaviour {
 		UncolorLastInput();
 		lastErrorInput = null;
 	}
-
+	public bool IsVisible => gameObject.activeInHierarchy;
 }

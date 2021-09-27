@@ -7,6 +7,7 @@ using UnityEngine.UI;
 namespace NonStandard.Ui {
 	public class UiText : MonoBehaviour {
 		public UnityEvent_string setText;
+		public UnityEvent_string OnSetText => setText;
 		public Func<string> getText = null;
 		private void Reset() { Init(); }
 		public void Init() {

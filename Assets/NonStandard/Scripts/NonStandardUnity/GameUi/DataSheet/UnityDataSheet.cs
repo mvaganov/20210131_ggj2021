@@ -46,7 +46,7 @@ namespace NonStandard.GameUi.DataSheet {
 		public Token valueScript;
 		public object defaultValue; // TODO make this a Token, like valueScript -> fieldToken
 		public Type typeOfValue;
-		public Token columnUi; // TODO make this a Token, like valueScript -> fieldToken
+		public Token columnUi;
 		public float widthOfColumn;
 		public string headerUi; // TODO make this a Token, like valueScript -> fieldToken
 		public bool alwaysLast;
@@ -109,7 +109,7 @@ namespace NonStandard.GameUi.DataSheet {
 			InitColumnSettings(columnSetup);
 		}
 		void InitColumnSettings(string columnSetup) {
-			Show.Log(columnSetup);
+			//Show.Log(columnSetup);
 			Tokenizer tokenizer = new Tokenizer();
 			CodeConvert.TryParse(columnSetup, out UnityDataSheetColumnInitStructure[] columns, null, tokenizer);
 			if (tokenizer.HasError()) {
@@ -327,6 +327,10 @@ namespace NonStandard.GameUi.DataSheet {
 				// otherwise create it
 				if (fieldUi == null) {
 					GameObject prefab = uiPrototypes.GetElement(columnUiName);
+					if (prefab == null) {
+						throw new Exception("no such prefab \""+columnUiName+"\" in data sheet initialization script. valid values: ["+
+							uiPrototypes.transform.JoinToString()+"]");
+					}
 					fieldUi = Instantiate(prefab);
 				}
 
@@ -392,7 +396,9 @@ namespace NonStandard.GameUi.DataSheet {
 		}
 
 		public void FullRefresh() {
-			data.RefreshAll();
+			errLog.ClearErrors();
+			data.RefreshAll(errLog);
+			if(errLog.HasError()) { return; }
 			RefreshUi();
 		}
 		public void ResizeColumnWidth(int column, float oldWidth, float newWidth) {

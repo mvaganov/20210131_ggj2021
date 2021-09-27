@@ -104,7 +104,7 @@ namespace NonStandard.Data.Parse {
 			} else {
 				try {
 					if (resultType.IsPrimitive || resultType == typeof(string)) {
-						Show.Error("need to parse primitive! see TryGetValue()?");
+						Show.Error("need to parse primitive! see TryGetValue()? "+resultType);
 					}
 					if (result == null && !resultType.IsAbstract) { result = type.GetNewInstance(); }
 				} catch (Exception e) {

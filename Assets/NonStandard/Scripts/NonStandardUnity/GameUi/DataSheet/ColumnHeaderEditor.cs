@@ -54,7 +54,11 @@ namespace NonStandard.GameUi.DataSheet {
 			TokenErrorLog errLog = new TokenErrorLog();
 			// setup script value
 			scriptValue.onValueChanged.RemoveAllListeners();
-			string text = cHeader.columnSetting.fieldToken.Stringify();
+			Token t = cHeader.columnSetting.fieldToken;
+			string text = t.GetAsBasicToken();
+			string textA = t.GetAsSmallText();
+			string textB = t.Stringify();
+			string textC = t.StringifySmall();
 			scriptValue.text = text;
 			EventBind.On(scriptValue.onValueChanged, this, OnScriptValueEdit);
 			// implicitly setup value types dropdown
@@ -63,7 +67,7 @@ namespace NonStandard.GameUi.DataSheet {
 			columnLabel.onValueChanged.RemoveAllListeners();
 			object labelText = cHeader.columnSetting.data.label.Resolve(errLog, uds.data);
 			if (errLog.HasError()) { popup.Set("err", defaultValue.gameObject, errLog.GetErrorString()+Proc.Now); return; }
-			columnLabel.text = labelText.ToString();
+			columnLabel.text = labelText.StringifySmall();
 			EventBind.On(columnLabel.onValueChanged, this, OnLabelEdit);
 			// setup column width
 			columnWidth.onValueChanged.RemoveAllListeners();
@@ -74,9 +78,26 @@ namespace NonStandard.GameUi.DataSheet {
 			columnIndex.text = column.ToString();
 			EventBind.On(columnIndex.onValueChanged, this, OnIndexEdit);
 			// setup column type
-			List<ModalConfirmation.Entry> entries = columnTypes.ConvertAll(c => new ModalConfirmation.Entry(c.name, null));
-			int currentIndex = columnTypes.FindIndex(c=> cHeader.columnSetting.data.uiBase.ResolveString(errLog, null).StartsWith(c.uiField.name));
+			List<ModalConfirmation.Entry> entries = columnTypes.ConvertAll(c => {
+				string dropdownLabel;
+				if(c.uiField != null && !string.IsNullOrEmpty(c.name)) {
+					dropdownLabel = "/*" + c.name + "*/ " + c.uiField.name;
+				} else {
+					dropdownLabel = c.name;
+				}
+				return new ModalConfirmation.Entry(dropdownLabel, null);
+			});
+			string textOfUiElement = cHeader.columnSetting.data.uiBase.GetAsBasicToken();//ResolveString(errLog, null);
+			int currentIndex = columnTypes.FindIndex(c=> textOfUiElement.StartsWith(c.uiField.name));
 			DropDownEvent.PopulateDropdown(fieldType, entries, this, SetFieldType, currentIndex);
+			if (currentIndex < 0) {
+				UiText.SetText(fieldType.gameObject, textOfUiElement);
+			}
+			TMP_InputField elementUiInputField = fieldType.GetComponentInChildren<TMP_InputField>();
+			if (elementUiInputField != null) {
+				elementUiInputField.onValueChanged.RemoveAllListeners();
+				EventBind.On(elementUiInputField.onValueChanged, this, OnSetFieldTypeText);
+			}
 			// setup default value
 			object defVal = cHeader.columnSetting.defaultValue;
 			if (defVal != null) {
@@ -91,6 +112,22 @@ namespace NonStandard.GameUi.DataSheet {
 			EventBind.On(trashColumn.onClick, this, ColumnRemove);
 			popup.Hide();
 		}
+		public void OnSetFieldTypeText(string text) {
+			if (SetFieldTypeText(text)) { uds.RefreshRowAndColumnUi(); }
+		}
+		public bool SetFieldTypeText(string text) {
+			Tokenizer tokenizer = Tokenizer.Tokenize(text);
+			if (tokenizer.HasError()) { popup.Set("err", defaultValue.gameObject, tokenizer.GetErrorString() + Proc.Now); return false; }
+			Token t = Token.None;
+			switch (tokenizer.tokens.Count) {
+			case 0: break;
+			case 1: t = tokenizer.tokens[0]; break;
+			default: t = tokenizer.GetMasterToken(); break;
+			}
+			cHeader.columnSetting.data.uiBase = t;
+			popup.Hide();
+			return true;
+		}
 		public void OnSetDefaultValue(string text) {
 			object value = null;
 			Tokenizer tokenizer = new Tokenizer();
@@ -101,7 +138,11 @@ namespace NonStandard.GameUi.DataSheet {
 			popup.Hide();
 		}
 		public void SetFieldType(int index) {
-			cHeader.columnSetting.data.uiBase = new Token(columnTypes[index].uiField.name);
+			if (index >= 0 && columnTypes[index].uiField != null) {
+				cHeader.columnSetting.data.uiBase = new Token(columnTypes[index].uiField.name);
+			} else {
+				if(!SetFieldTypeText(UiText.GetText(fieldType.gameObject))) { return; }
+			}
 			uds.RefreshRowAndColumnUi();
 		}
 		public void OnLabelEdit(string text) {

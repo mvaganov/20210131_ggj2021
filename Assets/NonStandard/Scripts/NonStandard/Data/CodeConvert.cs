@@ -132,6 +132,7 @@ namespace NonStandard.Data {
 				//throw new FormatException("could not convert \"" + value + "\" to type " + typeToConvertTo);
 				return false;
 			}
+			value = result;
 			return true;
 		}
 		public static bool IsIntegral(Type t) {

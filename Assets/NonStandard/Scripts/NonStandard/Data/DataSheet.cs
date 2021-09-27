@@ -96,6 +96,7 @@ namespace NonStandard.Data {
 			public object SetFieldToken(Token value, ITokenErrLog errLog) {
 				_fieldToken = value;
 				RefreshEditPath(true, null, errLog);
+				if (errLog.HasError()) { return null; }
 				if (editPath != null && dataSheet.rows.Count > 0) {
 					return RefreshStrictlyTypedVariablePathBasedOnDataFromSpreadsheet(errLog);
 				}
@@ -137,6 +138,7 @@ namespace NonStandard.Data {
 				object result;
 				if (mustReEvauluateFieldBecauseOfConditionalLogic) {
 					RefreshEditPath(false, scope, errLog);
+					if (errLog != null && errLog.HasError()) { return null; }
 				}
 				if (needsToLoadEditPath) {
 					result = CompileEditPath(scope);
@@ -173,6 +175,7 @@ namespace NonStandard.Data {
 				//Show.Log("attempting to set " + _fieldToken.GetAsSmallText() + " to " + value);
 				if (mustReEvauluateFieldBecauseOfConditionalLogic) {
 					RefreshEditPath(false, scope, errLog);
+					if (errLog.HasError()) { return false; }
 				}
 				if (!canEdit) return false;
 				if (needsToLoadEditPath) {
@@ -211,6 +214,7 @@ namespace NonStandard.Data {
 					if (!checkOnly) { return true; }
 					//fieldToProcess.Resolve(errLog, scope, ResolveToNonIfStatement);
 					object result = conditionalLogic.Resolve(errLog, scope, ResolveToNonIfStatement);
+					if (errLog != null && errLog.HasError()) { return false; }
 					fieldToProcess = (Token)result;
 					return true;
 				}
@@ -225,6 +229,7 @@ namespace NonStandard.Data {
 					editPath = null;
 					return;
 				}
+				if (errLog != null && errLog.HasError()) { return; }
 				List<Token> allTokens = new List<Token>();
 				bool isValidEditableField = TokenOnlyContains(fieldToProcess, new ParseRuleSet[] { 
 					CodeRules.Expression, CodeRules.MembershipOperator, CodeRules.SquareBrace }, allTokens);
@@ -291,6 +296,7 @@ namespace NonStandard.Data {
 			}
 			try {
 				object value = columnSettings[col].GetValue(errLog, rows[row].obj);
+				if (errLog.HasError()) { return null; }
 				rows[row].columns[col] = value;
 				return value;
 			} catch (Exception e) {
@@ -305,6 +311,7 @@ namespace NonStandard.Data {
 			for(int r = 0; r < rows.Count; ++r) {
 				for (int c = 0; c < columnSettings.Count; ++c) {
 					object value = columnSettings[c].GetValue(errLog, rows[r].obj);
+					if (errLog != null && errLog.HasError()) { return; }
 					rows[r].columns[c] = value;
 				}
 			}

@@ -107,7 +107,32 @@ namespace NonStandard.Data.Parse {
 			}
 			return ToString();
 		}
-		public string GetAsBasicToken() { if (meta is string) { return ((string)meta).Substring(index, length); } return null; }
+		public string GetAsBasicToken() {
+			string src = null;
+			int len = length;
+			switch (meta) {
+			case string s: src = s; break;
+			case Delim d: return d.text;
+			case ParseRuleSet.Entry e:
+				if (len < 0) {
+					Token end = e.GetEndToken();
+					Token begin = e.GetBeginToken();
+					int start = begin.index;
+					string endTokenText = end.GetAsSmallText();
+					len = end.index + endTokenText.Length - start;
+				}
+				while (e != null) {
+					if (e.sourceMeta is string es) {
+						src = es;
+						break;
+					}
+					e = e.GetParent();
+				}
+				break;
+			}
+			if (src != null) { return src.Substring(index, len); }
+			return null;
+		}
 		public Delim GetAsDelimiter() { return meta as Delim; }
 		public ParseRuleSet.Entry GetAsContextEntry() { return meta as ParseRuleSet.Entry; }
 		public List<Token> GetTokenSublist() {

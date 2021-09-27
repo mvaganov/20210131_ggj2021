@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
+// TODO enable square braces to attempt to seek an array-element/array-sublist/table-element/object-element if possible, and use that behavior by default (a new list is explicitly started by a comma)
 namespace NonStandard.Data.Parse {
 	class CodeRules {
 
@@ -339,8 +340,15 @@ namespace NonStandard.Data.Parse {
 
 		public static void op_BinaryArgs(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, out object left, out object right, out Type lType, out Type rType) {
 			SingleArgPreferDouble(tok, e.tokens[0], scope, out left, out lType, null);
-			if(e.Length < 3) {
-				tok.AddError(e.tokens[1], "missing right argument for binary operator");
+			bool missingRightArgument = false;
+			if (e.tokenCount >= 3 && e.Length  > 3) {
+				Token r = e.tokens[2];
+				if (r.IsContextEnding()) { missingRightArgument = true; }
+			} else {
+				missingRightArgument = true;
+			}
+			if (missingRightArgument) {
+				tok.AddError(e.tokens[1], "missing right argument for binary operator "+e.parseRules.name);
 				right = null;
 				rType = null;
 				return;
@@ -575,7 +583,7 @@ namespace NonStandard.Data.Parse {
 			Token condition = e.tokens[1];
 			Token resultToEvaluate = e.tokens[2];
 			op_ResolveToken(tok, condition, scope, out conditionResult, out cType);
-			Show.Log("this is where the if statement gets parsed, and returns "+resultToEvaluate.StringifySmall()+" if "+condition.StringifySmall()+" is true");
+			//Show.Log("this is where the if statement gets parsed, and returns "+resultToEvaluate.StringifySmall()+" if "+condition.StringifySmall()+" is true");
 			bool convertedToDouble = false;
 			double td = 0;
 			if (conditionResult != null && (
@@ -594,10 +602,10 @@ namespace NonStandard.Data.Parse {
 				((convertedToDouble || CodeConvert.TryConvert(conditionResult, out td)) && td == 0)
 			) {
 				op_ResolveToken(tok, resultToEvaluate, scope, out resultEvaluated, out rType, isItResolvedEnough);
-				Show.Log("resolved else: " + resultToEvaluate.StringifySmall()+" as "+resultEvaluated);
+				//Show.Log("resolved else: " + resultToEvaluate.StringifySmall()+" as "+resultEvaluated);
 				return resultEvaluated;
 			}
-			Show.Log(condition.StringifySmall()+" resolves to "+ conditionResult.StringifySmall() + ", which is neither True, nor False. what is it?");
+			//Show.Log(condition.StringifySmall()+" resolves to "+ conditionResult.StringifySmall() + ", which is neither True, nor False. what is it?");
 			op_ResolveToken(tok, condition, scope, out conditionResult, out cType);
 			//if (e.tokens.Count > 2 && e.tokens[3].GetAsBasicToken() == "else") {
 			//	Show.Log("and it has an else to return if the condition failed");

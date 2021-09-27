@@ -24,5 +24,15 @@ namespace NonStandard.Extension {
 			}
 			return -1;
 		}
+
+		private static string _TransformName(Transform t) { return t.name; }
+		public static string JoinToString(this Transform t, string separator = ", ", Func<Transform, string> toString = null) {
+			if(toString == null) { toString = _TransformName; }
+			string[] children = new string[t.childCount];
+			for(int i = 0; i < t.childCount; ++i) {
+				children[i] = toString(t.GetChild(i));
+			}
+			return children.JoinToString(separator);
+		}
 	}
 }
