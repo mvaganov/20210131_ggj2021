@@ -48,12 +48,21 @@ namespace NonStandard.GameUi.DataSheet {
 		}
 
 		public void SetColumnHeader(ColumnHeader columnHeader, UnityDataSheet uds, int column) {
+			// unregister listeners before values change, since values are about to change.
+			TMP_InputField elementUiInputField = fieldType.GetComponentInChildren<TMP_InputField>();
+			if (elementUiInputField != null) { elementUiInputField.onValueChanged.RemoveAllListeners(); }
+			scriptValue.onValueChanged.RemoveAllListeners();
+			columnLabel.onValueChanged.RemoveAllListeners();
+			columnWidth.onValueChanged.RemoveAllListeners();
+			columnIndex.onValueChanged.RemoveAllListeners();
+			defaultValue.onValueChanged.RemoveAllListeners();
+			trashColumn.onClick.RemoveAllListeners();
+
 			this.uds = uds;
 			this.column = column;
 			cHeader = columnHeader;
 			TokenErrorLog errLog = new TokenErrorLog();
 			// setup script value
-			scriptValue.onValueChanged.RemoveAllListeners();
 			Token t = cHeader.columnSetting.fieldToken;
 			string text = t.GetAsBasicToken();
 			string textA = t.GetAsSmallText();
@@ -64,17 +73,14 @@ namespace NonStandard.GameUi.DataSheet {
 			// implicitly setup value types dropdown
 			OnScriptValueEdit(text);
 			// setup column label
-			columnLabel.onValueChanged.RemoveAllListeners();
 			object labelText = cHeader.columnSetting.data.label.Resolve(errLog, uds.data);
 			if (errLog.HasError()) { popup.Set("err", defaultValue.gameObject, errLog.GetErrorString()+Proc.Now); return; }
 			columnLabel.text = labelText.StringifySmall();
 			EventBind.On(columnLabel.onValueChanged, this, OnLabelEdit);
 			// setup column width
-			columnWidth.onValueChanged.RemoveAllListeners();
 			columnWidth.text = cHeader.columnSetting.data.width.ToString();
 			EventBind.On(columnWidth.onValueChanged, this, OnColumnWidthEdit);
 			// setup column index
-			columnIndex.onValueChanged.RemoveAllListeners();
 			columnIndex.text = column.ToString();
 			EventBind.On(columnIndex.onValueChanged, this, OnIndexEdit);
 			// setup column type
@@ -93,9 +99,7 @@ namespace NonStandard.GameUi.DataSheet {
 			if (currentIndex < 0) {
 				UiText.SetText(fieldType.gameObject, textOfUiElement);
 			}
-			TMP_InputField elementUiInputField = fieldType.GetComponentInChildren<TMP_InputField>();
 			if (elementUiInputField != null) {
-				elementUiInputField.onValueChanged.RemoveAllListeners();
 				EventBind.On(elementUiInputField.onValueChanged, this, OnSetFieldTypeText);
 			}
 			// setup default value
@@ -105,17 +109,18 @@ namespace NonStandard.GameUi.DataSheet {
 			} else {
 				defaultValue.text = "";
 			}
-			defaultValue.onValueChanged.RemoveAllListeners();
 			EventBind.On(defaultValue.onValueChanged, this, OnSetDefaultValue);
 			// setup column destroy option
-			trashColumn.onClick.RemoveAllListeners();
 			EventBind.On(trashColumn.onClick, this, ColumnRemove);
 			popup.Hide();
 		}
 		public void OnSetFieldTypeText(string text) {
+			Show.Log(this.fieldType.itemText.text);
+			if (!gameObject.activeInHierarchy) { return; }
 			if (SetFieldTypeText(text)) { uds.RefreshRowAndColumnUi(); }
 		}
 		public bool SetFieldTypeText(string text) {
+			Show.Log("SetFieldTypeText "+text);
 			Tokenizer tokenizer = Tokenizer.Tokenize(text);
 			if (tokenizer.HasError()) { popup.Set("err", defaultValue.gameObject, tokenizer.GetErrorString() + Proc.Now); return false; }
 			Token t = Token.None;

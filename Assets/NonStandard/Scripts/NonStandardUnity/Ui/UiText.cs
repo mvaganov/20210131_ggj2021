@@ -38,6 +38,7 @@ namespace NonStandard.Ui {
 			return null;
 		}
 		public static void SetText(GameObject go, string value) {
+			//Show.Log("setting "+go.name+" to \""+value+"\"");
 			UiText uit = go.GetComponentInChildren<UiText>();
 			if (uit != null) { uit.setText.Invoke(value); return; }
 			TMPro.TMP_InputField tif = go.GetComponentInChildren<TMPro.TMP_InputField>();
