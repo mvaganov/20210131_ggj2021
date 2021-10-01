@@ -46,17 +46,25 @@ namespace NonStandard.GameUi.DataSheet {
 		public void Start() {
 			popup.defaultColor = scriptValue.GetComponent<Image>().color;
 		}
-
-		public void SetColumnHeader(ColumnHeader columnHeader, UnityDataSheet uds, int column) {
-			// unregister listeners before values change, since values are about to change.
+		public void ClearInputTextBoxListeners() {
 			TMP_InputField elementUiInputField = fieldType.GetComponentInChildren<TMP_InputField>();
-			if (elementUiInputField != null) { elementUiInputField.onValueChanged.RemoveAllListeners(); }
+			if (elementUiInputField != null) {
+				//elementUiInputField.onValueChanged.RemoveAllListeners();
+				// not enough to remove all listeners apparently.
+				elementUiInputField.onValueChanged = new TMP_InputField.OnChangeEvent();
+				//Show.Log("unbind from "+elementUiInputField.name);
+			}
 			scriptValue.onValueChanged.RemoveAllListeners();
 			columnLabel.onValueChanged.RemoveAllListeners();
 			columnWidth.onValueChanged.RemoveAllListeners();
 			columnIndex.onValueChanged.RemoveAllListeners();
 			defaultValue.onValueChanged.RemoveAllListeners();
 			trashColumn.onClick.RemoveAllListeners();
+		}
+
+		public void SetColumnHeader(ColumnHeader columnHeader, UnityDataSheet uds, int column) {
+			// unregister listeners before values change, since values are about to change.
+			ClearInputTextBoxListeners();
 
 			this.uds = uds;
 			this.column = column;
@@ -93,13 +101,16 @@ namespace NonStandard.GameUi.DataSheet {
 				}
 				return new ModalConfirmation.Entry(dropdownLabel, null);
 			});
-			string textOfUiElement = cHeader.columnSetting.data.uiBase.GetAsBasicToken();//ResolveString(errLog, null);
+			string textOfUiElement = cHeader.columnSetting.data.uiPrefabName.GetAsBasicToken();//ResolveString(errLog, null);
 			int currentIndex = columnTypes.FindIndex(c=> textOfUiElement.StartsWith(c.uiField.name));
 			DropDownEvent.PopulateDropdown(fieldType, entries, this, SetFieldType, currentIndex);
 			if (currentIndex < 0) {
 				UiText.SetText(fieldType.gameObject, textOfUiElement);
 			}
+			TMP_InputField elementUiInputField = fieldType.GetComponentInChildren<TMP_InputField>();
 			if (elementUiInputField != null) {
+				elementUiInputField.onValueChanged.RemoveAllListeners();
+				//Show.Log("bind to "+elementUiInputField.name);
 				EventBind.On(elementUiInputField.onValueChanged, this, OnSetFieldTypeText);
 			}
 			// setup default value
@@ -115,12 +126,11 @@ namespace NonStandard.GameUi.DataSheet {
 			popup.Hide();
 		}
 		public void OnSetFieldTypeText(string text) {
-			Show.Log(this.fieldType.itemText.text);
+			Show.Log("fieldTypeGettingSet? " + this.fieldType.itemText.text+ " " + text);
 			if (!gameObject.activeInHierarchy) { return; }
 			if (SetFieldTypeText(text)) { uds.RefreshRowAndColumnUi(); }
 		}
 		public bool SetFieldTypeText(string text) {
-			Show.Log("SetFieldTypeText "+text);
 			Tokenizer tokenizer = Tokenizer.Tokenize(text);
 			if (tokenizer.HasError()) { popup.Set("err", defaultValue.gameObject, tokenizer.GetErrorString() + Proc.Now); return false; }
 			Token t = Token.None;
@@ -129,7 +139,8 @@ namespace NonStandard.GameUi.DataSheet {
 			case 1: t = tokenizer.tokens[0]; break;
 			default: t = tokenizer.GetMasterToken(); break;
 			}
-			cHeader.columnSetting.data.uiBase = t;
+			Show.Log("SetFieldTypeText " + text+" -> "+t.GetAsBasicToken());
+			cHeader.columnSetting.data.uiPrefabName = t;
 			popup.Hide();
 			return true;
 		}
@@ -144,7 +155,7 @@ namespace NonStandard.GameUi.DataSheet {
 		}
 		public void SetFieldType(int index) {
 			if (index >= 0 && columnTypes[index].uiField != null) {
-				cHeader.columnSetting.data.uiBase = new Token(columnTypes[index].uiField.name);
+				cHeader.columnSetting.data.uiPrefabName = new Token(columnTypes[index].uiField.name);
 			} else {
 				if(!SetFieldTypeText(UiText.GetText(fieldType.gameObject))) { return; }
 			}
@@ -288,6 +299,11 @@ namespace NonStandard.GameUi.DataSheet {
 			Udash.ColumnSetting cS = uds.GetColumn(column);
 			ui.OkCancel("Are you sure you want to delete column \"" + cS.data.label + "\"?", () => { uds.RemoveColumn(column); });
 			uds.RefreshUi();
+		}
+
+		public void Close() {
+			ClearInputTextBoxListeners();
+			gameObject.SetActive(false);
 		}
 	}
 }

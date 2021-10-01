@@ -24,14 +24,16 @@ namespace NonStandard.GameUi.DataSheet {
 		}
 		public void ColumnEdit() {
 			editUi.SetActive(true);
-			editUi.transform.SetParent(transform, false);
+			//editUi.transform.SetParent(transform, false);
 			//Debug.Log("path is " + editUi.transform.HierarchyPath());
-			editUi.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+			//editUi.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
 			ColumnHeaderEditor chEditor = editUi.GetComponent<ColumnHeaderEditor>();
 			chEditor.SetColumnHeader(this, UDS(), Col());
-			Proc.Enqueue(() => {
-				editUi.transform.SetParent(originalParent, true);
-			});
+			//Proc.Enqueue(() => {
+			//	if (editUi != null) {
+			//		editUi.transform.SetParent(originalParent, true);
+			//	}
+			//});
 		}
 		public void SetSortMode(int sortModeIndex) {
 			if (sortModeIndex < 0 || sortModeIndex >= (int)SortState.Count) { return; }

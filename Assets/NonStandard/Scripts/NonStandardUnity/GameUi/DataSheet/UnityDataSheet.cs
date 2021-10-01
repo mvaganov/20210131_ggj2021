@@ -17,7 +17,7 @@ namespace NonStandard.GameUi.DataSheet {
 		/// <summary>
 		/// prefab used for the column data elements
 		/// </summary>
-		public Token uiBase;
+		public Token uiPrefabName;
 		/// <summary>
 		/// prefab used for the column header element
 		/// </summary>
@@ -125,7 +125,7 @@ namespace NonStandard.GameUi.DataSheet {
 					//fieldToken = c.valueScript,
 					data = new UnityColumnData {
 						label = c.label,
-						uiBase = c.columnUi,
+						uiPrefabName = c.columnUi,
 						headerBase = uiPrototypes.GetElement(c.headerUi),
 						width = -1,
 						onClick = c.onClick,
@@ -315,7 +315,7 @@ namespace NonStandard.GameUi.DataSheet {
 			for (int c = 0; c < data.columnSettings.Count; ++c) {
 				Udash.ColumnSetting colS = data.columnSettings[c];
 				GameObject fieldUi = null;
-				string columnUiName = colS.data.uiBase.ResolveString(errLog, rowData.obj);
+				string columnUiName = colS.data.uiPrefabName.ResolveString(errLog, rowData.obj);
 				// check if there's a version of it from earlier
 				for (int i = 0; i < unusedColumns.Count; ++i) {
 					if (unusedColumns[i].name.StartsWith(columnUiName)) {
@@ -538,7 +538,7 @@ namespace NonStandard.GameUi.DataSheet {
 				fieldToken = new Token(""),
 				data = new UnityColumnData {
 					label = new Token("new data"),
-					uiBase = new Token("input"),
+					uiPrefabName = new Token("input"),
 					headerBase = uiPrototypes.GetElement("collabel"),
 					width = -1,
 				},
