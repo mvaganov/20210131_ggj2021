@@ -21,15 +21,15 @@ namespace NonStandard.GameUi.DataSheet {
 		/// <summary>
 		/// prefab used for the column header element
 		/// </summary>
-		public GameObject headerBase; // TODO make this a Token, which supports if-statements, like valueScript -> fieldToken
+		public Token columnHeaderPrefabName;
+		/// <summary>
+		/// a script to execute when this element is clicked. row object as scope
+		/// </summary>
+		public Token onClick;
 		/// <summary>
 		/// width of the column
 		/// </summary>
 		public float width;
-		/// <summary>
-		/// a script to execute when this element is clicked. row object as scope
-		/// </summary>
-		public Token onClick;// TODO make this a Token, which supports if-statements, like valueScript -> fieldToken
 		/// <summary>
 		/// if true, will move itself to far right end, even if new elements are added
 		/// </summary>
@@ -44,13 +44,13 @@ namespace NonStandard.GameUi.DataSheet {
 		/// could be a string, number, expression, TODO or conditional (like an if statement). in the case of a conditional, pick the right option!
 		/// </summary>
 		public Token valueScript;
+		public Token columnUi;
+		public Token headerUi;
 		public object defaultValue; // TODO make this a Token, like valueScript -> fieldToken
 		public Type typeOfValue;
-		public Token columnUi;
 		public float widthOfColumn;
-		public string headerUi; // TODO make this a Token, like valueScript -> fieldToken
 		public bool alwaysLast;
-		public Token onClick = Token.None; // TODO make this a Token, which supports if-statements, like valueScript -> fieldToken
+		public Token onClick = Token.None;
 	}
 	public class ClickableScriptedCell : MonoBehaviour {
 		public Token script;
@@ -126,7 +126,7 @@ namespace NonStandard.GameUi.DataSheet {
 					data = new UnityColumnData {
 						label = c.label,
 						uiPrefabName = c.columnUi,
-						headerBase = uiPrototypes.GetElement(c.headerUi),
+						columnHeaderPrefabName = c.headerUi,
 						width = -1,
 						onClick = c.onClick,
 						alwaysLast = c.alwaysLast
@@ -208,22 +208,23 @@ namespace NonStandard.GameUi.DataSheet {
 			for (int i = 0; i < data.columnSettings.Count; ++i) {
 				Udash.ColumnSetting colS = data.columnSettings[i];
 				GameObject header = null;
-				string headerObj = colS.data.headerBase.name;
+				string headerObjName = colS.data.columnHeaderPrefabName.ResolveString(errLog, this);
 				// check if the header we need is in the old header list
 				object headerTextResult = colS.data.label.Resolve(errLog, data);
 				if (errLog.HasError()) { popup.Set("err", null, errLog.GetErrorString()); return; }
 				string headerTextString = headerTextResult?.ToString() ?? null;
 				for (int h = 0; h < unusedHeaders.Count; ++h) {
 					GameObject hdr = unusedHeaders[h];
-					if (hdr.name.StartsWith(headerObj) && UiText.GetText(hdr) == headerTextString) {
+					if (hdr.name.StartsWith(headerObjName) && UiText.GetText(hdr) == headerTextString) {
 						header = hdr;
 						unusedHeaders.RemoveAt(h);
 						break;
 					}
 				}
 				if (header == null) {
-					header = Instantiate(colS.data.headerBase);
-					header.name = header.name.SubstringBeforeFirst("(", headerObj.Length) + "(" + colS.data.label + ")";
+					GameObject headerObjectPrefab = uiPrototypes.GetElement(headerObjName);
+					header = Instantiate(headerObjectPrefab);
+					header.name = header.name.SubstringBeforeFirst("(", headerObjName.Length) + "(" + colS.data.label + ")";
 					UiText.SetText(header, headerTextString);
 				}
 				ColumnHeader ch = header.GetComponent<ColumnHeader>();
@@ -539,7 +540,7 @@ namespace NonStandard.GameUi.DataSheet {
 				data = new UnityColumnData {
 					label = new Token("new data"),
 					uiPrefabName = new Token("input"),
-					headerBase = uiPrototypes.GetElement("collabel"),
+					columnHeaderPrefabName = new Token("collabel"),
 					width = -1,
 				},
 				type = typeof(string),

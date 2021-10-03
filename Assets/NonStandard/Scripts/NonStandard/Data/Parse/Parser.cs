@@ -103,9 +103,10 @@ namespace NonStandard.Data.Parse {
 				listData = new List<object>();
 			} else {
 				try {
-					if (resultType.IsPrimitive || resultType == typeof(string)) {
-						Show.Error("need to parse primitive! see TryGetValue()? "+resultType);
-					}
+					// explicitly parsing a primitive is sort of a poor use of the parser, _except_ when a script resolves to a primitive.
+					//if (resultType.IsPrimitive || resultType == typeof(string)) {
+					//	Show.Error("need to parse primitive! see TryGetValue()? "+resultType);
+					//}
 					if (result == null && !resultType.IsAbstract) { result = type.GetNewInstance(); }
 				} catch (Exception e) {
 					AddError("failed to create " + type + "\n" + e.ToString());
