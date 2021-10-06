@@ -28,6 +28,14 @@ namespace NonStandard.Extension {
 			}
 			return ~lower;
 		}
+		public static int BinarySearchInsert<T>(this IList<T> list, T value, Func<T, T, int> comparer) {
+			if (list == null) { throw new ArgumentNullException("list"); }
+			int result = BinarySearchIndexOf(list, value, comparer);
+			int index = result;
+			if (index < 0) { index = ~index; }
+			list.Insert(index, value);
+			return result;
+		}
 		public static bool IsSorted<T>(this IList<T> list, IComparer<T> comparer = null) {
 			if (list == null) { throw new ArgumentNullException("list"); }
 			if (comparer == null) { comparer = Comparer<T>.Default; }

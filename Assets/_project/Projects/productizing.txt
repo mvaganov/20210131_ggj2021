@@ -1,0 +1,238 @@
+{n:"productizing"
+	desc:"productizing the data visualization"
+	task:[
+		{n:"code maintenance"
+			task:[
+				{n:"new API"
+					desc:"integrate updated API, which expands functionality"
+					cost:{hr:8} prog:{hr:8}
+					mod:[
+						{t:2014/4/23@13.20,e:(prog,hr),v:0},
+						{t:2014/4/23@17.50,e:(prog,hr),v:4}
+					]
+				}
+				{n:"refactor"
+					desc:"refactor existing model generation code to take better advantage of updated API (should reduce code size, reduce error potential, and improve performance)" 
+					cost:{hr:32,risk:1.5} prog:{hr:32}
+					mod:[
+						{t:2014/4/24@15.16,e:(prog,hr),v:0},
+						{t:2014/4/27@19,e:(prog,hr),v:4}
+						{t:2014/5/1@18,e:(prog,hr),v:8,n:"no noticeable performance gains. though some old bad code was removed, possibly reducing bugs."}
+						{t:2014/8/24@12,e:(cost,hr),v:16,n:"Unity4.6's new UI API is way better than the old one. Redoing UI code, which is leading to a much-needed BoxArc refactor, and will also simplify+improve the rest of the UI."}
+						{t:2014/9/13@12 e:(prog,hr) v:16 n:"new UI code, refactor of OM.Expression"}
+					]
+				}
+				{n:"scripted UI"
+					desc:"add scripted type-casting UI settings, including bug fixing" cost:{hr:16,risk:1.5} prog:{hr:8}
+					mod:[
+						{t:2014/4/24@15}, // a mod entry without an attribute implies a task creation date
+						{t:2014/4/26@18.32,e:(cost,hr),v:8,n:"forgot to factor in bug fixing"}
+						{t:2014/5/1@18.32,e:(cost,hr),v:16,n:"nope, previous estimate was fine"}
+						{t:2014/5/1@18.32,e:(prog,hr)}
+						{t:2014/9/22@18.32,e:(cost,hr),v:8,n:"need to do some more work to make it compatibale with the Unity4.6 UI system."}
+					]
+				}
+				{n:"UI management",desc:"develop a sane component UI model, or at least a simpler model. make all the UI 3D. having a parallel 2D UI is insane."
+					cost:{hr:9} prog:{hr:9}
+					mod:[
+						{t:2014/9/1@12,e:(cost,hr),v:16,n:"killed all old UI code. Just using Unity's UI from v4.6."}
+						{t:2014/8/7@12,e:(prog,hr),v:1,n:"building a brand new component UI model. using Unity3D as the UI editor. TODO: set cost to 0, and implement \"overwork\" state for tasks."}
+						{t:2014/5/14@18.30}
+					]
+				}
+			]
+		}
+		{n:"more work"
+			desc:"additional required work before for sharing"
+			id:features
+			task:[
+				{n:"burndown chart"
+					cost:{hr:20,risk:3}, prog:{hr:20},
+					mod:[
+						{t:2014/5/2@17.46,e:(prog,hr)},
+						{t:2014/5/2@17.46,e:(cost,hr),v:40,n:"realized I've already done maybe 8 hours of work from earlier"},
+						{t:2014/5/5@18.30,e:(prog,hr),v:4},
+						{t:2014/5/6@22.0,e:(prog,hr),v:6,n:"need to refactor BoxArc... create and use a TriangleStrip type"},
+						{t:2014/5/7@17.30,e:(prog,hr),v:10},
+						{t:2014/5/8@18.30,e:(prog,hr),v:14},
+						{t:2014/5/12@22.45,e:(cost,hr),v:32,n:"it always seems so impossible until it doesn't."},
+					]
+				}
+				{n:"scrolling visuals",desc:"scrolling large visuals" cost:{hr:24,risk:1.5}}
+				{n:"web hooks",desc:"add hooks to pull data from web sources and text parameters" cost:{hr:0}
+					mod:[
+						{t:2014/6/13@12,e:(cost,hr),v:8},
+					]
+				}
+				{n:"4 visualized mode buttons",desc:"implement the 4 buttons that make it easy to transform the visual between Radial/WBS/Gantt/Burndown" cost:{hr:4} prog:{hr:0}
+					mod:[
+						{t:2014/9/22@17},
+					]
+				}
+				{n:"dataset",desc:"convert data set (http://www.bls.gov/emp/ep_table_107.htm) for visualization" prog:{hr:4} cost:{hr:4,risk:0.2}
+					mod:[
+						{t:2014/5/22@15,e:(prog,hr)},
+						{t:2014/5/22@18.17,e:(prog,hr),v:3}
+					]
+				}
+				{n:"webpage",desc:"develop Amazon page using s3 for the visualization" cost:{hr:8,risk:1.8}}
+				{n:"feedback",desc:"develop feedback survey page" cost:{hr:8}}
+				{n:"DateTime",desc:"DateTime integration, replacing homebrew time code(?)" cost:{hr:6} prog:{hr:6}
+					mod:[
+						{t:2014/4/24@15,e:(prog,hr)},
+						{t:2014/5/1@18.17,e:(prog,hr),v:3}
+						{t:2014/5/1@18.17,e:(cost,hr),v:8}
+					]
+				}
+				{n:"tree vs visul",desc:"make the expandable tree a seperate piece of UI from the transforming visual", cost:{hr:12} prog:{hr:12}
+					mod:[
+						{t:2014/7/28@15}
+						{t:2014/8/12@12.17,e:(prog,hr),v:0}
+						{t:2014/8/15@15,e:(prog,hr),v:8}
+					]
+				}
+				{n:"integrate UI",desc:"get the old non-general UI to work with the newer more general UI",cost:{hr:8},prog:{hr:8}
+					mod:[
+						{t:2014/9/1@16,e:(prog,hr),v:0}
+						{t:2014/8/15@16}
+					]
+				}
+				{n:"bdown UI",desc:"additional burndown UI features"
+					cost:{risk:.1}
+					task:[
+						{n:"bdown parent strips",desc:"draw burndown strip with parent task if children are hidden", 
+							cost:{hr:2,risk:.1},prog:{hr:2},
+							mod:[{t:2015/5/14@17}]}
+						{n:"annotations",desc:"UI elements that show where changes occured", cost:{hr:8,risk:2}
+							mod:[
+								{t:2014/6/13@12,e:(cost,hr),v:0},
+							]
+						}
+						{n:"annotations edit",desc:"being able to edit the annotations with UI rather than script only", cost:{hr:0,risk:2}
+							mod:[
+								{t:2014/6/13@12,e:(cost,hr),v:8},
+							]
+						}
+						{n:"vert axis label",desc:"burndown label+gradation vertical axis", cost:{hr:4}}
+						{n:"horz axis label",desc:"burndown time scale horizontal axis", cost:{hr:4}}
+						{n:"slope calc",desc:"burndown slope calculation: line of best fit to determine likely finish date", cost:{hr:4}}
+					]
+					mod:[{t:2014/5/14@9}]
+				}
+				{n:"big performance",desc:"improve performance when dealing with large data sets"
+					task:[
+						{n:"test methods"
+							task:[
+								{n:"vert shader", cost:{hr:10}, prog:{hr:10}
+									mod:[
+										{t:2014/6/11@12,e:(prog,hr),v:0,n:"should really be using mesh animation system"},
+										{t:2014/6/11@12,e:(cost,hr),v:16,n:"need to find an expert. lots of dead ends."},
+									]
+								}
+								{n:"pixel shader for selection", desc:"unexpected bonus feature!", cost:{hr:4}, prog:{hr:4}
+									mod:[{t:2014/6/8@12}]
+								}
+								{n:"profile code", cost:{hr:16}}
+								{n:"hide small tasks", cost:{hr:16}}
+								{n:"render to texture",desc:"and hide tasks that are merged into a texture. will it require the pro version? http://wiki.unity3d.com/index.php?title=RenderTexture_Free , http://blog.christianhenschel.com/2014/03/09/render-screen-to-texture-in-unity3d-without-pro/", cost:{hr:30}, prog:{hr:30}
+									mod:[
+											{t:2014/7/16@12,e:(cost,hr),v:16,n:"much harder than expected."},
+											{t:2014/7/21@12,e:(prog,hr),v:0},
+											{t:2014/7/28@12,e:(prog,hr),v:15,n:"w00t! still much refactoring to do, but it works!"},
+										]
+									}
+								{n:"cooperative-multi-threading load", cost:{hr:8}}
+							]
+						}
+					]
+					mod:[{t:2014/5/28@9}]
+				}
+			]
+		}
+		{n:"share link",desc:"share link with interested parties (business contacts, friends/family, students)"
+			id:share
+			task:[
+				{n:"e-mail" cost:{hr:2,risk:.1}}
+				{n:"Facebook" cost:{hr:2,risk:.1}}
+				{n:"codegiraffe.com" cost:{hr:4,risk:.1}}
+				{n:"Reddit" cost:{hr:4,risk:1.2}}
+			]
+		}
+		{n:"share usage",desc:"develop simple product to be shared"
+			reqStart:[{ptr:features}]
+			task:[
+				{n:"API docs",desc:"simple API docs (basic use) and examples on GitHub" cost:{hr:24}}
+			]
+		}
+		{n:"evaluate"
+			reqStart:[{ptr:share}]
+			task:[
+				{n:"reddit",desc:"maintain Reddit engagement" cost:{hr:40}}
+				{n:"survey check",desc:"check feedback from surveys and users" cost:{hr:8}}
+				{n:"more data",desc:"seek additional data sets for visualization" cost:{hr:8}}
+			]
+		}
+		{n:"final evaluation"
+			task:[
+				{n:"personal judgement",desc:"decide if the data visualization product has a market" cost:{hr:1}}
+				{n:"mentor judgement",desc:"ask mentors to decide if the data visualization product has a market" cost:{hr:16}}
+			]
+		}
+		{n"additional features"
+			task[
+				{n"GitHub integration"
+				desc"before a commit, find TODO lines. if they don't have a unique ID, insert one, and add them as feature additions to the product backlog. If they do, update the entry that is either still in the product backlog, or has been moved into the project proper somewhere"
+				cost{hr:40}}
+			]
+		}
+	]
+	~default:{
+		//values:{
+			alignment:{}
+			desc:""
+			cost:{hr:1,risk:1}
+			prog:{hr:0}
+			+time:2014/4/23@11.00
+		//}
+		~alias:{
+		// variableNameInCode:scriptName
+			// the Task class member 'ID' is being mapped to the scripted variable 'id'
+			(ID):(id)
+			// the Task class member 'arcLength' is being mapped to the scripted variable at the end of this.script["cost"]["hr"]
+			(visualization,arcLength):(cost,hr)
+			(visualization,progress):(prog,hr)
+			(visualization,arcRadius):(cost,risk)
+			(visualization,color):(color)
+		}
+		~diagram:{
+			total:(cost,hr)
+			progress:(prog,hr)
+		}
+		~edit:[
+			{<:EditUI+Text,>:{label:Name,edit:(n)}}
+			{<:EditUI+TextArea,>:{label:Description,edit:(desc)}}
+			{<:EditUI+Text,>:{label:ID,edit:(id)}}
+			{<:EditUI+Number,>:{label:"HRs Required",edit:(cost,hr)}}
+			{<:EditUI+Number,>:{label:"HRs Progress",edit:(prog,hr)}}
+			{<:EditUI+Number,>:{label:Risk,edit:(cost,risk)}}
+			{<:EditUI+Color,>:{label:Color,edit:(color)}}
+			
+			
+			//{value:n,type:string,label:Name}
+			//{value:desc,type:stringArea,label:Description}
+			//{value:id,type:string,label:ID}
+			//{value:"[cost,hr]",type:number,label:"HRs Required"}
+			//{value:"[prog,hr]",type:number,label:"HRs Progress"}
+			//{value:complexity,type:number,label:Complexity}
+			//{value:color type:color,label:Color}
+			
+			//{value:complexity label:Difficulty
+			//	type:dropdownbox
+			//	options:[trivial,easy,normal,hard,"very hard"] // TODO dropdownbox? selection page?
+			//	defaultoption:2
+			//}
+			//{value:alignment type:dropdownbox label:"Alignment"}
+		],
+	}
+	mod:[{t:2014/4/23@11.00}]
+}

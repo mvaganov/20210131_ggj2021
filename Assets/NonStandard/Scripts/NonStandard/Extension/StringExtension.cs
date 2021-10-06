@@ -14,18 +14,24 @@ namespace NonStandard.Extension {
 			}
 			return true;
 		}
+		public static int IsSubstringAt(this string str, string[] substrings, int index) {
+			for (int i = 0; i < substrings.Length; ++i) {
+				if (IsSubstringAt(str, substrings[i], index)) { return i; }
+			}
+			return -1;
+		}
 		public static string RemoveFromFront(this string str, string trimMe) {
 			if (str.StartsWith(trimMe)) { return str.Substring(trimMe.Length); }
 			return str;
 		}
 
 		public static readonly string[] whitespace = new string[] { " ", "\t", "\n", "\r" };
-		public static int IndexOfFirst(this string str, string[] delimiter, out int firstDelimeter, int startIndex = 0) {
-			firstDelimeter = -1;
-			for(int i = startIndex; i < str.Length; ++i) {
-				for(int j = 0; j < delimiter.Length; ++j) {
+		public static int IndexOfFirst(this string str, string[] delimiter, out int firstDelimiter, int startIndex = 0) {
+			firstDelimiter = -1;
+			for (int i = startIndex; i < str.Length; ++i) {
+				for (int j = 0; j < delimiter.Length; ++j) {
 					if (str.IsSubstringAt(delimiter[j], i)) {
-						firstDelimeter = j;
+						firstDelimiter = j;
 						return i;
 					}
 				}
@@ -34,7 +40,7 @@ namespace NonStandard.Extension {
 		}
 		public static int IndexOfLast(this string str, string[] delimiter, out int firstDelimeter) {
 			firstDelimeter = -1;
-			for (int i = str.Length-1; i >= 0; --i) {
+			for (int i = str.Length - 1; i >= 0; --i) {
 				for (int j = 0; j < delimiter.Length; ++j) {
 					if (str.IsSubstringAt(delimiter[j], i)) {
 						firstDelimeter = j;
@@ -44,16 +50,16 @@ namespace NonStandard.Extension {
 			}
 			return -1;
 		}
-		public static string SubstringBeforeWhitespace(this string str) {
-			return SubstringBeforeFirst(str, whitespace);
+		public static string SubstringBeforeWhitespace(this string str, int startIndex = 0) {
+			return SubstringBeforeFirst(str, whitespace, startIndex);
 		}
 		public static string SubstringBeforeFirst(this string str, string delimiter, int startIndex = 0) {
 			return SubstringBeforeFirst(str, new string[] { delimiter }, startIndex);
 		}
 		public static string SubstringBeforeFirst(this string str, string[] delimiter, int startIndex = 0) {
-			if(delimiter == null) { delimiter = whitespace; }
+			if (delimiter == null) { delimiter = whitespace; }
 			int index = IndexOfFirst(str, delimiter, out int which, startIndex);
-			if(index >= 0) { return str.Substring(0, index); }
+			if (index >= 0) { return str.Substring(0, index); }
 			return null;
 		}
 		public static string SubstringAfterLast(this string str, string delimiter) {
@@ -70,7 +76,6 @@ namespace NonStandard.Extension {
 		/// <param name="indent">if null, use <see cref="DefaultIndentation"/></param>
 		/// <param name="depth"></param>
 		public static string Indentation(int depth, string indent = null) {
-			if (depth <= 0) return "";
 			if (indent == null) { indent = DefaultIndentation; }
 			StringBuilder sb = new StringBuilder();
 			while (depth-- > 0) { sb.Append(indent); }
@@ -102,13 +107,27 @@ namespace NonStandard.Extension {
 			}
 			return sb.ToString();
 		}
-		public static string[] Split(this string str, string delimiter = "\n") {
-			List<int> lineEndings = GenerateIndexTable(str, delimiter);
+
+		public static string[] Split(this string str, string delimiter) {
+			return Split(str, new string[] { delimiter });
+		}
+		public static string[] Split(this string str, string[] delimiters) {
+			List<int> lineEndings = GenerateIndexTable(str, delimiters);
 			string[] lines = new string[lineEndings.Count + 1];
 			int lineStart = 0;
+			int delimLenMin = int.MaxValue, delimLenMax = int.MinValue;
+			for (int i = 0; i < delimiters.Length; ++i) {
+				delimLenMin = Math.Min(delimiters[i].Length, delimLenMin);
+				delimLenMax = Math.Max(delimiters[i].Length, delimLenMax);
+			}
 			for (int i = 0; i < lineEndings.Count; ++i) {
 				lines[i] = str.Substring(lineStart, lineEndings[i] - lineStart);
-				lineStart = lineEndings[i] + delimiter.Length;
+				if (delimLenMin == delimLenMax) {
+					lineStart = lineEndings[i] + delimLenMin;
+				} else {
+					int delimIndex = str.IsSubstringAt(delimiters, lineEndings[i]);
+					lineStart = lineEndings[i] + delimiters[delimIndex].Length;
+				}
 			}
 			lines[lineEndings.Count] = str.Substring(lineStart, str.Length - lineStart);
 			return lines;
@@ -256,7 +275,14 @@ namespace NonStandard.Extension {
 			case 'x': return str.NumberParse(index + 2, 2, 16, false).AddToLength(2).ForceCharSubstitute();
 			case 'u': return str.NumberParse(index + 2, 4, 16, false).AddToLength(2).ForceCharSubstitute();
 			case 'U': return str.NumberParse(index + 2, 8, 16, false).AddToLength(2).ForceCharSubstitute();
-			case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': {
+			case '0':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7': {
 				int digitCount = 1;
 				do {
 					if (str.Length <= index + digitCount + 1) break;
@@ -267,7 +293,6 @@ namespace NonStandard.Extension {
 				return str.NumberParse(index + 1, digitCount, 8, false).AddToLength(1).ForceCharSubstitute();
 			}
 			}
-			r.lengthParsed = 1;
 			return r.SetError("unknown escape sequence", 1, 0, 1);
 		}
 
@@ -284,13 +309,21 @@ namespace NonStandard.Extension {
 			}
 		}
 
-		/// <returns>the indexes of the given substring in this string</returns>
 		public static List<int> GenerateIndexTable(this string haystack, string needle = "\n") {
+			return GenerateIndexTable(haystack, new string[] { needle });
+		}
+
+		/// <returns>the indexes of the given substring in this string</returns>
+		public static List<int> GenerateIndexTable(this string haystack, string[] needles) {
 			List<int> found = new List<int>();
 			//if (haystack == null || needle == null) return found;
-			int limit = haystack.Length - needle.Length;
-			for(int i = 0; i < limit; ++i) {
-				if(haystack.IsSubstringAt(needle, i)) { found.Add(i); }
+			int limit = haystack.Length;
+			for (int i = 0; i < limit; ++i) {
+				for (int n = 0; n < needles.Length; ++n) {
+					if (haystack.IsSubstringAt(needles[n], i)) {
+						found.Add(i);
+					}
+				}
 			}
 			return found;
 		}
@@ -321,6 +354,60 @@ namespace NonStandard.Extension {
 			text = text.Replace("\n\r", "\n");
 			text = text.Replace("\r", "\n");
 			return text;
+		}
+
+		/// <summary>
+		/// Damereau-Levenshein Distance algorithm
+		/// </summary>
+		public static int ComputeDistance(this string s, string t) {
+			if (string.IsNullOrEmpty(s)) {
+				if (string.IsNullOrEmpty(t))
+					return 0;
+				return t.Length;
+			}
+			if (string.IsNullOrEmpty(t)) {
+				return s.Length;
+			}
+			int n = s.Length;
+			int m = t.Length;
+			int[,] d = new int[n + 1, m + 1];
+			// initialize the top and right of the table to 0, 1, 2, ...
+			for (int i = 0; i <= n; d[i, 0] = i++) { }
+			for (int j = 1; j <= m; d[0, j] = j++) { }
+			for (int i = 1; i <= n; i++) {
+				for (int j = 1; j <= m; j++) {
+					int cost = (t[j - 1] == s[i - 1]) ? 0 : 1;
+					int min1 = d[i - 1, j] + 1;
+					int min2 = d[i, j - 1] + 1;
+					int min3 = d[i - 1, j - 1] + cost;
+					d[i, j] = Math.Min(Math.Min(min1, min2), min3);
+				}
+			}
+			return d[n, m];
+		}
+
+		public static string GetClosestString(this string needle, IList<string> haystack) {
+			int i = GetClosestStringIndex(needle, haystack);
+			return i < 0 ? null : haystack[i];
+		}
+		public static string GetClosestString(this string needle, Func<int> haystackSize, Func<int, string> haystack) {
+			int i = GetClosestStringIndex(needle, haystackSize, haystack);
+			return i < 0 ? null : haystack.Invoke(i);
+		}
+		public static int GetClosestStringIndex(this string needle, IList<string> haystack) {
+			return GetClosestStringIndex(needle, () => haystack.Count, i => haystack[i]);
+		}
+		public static int GetClosestStringIndex(this string needle, Func<int> haystackSize, Func<int,string> haystack) {
+			int bestIndex = -1;
+			int bestDist = -1;
+			for (int i = 0; i < haystackSize.Invoke(); ++i) {
+				int d = ComputeDistance(needle, haystack.Invoke(i));
+				if (bestDist < 0 || d < bestDist) {
+					bestIndex = i;
+					bestDist = d;
+				}
+			}
+			return bestIndex;
 		}
 	}
 }
