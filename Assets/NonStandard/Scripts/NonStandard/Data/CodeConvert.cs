@@ -7,6 +7,10 @@ using System.Text;
 
 namespace NonStandard.Data {
 	public class CodeConvert {
+		public delegate bool TryParseFunction(string text, out object result);
+
+		public static Dictionary<Type, TryParseFunction> Deserialization =
+			new Dictionary<Type, TryParseFunction>();
 		public static string Stringify(object obj) {
 			return StringifyExtension.Stringify(obj, false, showBoundary: false);
 		}
@@ -32,12 +36,34 @@ namespace NonStandard.Data {
 		/// <param name="data">output</param>
 		/// <param name="scope">where to search for variables when resolving unescaped-string tokens</param>
 		/// <param name="tokenizer">optional tokenizer, useful if you want to get errors</param>
+		/// <param name="parsingRules">rules used to parse. if null, will use Default rules. another example rule set: CommandLine</param>
 		/// <returns></returns>
-		public static bool TryParse(string text, out object data, object scope = null, Tokenizer tokenizer = null) {
+		public static bool TryParse(string text, out object data, object scope = null, Tokenizer tokenizer = null, ParseRuleSet parsingRules = null) {
 			object value = null;
-			bool result = TryParseType(typeof(object), text, ref value, scope, tokenizer);
+			bool result = TryParseType(typeof(object), text, ref value, scope, tokenizer, parsingRules);
 			data = value;
 			return result;
+		}
+
+		public static bool TryParse(string text, out object data) { return TryParse(text, out data, null, null, null); }
+
+		/// <summary>
+		/// used to parse JSON-like objects, and output the results to a new object made of nested <see cref="Dictionary{string, object}"/>, <see cref="List{object}"/>, and primitive value objects
+		/// </summary>
+		/// <param name="text">JSON-like source text</param>
+		/// <param name="data">output</param>
+		/// <param name="scope">where to search for variables when resolving unescaped-string tokens</param>
+		/// <param name="tokenizer">optional tokenizer, useful if you want to get errors</param>
+		/// <param name="parsingRules">rules used to parse. if null, will use Default rules. another example rule set: CommandLine</param>
+		/// <returns>always a list of objects or null. if text would be a single object, it's in a list of size 1</returns>
+		public static bool TryParse(string text, out IList<object> data, object scope = null, Tokenizer tokenizer = null, ParseRuleSet parsingRules = null) {
+			bool result = TryParse(text, out object d, scope, tokenizer, parsingRules);
+			if (!result) { data = null; return false; }
+			switch (d) {
+				case IList<object> list: data = list; break;
+				default: data = new List<object> { d }; break;
+			}
+			return true;
 		}
 		/// <summary>
 		/// used to compile an object out of JSON
@@ -48,9 +74,9 @@ namespace NonStandard.Data {
 		/// <param name="scope">where to search for variables when resolving unescaped-string tokens</param>
 		/// <param name="tokenizer">optional tokenizer, useful if you want to get errors</param>
 		/// <returns>true if data was parsed without error. any errors can be reviewed in the 'tokenizer' parameter</returns>
-		public static bool TryParse<T>(string text, out T data, object scope = null, Tokenizer tokenizer = null) {
+		public static bool TryParse<T>(string text, out T data, object scope = null, Tokenizer tokenizer = null, ParseRuleSet parseRules = null) {
 			object value = null;
-			bool result = TryParseType(typeof(T), text, ref value, scope, tokenizer);
+			bool result = TryParseType(typeof(T), text, ref value, scope, tokenizer, parseRules);
 			data = (T)value;
 			return result;
 		}
@@ -75,11 +101,11 @@ namespace NonStandard.Data {
 		/// <param name="scope"></param>
 		/// <param name="tokenizer"></param>
 		/// <returns></returns>
-		public static bool TryParseType(Type type, string text, ref object data, object scope, Tokenizer tokenizer = null) {
+		public static bool TryParseType(Type type, string text, ref object data, object scope, Tokenizer tokenizer = null, ParseRuleSet parsingRules = null) {
 			if (text == null || text.Trim().Length == 0) return false;
 			try {
 				if (tokenizer == null) { tokenizer = new Tokenizer(); }
-				tokenizer.Tokenize(text);
+				tokenizer.Tokenize(text, parsingRules);
 			} catch(Exception e){
 				tokenizer.AddError("Tokenize: " + e + "\n" + tokenizer.DebugPrint());
 				return false;
@@ -94,7 +120,7 @@ namespace NonStandard.Data {
 			Parser p = new Parser();
 			p.Init(type, tokens, data, tokenizer, scope);
 			try {
-				result = p.TryParse();
+				result = p.TryParse(type);
 				data = p.result;
 			} catch (Exception e) {
 				tokenizer.AddError("TryParseTokens:" + e + "\n" + p.GetCurrentTokenIndex().JoinToString(", ") + "\n" + tokenizer.DebugPrint());
@@ -213,6 +239,9 @@ namespace NonStandard.Data {
 					desiredValue = System.Convert.ChangeType(value, typeToGet);
 					break;
 				default:
+					if (value is string s && Deserialization.TryGetValue(typeToGet, out TryParseFunction f)) {
+						return f.Invoke(s, out desiredValue);
+					}
 					if (TryConvertIList(value, out desiredValue, typeToGet)) {
 						return true;
 					}

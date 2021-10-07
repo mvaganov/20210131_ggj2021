@@ -47,8 +47,14 @@ namespace NonStandard.Data.Parse {
 		}
 	}
 	public class Tokenizer : TokenErrorLog {
+		/// <summary>
+		/// text being tokenized
+		/// </summary>
 		internal string str;
-		internal List<Token> tokens = new List<Token>(); // actually a tree. each token can point to more token lists
+		/// <summary>
+		/// a tree of tokens, where each token might have meta data that is another list of tokens
+		/// </summary>
+		internal List<Token> tokens = new List<Token>();
 		/// <summary>
 		/// TODO testme! does this produce all of the tokens in string form?
 		/// </summary>
@@ -216,16 +222,18 @@ namespace NonStandard.Data.Parse {
 			tokenStrings.Clear();
 			if (string.IsNullOrEmpty(str)) return;
 			List<ParseRuleSet.Entry> contextStack = new List<ParseRuleSet.Entry>();
-			if (parseRules == null) parseRules = CodeRules.Default;
+			if (parseRules == null) {
+				parseRules = CodeRules.Default;
+			}
 			else { contextStack.Add(parseRules.GetEntry(tokens, -1, null)); }
 			int tokenBegin = -1;
 			ParseRuleSet currentContext = parseRules;
+			//Show.Log("parsing \""+str+"\" with ["+currentContext.name+"]");
 			int lastIndex = index-1;
 			while (index < str.Length && (condition == null || condition.Invoke(this))) {
 				if (index <= lastIndex) { throw new Exception("tokenize algorithm problem, the index isn't advancing"); }
 				char c = str[index];
-				bool isWhiteSpace = currentContext.IsWhitespace(c);
-				Delim delim = !isWhiteSpace ? currentContext.GetDelimiterAt(str, index, tokenBegin) : null;
+				WhatsThis(currentContext, index, tokenBegin, parseRules, out Delim delim, out bool isWhiteSpace);
 				if (delim != null) {
 					FinishToken(index, ref tokenBegin); // finish whatever token was being read before this delimeter
 					HandleDelimiter(delim, ref index, contextStack, ref currentContext, parseRules);
@@ -242,6 +250,17 @@ namespace NonStandard.Data.Parse {
 			//DebugPrint(-1);
 			ApplyOperators();
 		}
+		private void WhatsThis(ParseRuleSet currentContext, int index, int tokenBegin, ParseRuleSet defaultContext, out Delim delim, out bool isWhiteSpace) {
+			int test = 0;
+			isWhiteSpace = (currentContext.Whitespace != null)
+				? currentContext.IsWhitespace(str[index])
+				: (defaultContext.Whitespace != null ) ? defaultContext.IsWhitespace(str[index]) : 0 == 1/test;
+			if (isWhiteSpace) { delim = null; return; }
+			delim = (currentContext.Delimiters != null)
+				? currentContext.GetDelimiterAt(str, index, tokenBegin)
+				: defaultContext.GetDelimiterAt(str, index, tokenBegin);
+		}
+
 
 		private bool FinishToken(int index, ref int tokenBegin) {
 			if (tokenBegin >= 0) {

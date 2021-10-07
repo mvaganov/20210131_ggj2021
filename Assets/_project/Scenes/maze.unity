@@ -3990,7 +3990,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Option A
+  m_text: "\u200B"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -32114,16 +32114,17 @@ PrefabInstance:
     - target: {fileID: 5049753555989822290, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
       propertyPath: values
-      value: 'name : "player"
+      value: 'name  : "player"
 
-        handicraft 2
+        handicraft 2,
 
         active True'
       objectReference: {fileID: 0}
     - target: {fileID: 5049753555989822290, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
       propertyPath: parseResults
-      value: "{\n  name : \"player\",\n  handicraft : 2,\n  active : True\n}"
+      value: "{\n  name : \":\",\n  \"\\\"player\\\"\" : \"handicraft\",\n  \"2,\"
+        : \"active\"\n}"
       objectReference: {fileID: 0}
     - target: {fileID: 5049753556005701580, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}

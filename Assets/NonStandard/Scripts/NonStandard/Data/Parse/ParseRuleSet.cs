@@ -38,6 +38,7 @@ namespace NonStandard.Data.Parse {
 				SetDelimiters(delimiters);
 			}
 		}
+
 		private char minWhitespace = char.MinValue, maxWhitespace = char.MaxValue;
 		public bool IsWhitespace(char c) {
 			return (c < minWhitespace || c > maxWhitespace) ? false : whitespace.IndexOf(c) >= 0;
@@ -45,15 +46,23 @@ namespace NonStandard.Data.Parse {
 		/// <summary>
 		/// data used to make delimiter searching very fast
 		/// </summary>
-		private char minDelim = char.MaxValue, maxDelim = char.MinValue; private int[] textLookup;
+		private char minDelim = char.MaxValue, maxDelim = char.MinValue; private int[] delimTextLookup;
 		public ParseRuleSet(string name, Delim[] defaultDelimiters = null, char[] defaultWhitespace = null) {
 			this.name = name;
 			allContexts[name] = this;
 			if (defaultDelimiters != null && !defaultDelimiters.IsSorted()) { Array.Sort(defaultDelimiters); }
 			if (defaultWhitespace != null && !defaultWhitespace.IsSorted()) { Array.Sort(defaultWhitespace); }
-			Delimiters = (defaultDelimiters == null) ? CodeRules.StandardDelimiters : defaultDelimiters;
-			Whitespace = (defaultWhitespace == null) ? CodeRules.StandardWhitespace : defaultWhitespace;
+			Delimiters = defaultDelimiters;
+			Whitespace = defaultWhitespace;
 		}
+
+		public Delim[] GetDefaultDelimiters(ParseRuleSet possibleRuleSet) {
+			return possibleRuleSet != null ? possibleRuleSet.Delimiters : CodeRules.Default.Delimiters;
+		}
+		public char[] GetDefaultWhitespace(ParseRuleSet possibleRuleSet) {
+			return possibleRuleSet != null ? possibleRuleSet.Whitespace : CodeRules.Default.Whitespace;
+		}
+
 		/// <summary>
 		/// set the delimiters of this Context, also calculating a simple lookup table
 		/// </summary>
@@ -61,7 +70,7 @@ namespace NonStandard.Data.Parse {
 		public void SetDelimiters(Delim[] delims) {
 			if(delims == null || delims.Length == 0) {
 				minDelim = maxDelim = (char)0;
-				textLookup = new int[] { -1 };
+				delimTextLookup = new int[] { -1 };
 				return;
 			}
 			char c, last = delims[0].text[0];
@@ -71,18 +80,18 @@ namespace NonStandard.Data.Parse {
 				if (c < minDelim) minDelim = c;
 				if (c > maxDelim) maxDelim = c;
 			}
-			textLookup = new int[maxDelim + 1 - minDelim];
-			for (int i = 0; i < textLookup.Length; ++i) { textLookup[i] = -1; }
+			delimTextLookup = new int[maxDelim + 1 - minDelim];
+			for (int i = 0; i < delimTextLookup.Length; ++i) { delimTextLookup[i] = -1; }
 			for (int i = 0; i < delims.Length; ++i) {
 				c = delims[i].text[0];
 				int lookupIndex = c - minDelim; // where in the delimiters list this character can be found
-				if (textLookup[lookupIndex] < 0) { textLookup[lookupIndex] = i; }
+				if (delimTextLookup[lookupIndex] < 0) { delimTextLookup[lookupIndex] = i; }
 			}
 		}
 		public int IndexOfDelimeterAt(string str, int index) {
 			char c = str[index];
 			if (c < minDelim || c > maxDelim) return -1;
-			int i = textLookup[c - minDelim];
+			int i = delimTextLookup[c - minDelim];
 			if (i < 0) return -1;
 			while (i < delimiters.Length) {
 				if (delimiters[i].text[0] != c) break;

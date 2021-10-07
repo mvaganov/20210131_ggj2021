@@ -12,7 +12,7 @@ namespace NonStandard.Data.Parse {
 			String, Char, Number, Hexadecimal, Boolean, Expression, SquareBrace, GenericArgs, CodeBody,
 			CodeInString, Sum, Difference, Product, Quotient, Modulus, Power, LogicalAnd, LogicalOr,
 			Assignment, Equal, LessThan, GreaterThan, LessThanOrEqual, GreaterThanOrEqual, MembershipOperator,
-			IfStatement, NotEqual, XmlCommentLine, CommentLine, CommentBlock, Default;
+			IfStatement, NotEqual, XmlCommentLine, CommentLine, CommentBlock, Default, CommandLine;
 
 		public static Delim[] _string_delimiter = new Delim[] { new DelimCtx("\"", ctx: "string", start: true, end: true), };
 		public static Delim[] _char_delimiter = new Delim[] { new DelimCtx("\'", ctx: "char", start: true, end: true), };
@@ -115,13 +115,20 @@ namespace NonStandard.Data.Parse {
 			_instruction_finished_delimiter, _list_item_delimiter, _membership_operator, _prefix_unary_operator,
 			_binary_operator, _binary_logic_operatpor, _assignment_operator, _lambda_operator, _math_operator,
 			_block_comment_delimiter, _line_comment_delimiter, _number, _boolean, _conditional_operator);
+		public static Delim[] CommandLineDelimiters = CombineDelims(_string_delimiter, _char_delimiter,
+			_expression_delimiter, _code_body_delimiter, _square_brace_delimiter,//_ternary_operator_delimiter,
+			_instruction_finished_delimiter, _list_item_delimiter, //_membership_operator, _prefix_unary_operator,
+			//_binary_operator, _binary_logic_operatpor, _assignment_operator, _lambda_operator, //_math_operator,
+			_block_comment_delimiter, _line_comment_delimiter //, _conditional_operator
+			);
 		public static Delim[] LineCommentDelimiters = CombineDelims(_line_comment_continuation, _end_of_line_comment);
 		public static Delim[] XmlCommentDelimiters = CombineDelims(_line_comment_continuation,
 			_end_of_XML_line_comment);
 		public static Delim[] CommentBlockDelimiters = CombineDelims(_block_comment_delimiter);
 
 		static CodeRules() {
-			Default = new ParseRuleSet("default");
+			Default = new ParseRuleSet("default", StandardDelimiters, StandardWhitespace);
+			CommandLine = new ParseRuleSet("command line", CodeRules.CommandLineDelimiters, StandardWhitespace);
 			String = new ParseRuleSet("string");
 			Char = new ParseRuleSet("char");
 			Number = new ParseRuleSet("number");
