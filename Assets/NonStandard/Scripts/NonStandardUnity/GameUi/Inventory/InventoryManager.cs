@@ -2,6 +2,7 @@
 using NonStandard.Commands;
 using System.Collections.Generic;
 using UnityEngine;
+using NonStandard.Extension;
 
 namespace NonStandard.GameUi.Inventory {
 	public class InventoryManager : MonoBehaviour {
@@ -25,18 +26,25 @@ namespace NonStandard.GameUi.Inventory {
 			SetMainInventory(n);
 		}
 		public void GiveInventory(Command.Exec e) {
-			string itemName = e.tok.GetStr(1, Commander.Instance.GetScope());
-			//Show.Log("Give " + e.tok);
+			string itemName = e.tok.GetToken(1).ToString();//GetStr(1, Commander.Instance.GetScope());
+			//Show.Log("Give " + itemName + " (" + e.tok.ToString() + ")");
 			Inventory inv = main;
 			GameObject itemObj = inv.RemoveItem(itemName);
 			if (itemObj != null) {
 				if (e.tok.TokenCount == 2 || e.tok.GetToken(2).ToString() == ";") {
 					UnityEngine.Object.Destroy(itemObj);
 					//Show.Log("giving to nobody... destroying");
+					//e.print("destroying " + itemName);
 				} else {
 					Token recieptiant = e.tok.GetToken(2);
-					Show.Log("TODO give " + itemObj + " to " + recieptiant);
+					string message = "TODO give " + itemObj + " to " + recieptiant;
+					Show.Warning(message);
+					e.print(message);
 				}
+			} else {
+				string message = "missing " + itemName+". have: "+inv.GetItems().JoinToString(", ", go=>go.name);
+				Show.Warning(message);
+				e.print(message);
 			}
 		}
 	}

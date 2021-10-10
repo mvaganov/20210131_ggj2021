@@ -21,7 +21,7 @@ public class NpcCreation : MonoBehaviour
 	}
 	public void GenerateMore(int len) {
 		for (int i = npcs.Count; i < len; ++i) {
-			Material mat = game.tokenCreator.tokenMaterials[i];
+			Material mat = game.idolCreator.idolMaterials[i];
 			GameObject npc = Instantiate(prefab_npcPlayer.gameObject);
 			ParticleSystem ps = npc.GetComponentInChildren<ParticleSystem>();
 			if (ps != null) {

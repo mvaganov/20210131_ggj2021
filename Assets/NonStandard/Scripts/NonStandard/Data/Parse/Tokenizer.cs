@@ -1,4 +1,5 @@
-﻿using NonStandard.Extension;
+﻿//#define __DEBUG_token_recursion
+using NonStandard.Extension;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -335,10 +336,11 @@ namespace NonStandard.Data.Parse {
 					i = 0;
 				}
 			}
-			// remove this code eventually TODO
+#if __DEBUG_token_recursion
 			List<Token> allTokens = new List<Token>(tokens);
 			int travelIndex = 0;
 			BreadthFirstSearch(allTokens, ref travelIndex);
+#endif
 		}
 
 		protected void BreadthFirstSearch(List<Token> travelLog, ref int index) {

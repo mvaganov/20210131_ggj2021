@@ -16,8 +16,8 @@ GameObject:
   - component: {fileID: 8561600735737634928}
   - component: {fileID: 39552513395893804}
   - component: {fileID: -5253052072878628835}
-  - component: {fileID: 4550935282869908665}
   - component: {fileID: -5584701397388261027}
+  - component: {fileID: 7511220964399511019}
   m_Layer: 0
   m_Name: icosahedron
   m_TagString: Untagged
@@ -129,6 +129,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemName: 
   _pickupCollider: {fileID: 0}
+  inventory: {fileID: 0}
   addToInventoryEvent:
     m_PersistentCalls:
       m_Calls:
@@ -151,6 +152,42 @@ MonoBehaviour:
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 7511220964399511019}
+        m_MethodName: AddColorToVariables
+        m_Mode: 4
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 1
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 7511220964399511019}
+        m_MethodName: PickUp
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  removeFromInventoryEvent:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 7511220964399511019}
+        m_MethodName: AddColorToVariables
+        m_Mode: 4
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: -1
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
@@ -186,19 +223,6 @@ MonoBehaviour:
   marker: {fileID: 0}
   disableAfterFirstTouchdown: 0
   copyColor: 1
---- !u!114 &4550935282869908665
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8561600735737634937}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1371284843b8885479f37ec1d88abcec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  intMetaData: 
 --- !u!114 &-5584701397388261027
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -214,3 +238,18 @@ MonoBehaviour:
   expectedParticleName: circdir
   _particleSystem: {fileID: 0}
   emitCount: 10
+--- !u!114 &7511220964399511019
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8561600735737634937}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e67565bf5b13f8b46a0ef74f5bd24484, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  typeName: 
+  specificName: 
+  intMetaData: 

@@ -854,6 +854,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5366851426413706511}
   - component: {fileID: 5873066505987836163}
+  - component: {fileID: 978093505}
   m_Layer: 5
   m_Name: inventory
   m_TagString: Untagged
@@ -911,6 +912,19 @@ MonoBehaviour:
   onRemoveItem:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &978093505
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2519859279744519623}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b71ac52fa5b3b1b4d9771f75e76a6ee0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dictionary: {fileID: 7731634059116809492}
 --- !u!1 &2716088289687133510
 GameObject:
   m_ObjectHideFlags: 0
@@ -3959,7 +3973,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.0008908045, y: -0.0004929489}
+  m_AnchoredPosition: {x: -0.00000062873016, y: -0.00004604415}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &5049753555242306424
@@ -4741,6 +4755,9 @@ MonoBehaviour:
   dynamicMouseCursor: 1
   resizeEdgeRadius: 4
   minimumSize: {x: 170, y: 50}
+  onResize:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &5049753555622292014
 GameObject:
   m_ObjectHideFlags: 0
@@ -5019,7 +5036,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 5049753556388471593}
   m_HandleRect: {fileID: 5049753556388471592}
   m_Direction: 0
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -5536,7 +5553,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.00015762096, y: 0.000019760802}
+  m_AnchoredPosition: {x: -0.000007531675, y: 0.00012337703}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &5049753556087296669
@@ -7031,6 +7048,9 @@ MonoBehaviour:
   dynamicMouseCursor: 1
   resizeEdgeRadius: 4
   minimumSize: {x: 100, y: 50}
+  onResize:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &5049753556071696369
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7868,6 +7888,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   move: {fileID: 5155537503424186002}
   data: {fileID: 5049753555989822290}
+  activateFunction:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &5049753555989822290
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7882,10 +7905,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dict:
     onAssignmentToFunction: 0
-  values: 'name : "player"
+  values: 'name  : "player"
 
-    handicraft 2'
-  parseResults: "{\n  name : \"player\",\n  handicraft : 2\n}"
+    handicraft 2,
+
+    active True'
+  parseResults: "{\n  name : \"player\",\n  handicraft : 2,\n  active : True\n}"
   dictionaryTostringChangeListener:
     m_PersistentCalls:
       m_Calls: []
@@ -8597,7 +8622,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000017093495, y: 0.00012207031}
+  m_AnchoredPosition: {x: 0.000060279617, y: -0.000061035156}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &2115387794360142880

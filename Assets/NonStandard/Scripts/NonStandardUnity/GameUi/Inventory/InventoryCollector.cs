@@ -7,8 +7,6 @@ namespace NonStandard.GameUi.Inventory {
 		public Inventory inventory;
 		public bool autoPickup = true;
 		public ListItemUi AddItem(GameObject itemObject) {
-			InventoryItem item = itemObject.GetComponent<InventoryItem>();
-			item.addToInventoryEvent?.Invoke(gameObject);
 			return inventory.AddItem(itemObject);
 		}
 		public void RemoveItem(GameObject itemObject) {

@@ -23,7 +23,8 @@ namespace NonStandard.Data.Parse {
 		public string ToString(string s) { return s.Substring(index, length); }
 
 		public string Stringify() { return GetAsSmallText(); }
-		public override string ToString() {
+		public override string ToString() { return GetAsSmallText(); }
+		public string ToDebugString() {
 			ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry;
 			if (pce == null) { return Resolve(null, null).ToString(); }
 			Delim d = pce.sourceMeta as Delim;
@@ -105,7 +106,7 @@ namespace NonStandard.Data.Parse {
 				if (IsContextEnding()) { return e.endDelim.ToString(); }
 				return e.TextEnclosed;
 			}
-			return ToString();
+			return ToDebugString();
 		}
 		public string GetAsBasicToken() {
 			string src = null;

@@ -411,6 +411,11 @@ namespace NonStandard.Data.Parse {
 				}
 				return true;
 			}
+			Delim d = meta as Delim;
+			if (d != null && memberType == typeof(object)) {
+				memberValue = d;
+				return true;
+			}
 			AddError("unable to parse token with meta data " + meta);
 			return false;
 		}

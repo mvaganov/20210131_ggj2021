@@ -97,7 +97,7 @@ namespace NonStandard.Data {
 			return (float)val;
 		}
 		public void AddTo(string fieldName, float bonus) {
-			//Show.Log(fieldName + " " + bonus + " " + Show.GetStack(6));
+			//Show.Log("'"+fieldName + "' += " + bonus + " " + ReflectionExtension.GetStack(6));
 			dict[fieldName] = NumValue(fieldName) + bonus;
 		}
 		public string Format(string text) {

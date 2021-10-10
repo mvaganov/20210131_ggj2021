@@ -56,12 +56,20 @@ namespace NonStandard.Data {
 		/// <param name="tokenizer">optional tokenizer, useful if you want to get errors</param>
 		/// <param name="parsingRules">rules used to parse. if null, will use Default rules. another example rule set: CommandLine</param>
 		/// <returns>always a list of objects or null. if text would be a single object, it's in a list of size 1</returns>
-		public static bool TryParse(string text, out IList<object> data, object scope = null, Tokenizer tokenizer = null, ParseRuleSet parsingRules = null) {
+		public static bool TryParseArgs(string text, out List<object> data, object scope = null, Tokenizer tokenizer = null, ParseRuleSet parsingRules = null) {
 			bool result = TryParse(text, out object d, scope, tokenizer, parsingRules);
 			if (!result) { data = null; return false; }
 			switch (d) {
-				case IList<object> list: data = list; break;
-				default: data = new List<object> { d }; break;
+			case List<object> list: data = list; break;
+			default:
+				data = new List<object>();
+				if (d is IList<object> ilist) {
+					data.Capacity = ilist.Count;
+					for (int i = 0; i < ilist.Count; ++i) { data.Add(ilist[i]); }
+				} else {
+					data.Add(d);
+				}
+				break;
 			}
 			return true;
 		}

@@ -1,4 +1,5 @@
-﻿using NonStandard.Data.Parse;
+﻿using NonStandard.Data;
+using NonStandard.Data.Parse;
 using NonStandard.Extension;
 using System;
 using System.Collections.Generic;
@@ -40,6 +41,9 @@ namespace NonStandard.Commands {
 			tokenizer = null;
 			string trimmed = instruction.text?.Trim();
 			if (string.IsNullOrEmpty(trimmed)) return;
+			//Tokenizer tok = new Tokenizer();
+			//CodeConvert.TryParseArgs(trimmed, out List<object> parsedCommand, instruction.source, tok);
+			//Show.Log(trimmed+":::"+parsedCommand.Stringify());
 			string firstWord = Tokenizer.FirstWord(trimmed);
 			if (firstWord == null) { firstWord = trimmed; }
 			//Show.Log("1stword " + firstWord.StringifySmall());

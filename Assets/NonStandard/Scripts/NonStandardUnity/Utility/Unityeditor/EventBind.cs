@@ -9,14 +9,14 @@ using UnityEngine.Events;
 namespace NonStandard.Utility.UnityEditor {
 	public class EventBind {
 		public object target;
-		public string setMethodName;
+		public string methodName;
 		public object value;
 
 		public EventBind(object target, string setMethodName, object value = null) {
-			this.target = target; this.setMethodName = setMethodName; this.value = value;
+			this.target = target; this.methodName = setMethodName; this.value = value;
 		}
 		public EventBind(object target, string setMethodName) {
-			this.target = target; this.setMethodName = setMethodName; value = null;
+			this.target = target; this.methodName = setMethodName; value = null;
 		}
 		public UnityAction<T> GetAction<T>(object target, string setMethodName) {
 			System.Reflection.MethodInfo targetinfo = UnityEvent.GetValidMethodInfo(target, setMethodName, new Type[] { typeof(T) });
@@ -68,10 +68,28 @@ namespace NonStandard.Utility.UnityEditor {
 		public static void On<T>(UnityEvent<T> @event, object target, string methodName) {
 			new EventBind(target, methodName).Bind(@event);
 		}
-		public static bool IfNotAlready(UnityEvent @event, UnityEngine.Object target, string methodName) {
+		public bool IsAlreadyBound(UnityEvent @event) {
+			UnityEngine.Object obj = target as UnityEngine.Object;
+			return obj != null && IsAlreadyBound(@event, obj, methodName);
+		}
+		public bool IsAlreadyBound<T>(UnityEvent<T> @event) {
+			UnityEngine.Object obj = target as UnityEngine.Object;
+			return obj != null && IsAlreadyBound(@event, obj, methodName);
+		}
+		public static bool IsAlreadyBound(UnityEvent @event, UnityEngine.Object target, string methodName) {
 			for (int i = 0; i < @event.GetPersistentEventCount(); ++i) {
-				if (@event.GetPersistentTarget(i) == target && @event.GetPersistentMethodName(i) == methodName) { return false; }
+				if (@event.GetPersistentTarget(i) == target && @event.GetPersistentMethodName(i) == methodName) { return true; }
 			}
+			return false;
+		}
+		public static bool IsAlreadyBound<T>(UnityEvent<T> @event, UnityEngine.Object target, string methodName) {
+			for (int i = 0; i < @event.GetPersistentEventCount(); ++i) {
+				if (@event.GetPersistentTarget(i) == target && @event.GetPersistentMethodName(i) == methodName) { return true; }
+			}
+			return false;
+		}
+		public static bool IfNotAlready(UnityEvent @event, UnityEngine.Object target, string methodName) {
+			if (IsAlreadyBound(@event, target, methodName)) return false;
 			On(@event, target, methodName);
 			return true;
 		}
@@ -80,7 +98,7 @@ namespace NonStandard.Utility.UnityEditor {
 		}
 		public void Bind<T>(UnityEvent<T> @event) {
 #if UNITY_EDITOR
-			UnityEventTools.AddPersistentListener(@event, GetAction<T>(target, setMethodName));
+			UnityEventTools.AddPersistentListener(@event, GetAction<T>(target, methodName));
 #else
 			System.Reflection.MethodInfo targetinfo = UnityEvent.GetValidMethodInfo(target, setMethodName, new Type[]{typeof(T)});
 			@event.AddListener((val) => targetinfo.Invoke(target, new object[] { val }));
@@ -88,7 +106,7 @@ namespace NonStandard.Utility.UnityEditor {
 		}
 		public void Bind(UnityEvent_string @event) {
 #if UNITY_EDITOR
-			UnityEventTools.AddPersistentListener(@event, GetAction<string>(target, setMethodName));
+			UnityEventTools.AddPersistentListener(@event, GetAction<string>(target, methodName));
 #else
 			System.Reflection.MethodInfo targetinfo = UnityEvent.GetValidMethodInfo(target, setMethodName, new Type[0]);
 			@event.AddListener((str) => targetinfo.Invoke(target, new object[] { str }));
@@ -97,18 +115,18 @@ namespace NonStandard.Utility.UnityEditor {
 		public void Bind(UnityEvent @event) {
 #if UNITY_EDITOR
 			if (value == null) {
-				System.Reflection.MethodInfo targetinfo = UnityEvent.GetValidMethodInfo(target, setMethodName, new Type[0]);
-				if (targetinfo == null) { Debug.LogError("no method " + setMethodName + "() in " + target.ToString()); }
+				System.Reflection.MethodInfo targetinfo = UnityEvent.GetValidMethodInfo(target, methodName, new Type[0]);
+				if (targetinfo == null) { Debug.LogError("no method " + methodName + "() in " + target.ToString()); }
 				UnityAction action = Delegate.CreateDelegate(typeof(UnityAction), target, targetinfo, false) as UnityAction;
 				UnityEventTools.AddVoidPersistentListener(@event, action);
 			} else if (value is int) {
-				UnityEventTools.AddIntPersistentListener(@event, GetAction<int>(target, setMethodName), (int)value);
+				UnityEventTools.AddIntPersistentListener(@event, GetAction<int>(target, methodName), (int)value);
 			} else if (value is float) {
-				UnityEventTools.AddFloatPersistentListener(@event, GetAction<float>(target, setMethodName), (float)value);
+				UnityEventTools.AddFloatPersistentListener(@event, GetAction<float>(target, methodName), (float)value);
 			} else if (value is string) {
-				UnityEventTools.AddStringPersistentListener(@event, GetAction<string>(target, setMethodName), (string)value);
+				UnityEventTools.AddStringPersistentListener(@event, GetAction<string>(target, methodName), (string)value);
 			} else if (value is bool) {
-				UnityEventTools.AddBoolPersistentListener(@event, GetAction<bool>(target, setMethodName), (bool)value);
+				UnityEventTools.AddBoolPersistentListener(@event, GetAction<bool>(target, methodName), (bool)value);
 			} else if (value is GameObject) {
 				Bind<GameObject>(@event);
 			} else if (value is Transform) {
@@ -124,7 +142,7 @@ namespace NonStandard.Utility.UnityEditor {
 #if UNITY_EDITOR
 		public void Bind<T>(UnityEvent @event) where T : UnityEngine.Object {
 			if (value is T) {
-				UnityEventTools.AddObjectPersistentListener(@event, GetAction<T>(target, setMethodName), (T)value);
+				UnityEventTools.AddObjectPersistentListener(@event, GetAction<T>(target, methodName), (T)value);
 			} else {
 				Debug.LogError("unable to assign " + value.GetType());
 			}
