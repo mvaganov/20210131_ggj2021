@@ -1,5 +1,7 @@
 ﻿using NonStandard.Data;
+using NonStandard.Extension;
 using System;
+using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor.Events;
 #endif
@@ -68,21 +70,11 @@ namespace NonStandard.Utility.UnityEditor {
 		public static void On<T>(UnityEvent<T> @event, object target, string methodName) {
 			new EventBind(target, methodName).Bind(@event);
 		}
-		public bool IsAlreadyBound(UnityEvent @event) {
+		public bool IsAlreadyBound(UnityEventBase @event) {
 			UnityEngine.Object obj = target as UnityEngine.Object;
 			return obj != null && IsAlreadyBound(@event, obj, methodName);
 		}
-		public bool IsAlreadyBound<T>(UnityEvent<T> @event) {
-			UnityEngine.Object obj = target as UnityEngine.Object;
-			return obj != null && IsAlreadyBound(@event, obj, methodName);
-		}
-		public static bool IsAlreadyBound(UnityEvent @event, UnityEngine.Object target, string methodName) {
-			for (int i = 0; i < @event.GetPersistentEventCount(); ++i) {
-				if (@event.GetPersistentTarget(i) == target && @event.GetPersistentMethodName(i) == methodName) { return true; }
-			}
-			return false;
-		}
-		public static bool IsAlreadyBound<T>(UnityEvent<T> @event, UnityEngine.Object target, string methodName) {
+		public static bool IsAlreadyBound(UnityEventBase @event, UnityEngine.Object target, string methodName) {
 			for (int i = 0; i < @event.GetPersistentEventCount(); ++i) {
 				if (@event.GetPersistentTarget(i) == target && @event.GetPersistentMethodName(i) == methodName) { return true; }
 			}
@@ -148,6 +140,23 @@ namespace NonStandard.Utility.UnityEditor {
 			}
 		}
 #endif
+		public static List<EventBind> GetList(UnityEventBase @event) {
+			List<EventBind> eb = new List<EventBind>();
+			for(int i = 0; i <@event.GetPersistentEventCount(); ++i) {
+				eb.Add(new EventBind(@event.GetPersistentTarget(i), @event.GetPersistentMethodName(i)));
+			}
+			return eb;
+		}
+		public static string DebugPrint(UnityEventBase @event) {
+			List<EventBind> eb = GetList(@event);
+			return eb.JoinToString();
+		}
+		public override string ToString() {
+			string t = null;
+			if (target is UnityEngine.Object o) { t = o.name; }
+			else if (target != null) { t = target.ToString(); }
+			return t+"."+methodName;
+		}
 	}
 
 }

@@ -4,6 +4,7 @@ using NonStandard.Data.Parse;
 using NonStandard.Extension;
 using NonStandard.Process;
 using NonStandard.Ui;
+using NonStandard.Utility.UnityEditor;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -148,6 +149,12 @@ namespace NonStandard.GameUi.DataSheet {
 			// get the data
 			List<object> objects = new List<object>();
 			dataPopulator.Invoke(objects);
+			for(int i = objects.Count-1; i >= 0; --i) {
+				if (objects[i] == null) {
+					Show.Warning("{" + EventBind.DebugPrint(dataPopulator)+"}["+i+"] is null. removing it");
+					objects.RemoveAt(i);
+				}
+			}
 			// take stock of what objects are here
 			HashSet<object> manifest = new HashSet<object>();
 			for(int i = 0; i < data.rows.Count; ++i) {

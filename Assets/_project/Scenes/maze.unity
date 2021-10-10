@@ -4059,10 +4059,10 @@ MonoBehaviour:
   m_margin: {x: 0, y: 0, z: 0, w: 0}
   m_textInfo:
     textComponent: {fileID: 468126168}
-    characterCount: 8
+    characterCount: 1
     spriteCount: 0
-    spaceCount: 1
-    wordCount: 2
+    spaceCount: 0
+    wordCount: 1
     linkCount: 0
     lineCount: 1
     pageCount: 1
@@ -8604,12 +8604,11 @@ MonoBehaviour:
   - {fileID: 2100000, guid: db6c6120c750c0b4f9b59558adfe34c6, type: 2}
   - {fileID: 2100000, guid: aeb74a6df3df0dd4a8f56fcbacf4adb0, type: 2}
   - {fileID: 2100000, guid: 9e43cfd6793756f4cbcbe055c54f5479, type: 2}
-  - {fileID: 2100000, guid: 0298f6cb93c82f649a581b90e4edaf2b, type: 2}
+  - {fileID: 2100000, guid: cde7191fe84c3a24988afa14ed19df3a, type: 2}
   - {fileID: 2100000, guid: 6566de62b36ebec48897c17cc90d4395, type: 2}
   - {fileID: 2100000, guid: 381b5f86e2414b3418c21eb2647e433b, type: 2}
   - {fileID: 2100000, guid: e7a04bb2f84caae478dd432bbf216109, type: 2}
   - {fileID: 2100000, guid: fc149dee6cf8c554dbb8a6d49aa5d415, type: 2}
-  - {fileID: 2100000, guid: cde7191fe84c3a24988afa14ed19df3a, type: 2}
   idols: []
   idolsDistributed: 0
 --- !u!114 &893536468

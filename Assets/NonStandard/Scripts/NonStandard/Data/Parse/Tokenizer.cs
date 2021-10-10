@@ -252,10 +252,11 @@ namespace NonStandard.Data.Parse {
 			ApplyOperators();
 		}
 		private void WhatsThis(ParseRuleSet currentContext, int index, int tokenBegin, ParseRuleSet defaultContext, out Delim delim, out bool isWhiteSpace) {
-			int test = 0;
+			char c = str[index];
 			isWhiteSpace = (currentContext.Whitespace != null)
-				? currentContext.IsWhitespace(str[index])
-				: (defaultContext.Whitespace != null ) ? defaultContext.IsWhitespace(str[index]) : 0 == 1/test;
+				? currentContext.IsWhitespace(c) : (defaultContext.Whitespace != null ) 
+				? defaultContext.IsWhitespace(c) 
+				: CodeRules.Default.IsWhitespace(c);
 			if (isWhiteSpace) { delim = null; return; }
 			delim = (currentContext.Delimiters != null)
 				? currentContext.GetDelimiterAt(str, index, tokenBegin)

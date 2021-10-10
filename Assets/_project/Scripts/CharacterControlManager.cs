@@ -13,9 +13,11 @@ public class CharacterControlManager : MonoBehaviour
 
 	public void SetCharacter(GameObject obj) {
 		if (moveProxy != null) {
-			//Debug.Log("Switching from " + moveProxy.target);
-			Interact3dItem i3i = moveProxy.Target.GetComponent<Interact3dItem>();
-			if(i3i != null) i3i.showing = true;
+			//Debug.Log("Switching from " + moveProxy.Target);
+			if (moveProxy.Target != null) {
+				Interact3dItem i3i = moveProxy.Target.GetComponent<Interact3dItem>();
+				if (i3i != null) i3i.showing = true;
+			}
 		}
 		CharacterRoot cm = obj.GetComponent<CharacterRoot>();
 		if (moveProxy.Target != fourthPersonControl.GetMover()) {

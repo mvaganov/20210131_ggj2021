@@ -97,8 +97,8 @@ namespace NonStandard.Data {
 			return (float)val;
 		}
 		public void AddTo(string fieldName, float bonus) {
-			//Show.Log("'"+fieldName + "' += " + bonus + " " + ReflectionExtension.GetStack(6));
 			dict[fieldName] = NumValue(fieldName) + bonus;
+			//Show.Log("'" + fieldName + "' += " + bonus + " (" + dict[fieldName] + ") " + ReflectionExtension.GetStack(6));
 		}
 		public string Format(string text) {
 			Tokenizer tok = new Tokenizer();

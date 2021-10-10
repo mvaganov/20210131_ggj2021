@@ -201,7 +201,7 @@ public class Game : MonoBehaviour
 	}
 	public void GoalCheck(GameObject inventoryObject) {
 		if (idolCreator.idols == null) return;
-		int unclaimedIdolCount = idolCreator.idols.CountEach(i => i.GetComponent<InventoryItem>().inventory == null);
+		int unclaimedIdolCount = idolCreator.CountUnclaimedIdols();
 		//Show.Log("checking..."+unclaimedIdolCount);
 		if (unclaimedIdolCount > 0) { return; }
 		nextLevelButton.SetActive(true);

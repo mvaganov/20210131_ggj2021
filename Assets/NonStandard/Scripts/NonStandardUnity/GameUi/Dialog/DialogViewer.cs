@@ -47,7 +47,9 @@ namespace NonStandard.GameUi.Dialog {
 				Dialog.Choice c = option as Dialog.Choice;
 				if (c != null) {
 					li = listUi.AddItem(option, DialogManager.Instance.GetScriptScope().Format(c.text), () => {
+						//NonStandard.Show.Log("------- "+c.command);
 						Commander.Instance.ParseCommand(new Instruction(c.command, li), Print, out tok);
+						//NonStandard.Show.Log("/////// " + c.command);
 						if (tok?.HasError() ?? false) { Print(tok.GetErrorString()); }
 						PossiblyAddParseCommandOutputToDialog(option);
 					}, prefab_buttonUi);
