@@ -14,7 +14,7 @@ public class NpcCreation : MonoBehaviour
 	public CharacterRoot prefab_npcPlayer;
 	public List<CharacterRoot> npcs = new List<CharacterRoot>();
 	private Dictionary<string, string> npcNames;
-
+	public List<CharacterRoot> startingCharacters = new List<CharacterRoot>();
 	public void Init() {
 		Tokenizer tokenizer = new Tokenizer();
 		CodeConvert.TryParse(npcNamesText.text, out npcNames, null, tokenizer);
@@ -52,8 +52,7 @@ public class NpcCreation : MonoBehaviour
 	}
 
 	public void PopulateWithCharacters(List<object> chars) {
-		CharacterProxy charMove = Global.GetComponent<CharacterProxy>();
-		chars.Add(charMove.Target);
+		chars.AddRange(startingCharacters);
 		chars.AddRange(npcs);
 	}
 }

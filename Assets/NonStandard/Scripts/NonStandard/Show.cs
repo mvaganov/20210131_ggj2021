@@ -8,21 +8,9 @@ namespace NonStandard {
             public PrintFunc onError;
             public PrintFunc onWarning;
             public PrintFunc onAnyMessage;
-            public void Log(object obj) { Log(obj != null ? obj.ToString() : ""); }
-            public void Log(string str) {
-                onLog?.Invoke(str);
-                onAnyMessage?.Invoke(str);
-            }
-            public void Error(object obj) { Error(obj != null ? obj.ToString() : ""); }
-            public void Error(string str) {
-                onError?.Invoke(str);
-                onAnyMessage?.Invoke(str);
-            }
-            public void Warning(object obj) { Warning(obj != null ? obj.ToString() : ""); }
-            public void Warning(string str) {
-                onWarning?.Invoke(str);
-                onAnyMessage?.Invoke(str);
-            }
+            public void Log(string str)     { onLog?.Invoke(str);     onAnyMessage?.Invoke(str); }
+            public void Error(string str)   { onError?.Invoke(str);   onAnyMessage?.Invoke(str); }
+            public void Warning(string str) { onWarning?.Invoke(str); onAnyMessage?.Invoke(str); }
             public void Assert(bool condition, string format, params object[] args) {
                 if (condition) return;
                 string message = format;
@@ -31,10 +19,10 @@ namespace NonStandard {
             }
             public Routes() { }
             public Routes(Routes o) {
-                if (o.onLog != null) onLog = (PrintFunc)o.onLog.Clone();
-                if (o.onError != null) onError = (PrintFunc)o.onError.Clone();
-                if (o.onWarning != null) onWarning = (PrintFunc)o.onWarning.Clone();
-                if (o.onAnyMessage != null) onAnyMessage = (PrintFunc)o.onAnyMessage.Clone();
+                if (o.onLog != null)        { onLog =        (PrintFunc)o.onLog.Clone();        }
+                if (o.onError != null)      { onError =      (PrintFunc)o.onError.Clone();      }
+                if (o.onWarning != null)    { onWarning =    (PrintFunc)o.onWarning.Clone();    }
+                if (o.onAnyMessage != null) { onAnyMessage = (PrintFunc)o.onAnyMessage.Clone(); }
             }
         }
         public static Routes _instance;
@@ -49,12 +37,12 @@ namespace NonStandard {
             return r;
         }
 
-        public static void Log(object o) => Route.Log(o);
-        public static void Log(string s) => Route.Log(s);
-        public static void Error(object o) => Route.Error(o);
-        public static void Error(string s) => Route.Error(s);
-        public static void Warning(object o) => Route.Warning(o);
+        public static void Log(string s)     => Route.Log(s);
+        public static void Error(string s)   => Route.Error(s);
         public static void Warning(string s) => Route.Warning(s);
+        public static void Log(object o)     => Route.Log(o != null ? o.ToString() : "");
+        public static void Error(object o)   => Route.Error(o != null ? o.ToString() : "");
+        public static void Warning(object o) => Route.Warning(o != null ? o.ToString() : "");
 
         public static void Assert(bool condition, string format, params object[] args) =>
             Route.Assert(condition, format, args);
