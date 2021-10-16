@@ -2101,8 +2101,8 @@ MonoBehaviour:
     headerUi:collabel, widthOfColumn:100}\r\n{l\xA4:\"speed\", c\xA4:\"txticon\",
     v\xA4:(move.move.speed/5), h\xA4:collabel, w\xA4:30, d\xA4:0.0}\r\n{l\xA4:\"handicraft\",
     c\xA4:\"input\", v\xA4:(data.handicraft), h\xA4:collabel, w\xA4:80, d\xA4:0.0}\r\n{l\xA4:\"activate\",
-    c\xA4:if(name==athlete){btn}else{none}, v\xA4:if(name==athlete){\"as\"+\"k for
-    \\nhelp\"}else{0}, h\xA4:collabel, w\xA4:100, onClick:{DoActivateTrigger()}}\n{l\xA4:\"+\",
+    c\xA4:if(data.mycolor==yellow){btn}else{none}, v\xA4:if(name==athlete){\"as\"+\"k
+    for \\nhelp\"}else{0}, h\xA4:collabel, w\xA4:100, onClick:{DoActivateTrigger()}}\n{l\xA4:\"+\",
     c\xA4:\"none\", v\xA4:null, h\xA4:addcol, w\xA4:30,alwaysLast:1}\r"
   dataPopulator:
     m_PersistentCalls:
@@ -32276,6 +32276,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7731634059116809492, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
+        type: 3}
+      propertyPath: m_Name
+      value: variables
       objectReference: {fileID: 0}
     - target: {fileID: 8825238488467681474, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}

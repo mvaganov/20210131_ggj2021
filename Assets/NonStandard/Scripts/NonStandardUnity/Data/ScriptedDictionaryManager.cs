@@ -1,5 +1,6 @@
 ﻿using NonStandard.Commands;
 using NonStandard.Extension;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -35,6 +36,7 @@ namespace NonStandard.Data {
 		public void Decrement(string name) { mainDictionary.AddTo(name, -1); }
 		public void Increment(Command.Exec e) { Increment(e.tok.GetToken(1).ToString()); }
 		public void Decrement(Command.Exec e) { Decrement(e.tok.GetToken(1).ToString()); }
+		public ScriptedDictionary Find(Func<ScriptedDictionary, bool> predicate) { return dictionaries.Find(predicate); }
 		public void SetString(Command.Exec e) {
 			if (e.tok.tokens.Count <= 1) { e.tok.AddError("setstring missing variable name"); return; }
 			string key = e.tok.GetToken(1).ToString();

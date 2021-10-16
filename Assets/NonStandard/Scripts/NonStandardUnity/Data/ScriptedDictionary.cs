@@ -52,6 +52,11 @@ namespace NonStandard.Data {
 		void ShowChange(){}
 #endif
 		public StringEvent dictionaryTostringChangeListener;
+		public ScriptedDictionary FindOther(string name) {
+			ScriptedDictionaryManager m = Global.Get<ScriptedDictionaryManager>();
+			if (m == null) return null;
+			return m.Find(other => other.name == name);
+		}
 
 		[System.Serializable] public class StringEvent : UnityEvent<string> { }
 

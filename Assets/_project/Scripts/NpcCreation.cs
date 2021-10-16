@@ -30,6 +30,10 @@ public class NpcCreation : MonoBehaviour
 				m.startColor = mat.color;
 			}
 			npc.name = prefab_npcPlayer.name + i;
+			ScriptedDictionary dict = npc.GetComponentInChildren<ScriptedDictionary>();
+			if (dict != null) {
+				dict["mycolor"] = mat.name;
+			}
 			string foundName;
 			if (npcNames.TryGetValue(mat.name, out foundName)) {
 				npc.name = foundName;

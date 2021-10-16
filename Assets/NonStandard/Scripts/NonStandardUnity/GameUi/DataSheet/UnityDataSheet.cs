@@ -324,6 +324,12 @@ namespace NonStandard.GameUi.DataSheet {
 				Udash.ColumnSetting colS = data.columnSettings[c];
 				GameObject fieldUi = null;
 				string columnUiName = colS.data.uiPrefabName.ResolveString(errLog, rowData.obj);
+				if (columnUiName == null) {
+					string errorMessage = "could not resolve column UI name from " + colS.data.uiPrefabName;
+					Show.Log(errorMessage);
+					columnUiName = colS.data.uiPrefabName.ResolveString(errLog, rowData.obj);
+					throw new Exception(errorMessage);
+				}
 				// check if there's a version of it from earlier
 				for (int i = 0; i < unusedColumns.Count; ++i) {
 					if (unusedColumns[i].name.StartsWith(columnUiName)) {

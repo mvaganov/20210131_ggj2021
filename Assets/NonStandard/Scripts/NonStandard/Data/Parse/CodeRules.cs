@@ -350,7 +350,7 @@ namespace NonStandard.Data.Parse {
 			bool missingRightArgument = false;
 			if (e.tokenCount >= 3 && e.Length  > 3) {
 				Token r = e.tokens[2];
-				if (r.IsContextEnding()) { missingRightArgument = true; }
+				if (r.IsContextEnding()) { missingRightArgument = true; } // prevent a right-parenthesis from being read as a valid token
 			} else {
 				missingRightArgument = true;
 			}
@@ -626,7 +626,7 @@ namespace NonStandard.Data.Parse {
 			//Show.Log(e.tokens[0].ToString()+ e.tokens[1].ToString()+ e.tokens[2].ToString()+"~~~"+ lType +" "+left+" . "+rType+" "+right);
 			string name = e.tokens[2].ToString();
 			object val = ReflectionParseExtension.GetValue(left, name, new DefaultString(name));
-			if (val == null) {
+			if (val == null || val is DefaultString) {
 				val = e.tokens[0].ToString()+e.tokens[1]+e.tokens[2];
 			}
 			return val;

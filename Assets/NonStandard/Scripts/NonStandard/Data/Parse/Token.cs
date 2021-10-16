@@ -23,7 +23,7 @@ namespace NonStandard.Data.Parse {
 		public string ToString(string s) { return s.Substring(index, length); }
 
 		public string Stringify() { return GetAsSmallText(); }
-		public override string ToString() { return GetAsSmallText(); }
+		public override string ToString() { return GetAsBasicToken(); }
 		public string ToDebugString() {
 			ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry;
 			if (pce == null) { return Resolve(null, null).ToString(); }
@@ -110,7 +110,7 @@ namespace NonStandard.Data.Parse {
 		}
 		public string GetAsBasicToken() {
 			string src = null;
-			int len = length;
+			int len = length, beginIndex = index;
 			switch (meta) {
 			case string s: src = s; break;
 			case Delim d: return d.text;
@@ -118,9 +118,9 @@ namespace NonStandard.Data.Parse {
 				if (len < 0) {
 					Token end = e.GetEndToken();
 					Token begin = e.GetBeginToken();
-					int start = begin.index;
+					beginIndex = begin.index;
 					string endTokenText = end.GetAsSmallText();
-					len = end.index + endTokenText.Length - start;
+					len = end.index + endTokenText.Length - beginIndex;
 				}
 				while (e != null) {
 					if (e.sourceMeta is string es) {
@@ -131,7 +131,7 @@ namespace NonStandard.Data.Parse {
 				}
 				break;
 			}
-			if (src != null) { return src.Substring(index, len); }
+			if (src != null) { return src.Substring(beginIndex, len); }
 			return null;
 		}
 		public Delim GetAsDelimiter() { return meta as Delim; }
