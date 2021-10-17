@@ -325,7 +325,7 @@ namespace NonStandard.GameUi.DataSheet {
 				GameObject fieldUi = null;
 				string columnUiName = colS.data.uiPrefabName.ResolveString(errLog, rowData.obj);
 				if (columnUiName == null) {
-					string errorMessage = "could not resolve column UI name from " + colS.data.uiPrefabName;
+					string errorMessage = "could not resolve column UI name from " + colS.data.uiPrefabName+"\n"+errLog.GetErrorString();
 					Show.Log(errorMessage);
 					columnUiName = colS.data.uiPrefabName.ResolveString(errLog, rowData.obj);
 					throw new Exception(errorMessage);

@@ -62,11 +62,11 @@ namespace NonStandard.Data.Parse {
 			return true;
 		}
 		protected bool SkipComments(bool incrementAtLeastOnce = false) {
-			ParseRuleSet.Entry e = incrementAtLeastOnce ? ParseRuleSet.Entry.None : null;
+			SyntaxTree syntax = incrementAtLeastOnce ? SyntaxTree.None : null;
 			do {
-				if (e != null && !Increment()) return false;
-				e = Current.Token.GetAsContextEntry();
-			} while (e != null && e.IsComment());
+				if (syntax != null && !Increment()) return false;
+				syntax = Current.Token.GetAsSyntaxNode();
+			} while (syntax != null && syntax.IsComment());
 			return true;
 		}
 
@@ -161,8 +161,8 @@ namespace NonStandard.Data.Parse {
 		}
 		public bool TryParse(Type targetType = null) {
 			Token token = Current.Token;
-			ParseRuleSet.Entry e = token.GetAsContextEntry();
-			if (e != null && e.tokens == Current.tokens) { Increment(); } // skip past the opening bracket
+			SyntaxTree syntax = token.GetAsSyntaxNode();
+			if (syntax != null && syntax.tokens == Current.tokens) { Increment(); } // skip past the opening bracket
 			if (targetType != null) { SetResultType(targetType); }
 			FindInternalType(); // first, check if this has a more correct internal type defined
 			if (resultType == typeof(object)) {
@@ -191,8 +191,8 @@ namespace NonStandard.Data.Parse {
 			if (!SkipComments()) { return true; }
 			while (state.Count > 0 && Current.tokenIndex < Current.tokens.Count) {
 				Token token = Current.Token;
-				ParseRuleSet.Entry e = token.GetAsContextEntry();
-				if (e != null && e.tokens == Current.tokens) {
+				SyntaxTree syntax = token.GetAsSyntaxNode();
+				if (syntax != null && syntax.tokens == Current.tokens) {
 					if (!token.IsContextEnding()) { AddError("unexpected state. we should never see this. ever."); }
 					break;
 				} // found the closing bracket!
@@ -225,19 +225,19 @@ namespace NonStandard.Data.Parse {
 			memberToken = Current.Token;
 			if (SkipStructuredDelimiters(memberToken.GetAsDelimiter())) { memberToken.Invalidate(); return true; }
 			memberId = null;
-			ParseRuleSet.Entry e = memberToken.GetAsContextEntry();
-			if (e != null) {
+			SyntaxTree syntax = memberToken.GetAsSyntaxNode();
+			if (syntax != null) {
 				if (dictionaryAdd == null) {
-					if (e.IsText()) {
-						memberId = e.GetText();
+					if (syntax.IsTextLiteral()) {
+						memberId = syntax.GetText();
 					} else {
-						AddError("unable to parse token (" + e.parseRules.name + "), expected member name for " + resultType);
+						AddError("unable to parse token (" + syntax.rules.name + "), expected member name for " + resultType);
 					}
 				} else {
-					memberId = e.Resolve(tok, scope);// "dictionary member value will be resolved later";
+					memberId = syntax.Resolve(tok, scope);// "dictionary member value will be resolved later";
 				}
-				if (e.tokens == Current.tokens) {
-					Current.tokenIndex += e.tokenCount - 1;
+				if (syntax.tokens == Current.tokens) {
+					Current.tokenIndex += syntax.tokenCount - 1;
 				}
 			} else {
 				memberId = memberToken.GetAsBasicToken();
@@ -281,8 +281,8 @@ namespace NonStandard.Data.Parse {
 		protected void AssignValueToMember() {
 			if (memberValue != null) {
 				switch (memberValue) {
-				case ParseRuleSet.Entry e:
-					memberValue = e.Resolve(tok, scope);
+				case SyntaxTree syntax:
+					memberValue = syntax.Resolve(tok, scope);
 					break;
 				case Token t:
 					if (memberType != typeof(Token)) {
@@ -350,74 +350,78 @@ namespace NonStandard.Data.Parse {
 			if (SkipStructuredDelimiters(meta as Delim)) { return true; }
 			// if we're looking for an unparsed token, we got it! lets go!
 			if (memberType == typeof(Token)) { memberValue = token; return true; }
-			ParseRuleSet.Entry context = meta as ParseRuleSet.Entry;
-			if (context != null) {
-				bool subContextUsingSameList = context.tokens == Current.tokens;
-				if (context.IsText()) {
-					memberValue = context.GetText();
-				} else {
-					int index = Current.tokenIndex;
-					List<Token> parseNext = subContextUsingSameList
-							? Current.tokens.GetRange(index, context.tokenCount)
-							: context.tokens;
-					if (memberType == typeof(Expression)) {
-						Expression expr = new Expression(new List<Token>() { token });
-						if (scope != null) {
-							List<object> resolved = expr.Resolve(tok, scope);
-							if (resolved.Count == 1) {
-								switch (resolved[0]) {
-								case string partiallyResolvedExpressionAsString:
-									expr = new Expression(partiallyResolvedExpressionAsString);
-									break;
-								case Expression partiallyResolvedExpression:
-									expr = partiallyResolvedExpression;
-									break;
-								}
-							}
-							//Show.Log(resolved.JoinToString() + " " + resolved[0].GetType()+ " >><< " + expr+ " " + expr.GetType());
-						}
-						memberValue = expr;
-					} else {
-						if (CodeConvert.IsConvertable(memberType)) {
-							//Show.Log(memberId + " :: " + memberValue);
-							memberValue = context.Resolve(tok, scope);
-						} else {
-							//Show.Log(memberId+" : "+memberValue);
-							if (!CodeConvert.TryParseTokens(memberType, parseNext, ref memberValue, scope, tok)) { return false; }
-						}
-					}
+			switch (meta) {
+			case SyntaxTree syntax: return TryGetValue_Syntax(token, syntax);
+			case string basicString: return TryGetValue_String(token);
+			case TokenSubstitution s: return TryGetValue_TokenSubstitution(token, s);
+			case Delim d:
+				if (memberType == typeof(object)) {
+					memberValue = d;
+					return true;
 				}
-				if (subContextUsingSameList) {
-					Current.tokenIndex += context.tokenCount - 1; // -1 because increment happens after this method
-				}
-				return true;
-			}
-			string s = meta as string;
-			if (s != null) {
-				//memberValue = token.ToString(s);
-				CodeRules.op_ResolveToken(tok, token, scope, out memberValue, out Type _memberType);
-				if (memberType == null || memberValue == null || (!memberType.IsAssignableFrom(memberValue.GetType()) && !CodeConvert.TryConvert(ref memberValue, memberType))) {
-					AddError("unable to convert (" + memberValue + ") to type '" + memberType + "'");
-					return false;
-				}
-				return true;
-			}
-			TokenSubstitution sub = meta as TokenSubstitution;
-			if (sub != null) {
-				memberValue = sub.value;
-				if (!memberType.IsAssignableFrom(memberValue.GetType()) && !CodeConvert.TryConvert(ref memberValue, memberType)) {
-					AddError("unable to convert substitution (" + memberValue + ") to type '" + memberType + "'");
-					return false;
-				}
-				return true;
-			}
-			Delim d = meta as Delim;
-			if (d != null && memberType == typeof(object)) {
-				memberValue = d;
-				return true;
+				break;
 			}
 			AddError("unable to parse token with meta data " + meta);
 			return false;
+		}
+
+		private bool TryGetValue_Syntax(Token token, SyntaxTree syntax) {
+			bool subContextUsingSameList = syntax.tokens == Current.tokens;
+			if (syntax.IsTextLiteral()) {
+				memberValue = syntax.GetText();
+			} else {
+				int index = Current.tokenIndex;
+				List<Token> parseNext = subContextUsingSameList
+						? Current.tokens.GetRange(index, syntax.TokenCount)
+						: syntax.tokens;
+				if (memberType == typeof(Expression)) {
+					Expression expr = new Expression(new List<Token>() { token });
+					if (scope != null) {
+						List<object> resolved = expr.Resolve(tok, scope);
+						if (resolved.Count == 1) {
+							switch (resolved[0]) {
+							case string partiallyResolvedExpressionAsString:
+								expr = new Expression(partiallyResolvedExpressionAsString);
+								break;
+							case Expression partiallyResolvedExpression:
+								expr = partiallyResolvedExpression;
+								break;
+							}
+						}
+						//Show.Log(resolved.JoinToString() + " " + resolved[0].GetType()+ " >><< " + expr+ " " + expr.GetType());
+					}
+					memberValue = expr;
+				} else {
+					if (CodeConvert.IsConvertable(memberType)) {
+						//Show.Log(memberId + " :: " + memberValue);
+						memberValue = syntax.Resolve(tok, scope);
+					} else {
+						//Show.Log(memberId+" : "+memberValue);
+						if (!CodeConvert.TryParseTokens(memberType, parseNext, ref memberValue, scope, tok)) { return false; }
+					}
+				}
+			}
+			if (subContextUsingSameList) {
+				Current.tokenIndex += syntax.TokenCount - 1; // -1 because increment happens after this method
+			}
+			return true;
+		}
+		private bool TryGetValue_String(Token token) {
+			//memberValue = token.ToString(s);
+			CodeRules.op_ResolveToken(tok, token, scope, out memberValue, out Type _memberType);
+			if (memberType == null || memberValue == null || (!memberType.IsAssignableFrom(memberValue.GetType()) && !CodeConvert.TryConvert(ref memberValue, memberType))) {
+				AddError("unable to convert (" + memberValue + ") to type '" + memberType + "'");
+				return false;
+			}
+			return true;
+		}
+		private bool TryGetValue_TokenSubstitution(Token token, TokenSubstitution sub) {
+			memberValue = sub.value;
+			if (!memberType.IsAssignableFrom(memberValue.GetType()) && !CodeConvert.TryConvert(ref memberValue, memberType)) {
+				AddError("unable to convert substitution (" + memberValue + ") to type '" + memberType + "'");
+				return false;
+			}
+			return true;
 		}
 
 		//public static bool TryConvert(Type memberType, List<Token> tokens, ParseRuleSet.Entry context, object scope, Tokenizer tok, ref object memberValue) {

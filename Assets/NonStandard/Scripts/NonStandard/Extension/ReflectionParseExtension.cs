@@ -39,6 +39,33 @@ namespace NonStandard.Extension {
 			}
 			return index;
 		}
+		/// <param name="names">a list of names (a haystack)</param>
+		/// <param name="n">name to find (the needle in the haystack)</param>
+		/// <param name="sorted">if sorted alphabetically, BinarySearch can be used to speed up the search</param>
+		/// <param name="wildcard"></param>
+		/// <returns></returns>
+		public static List<int> FindIndexesWithWildcard(IList<string> names, string n, bool sorted, char wildcard = Wildcard) {
+			if (n.Length == 1 && n[0] == wildcard) {
+				List<int> allIndexes = new List<int>(names.Count);
+				for(int i = 0; i < names.Count; ++i) { allIndexes.Add(i); }
+				return allIndexes;
+			}
+			bool startGiven = n[n.Length - 1] == (wildcard), endGiven = n[0] == (wildcard);
+			if (startGiven && endGiven) { return names.FindIndexes(s => s.Contains(n.Substring(1, n.Length - 2))); }
+			if (endGiven) { n = n.Substring(1); return names.FindIndexes(s => s.EndsWith(n)); }
+			if (startGiven) { n = n.Substring(0, n.Length - 1); }
+			int index = sorted ? names.BinarySearchIndexOf(n) : (startGiven)
+				? names.FindIndex(s => s.StartsWith(n)) : names.IndexOf(n);
+			List<int> indexes = new List<int>();
+			if (startGiven && index < 0) {
+				index = ~index;
+				while (index < names.Count && names[index].StartsWith(n)) {
+					indexes.Add(index);
+					++index;
+				}
+			}
+			return new List<int>();
+		}
 		/// <summary>
 		/// tries to converts text, which might include a wildcard character, into a proper enum value
 		/// </summary>
@@ -55,9 +82,14 @@ namespace NonStandard.Extension {
 			value = Enum.Parse(enumType, enumName);
 			return true;
 		}
-		public static object GetValue(object obj, string variableNamePath, object defaultValue, List<object> out_path = null) {
+		public static object GetValue(object obj, object variableNameOrPath, object defaultValue, List<object> out_path = null) {
 			//Show.Log(variableNamePath);
-			IList<object> vars = variableNamePath.Split(".");
+			IList<object> vars;
+			switch (variableNameOrPath) {
+			case string s: vars = s.Split("."); break;
+			case IList<object> list: vars = list; break;
+			default: vars = new object[] { variableNameOrPath }; break;
+			}
 			return GetValueFromRawPath(obj, vars, defaultValue, out_path);
 		}
 		public static object GetValueFromRawPath(object obj, IList<object> rawPath, object defaultValue = null, List<object> out_compiledPath = null, ITokenErrLog errLog = null) {
@@ -193,6 +225,29 @@ namespace NonStandard.Extension {
 			result = TryGetValue_Object(scope, name, out value, out MemberInfo mi);
 			path = mi;
 			return result;
+		}
+		/// <summary>
+		/// trys to get a member variable based on the name requested. the name can include a wildcard
+		/// </summary>
+		/// <param name="scope">where to get the variable from</param>
+		/// <param name="name">the methods that belong to the given scope</param>
+		/// <param name="value">the found methods</param>
+		/// <returns></returns>
+		public static bool TryGetMethod(object scope, string name, out MethodInfo[] value, char wildcard = Wildcard) {
+			Type scopeType = scope.GetType();
+			if (name.Length > 0 && (name[0] == wildcard || name[name.Length - 1] == wildcard)) {
+				MethodInfo[] methods = scopeType.GetMethods();
+				string[] names = Array.ConvertAll(methods, m => m.Name);
+				List<int> indexes = FindIndexesWithWildcard(names, name, false, wildcard);
+				value = new MethodInfo[indexes.Count];
+				for(int i = 0; i < indexes.Count; ++i) { value[i] = methods[indexes[i]]; }
+				if (value.Length > 0) { return true; }
+			} else {
+				IList<MethodInfo> methods = scopeType.GetMethods().FindAll(m=>m.Name == name);
+				value = methods.SubList();
+				if (methods.Count > 0) { return true; }
+			}
+			return false;
 		}
 		public static bool TrySetValue(object scope, object keyName, object value, out object path) {
 			Type scopeType = scope.GetType();

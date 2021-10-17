@@ -113,20 +113,17 @@ namespace NonStandard.Data.Parse {
 			this.rows = toCopy.rows.Copy();
 		}
 		public Token GetMasterToken() {
-			ParseRuleSet.Entry e = new ParseRuleSet.Entry();
-			e.tokens = tokens;
-			e.tokenStart = 0;
-			e.tokenCount = tokens.Count;
-			Token t = new Token(e, 0, str.Length);
+			SyntaxTree syntax = new SyntaxTree(tokens, 0, tokens.Count);
+			Token t = new Token(syntax, 0, str.Length);
 			return t;
 		}
 		public void FilePositionOf(Token token, out int row, out int col) {
 			ParseError.FilePositionOf(token, rows, out row, out col);
 		}
 		public string FilePositionOf(Token token) {
-			List<ParseRuleSet.Entry> traversed = new List<ParseRuleSet.Entry>();
+			List<SyntaxTree> traversed = new List<SyntaxTree>();
 			while (!token.IsValid) {
-				ParseRuleSet.Entry e = token.GetAsContextEntry();
+				SyntaxTree e = token.GetAsSyntaxNode();
 				if (e == null || traversed.IndexOf(e) >= 0) return "???";
 				traversed.Add(e);
 				token = e.tokens[0];
@@ -179,14 +176,14 @@ namespace NonStandard.Data.Parse {
 				//	return;
 				//}
 				//path.Add(t);
-				ParseRuleSet.Entry e = t.GetAsContextEntry();
+				SyntaxTree e = t.GetAsSyntaxNode();
 				if (e != null) {
 					//if ((r = path.IndexOf(e.tokens)) >= 0) {
 					//	string message = "/* recurse " + (path.Count - r) + " */";
 					//	sb.Append(message);
 					//} else
 					if (e.tokens != tokens) {
-						ParseRuleSet.Entry prevEntry = i > 0 ? tokens[i - 1].GetAsContextEntry() : null;
+						SyntaxTree prevEntry = i > 0 ? tokens[i - 1].GetAsSyntaxNode() : null;
 						if (indent != null) {
 							if (prevEntry != null && prevEntry.tokens != tokens) {
 								sb.Append(indent);
@@ -222,7 +219,7 @@ namespace NonStandard.Data.Parse {
 		protected void Tokenize(ParseRuleSet parseRules = null, int index = 0, Func<Tokenizer, bool> condition = null) {
 			tokenStrings.Clear();
 			if (string.IsNullOrEmpty(str)) return;
-			List<ParseRuleSet.Entry> contextStack = new List<ParseRuleSet.Entry>();
+			List<SyntaxTree> contextStack = new List<SyntaxTree>();
 			if (parseRules == null) {
 				parseRules = CodeRules.Default;
 			}
@@ -276,7 +273,7 @@ namespace NonStandard.Data.Parse {
 			}
 			return false;
 		}
-		private void HandleDelimiter(Delim delim, ref int index,  List<ParseRuleSet.Entry> contextStack, 
+		private void HandleDelimiter(Delim delim, ref int index,  List<SyntaxTree> syntaxStack, 
 			ref ParseRuleSet currentContext, ParseRuleSet defaultContext) {
 			Token delimToken = new Token(delim, index, delim.text.Length);
 			if (delim.parseRule != null) {
@@ -294,46 +291,46 @@ namespace NonStandard.Data.Parse {
 				index += delim.text.Length - 1;
 			}
 			DelimCtx dcx = delim as DelimCtx;
-			ParseRuleSet.Entry endedContext = null;
+			SyntaxTree endedSyntax = null;
 			if (dcx != null) {
-				if (contextStack.Count > 0 && dcx.Context == currentContext && dcx.isEnd) {
-					endedContext = contextStack[contextStack.Count - 1];
-					endedContext.endDelim = dcx;
-					delimToken.meta = endedContext;
-					endedContext.tokenCount = (tokens.Count - endedContext.tokenStart) + 1;
-					contextStack.RemoveAt(contextStack.Count - 1);
-					if (contextStack.Count > 0) {
-						currentContext = contextStack[contextStack.Count - 1].parseRules;
+				if (syntaxStack.Count > 0 && dcx.Context == currentContext && dcx.isEnd) {
+					endedSyntax = syntaxStack[syntaxStack.Count - 1];
+					endedSyntax.endDelim = dcx;
+					delimToken.meta = endedSyntax;
+					endedSyntax.tokenCount = (tokens.Count - endedSyntax.tokenStart) + 1;
+					syntaxStack.RemoveAt(syntaxStack.Count - 1);
+					if (syntaxStack.Count > 0) {
+						currentContext = syntaxStack[syntaxStack.Count - 1].rules;
 					} else {
 						currentContext = defaultContext;
 					}
 				}
-				if (endedContext == null && dcx.isStart) {
-					ParseRuleSet.Entry parentCntx = (contextStack.Count > 0) ? contextStack[contextStack.Count - 1] : null;
-					ParseRuleSet.Entry newContext = dcx.Context.GetEntry(tokens, tokens.Count, str, parentCntx);
+				if (endedSyntax == null && dcx.isStart) {
+					SyntaxTree parentCntx = (syntaxStack.Count > 0) ? syntaxStack[syntaxStack.Count - 1] : null;
+					SyntaxTree newContext = dcx.Context.GetEntry(tokens, tokens.Count, str, parentCntx);
 					newContext.beginDelim = dcx;
 					currentContext = dcx.Context;
 					delimToken.meta = newContext;
-					contextStack.Add(newContext);
+					syntaxStack.Add(newContext);
 				}
 			}
 			tokens.Add(delimToken);
 			tokenStrings.Add(delim.text);
-			if (endedContext != null) { ExtractContextAsSubTokenList(endedContext); }
+			if (endedSyntax != null) { ExtractContextAsSubTokenList(endedSyntax); }
 		}
 		private void FinalTokenCleanup() {
 			for (int i = 0; i < tokens.Count; ++i) {
 				// any unfinished contexts must end. the last place they could end is the end of this string
-				ParseRuleSet.Entry e = tokens[i].GetAsContextEntry();
-				if (e != null && e.tokenCount < 0) {
-					e.tokenCount = tokens.Count - e.tokenStart;
-					ExtractContextAsSubTokenList(e);
-					if (e.parseRules != CodeRules.CommentLine) { // this is an error, unless it's a comment
+				SyntaxTree syntax = tokens[i].GetAsSyntaxNode();
+				if (syntax != null && syntax.TokenCount < 0) {
+					syntax.tokenCount = tokens.Count - syntax.tokenStart;
+					ExtractContextAsSubTokenList(syntax);
+					if (syntax.rules != CodeRules.CommentLine) { // this is an error, unless it's a comment
 						errors.Add(new ParseError(tokens[i], rows, 
-							$"missing closing token after {e.GetBeginToken().ToString().StringifySmall()}"));
+							$"missing closing token after {syntax.GetBeginToken().ToString().StringifySmall()}"));
 					}
 					// close any unfinished contexts inside of this context too!
-					tokens = e.tokens;
+					tokens = syntax.tokens;
 					i = 0;
 				}
 			}
@@ -347,7 +344,7 @@ namespace NonStandard.Data.Parse {
 		protected void BreadthFirstSearch(List<Token> travelLog, ref int index) {
 			while(index < travelLog.Count) {
 				Token iter = travelLog[index];
-				ParseRuleSet.Entry e = iter.GetAsContextEntry();
+				SyntaxTree e = iter.GetAsSyntaxNode();
 				if (e != null) {
 					for (int i = 0; i < e.tokens.Count; ++i) {
 						Token token = e.tokens[i];
@@ -355,7 +352,7 @@ namespace NonStandard.Data.Parse {
 						if (inTheList >= 0 && inTheList < index && travelLog[inTheList].IsValid) {
 							throw new Exception("recursion! " + token.index + " " + token);
 						}
-						if (inTheList < 0 && token.GetAsContextEntry() != e) {
+						if (inTheList < 0 && token.GetAsSyntaxNode() != e) {
 							travelLog.Add(token);
 						}
 					}
@@ -386,7 +383,7 @@ namespace NonStandard.Data.Parse {
 			do {
 				operatorWasLostInTheShuffle = false;
 				for (int i = 0; i < paths.Count; ++i) {
-					ParseRuleSet.Entry pathNode = null;
+					SyntaxTree pathNode = null;
 					Token t = GetTokenAt(tokens, paths[i].path, ref pathNode);
 					if (t == Token.None) {
 						t = pathNode?.GetBeginToken() ?? this.tokens[0];
@@ -404,7 +401,7 @@ namespace NonStandard.Data.Parse {
 					List<Token> listWhereOpWasFound = pathNode != null ? pathNode.tokens : tokens;
 					//Context.Entry opEntry = 
 						op.isSyntaxValid.Invoke(this, listWhereOpWasFound, paths[i].path[paths[i].path.Length - 1]);
-					if (pathNode != null && pathNode.tokenCount != pathNode.tokens.Count) {
+					if (pathNode != null && pathNode.TokenCount != pathNode.tokens.Count) {
 						pathNode.tokenCount = pathNode.tokens.Count;
 					}
 					finishedTokens.Add(t.index);
@@ -417,22 +414,22 @@ namespace NonStandard.Data.Parse {
 		}
 		protected string PrintTokenPaths(IList<int[]> paths) {
 			return paths.JoinToString("\n", arr => {
-				ParseRuleSet.Entry e = null;
+				SyntaxTree e = null;
 				Token t = GetTokenAt(tokens, arr, ref e);
 				return arr.JoinToString(", ") + ":" + t + " @" + ParseError.FilePositionOf(t, rows);
 			});
 		}
-		Token GetTokenAt(List<Token> currentPath, IList<int> index, ref ParseRuleSet.Entry lastPathNode) {
+		Token GetTokenAt(List<Token> currentPath, IList<int> index, ref SyntaxTree lastPathNode) {
 			int i = index[0];
 			if (i < 0 || i >= currentPath.Count) { return Token.None; }
 			Token t = currentPath[i];
 			if (index.Count == 1) return t;
 			index = index.GetRange(1, index.Count - 1);
-			lastPathNode = t.GetAsContextEntry();
+			lastPathNode = t.GetAsSyntaxNode();
 			return GetTokenAt(lastPathNode.tokens, index, ref lastPathNode);
 		}
 		struct TokenPath {
-			public int[] path; public Token token; public ParseRuleSet.Entry pathNode;
+			public int[] path; public Token token; public SyntaxTree pathNode;
 		}
 		List<TokenPath> FindTokenPaths(Func<Token, bool> predicate, bool justOne = false) {
 			if (tokens.Count == 0) return new List<TokenPath>();
@@ -441,13 +438,13 @@ namespace NonStandard.Data.Parse {
 			List<TokenPath> paths = new List<TokenPath>();
 			path.Add(tokens);
 			position.Add(0);
-			ParseRuleSet.Entry e = null;
+			SyntaxTree e = null;
 			while (position[position.Count-1] < path[path.Count - 1].Count) {
 				List<Token> currentTokens = path[path.Count - 1];
 				int currentIndex = position[position.Count - 1];
 				Token token = currentTokens[currentIndex];
 				if (predicate(token)) { paths.Add(new TokenPath { path = position.ToArray(), token = token, pathNode = e }); }
-				e = token.GetAsContextEntry();
+				e = token.GetAsSyntaxNode();
 				bool incremented = false;
 				if(e != null) {
 					if (currentTokens != e.tokens) {
@@ -476,8 +473,8 @@ namespace NonStandard.Data.Parse {
 			}
 			return paths;
 		}
-		internal void ExtractContextAsSubTokenList(ParseRuleSet.Entry entry) {
-			if(entry.tokenCount <= 0) { throw new Exception("what just happened?"); }
+		internal void ExtractContextAsSubTokenList(SyntaxTree entry) {
+			if(entry.TokenCount <= 0) { throw new Exception("what just happened?"); }
 			int indexWhereItHappens = entry.tokenStart;
 			int limit = entry.tokenStart + entry.tokenCount;
 			if (entry.tokenStart < 0 || entry.tokenCount < 0 || limit > entry.tokens.Count) {
@@ -489,7 +486,7 @@ namespace NonStandard.Data.Parse {
 			} catch {
 				Show.Log("oh no! !!!!");
 			}
-			int index = subTokens.FindIndex(t => t.GetAsContextEntry() == entry);
+			int index = subTokens.FindIndex(t => t.GetAsSyntaxNode() == entry);
 			entry.RemoveTokenRange(entry.tokenStart, entry.tokenCount - 1);
 			Token entryToken = subTokens[index];
 			entryToken.Invalidate();
@@ -500,7 +497,7 @@ namespace NonStandard.Data.Parse {
 			entry.tokenCount = subTokens.Count;
 			// adjust subtoken lists along with this new list
 			for(int i = 0; i < subTokens.Count; ++i) {
-				ParseRuleSet.Entry e = subTokens[i].GetAsContextEntry();
+				SyntaxTree e = subTokens[i].GetAsSyntaxNode();
 				if(e != null && e.tokenStart != 0) {
 					e.tokens = subTokens;
 					e.tokenStart -= oldStart;

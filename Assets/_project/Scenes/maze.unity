@@ -2101,9 +2101,10 @@ MonoBehaviour:
     headerUi:collabel, widthOfColumn:100}\r\n{l\xA4:\"speed\", c\xA4:\"txticon\",
     v\xA4:(move.move.speed/5), h\xA4:collabel, w\xA4:30, d\xA4:0.0}\r\n{l\xA4:\"handicraft\",
     c\xA4:\"input\", v\xA4:(data.handicraft), h\xA4:collabel, w\xA4:80, d\xA4:0.0}\r\n{l\xA4:\"activate\",
-    c\xA4:if(data.mycolor==yellow){btn}else{none}, v\xA4:if(name==athlete){\"as\"+\"k
-    for \\nhelp\"}else{0}, h\xA4:collabel, w\xA4:100, onClick:{DoActivateTrigger()}}\n{l\xA4:\"+\",
-    c\xA4:\"none\", v\xA4:null, h\xA4:addcol, w\xA4:30,alwaysLast:1}\r"
+    c\xA4:if(((data.GetVars(\"variables\")).(\"{0}Given\"%\"yellow\")) > 0){btn}else{none},
+    v\xA4:if(name==athlete){\"as\"+\"k for \\nhelp\"}else{0}, h\xA4:collabel, w\xA4:100,
+    onClick:{DoActivateTrigger()}}\n{l\xA4:\"+\", c\xA4:\"none\", v\xA4:null, h\xA4:addcol,
+    w\xA4:30,alwaysLast:1}\r"
   dataPopulator:
     m_PersistentCalls:
       m_Calls:
@@ -3996,7 +3997,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u200B"
+  m_text: Option A
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -31947,6 +31948,18 @@ PrefabInstance:
       propertyPath: m_SizeDelta.x
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2784749141738171664, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
+        type: 3}
+      propertyPath: values
+      value: 'name"the player"
+
+        yellowGiven:0'
+      objectReference: {fileID: 0}
+    - target: {fileID: 2784749141738171664, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
+        type: 3}
+      propertyPath: parseResults
+      value: "{\n  name : \"the player\",\n  yellowGiven : 0\n}"
+      objectReference: {fileID: 0}
     - target: {fileID: 5045296447557990786, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -32255,7 +32268,7 @@ PrefabInstance:
     - target: {fileID: 5050782023395414248, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
       propertyPath: m_Name
-      value: player character
+      value: player
       objectReference: {fileID: 0}
     - target: {fileID: 5189839217934239476, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}

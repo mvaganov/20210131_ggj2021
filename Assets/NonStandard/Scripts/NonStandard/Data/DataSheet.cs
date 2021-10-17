@@ -197,7 +197,7 @@ namespace NonStandard.Data {
 				return true;
 			}
 			public static bool ResolveToNonIfStatement(object thing) {
-				if (thing is ParseRuleSet.Entry e && e.parseRules == CodeRules.IfStatement) { return false; } // IfStatement code rules are not "resolved enough"
+				if (thing is SyntaxTree syntax && syntax.rules == CodeRules.IfStatement) { return false; } // IfStatement code rules are not "resolved enough"
 				return true; // get the first thing that isn't an if-statement
 			}
 			/// <summary>
@@ -209,8 +209,8 @@ namespace NonStandard.Data {
 			/// <param name="checkOnly">if true, will not fully resolve the token, only identify that it needs to be resolved later</param>
 			/// <returns></returns>
 			public static bool ResolveConditionalFilter(ref Token fieldToProcess, ITokenErrLog errLog, object scope, bool checkOnly = false) {
-				ParseRuleSet.Entry conditionalLogic = fieldToProcess.GetAsContextEntry();
-				if (conditionalLogic != null && conditionalLogic.parseRules == CodeRules.IfStatement) {
+				SyntaxTree conditionalLogic = fieldToProcess.GetAsSyntaxNode();
+				if (conditionalLogic != null && conditionalLogic.rules == CodeRules.IfStatement) {
 					if (!checkOnly) { return true; }
 					//fieldToProcess.Resolve(errLog, scope, ResolveToNonIfStatement);
 					object result = conditionalLogic.Resolve(errLog, scope, ResolveToNonIfStatement);
@@ -231,7 +231,7 @@ namespace NonStandard.Data {
 				}
 				if (errLog != null && errLog.HasError()) { return; }
 				List<Token> allTokens = new List<Token>();
-				bool isValidEditableField = TokenOnlyContains(fieldToProcess, new ParseRuleSet[] { 
+				bool isValidEditableField = TokenOnlyContainsSyntax(fieldToProcess, new ParseRuleSet[] { 
 					CodeRules.Expression, CodeRules.MembershipOperator, CodeRules.SquareBrace }, allTokens);
 				//StringBuilder sb = new StringBuilder();
 				//sb.Append(fieldToken.GetAsSmallText() + " " + isValidEditableField + "\n");
@@ -250,8 +250,8 @@ namespace NonStandard.Data {
 				//sb.Clear();
 				editPath = new List<object>();
 				for(int i = 0; i < allTokens.Count; ++i) {
-					ParseRuleSet.Entry pc = allTokens[i].meta as ParseRuleSet.Entry;
-					if (pc != null) continue;
+					SyntaxTree syntax = allTokens[i].meta as SyntaxTree;
+					if (syntax != null) continue;
 					editPath.Add(allTokens[i]);
 					//sb.Append(allTokens[i].GetAsSmallText()+"\n");
 				}
@@ -266,13 +266,13 @@ namespace NonStandard.Data {
 			/// <param name="validParserRules"></param>
 			/// <param name="allTokens">if not null, will put all tokens within the main token argument into this list as per <see cref="Token.FlattenInto(List{Token})"/></param>
 			/// <returns></returns>
-			public bool TokenOnlyContains(Token token, IList<ParseRuleSet> validParserRules, List<Token> allTokens = null) {
+			public bool TokenOnlyContainsSyntax(Token token, IList<ParseRuleSet> validParserRules, List<Token> allTokens = null) {
 				if (allTokens == null) allTokens = new List<Token>();
 				token.FlattenInto(allTokens);
 				for (int i = 0; i < allTokens.Count; ++i) {
-					ParseRuleSet.Entry pc = allTokens[i].meta as ParseRuleSet.Entry;
-					if (pc == null) continue;
-					if (validParserRules.IndexOf(pc.parseRules) < 0) { return false; }
+					SyntaxTree syntax = allTokens[i].meta as SyntaxTree;
+					if (syntax == null) continue;
+					if (validParserRules.IndexOf(syntax.rules) < 0) { return false; }
 				}
 				return true;
 			}

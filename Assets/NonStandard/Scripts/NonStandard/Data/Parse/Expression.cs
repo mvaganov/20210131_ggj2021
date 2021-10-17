@@ -11,7 +11,7 @@ namespace NonStandard.Data.Parse {
 			tokens = tok.tokens;
 		}
 		public override string ToString() {
-			return ParseRuleSet.Entry.PrintAll(tokens);
+			return SyntaxTree.PrintAll(tokens);
 		}
 		public string Stringify() { return ToString(); }
 		public string DebugPrint(int depth = 0, string indent = "  ", string separator = ", ") {
@@ -19,14 +19,14 @@ namespace NonStandard.Data.Parse {
 		}
 		public List<object> Resolve(ITokenErrLog errLog, object scope = null) {
 			List<object> results = new List<object>();
-			ParseRuleSet.Entry.ResolveTerms(errLog, scope, tokens, 0, tokens.Count, results);
+			SyntaxTree.ResolveTerms(errLog, scope, tokens, 0, tokens.Count, results);
 			return results;
 		}
 
 		public bool TryResolve<T>(out T value, Tokenizer tok, object scope = null) {
 			List<object> results = new List<object>();
 			//Show.Log(Tokenizer.DebugPrint(tokens));
-			ParseRuleSet.Entry.ResolveTerms(tok, scope, tokens, 0, tokens.Count, results);
+			SyntaxTree.ResolveTerms(tok, scope, tokens, 0, tokens.Count, results);
 			//Show.Log(results.Join("]["));
 			if(results == null || results.Count != 1) {
 				tok.AddError(-1, "missing results");

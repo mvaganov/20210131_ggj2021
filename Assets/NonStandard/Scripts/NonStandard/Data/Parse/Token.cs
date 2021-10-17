@@ -9,7 +9,7 @@ namespace NonStandard.Data.Parse {
 		/// <summary>
 		/// if this field is a different type, it changes the behavior of this class in dramatic and meaningful ways
 		/// <see cref="string"/> - means this is some kind of basic string, either a string literal, or an unescaped 'probably a string' situation. these could be a variable token that should be resolved later, when better context is given
-		/// <see cref="ParseRuleSet.Entry"/> - means this token is a container of other tokens. things inside of parenthesis, square braces, quotes, etc. binary operators also fall into this category.
+		/// <see cref="SyntaxTree"/> - means this token is a container of other tokens. things inside of parenthesis, square braces, quotes, etc. binary operators also fall into this category.
 		/// <see cref="Delim"/> - means this token is a standard piece of syntax, like a constant, or a default type
 		/// <see cref="TokenSubstitution"/> - means this token should have it's value semantically replaced by <see cref="TokenSubstitution.value"/>, even though it is literally a sequence of characters. used when resolving alphanumeric tokens into numbers, enums, or constants
 		/// </summary>
@@ -18,6 +18,13 @@ namespace NonStandard.Data.Parse {
 		public Token(string text) { this.meta = text; index = 0; length = text.Length; }
 		private static Token _None = new Token(null, -1, -1);
 		public static Token None => _None;
+		/// <summary>
+		/// a token can be valid without meta data, as a simple marker. but if it has invalid marks, and no data, it's bad.
+		/// </summary>
+		public bool IsValid { get { return index >= 0 && length >= 0; } }
+		public bool IsSimpleString { get { return index >= 0 && length >= 0 && 
+					(meta is string || meta is SyntaxTree pce && pce.TextRaw != null); } }
+		public bool IsDelim { get { return meta is Delim; } }
 		public int GetBeginIndex() { return index; }
 		public int GetEndIndex() { return index + length; }
 		public string ToString(string s) { return s.Substring(index, length); }
@@ -25,13 +32,13 @@ namespace NonStandard.Data.Parse {
 		public string Stringify() { return GetAsSmallText(); }
 		public override string ToString() { return GetAsBasicToken(); }
 		public string ToDebugString() {
-			ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry;
+			SyntaxTree pce = meta as SyntaxTree;
 			if (pce == null) { return Resolve(null, null).ToString(); }
 			Delim d = pce.sourceMeta as Delim;
 			if(d != null) { return d.ToString(); }
 			if(IsValid) return ToString(pce.TextRaw);
-			string output = pce.parseRules.name;
-			if (pce.IsText()) {
+			string output = pce.rules.name;
+			if (pce.IsTextLiteral()) {
 				output += "(" + pce.GetText() + ")";
 			}
 			return output;
@@ -43,14 +50,14 @@ namespace NonStandard.Data.Parse {
 			if (sb == null) { sb = new StringBuilder(); }
 			sb.Append(StringExtension.Indentation(depth, "  "));
 			sb.Append(meta.GetType().ToString() + ":" + GetAsSmallText()+"@"+index);
-			ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry;
-			if (pce != null) {
-				sb.Append(pce.parseRules.name);
+			SyntaxTree syntax = meta as SyntaxTree;
+			if (syntax != null) {
+				sb.Append(syntax.rules.name);
 			}
 			sb.Append("\n");
-			if (pce != null) {
-				for (int i = 0; i < pce.tokenCount; ++i) {
-					Token t = pce.tokens[pce.tokenStart + i];
+			if (syntax != null) {
+				for (int i = 0; i < syntax.TokenCount; ++i) {
+					Token t = syntax.GetToken(i);
 					if (t.index == index && t.meta.GetType() == meta.GetType()) continue;
 					t.DebugOut(sb, depth + 1, recursionGuard);
 				}
@@ -62,10 +69,10 @@ namespace NonStandard.Data.Parse {
 		public void FlattenInto(List<Token> tokens) {
 			if (tokens.Contains(this)) { return; }
 			tokens.Add(this);
-			ParseRuleSet.Entry pce = meta as ParseRuleSet.Entry;
-			if(pce != null) {
-				for(int i = 0; i < pce.tokenCount; ++i) {
-					Token t = pce.tokens[pce.tokenStart + i];
+			SyntaxTree syntax = meta as SyntaxTree;
+			if(syntax != null) {
+				for(int i = 0; i < syntax.TokenCount; ++i) {
+					Token t = syntax.GetToken(i);
 					// binary operators insert a copy of themselves (but not themselves exactly) as the middle of 3 tokens
 					if (t.index == index && t.meta.GetType() == meta.GetType()) { continue; }
 					t.FlattenInto(tokens);
@@ -90,7 +97,7 @@ namespace NonStandard.Data.Parse {
 			}
 			case TokenSubstitution ss: return ss.value;
 			case Delim d: return d.text;
-			case ParseRuleSet.Entry pce: return pce.Resolve(tok, scope, isItResolvedEnough);
+			case SyntaxTree pce: return pce.Resolve(tok, scope, isItResolvedEnough);
 			}
 			throw new DecoderFallbackException();
 		}
@@ -100,7 +107,7 @@ namespace NonStandard.Data.Parse {
 			return result.ToString();
 		}
 		public string GetAsSmallText() {
-			ParseRuleSet.Entry e = GetAsContextEntry();
+			SyntaxTree e = GetAsSyntaxNode();
 			if (e != null) {
 				if (IsContextBeginning()) { return e.beginDelim.ToString(); }
 				if (IsContextEnding()) { return e.endDelim.ToString(); }
@@ -114,7 +121,7 @@ namespace NonStandard.Data.Parse {
 			switch (meta) {
 			case string s: src = s; break;
 			case Delim d: return d.text;
-			case ParseRuleSet.Entry e:
+			case SyntaxTree e:
 				if (len < 0) {
 					Token end = e.GetEndToken();
 					Token begin = e.GetBeginToken();
@@ -135,34 +142,27 @@ namespace NonStandard.Data.Parse {
 			return null;
 		}
 		public Delim GetAsDelimiter() { return meta as Delim; }
-		public ParseRuleSet.Entry GetAsContextEntry() { return meta as ParseRuleSet.Entry; }
+		public SyntaxTree GetAsSyntaxNode() { return meta as SyntaxTree; }
 		public List<Token> GetTokenSublist() {
-			ParseRuleSet.Entry e = GetAsContextEntry();
+			SyntaxTree e = GetAsSyntaxNode();
 			if(e != null) {
 				return e.tokens;
 			}
 			return null;
 		}
 		public bool IsContextBeginning() {
-			ParseRuleSet.Entry ctx = GetAsContextEntry(); if (ctx != null) { return ctx.GetBeginToken() == this; }
+			SyntaxTree ctx = GetAsSyntaxNode(); if (ctx != null) { return ctx.GetBeginToken() == this; }
 			return false;
 		}
 		public bool IsContextEnding() {
-			ParseRuleSet.Entry ctx = GetAsContextEntry(); if (ctx != null) { return ctx.GetEndToken() == this; }
+			SyntaxTree ctx = GetAsSyntaxNode(); if (ctx != null) { return ctx.GetEndToken() == this; }
 			return false;
 		}
 		public bool IsContextBeginningOrEnding() {
-			ParseRuleSet.Entry ctx = GetAsContextEntry();
+			SyntaxTree ctx = GetAsSyntaxNode();
 			if (ctx != null) { return ctx.GetEndToken() == this || ctx.GetBeginToken() == this; }
 			return false;
 		}
-		/// <summary>
-		/// a token can be valid without meta data, as a simple marker. but if it has invalid marks, and no data, it's bad.
-		/// </summary>
-		public bool IsValid { get { return index >= 0 && length >= 0; } }
-		public bool IsSimpleString { get { return index >= 0 && length >= 0 && 
-					(meta is string || meta is ParseRuleSet.Entry pce && pce.TextRaw != null); } }
-		public bool IsDelim { get { return meta is Delim; } }
 		public void Invalidate() { length = -1; }
 		public bool Equals(Token other) { return index == other.index && length == other.length && meta == other.meta; }
 		public override bool Equals(object obj) { if (obj is Token) return Equals((Token)obj); return false; }

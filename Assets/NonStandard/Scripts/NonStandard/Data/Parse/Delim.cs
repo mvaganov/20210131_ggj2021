@@ -19,13 +19,13 @@ namespace NonStandard.Data.Parse {
 		}
 	}
 	public class DelimOp : Delim {
-		public delegate object TokenResolver(ITokenErrLog errLog, ParseRuleSet.Entry ruleContext, object variableContext, ResolvedEnoughDelegate isItResolvedEnough);
-		public delegate ParseRuleSet.Entry SyntaxContextGetter(Tokenizer tokenizer, List<Token> tokens, int index);
+		public delegate object TokenResolver(ITokenErrLog errLog, SyntaxTree syntax, object variableContext, ResolvedEnoughDelegate isItResolvedEnough);
+		public delegate SyntaxTree SyntaxGenerator(Tokenizer tokenizer, List<Token> tokens, int index);
 
 		public int order;
-		public SyntaxContextGetter isSyntaxValid = null;
+		public SyntaxGenerator isSyntaxValid = null;
 		public TokenResolver resolve = null;
-		public DelimOp(string delim, string name = null, string desc = null, ParseRule parseRule = null, SyntaxRequirement addReq = null, int order = 100, SyntaxContextGetter syntax = null, TokenResolver resolve = null, bool printable = true, bool breaking = true)
+		public DelimOp(string delim, string name = null, string desc = null, ParseRule parseRule = null, SyntaxRequirement addReq = null, int order = 100, SyntaxGenerator syntax = null, TokenResolver resolve = null, bool printable = true, bool breaking = true)
 			: base(delim, name, desc, parseRule, addReq, printable, breaking) {
 			this.order = order; isSyntaxValid = syntax; this.resolve = resolve;
 		}

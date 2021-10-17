@@ -35,37 +35,37 @@ namespace NonStandard.Data.Parse {
 		public static Delim[] _instruction_finished_delimiter_ignore_rest = new Delim[] { new Delim(";", parseRule: IgnoreTheRestOfThis) };
 		public static Delim[] _list_item_delimiter = new Delim[] { "," };
 		public static Delim[] _membership_operator = new Delim[] {
-			new DelimOp(".", "member",syntax:CodeRules.opinit_mem,resolve:CodeRules.op_member, order:10),
-			new DelimOp("->", "pointee",syntax:CodeRules.opinit_mem,resolve:CodeRules.op_member, order:11),
-			new DelimOp("::", "scope resolution",syntax:CodeRules.opinit_mem,resolve:CodeRules.op_member, order:12),
-			new DelimOp("?.", "null conditional",syntax:CodeRules.opinit_mem,resolve:CodeRules.op_member, order:13)
+			new DelimOp(".", "member",syntax:CodeRules.syntax_mem,resolve:CodeRules.op_member, order:10),
+			new DelimOp("->", "pointee",syntax:CodeRules.syntax_mem,resolve:CodeRules.op_member, order:11),
+			new DelimOp("::", "scope resolution",syntax:CodeRules.syntax_mem,resolve:CodeRules.op_member, order:12),
+			new DelimOp("?.", "null conditional",syntax:CodeRules.syntax_mem,resolve:CodeRules.op_member, order:13)
 		};
 		public static Delim[] _conditional_operator = new Delim[] {
-			new DelimOp("if", "if statement",syntax:CodeRules.opinit_if_,resolve:CodeRules.op_if_statement, order:10, breaking:false),
+			new DelimOp("if", "if statement",syntax:CodeRules.syntax_if_,resolve:CodeRules.op_if_statement, order:10, breaking:false),
 		};
 		public static Delim[] _prefix_unary_operator = new Delim[] { "++", "--", "!", "-", "~" };
 		public static Delim[] _postfix_unary_operator = new Delim[] { "++", "--" };
 		public static Delim[] _binary_operator = new Delim[] { "&", "|", "<<", ">>", "^" };
 		// https://en.wikipedia.org/wiki/Order_of_operations#:~:text=In%20mathematics%20and%20computer%20programming,evaluate%20a%20given%20mathematical%20expression.
 		public static Delim[] _binary_logic_operatpor = new DelimOp[] {
-			new DelimOp("==",syntax:CodeRules.opinit_equ,resolve:CodeRules.op_equ, order:70),
-			new DelimOp("!=",syntax:CodeRules.opinit_neq,resolve:CodeRules.op_neq, order:71),
-			new DelimOp("<", syntax:CodeRules.opinit_lt_,resolve:CodeRules.op_lt_, order:60),
-			new DelimOp(">", syntax:CodeRules.opinit_gt_,resolve:CodeRules.op_gt_, order:61),
-			new DelimOp("<=",syntax:CodeRules.opinit_lte,resolve:CodeRules.op_lte, order:62),
-			new DelimOp(">=",syntax:CodeRules.opinit_gte,resolve:CodeRules.op_gte, order:63),
-			new DelimOp("&&",syntax:CodeRules.opinit_and,resolve:CodeRules.op_and, order:110),
-			new DelimOp("||",syntax:CodeRules.opinit_or_,resolve:CodeRules.op_or_, order:120)
+			new DelimOp("==",syntax:CodeRules.syntax_equ,resolve:CodeRules.op_equ, order:70),
+			new DelimOp("!=",syntax:CodeRules.syntax_neq,resolve:CodeRules.op_neq, order:71),
+			new DelimOp("<", syntax:CodeRules.syntax_lt_,resolve:CodeRules.op_lt_, order:60),
+			new DelimOp(">", syntax:CodeRules.syntax_gt_,resolve:CodeRules.op_gt_, order:61),
+			new DelimOp("<=",syntax:CodeRules.syntax_lte,resolve:CodeRules.op_lte, order:62),
+			new DelimOp(">=",syntax:CodeRules.syntax_gte,resolve:CodeRules.op_gte, order:63),
+			new DelimOp("&&",syntax:CodeRules.syntax_and,resolve:CodeRules.op_and, order:110),
+			new DelimOp("||",syntax:CodeRules.syntax_or_,resolve:CodeRules.op_or_, order:120)
 		};
 		public static Delim[] _assignment_operator = new Delim[] { "+=", "-=", "*=", "/=", "%=", "|=", "&=", "<<=", ">>=", "??=", "=" };
 		public static Delim[] _lambda_operator = new Delim[] { "=>" };
 		public static Delim[] _math_operator = new DelimOp[] {
-			new DelimOp("+", syntax:CodeRules.opinit_add,resolve:CodeRules.op_add, order:40),
-			new DelimOp("-", syntax:CodeRules.opinit_dif,resolve:CodeRules.op_dif, order:41),
-			new DelimOp("*", syntax:CodeRules.opinit_mul,resolve:CodeRules.op_mul, order:30),
-			new DelimOp("/", syntax:CodeRules.opinit_div,resolve:CodeRules.op_div, order:31),
-			new DelimOp("%", syntax:CodeRules.opinit_mod,resolve:CodeRules.op_mod, order:32),
-			new DelimOp("^^",syntax:CodeRules.opinit_pow,resolve:CodeRules.op_pow, order:20),
+			new DelimOp("+", syntax:CodeRules.syntax_add,resolve:CodeRules.op_add, order:40),
+			new DelimOp("-", syntax:CodeRules.syntax_dif,resolve:CodeRules.op_dif, order:41),
+			new DelimOp("*", syntax:CodeRules.syntax_mul,resolve:CodeRules.op_mul, order:30),
+			new DelimOp("/", syntax:CodeRules.syntax_div,resolve:CodeRules.op_div, order:31),
+			new DelimOp("%", syntax:CodeRules.syntax_mod,resolve:CodeRules.op_mod, order:32),
+			new DelimOp("^^",syntax:CodeRules.syntax_pow,resolve:CodeRules.op_pow, order:20),
 		};
 		public static Delim[] _hex_number_prefix = new Delim[] { new DelimCtx("0x", ctx: "0x", parseRule: StringExtension.HexadecimalParse) };
 		public static Delim[] _number = new Delim[] {
@@ -219,25 +219,25 @@ namespace NonStandard.Data.Parse {
 		private static readonly string[] _if_operand_names = new string[] { "syntax", "conditional perand", "true case" };
 		private static readonly string[] _ifelse_operand_names = new string[] { "syntax", "conditional perand", "true case", "else clause", "false case"};
 		private static readonly string[] _binary_operand_names = new string[] { "left operand", "syntax", "right operand" };
-		public static ParseRuleSet.Entry opinit_IfStatementGeneral(List<Token> tokens, Tokenizer tok, int index, string contextName) {
+		public static SyntaxTree syntax_IfStatementGeneral(List<Token> tokens, Tokenizer tok, int index, string contextName) {
 			if(tokens.Count > index+4 && tokens[index+3].StringifySmall() == "else") {
-				return opinit_GenericOp(tokens, tok, index, contextName, 0, _ifelse_operand_names);
+				return syntax_GenericOp(tokens, tok, index, contextName, 0, _ifelse_operand_names);
 			}
 			// TODO if there is an else, use _ifelse_operand_names
-			return opinit_GenericOp(tokens, tok, index, contextName, 0, _if_operand_names);
+			return syntax_GenericOp(tokens, tok, index, contextName, 0, _if_operand_names);
 		}
-		public static ParseRuleSet.Entry opinit_Binary(List<Token> tokens, Tokenizer tok, int index, string contextName) {
-			return opinit_GenericOp(tokens, tok, index, contextName, -1, _binary_operand_names);
+		public static SyntaxTree syntax_BinaryOp(List<Token> tokens, Tokenizer tok, int index, string contextName) {
+			return syntax_GenericOp(tokens, tok, index, contextName, -1, _binary_operand_names);
 		}
-		public static ParseRuleSet.Entry opinit_GenericOp(List<Token> tokens, Tokenizer tok, int index, string contextName,
+		public static SyntaxTree syntax_GenericOp(List<Token> tokens, Tokenizer tok, int index, string contextName,
 			int whereContextBegins, string[] operandNames) {
 			Token t = tokens[index];
-			ParseRuleSet.Entry e = tokens[index].GetAsContextEntry();
-			if (e != null) {
-				if (e.parseRules.name != contextName) {
-					throw new Exception(tok.AddError(t, "expected context: " + contextName + ", found " + e.parseRules.name).ToString());
+			SyntaxTree syntax = tokens[index].GetAsSyntaxNode();
+			if (syntax != null) {
+				if (syntax.rules.name != contextName) {
+					throw new Exception(tok.AddError(t, "expected context: " + contextName + ", found " + syntax.rules.name).ToString());
 				}
-				return e;
+				return syntax;
 			}
 			for(int i = 0; i < operandNames.Length; ++i) {
 				int id = whereContextBegins + i;
@@ -247,37 +247,37 @@ namespace NonStandard.Data.Parse {
 			}
 			ParseRuleSet foundContext = ParseRuleSet.GetContext(contextName);
 			if (foundContext == null) { throw new Exception(tok.AddError(t, "context '" + contextName + "' does not exist").ToString()); }
-			ParseRuleSet.Entry parent = null; int pIndex;
+			SyntaxTree parent = null; int pIndex;
 			for (pIndex = 0; pIndex < tokens.Count; ++pIndex) {
-				e = tokens[pIndex].GetAsContextEntry();
-				if (e != null && e.tokens == tokens) { parent = e; break; }
+				syntax = tokens[pIndex].GetAsSyntaxNode();
+				if (syntax != null && syntax.tokens == tokens) { parent = syntax; break; }
 			}
 			if (pIndex == index) { throw new Exception(tok.AddError(t, "parent context recursion").ToString()); }
-			e = foundContext.GetEntry(tokens, index + whereContextBegins, t.meta, parent);
-			e.tokenCount = operandNames.Length;
-			t.meta = e;
+			syntax = foundContext.GetEntry(tokens, index + whereContextBegins, t.meta, parent);
+			syntax.tokenCount = operandNames.Length;
+			t.meta = syntax;
 			tokens[index] = t;
-			tok.ExtractContextAsSubTokenList(e);
-			return e;
+			tok.ExtractContextAsSubTokenList(syntax);
+			return syntax;
 		}
 		public static ParseResult IgnoreTheRestOfThis(string str, int index) { return new ParseResult(str.Length - index, null); }
-		public static ParseRuleSet.Entry opinit_add(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "sum"); }
-		public static ParseRuleSet.Entry opinit_dif(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "difference"); }
-		public static ParseRuleSet.Entry opinit_mul(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "product"); }
-		public static ParseRuleSet.Entry opinit_div(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "quotient"); }
-		public static ParseRuleSet.Entry opinit_mod(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "modulus"); }
-		public static ParseRuleSet.Entry opinit_pow(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "power"); }
-		public static ParseRuleSet.Entry opinit_and(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "logical and"); }
-		public static ParseRuleSet.Entry opinit_or_(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "logical or"); }
-		public static ParseRuleSet.Entry opinit_asn(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "assign"); }
-		public static ParseRuleSet.Entry opinit_equ(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "equal"); }
-		public static ParseRuleSet.Entry opinit_neq(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "not equal"); }
-		public static ParseRuleSet.Entry opinit_lt_(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "less than"); }
-		public static ParseRuleSet.Entry opinit_gt_(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "greater than"); }
-		public static ParseRuleSet.Entry opinit_lte(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "less than or equal"); }
-		public static ParseRuleSet.Entry opinit_gte(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "greater than or equal"); }
-		public static ParseRuleSet.Entry opinit_mem(Tokenizer tok, List<Token> tokens, int index) { return opinit_Binary(tokens, tok, index, "membership operator"); }
-		public static ParseRuleSet.Entry opinit_if_(Tokenizer tok, List<Token> tokens, int index) { return opinit_IfStatementGeneral(tokens, tok, index, "if statement"); }
+		public static SyntaxTree syntax_add(Tokenizer tok, List<Token> tokens, int index) { return syntax_BinaryOp(tokens, tok, index, "sum"); }
+		public static SyntaxTree syntax_dif(Tokenizer tok, List<Token> tokens, int index) { return syntax_BinaryOp(tokens, tok, index, "difference"); }
+		public static SyntaxTree syntax_mul(Tokenizer tok, List<Token> tokens, int index) { return syntax_BinaryOp(tokens, tok, index, "product"); }
+		public static SyntaxTree syntax_div(Tokenizer tok, List<Token> tokens, int index) { return syntax_BinaryOp(tokens, tok, index, "quotient"); }
+		public static SyntaxTree syntax_mod(Tokenizer tok, List<Token> tokens, int index) { return syntax_BinaryOp(tokens, tok, index, "modulus"); }
+		public static SyntaxTree syntax_pow(Tokenizer tok, List<Token> tokens, int index) { return syntax_BinaryOp(tokens, tok, index, "power"); }
+		public static SyntaxTree syntax_and(Tokenizer tok, List<Token> tokens, int index) { return syntax_BinaryOp(tokens, tok, index, "logical and"); }
+		public static SyntaxTree syntax_or_(Tokenizer tok, List<Token> tokens, int index) { return syntax_BinaryOp(tokens, tok, index, "logical or"); }
+		public static SyntaxTree syntax_asn(Tokenizer tok, List<Token> tokens, int index) { return syntax_BinaryOp(tokens, tok, index, "assign"); }
+		public static SyntaxTree syntax_equ(Tokenizer tok, List<Token> tokens, int index) { return syntax_BinaryOp(tokens, tok, index, "equal"); }
+		public static SyntaxTree syntax_neq(Tokenizer tok, List<Token> tokens, int index) { return syntax_BinaryOp(tokens, tok, index, "not equal"); }
+		public static SyntaxTree syntax_lt_(Tokenizer tok, List<Token> tokens, int index) { return syntax_BinaryOp(tokens, tok, index, "less than"); }
+		public static SyntaxTree syntax_gt_(Tokenizer tok, List<Token> tokens, int index) { return syntax_BinaryOp(tokens, tok, index, "greater than"); }
+		public static SyntaxTree syntax_lte(Tokenizer tok, List<Token> tokens, int index) { return syntax_BinaryOp(tokens, tok, index, "less than or equal"); }
+		public static SyntaxTree syntax_gte(Tokenizer tok, List<Token> tokens, int index) { return syntax_BinaryOp(tokens, tok, index, "greater than or equal"); }
+		public static SyntaxTree syntax_mem(Tokenizer tok, List<Token> tokens, int index) { return syntax_BinaryOp(tokens, tok, index, "membership operator"); }
+		public static SyntaxTree syntax_if_(Tokenizer tok, List<Token> tokens, int index) { return syntax_IfStatementGeneral(tokens, tok, index, "if statement"); }
 
 		public static object SimplifySingleTermParenthesis(List<object> terms) {
 			if (terms != null) { switch (terms.Count) { case 0: return null; case 1: return terms[0]; } }
@@ -308,8 +308,8 @@ namespace NonStandard.Data.Parse {
 				op_Resolve_SimplifyListOfArguments(tok, ref value, scope);
 				return;
 			}
-			ParseRuleSet.Entry e = token.GetAsContextEntry();
-			if (e != null && e.IsText()) { return; } // data is explicitly meant to be a string, done.
+			SyntaxTree syntax = token.GetAsSyntaxNode();
+			if (syntax != null && syntax.IsTextLiteral()) { return; } // data is explicitly meant to be a string, done.
 			Type t;
 			object v;
 			if(op_SearchForMember(name, out v, out t, scope)) {
@@ -345,22 +345,22 @@ namespace NonStandard.Data.Parse {
 			return false;
 		}
 
-		public static void op_BinaryArgs(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, out object left, out object right, out Type lType, out Type rType) {
-			SingleArgPreferDouble(tok, e.tokens[0], scope, out left, out lType, null);
+		public static void op_BinaryArgs(ITokenErrLog tok, SyntaxTree syntax, object scope, out object left, out object right, out Type lType, out Type rType) {
+			SingleArgPreferDouble(tok, syntax.tokens[0], scope, out left, out lType, null);
 			bool missingRightArgument = false;
-			if (e.tokenCount >= 3 && e.Length  > 3) {
-				Token r = e.tokens[2];
+			if (syntax.TokenCount >= 3 && syntax.Length  > 3) {
+				Token r = syntax.tokens[2];
 				if (r.IsContextEnding()) { missingRightArgument = true; } // prevent a right-parenthesis from being read as a valid token
 			} else {
 				missingRightArgument = true;
 			}
 			if (missingRightArgument) {
-				tok.AddError(e.tokens[1], "missing right argument for binary operator "+e.parseRules.name);
+				tok.AddError(syntax.tokens[1], "missing right argument for binary operator "+syntax.rules.name);
 				right = null;
 				rType = null;
 				return;
 			}
-			SingleArgPreferDouble(tok, e.tokens[2], scope, out right, out rType, null);
+			SingleArgPreferDouble(tok, syntax.tokens[2], scope, out right, out rType, null);
 		}
 		public static void SingleArgPreferDouble(ITokenErrLog tok, Token token, object scope, out object value, out Type valType, ResolvedEnoughDelegate isItResolvedEnough) {
 			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(token)) { value = token; valType = token.GetType(); return; }
@@ -370,14 +370,14 @@ namespace NonStandard.Data.Parse {
 				CodeConvert.TryConvert(ref value, typeof(double)); valType = typeof(double);
 			}
 		}
-		public static object op_asn(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
-			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
+		public static object op_asn(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
 			return "=";
 		}
-		public static object op_mul(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
-			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
+		public static object op_mul(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
 			object left, right; Type lType, rType;
-			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
+			op_BinaryArgs(tok, syntax, scope, out left, out right, out lType, out rType);
 			do {
 				bool lString = lType == typeof(string);
 				bool rString = rType == typeof(string);
@@ -413,26 +413,26 @@ namespace NonStandard.Data.Parse {
 					return ((double)left) * ((double)right);
 				}
 			} while (false);
-			tok.AddError(e.tokens[1], "unable to multiply " + lType + " and " + rType);
-			return e;
+			tok.AddError(syntax.tokens[1], "unable to multiply " + lType + " and " + rType);
+			return syntax;
 		}
-		public static object op_add(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
-			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
+		public static object op_add(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
 			object left, right; Type lType, rType;
-			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
+			op_BinaryArgs(tok, syntax, scope, out left, out right, out lType, out rType);
 			if (lType == typeof(string) || rType == typeof(string)) { return left.ToString() + right.ToString(); }
 			if (CodeConvert.IsConvertable(lType) && CodeConvert.IsConvertable(rType)) {
 				CodeConvert.TryConvert(ref left, typeof(double));
 				CodeConvert.TryConvert(ref right, typeof(double));
 				return ((double)left) + ((double)right);
 			}
-			tok.AddError(e.tokens[1], "unable to add " + lType + " and " + rType + " : " + left + " + " + right);
-			return e;
+			tok.AddError(syntax.tokens[1], "unable to add " + lType + " and " + rType + " : " + left + " + " + right);
+			return syntax;
 		}
-		public static object op_dif(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
-			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
+		public static object op_dif(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
 			object left, right; Type lType, rType;
-			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
+			op_BinaryArgs(tok, syntax, scope, out left, out right, out lType, out rType);
 			do {
 				if (lType == typeof(string) || rType == typeof(string)) { break; }
 				if (CodeConvert.IsConvertable(lType) && CodeConvert.IsConvertable(rType)) {
@@ -441,13 +441,13 @@ namespace NonStandard.Data.Parse {
 					return ((double)left) - ((double)right);
 				}
 			} while (false);
-			tok.AddError(e.tokens[1], "unable to subtract " + lType + " and " + rType + " : " + left + " - " + right);
-			return e;
+			tok.AddError(syntax.tokens[1], "unable to subtract " + lType + " and " + rType + " : " + left + " - " + right);
+			return syntax;
 		}
-		public static object op_div(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
-			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
+		public static object op_div(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
 			object left, right; Type lType, rType;
-			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
+			op_BinaryArgs(tok, syntax, scope, out left, out right, out lType, out rType);
 			do {
 				if (lType == typeof(string) || rType == typeof(string)) { break; }
 				if (CodeConvert.IsConvertable(lType) && CodeConvert.IsConvertable(rType)) {
@@ -456,8 +456,8 @@ namespace NonStandard.Data.Parse {
 					return ((double)left) / ((double)right);
 				}
 			} while (false);
-			tok.AddError(e.tokens[1], "unable to divide " + lType + " and " + rType + " : " + left + " / " + right);
-			return e;
+			tok.AddError(syntax.tokens[1], "unable to divide " + lType + " and " + rType + " : " + left + " / " + right);
+			return syntax;
 		}
 		public static int FindEndOfNextToken(ITokenErrLog tok, int startI, string str, int index, out int started, out int tokenId) {
 			started = -1;
@@ -531,10 +531,10 @@ namespace NonStandard.Data.Parse {
 			} while (index < format.Length);
 			return sb.ToString();
 		}
-		public static object op_mod(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
-			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
+		public static object op_mod(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
 			object left, right; Type lType, rType;
-			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
+			op_BinaryArgs(tok, syntax, scope, out left, out right, out lType, out rType);
 			do {
 				if (lType == typeof(string)) {
 					string format = left as string;
@@ -545,7 +545,7 @@ namespace NonStandard.Data.Parse {
 					} else {
 						args = right as List<object>;
 					}
-					return Format(format, args, scope, tok, e.tokens[0].index);
+					return Format(format, args, scope, tok, syntax.tokens[0].index);
 				}
 				if (lType == typeof(string) || rType == typeof(string)) { break; }
 				if (CodeConvert.IsConvertable(lType) && CodeConvert.IsConvertable(rType)) {
@@ -554,13 +554,13 @@ namespace NonStandard.Data.Parse {
 					return ((double)left) % ((double)right);
 				}
 			} while (false);
-			tok.AddError(e.tokens[1], "unable to modulo " + lType + " and " + rType + " : " + left + " % " + right);
-			return e;
+			tok.AddError(syntax.tokens[1], "unable to modulo " + lType + " and " + rType + " : " + left + " % " + right);
+			return syntax;
 		}
-		public static object op_pow(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
-			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
+		public static object op_pow(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
 			object left, right; Type lType, rType;
-			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
+			op_BinaryArgs(tok, syntax, scope, out left, out right, out lType, out rType);
 			do {
 				if (lType == typeof(string) || rType == typeof(string)) { break; }
 				if (CodeConvert.IsConvertable(lType) && CodeConvert.IsConvertable(rType)) {
@@ -569,8 +569,8 @@ namespace NonStandard.Data.Parse {
 					return Math.Pow((double)left, (double)right);
 				}
 			} while (false);
-			tok.AddError(e.tokens[1], "unable to exponent " + lType + " and " + rType + " : " + left + " ^^ " + right);
-			return e;
+			tok.AddError(syntax.tokens[1], "unable to exponent " + lType + " and " + rType + " : " + left + " ^^ " + right);
+			return syntax;
 		}
 		public static bool op_reduceToBoolean(object obj, Type type) {
 			if (obj == null) return false;
@@ -580,15 +580,15 @@ namespace NonStandard.Data.Parse {
 			return d != 0;
 		}
 		public struct DefaultString {
-			public string str;
-			public override string ToString() { return str; }
-			public DefaultString(string str) { this.str = str; }
+			public object str;
+			public override string ToString() { return str.ToString(); }
+			public DefaultString(object str) { this.str = str; }
 		}
-		public static object op_if_statement(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
-			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
+		public static object op_if_statement(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
 			object conditionResult, resultEvaluated; Type cType, rType;
-			Token condition = e.tokens[1];
-			Token resultToEvaluate = e.tokens[2];
+			Token condition = syntax.tokens[1];
+			Token resultToEvaluate = syntax.tokens[2];
 			op_ResolveToken(tok, condition, scope, out conditionResult, out cType);
 			//Show.Log("this is where the if statement gets parsed, and returns "+resultToEvaluate.StringifySmall()+" if "+condition.StringifySmall()+" is true");
 			bool convertedToDouble = false;
@@ -601,8 +601,8 @@ namespace NonStandard.Data.Parse {
 				op_ResolveToken(tok, resultToEvaluate, scope, out resultEvaluated, out rType, isItResolvedEnough);
 				return resultEvaluated;
 			}
-			if (e.tokens.Count <= 4) { return null; }
-			resultToEvaluate = e.tokens[4];
+			if (syntax.tokens.Count <= 4) { return null; }
+			resultToEvaluate = syntax.tokens[4];
 			if (conditionResult == null || 
 				(conditionResult is string fs && fs == "") ||
 				(conditionResult is bool fb && fb == false) ||
@@ -619,68 +619,93 @@ namespace NonStandard.Data.Parse {
 			//}
 			return null;
 		}
-		public static object op_member(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
-			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
+		public static object op_member(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
 			object left; Type lType;
-			SingleArgPreferDouble(tok, e.tokens[0], scope, out left, out lType, isItResolvedEnough); //op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
+			SingleArgPreferDouble(tok, syntax.tokens[0], scope, out left, out lType, isItResolvedEnough); //op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
 			//Show.Log(e.tokens[0].ToString()+ e.tokens[1].ToString()+ e.tokens[2].ToString()+"~~~"+ lType +" "+left+" . "+rType+" "+right);
-			string name = e.tokens[2].ToString();
-			object val = ReflectionParseExtension.GetValue(left, name, new DefaultString(name));
+			object variableName;
+			SyntaxTree possiblyComplexSyntax = syntax.tokens[2].GetAsSyntaxNode();
+			if (possiblyComplexSyntax != null) {
+				variableName = possiblyComplexSyntax.Resolve(tok, scope, isItResolvedEnough);
+			} else {
+				variableName = syntax.tokens[2].ToString();
+			}
+			object val = ReflectionParseExtension.GetValue(left, variableName, new DefaultString(variableName));
 			if (val == null || val is DefaultString) {
-				val = e.tokens[0].ToString()+e.tokens[1]+e.tokens[2];
+				SyntaxTree parentSyntax = syntax.GetParent();
+				int index = parentSyntax.tokens.FindIndex(t => t.meta == syntax);
+				if (index < 0) {
+					throw new Exception("problem with parent syntax branch, it is missing it's child");
+				}
+				// look for the argument list right after this and use that to find the correct method from the list of possibilities
+				SyntaxTree argSyntax = parentSyntax.tokens.Count > index + 2 ? parentSyntax.tokens[index + 1].GetAsSyntaxNode() : null;
+				if (parentSyntax != null && argSyntax != null) {//ReflectionParseExtension.TryGetMethod(left, variableName.ToString(), out MethodInfo[] methods)) {
+					//Token arguments = p.tokens[index + 1];
+					//if (SyntaxTree.TryExecuteFunction(left, variableName, arguments, out object funcResult, tok, isItResolvedEnough)) {
+					//	return funcResult;
+					//}
+					return new MethodCall(left, variableName);
+				}
+				val = syntax.tokens[0].ToString()+syntax.tokens[1]+syntax.tokens[2];
 			}
 			return val;
 		}
-		public static object op_and(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
-			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
+		public class MethodCall {
+			public object target;
+			public object methodName;
+			public MethodCall(object target, object methodName) { this.target = target; this.methodName = methodName; }
+		}
+		public static object op_and(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
 			object left, right; Type lType, rType;
-			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
+			op_BinaryArgs(tok, syntax, scope, out left, out right, out lType, out rType);
 			return op_reduceToBoolean(left, lType) && op_reduceToBoolean(right, rType);
 		}
-		public static object op_or_(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
-			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
+		public static object op_or_(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
 			object left, right; Type lType, rType;
-			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
+			op_BinaryArgs(tok, syntax, scope, out left, out right, out lType, out rType);
 			return op_reduceToBoolean(left, lType) || op_reduceToBoolean(right, rType);
 		}
 		// spaceship operator
-		public static bool op_Compare(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, out int compareValue) {
+		public static bool op_Compare(ITokenErrLog tok, SyntaxTree syntax, object scope, out int compareValue) {
 			object left, right; Type lType, rType;
-			op_BinaryArgs(tok, e, scope, out left, out right, out lType, out rType);
+			op_BinaryArgs(tok, syntax, scope, out left, out right, out lType, out rType);
 			if (lType == rType) { return lType.TryCompare(left, right, out compareValue); }
 			compareValue = 0;
-			tok.AddError(e.tokens[1].index, "can't operate ("+lType+")"+left+" "+e.tokens[1]+" ("+rType+")"+right+" with scope("+scope+")");
+			tok.AddError(syntax.tokens[1].index, "can't operate ("+lType+")"+left+" "+syntax.tokens[1]+" ("+rType+")"+right+" with scope("+scope+")");
 			return false;
 		}
-		public static object op_equ(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
-			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
-			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp == 0; }
-			return e;
+		public static object op_equ(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
+			int comp; if (op_Compare(tok, syntax, scope, out comp)) { return comp == 0; }
+			return syntax;
 		}
-		public static object op_neq(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
-			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
-			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp != 0; }
-			return e;
+		public static object op_neq(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
+			int comp; if (op_Compare(tok, syntax, scope, out comp)) { return comp != 0; }
+			return syntax;
 		}
-		public static object op_lt_(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
-			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
-			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp < 0; }
-			return e;
+		public static object op_lt_(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
+			int comp; if (op_Compare(tok, syntax, scope, out comp)) { return comp < 0; }
+			return syntax;
 		}
-		public static object op_gt_(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
-			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
-			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp > 0; }
-			return e;
+		public static object op_gt_(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
+			int comp; if (op_Compare(tok, syntax, scope, out comp)) { return comp > 0; }
+			return syntax;
 		}
-		public static object op_lte(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
-			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
-			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp <= 0; }
-			return e;
+		public static object op_lte(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
+			int comp; if (op_Compare(tok, syntax, scope, out comp)) { return comp <= 0; }
+			return syntax;
 		}
-		public static object op_gte(ITokenErrLog tok, ParseRuleSet.Entry e, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
-			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(e)) { return e; }
-			int comp; if (op_Compare(tok, e, scope, out comp)) { return comp >= 0; }
-			return e;
+		public static object op_gte(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
+			int comp; if (op_Compare(tok, syntax, scope, out comp)) { return comp >= 0; }
+			return syntax;
 		}
 	}
 }

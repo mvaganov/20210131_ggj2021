@@ -62,6 +62,11 @@ namespace NonStandard.Extension {
 			for (int i = 0; i < list.Count; ++i) { if (predicate(list[i])) return i; }
 			return -1;
 		}
+		public static List<int> FindIndexes<T>(this IList<T> list, Func<T, bool> predicate) {
+			List<int> indexes = new List<int>();
+			for (int i = 0; i < list.Count; ++i) { if (predicate(list[i])) { indexes.Add(i); } }
+			return indexes;
+		}
 		public static T Find<T>(this IList<T> list, Func<T, bool> predicate) {
 			for (int i = 0; i < list.Count; ++i) { if (predicate(list[i])) return list[i]; }
 			return default(T);
@@ -102,7 +107,13 @@ namespace NonStandard.Extension {
 		public static T GetFromNestedIndex<T>(this IList<IList<T>> list, int[] nestedIndex) {
 			return list[nestedIndex[0]][nestedIndex[1]];
 		}
-
+		/// <summary>
+		/// essentially converts into an array
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="list"></param>
+		/// <returns></returns>
+		public static T[] SubList<T>(this IList<T> list) { return SubList(list, 0, list.Count); }
 		public static T[] SubList<T>(this IList<T> list, int startIndex) {
 			return SubList(list, startIndex, list.Count - startIndex);
 		}
