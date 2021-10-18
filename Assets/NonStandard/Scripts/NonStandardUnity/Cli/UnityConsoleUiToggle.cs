@@ -39,7 +39,7 @@ namespace NonStandard.Cli {
 			uiTransform.SetParent(ScreenSpaceCanvas.transform, false);
 			UnityConsole console = GetComponent<UnityConsole>();
 			if (console.inputField != null) {
-				RectMask2D rm2d = console.inputField.textViewport?.GetComponent<RectMask2D>() ?? null;
+				RectMask2D rm2d = console.inputField.textViewport != null ? console.inputField.textViewport.GetComponent<RectMask2D>() : null;
 				if (rm2d != null && rm2d.enabled) {
 					disabledRectMask2d = true;
 					rm2d.enabled = false;

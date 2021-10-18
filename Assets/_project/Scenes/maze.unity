@@ -2098,9 +2098,10 @@ MonoBehaviour:
   popup: {fileID: 1777391069}
   columnSetup: "{label:\"\", columnUi:\"braille\", valueScript:null, headerUi:refresh,
     widthOfColumn:30}\r\n{label:\"name\", columnUi:\"label\", valueScript:na\xA4,
-    headerUi:collabel, widthOfColumn:100}\r\n{l\xA4:\"activate\", \r\nc\xA4:if(data.cooperative){btn}else{none},
-    \r\n\tv\xA4:\"activate\", h\xA4:collabel, w\xA4:100, \r\n\tonClick:{DoActivateTrigger()}}\r\n{l\xA4:\"speed\",
-    c\xA4:\"txticon\", v\xA4:(move.move.speed/5), h\xA4:collabel, w\xA4:30, d\xA4:0.0}\r\n{l\xA4:\"handicraft\",
+    headerUi:collabel, widthOfColumn:100}\r\n{l\xA4:\"activate\", \r\nc\xA4:if(maybe
+    data.cooperative){btn}else{none}, \r\n\tv\xA4:\"activate\", h\xA4:collabel, w\xA4:100,
+    \r\n\tonClick:{DoActivateTrigger()}}\r\n{l\xA4:\"speed\", c\xA4:\"txticon\",
+    v\xA4:(move.move.speed/5), h\xA4:collabel, w\xA4:30, d\xA4:0.0}\r\n{l\xA4:\"handicraft\",
     c\xA4:\"input\", v\xA4:(data.handicraft), h\xA4:collabel, w\xA4:80, d\xA4:0.0}\r\n{l\xA4:\"+\",
     c\xA4:\"none\", v\xA4:null, h\xA4:addcol, w\xA4:30,alwaysLast:1}\r\n"
   dataPopulator:

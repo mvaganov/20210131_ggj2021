@@ -96,7 +96,7 @@ namespace NonStandard.Cli {
 				UpdatePosition();
 			}
 			public static Vector2 TextAreaSize(UnityConsole console) {
-				return (console.inputField?.textViewport ?? console.text.GetComponent<RectTransform>()).rect.size;
+				return (console.inputField != null ? console.inputField.textViewport : console.text.GetComponent<RectTransform>()).rect.size;
 			}
 			public bool NeedsCalculation(UnityConsole console) {
 				return windowSizing == WindowSizing.AutoCalculateViewRectangle &&
@@ -140,7 +140,7 @@ namespace NonStandard.Cli {
 		public ColorSettings colorSettings = new ColorSettings();
 
 		public float FontSize {
-			get => inputField?.pointSize ?? Text.fontSize;
+			get => inputField != null ? inputField.pointSize : Text.fontSize;
 			set {
 				if (inputField != null) {
 					inputField.pointSize = charBack.fontSize = value;
@@ -152,7 +152,7 @@ namespace NonStandard.Cli {
 		public void AddToFontSize(float value) {
 			FontSize += value;
 			if (FontSize < 1) { FontSize = 1; }
-			cursor.cursor?.GetComponent<UnityConsoleCursor>().ScaleToFontSize(FontSize);
+			if (cursor.cursor != null) { cursor.cursor.GetComponent<UnityConsoleCursor>().ScaleToFontSize(FontSize); }
 			RefreshText();
 		}
 
@@ -222,7 +222,7 @@ namespace NonStandard.Cli {
 			Window.body = body;
 		}
 
-		public TMP_Text Text => inputField?.textComponent ?? text;
+		public TMP_Text Text => inputField != null ? inputField.textComponent : text;
 
 		public RectTransform GetUiTransform() {
 			if (inputField == null) { inputField = GetComponentInChildren<TMP_InputField>(); }
@@ -243,7 +243,7 @@ namespace NonStandard.Cli {
 			GameObject backgroundObject = Instantiate(Text.gameObject);
 			UnityConsole extra = backgroundObject.GetComponent<UnityConsole>();
 			if (extra != null) { DestroyImmediate(extra); }
-			RectTransform brt = backgroundObject.GetComponent<RectTransform>() ?? backgroundObject.AddComponent<RectTransform>();
+			RectTransform brt = backgroundObject.GetComponent<RectTransform>(); if (brt == null) { brt = backgroundObject.AddComponent<RectTransform>(); }
 			backgroundObject.transform.SetParent(pTmp.transform.parent);
 			if (pTmp.transform.parent != null) {
 				backgroundObject.transform.SetSiblingIndex(0); // put the background in the background
@@ -359,7 +359,7 @@ namespace NonStandard.Cli {
 		}
 		public class DisplayCalculations {
 			public DisplayCalculations(UnityConsole console) {
-				rt = console.inputField?.textViewport ?? console.text.GetComponent<RectTransform>();
+				rt = console.inputField != null ? console.inputField.textViewport : console.text.GetComponent<RectTransform>();
 			}
 			public RectTransform rt;
 			public Coord size = Coord.Zero;

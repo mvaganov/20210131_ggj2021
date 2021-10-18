@@ -12,7 +12,7 @@ namespace NonStandard.GameUi.DataSheet {
 		}
 		public void Sort(string text) {
 			UnityDataSheet uds = GetComponentInParent<UnityDataSheet>();
-			uds?.Sort();
+			if (uds != null) { uds.Sort(); }
 		}
 		string errorMessage;
 		public void AssignFromText(string text) {

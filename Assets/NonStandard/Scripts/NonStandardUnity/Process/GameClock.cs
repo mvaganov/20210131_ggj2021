@@ -83,10 +83,10 @@ namespace NonStandard {
 		void OnApplicationPause(bool paused) { if (paused) { Pause(); } else { Unpause(); } }
 		void OnDisable() { Pause(); }
 		void OnEnable() { Unpause(); }
-		private void OnDestroy() { }
-		private void OnApplicationQuit() { }
+		//private void OnDestroy() { }
+		//private void OnApplicationQuit() { }
 #if UNITY_EDITOR
-		public void OnValidate() { }
+		//public void OnValidate() { }
 #endif
 		internal static GameClock s_instance;
 		public static GameClock Instance() {

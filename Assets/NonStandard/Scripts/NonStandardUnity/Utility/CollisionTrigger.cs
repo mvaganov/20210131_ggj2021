@@ -10,16 +10,16 @@ namespace NonStandard.Utility {
 		void DoActivateTrigger(GameObject other) { if (enabled) onTrigger.Invoke(other); }
 		void DoDeactivateTrigger(GameObject other) { if (enabled) onEndTrigger.Invoke(other); }
 		void OnTriggerEnter(Collider other) {
-			if (tagLimit == null || other.gameObject.tag == tagLimit) { DoActivateTrigger(other.gameObject); }
+			if (tagLimit == null || other.gameObject.CompareTag(tagLimit)) { DoActivateTrigger(other.gameObject); }
 		}
 		void OnTriggerExit(Collider other) {
-			if (tagLimit == null || other.gameObject.tag == tagLimit) { DoDeactivateTrigger(other.gameObject); }
+			if (tagLimit == null || other.gameObject.CompareTag(tagLimit)) { DoDeactivateTrigger(other.gameObject); }
 		}
 		void OnCollisionEnter(Collision collision) {
-			if (tagLimit == null || collision.gameObject.tag == tagLimit) { DoActivateTrigger(collision.gameObject); }
+			if (tagLimit == null || collision.gameObject.CompareTag(tagLimit)) { DoActivateTrigger(collision.gameObject); }
 		}
 		void OnCollisionExit(Collision collision) {
-			if (tagLimit == null || collision.gameObject.tag == tagLimit) { DoDeactivateTrigger(collision.gameObject); }
+			if (tagLimit == null || collision.gameObject.CompareTag(tagLimit)) { DoDeactivateTrigger(collision.gameObject); }
 		}
 
 #if UNITY_EDITOR

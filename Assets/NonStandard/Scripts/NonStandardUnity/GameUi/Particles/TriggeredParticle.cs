@@ -43,11 +43,11 @@ namespace NonStandard.GameUi.Particles {
 			t.rotation = originalRotation;
 		}
 		public void ShootParticleFromHereToTarget(GameObject inventoryObject) {
-			Vector3 a = transform.position, b = inventoryObject?.transform.position ?? a + Vector3.up;
+			Vector3 a = transform.position, b = inventoryObject != null ? inventoryObject.transform.position : a + Vector3.up;
 			ShootParticle(GetParticles(), a, b, emitCount);
 		}
 		public void ShootParticleFromHereToTargetWithThisColor(GameObject inventoryObject) {
-			Vector3 a = transform.position, b = inventoryObject?.transform.position ?? a + Vector3.up;
+			Vector3 a = transform.position, b = inventoryObject != null ? inventoryObject.transform.position : a + Vector3.up;
 			Renderer r = GetComponent<Renderer>();
 			if (r != null) {
 				ShootParticle(GetParticles(), a, b, emitCount, new ParticleSystem.EmitParams() { startColor = r.material.color }); ;
@@ -56,7 +56,7 @@ namespace NonStandard.GameUi.Particles {
 			}
 		}
 		public void ShootParticleFromTargetToHereWithThisColor(GameObject inventoryObject) {
-			Vector3 a = transform.position, b = inventoryObject?.transform.position ?? a + Vector3.up;
+			Vector3 a = transform.position, b = inventoryObject != null ? inventoryObject.transform.position : a + Vector3.up;
 			Renderer r = GetComponent<Renderer>();
 			if (r != null) {
 				ShootParticle(GetParticles(), b, a, emitCount, new ParticleSystem.EmitParams() { startColor = r.material.color }); ;

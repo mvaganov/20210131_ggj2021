@@ -160,7 +160,7 @@ namespace NonStandard.TouchGui
 			RectTransform rt = GetComponent<RectTransform>();
 			Rect r = rt.rect;
 			Texture2D img = new Texture2D((int)r.width, (int)r.height);
-			img.SetPixels(0, 0, (int)r.width, (int)r.height, new Color[(int)(r.width * r.height)]); // set pixels to the default color, which is clear
+			img.SetPixels32(0, 0, (int)r.width, (int)r.height, new Color32[(int)(r.width * r.height)]); // set pixels to the default color, which is clear
 			if (c2d == null) { c2d = GetComponent<Collider2D>(); }
 			PolygonCollider2D polygon = c2d as PolygonCollider2D;
 			CircleCollider2D circle = c2d as CircleCollider2D;

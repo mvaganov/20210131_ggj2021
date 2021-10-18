@@ -27,10 +27,10 @@ public class DescriptionTextWithIcon : MonoBehaviour {
 			image.gameObject.SetActive(value);
 		}
 	}
-	public Sprite Sprite { get => image?.sprite ?? null; set { if (image == null) { return; } image.sprite = value; } }
+	public Sprite Sprite { get => image != null ? image.sprite : null; set { if (image == null) { return; } image.sprite = value; } }
 	public string Text { get => UiText.GetText(textObject); set => UiText.SetText(textObject, value); }
 	public Color32 TextColor { get => UiText.GetColor(textObject); set => UiText.SetColor(textObject, value); }
-	public Color32 SpriteColor { get => image?.color ?? Color.clear; set { if (image == null) { return; } image.color = value; } }
+	public Color32 SpriteColor { get => image != null ? image.color : Color.clear; set { if (image == null) { return; } image.color = value; } }
 	private void OnEnable() { Refresh(); }
 	public void Refresh() {
 		if (textObject == null) textObject = UiText.GetTextObject(textObject);

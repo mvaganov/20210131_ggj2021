@@ -20,7 +20,7 @@ namespace NonStandard.Character
 				Utility.Follow f = GetComponent<Utility.Follow>();
 				if (f) { character = f.whoToFollow.GetComponent<CharacterRoot>(); }
 			}
-			character?.Init();
+			if (character) character.Init();
 			//cb.jumped.AddListener(Jump);
 			//cb.stand.AddListener(Stand);
 			//cb.fall.AddListener(Fall);

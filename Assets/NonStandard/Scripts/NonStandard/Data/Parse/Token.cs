@@ -130,20 +130,24 @@ namespace NonStandard.Data.Parse {
 			switch (meta) {
 			case string s: src = s; break;
 			case Delim d: return d.text;
-			case SyntaxTree e:
-				if (len < 0) {
-					Token end = e.GetEndToken();
-					Token begin = e.GetBeginToken();
-					beginIndex = begin.index;
-					string endTokenText = end.GetAsSmallText();
-					len = end.index + endTokenText.Length - beginIndex;
-				}
-				while (e != null) {
-					if (e.sourceMeta is string es) {
+			case TokenSubstitution ts: return ts.value.ToString();
+			case SyntaxTree syntax:
+				Token end = syntax.GetEndToken();
+				Token begin = syntax.GetBeginToken();
+				//if (len < 0) {
+				beginIndex = begin.index;
+				string endTokenText = end.GetAsSmallText();
+				len = end.index + endTokenText.Length - beginIndex;
+				//}
+				src = begin.meta as string;
+				if (src == null) { src = end.meta as string; }
+				if (src != null) { break; }
+				while (src == null && syntax != null) {
+					if (syntax.sourceMeta is string es) {
 						src = es;
 						break;
 					}
-					e = e.GetParent();
+					syntax = syntax.GetParent();
 				}
 				break;
 			}

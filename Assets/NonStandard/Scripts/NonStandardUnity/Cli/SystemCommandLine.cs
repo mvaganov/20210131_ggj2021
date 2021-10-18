@@ -8,8 +8,5 @@ namespace NonStandard.Cli {
 	/// </summary>
 	public class SystemCommandLine : MonoBehaviour {
 		public string promptArtifact = "$"; // TODO implement
-		private void Start() {
-
-		}
 	}
 }

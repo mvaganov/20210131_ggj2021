@@ -62,7 +62,7 @@ namespace NonStandard.Character {
 		}
 
 		public void OrthographicCameraDistanceChangeLogic() {
-			if (cam?.orthographic ?? false) {
+			if (cam != null && cam.orthographic) {
 				if (targetDistance < 1f / 128) { targetDistance = 1f / 128; }
 				cam.orthographicSize = targetDistance / 2;
 			}

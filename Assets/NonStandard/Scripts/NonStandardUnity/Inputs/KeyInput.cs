@@ -6,18 +6,21 @@ namespace NonStandard.Inputs {
 	public class KeyInput : MonoBehaviour {
 		public List<KBind> KeyBinds = new List<KBind>();
 
+		private void Start() { Init(KeyBinds); }
+		private void OnEnable() { Enable(KeyBinds); }
+		private void OnDisable() { Disable(KeyBinds); }
 		public static void Init(IList<KBind> KeyBinds) {
 			if (KeyBinds.Count > 0) {
 				for (int i = 0; i < KeyBinds.Count; ++i) { KeyBinds[i].Init(); }
 			}
 		}
 
-		public static void OnEnable(IList<KBind> KeyBinds) {
+		public static void Enable(IList<KBind> KeyBinds) {
 			if (KeyBinds.Count > 0 && !AppInput.HasKeyBind(KeyBinds[0])) {
 				for (int i = 0; i < KeyBinds.Count; ++i) { AppInput.AddListener(KeyBinds[i]); }
 			}
 		}
-		public static void OnDisable(IList<KBind> KeyBinds) {
+		public static void Disable(IList<KBind> KeyBinds) {
 			if (AppInput.IsQuitting) return;
 			if (KeyBinds.Count > 0 && AppInput.HasKeyBind(KeyBinds[0])) {
 				for (int i = 0; i < KeyBinds.Count; ++i) { AppInput.RemoveListener(KeyBinds[i]); }
@@ -37,9 +40,6 @@ namespace NonStandard.Inputs {
 			return false;
 		}
 
-		private void Start() { Init(KeyBinds); }
-		private void OnEnable() { OnEnable(KeyBinds); }
-		private void OnDisable() { OnDisable(KeyBinds); }
 		public void KeyBind(KCode kCode, KModifier modifier, string name, string methodName, object value = null, object target = null) {
 			Bind(KeyBinds, kCode, modifier, name, methodName, value, target);
 		}

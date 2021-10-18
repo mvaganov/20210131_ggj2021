@@ -19,7 +19,7 @@ namespace NonStandard.GameUi.Inventory {
 			if (inventoryUi != null) { ListItemUi result = inventoryUi.GetListItemUi(itemObject); if (result != null) return result; }
 			items.Add(itemObject);
 			InventoryItem item = itemObject.GetComponent<InventoryItem>();
-			item?.AddToInventory(this);
+			if (item != null) { item.AddToInventory(this); }
 			itemObject.SetActive(false);
 			Vector3 playerLoc = Global.GetComponent<Character.CharacterProxy>().transform.position;
 			Vector3 localPosition = itemObject.transform.position - playerLoc;
@@ -66,7 +66,7 @@ namespace NonStandard.GameUi.Inventory {
 			//InventoryItem item = itemObject.GetComponent<InventoryItem>();
 			//item.onRemoveFromInventory?.Invoke(this);
 			InventoryItem item = itemObject.GetComponent<InventoryItem>();
-			item?.RemoveFromCurrentInventory();
+			if (item != null) { item.RemoveFromCurrentInventory(); }
 		}
 
 		public void RemoveAllItems() {

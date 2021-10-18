@@ -20,8 +20,8 @@ public class Team : MonoBehaviour {
 		prev.onClick.AddListener(Prev);
 		next.onClick.AddListener(Next);
 		if(members == null || members.Count < 1) {
-			prev?.gameObject.SetActive(false);
-			next?.gameObject.SetActive(false);
+			if (prev != null) { prev.gameObject.SetActive(false); }
+			if (next != null) { next.gameObject.SetActive(false); }
 		}
 	}
 
@@ -41,9 +41,9 @@ public class Team : MonoBehaviour {
 			}
 		}
 		if (members.Count > 1) {
-			prev?.gameObject.SetActive(true);
-			next?.gameObject.SetActive(true);
-			team?.gameObject.SetActive(true);
+			if (prev) prev.gameObject.SetActive(true);
+			if (next) next.gameObject.SetActive(true);
+			if (team) team.gameObject.SetActive(true);
 		}
 		if (rosterUi != null) {
 			ListItemUi result = rosterUi.GetListItemUi(memberObject);
@@ -100,7 +100,7 @@ public class Team : MonoBehaviour {
 		if (members != null) { members.RemoveAt(index); }
 		rosterUi.RemoveItem(go);
 		TeamMember teamMember = go.GetComponent<TeamMember>();
-		teamMember?.onLeaveTeam?.Invoke(this);
+		if (teamMember != null && teamMember.onLeaveTeam != null) { teamMember.onLeaveTeam.Invoke(this); }
 		if (index == currentIndex) {
 			Prev();
 		} else if (index > currentIndex) {
@@ -110,7 +110,7 @@ public class Team : MonoBehaviour {
 
 	internal void Clear() {
 		members.Clear();
-		prev?.gameObject.SetActive(false);
-		next?.gameObject.SetActive(false);
+		if (prev) prev.gameObject.SetActive(false);
+		if (next) next.gameObject.SetActive(false);
 	}
 }

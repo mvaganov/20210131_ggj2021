@@ -1228,7 +1228,7 @@ namespace NonStandard {
 			if (img == null) {
 				Rect r = rectTransform.rect;
 				img = new Texture2D((int)r.width, (int)r.height);
-				img.SetPixels(0, 0, (int)r.width, (int)r.height, new Color[(int)(r.width * r.height)]); // set pixels to the default color, which is clear
+				img.SetPixels32(0, 0, (int)r.width, (int)r.height, new Color32[(int)(r.width * r.height)]); // set pixels to the default color, which is clear
 				rImg.texture = img;
 			}
 			return img;

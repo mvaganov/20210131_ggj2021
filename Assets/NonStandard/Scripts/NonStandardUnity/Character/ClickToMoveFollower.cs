@@ -62,7 +62,7 @@ namespace NonStandard.Character {
 		public void HidePath() { ShowPath(false); }
 		public void ShowPath(bool show = true) {
 			line.gameObject.SetActive(show);
-			waypoints.ForEach(w => w.ui?.gameObject.SetActive(show));
+			waypoints.ForEach(w => { if (w.ui != null) w.ui.gameObject.SetActive(show); });
 		}
 		public void UpdateLine() {
 			List<Vector3> points = new List<Vector3>();
@@ -294,7 +294,7 @@ namespace NonStandard.Character {
 			}
 			if (currentWaypoint != null) {
 				currentWaypoint.transform.position = targetPosition;
-				Interact3dUi.Instance?.UpdateItem(currentWaypoint);
+				Interact3dUi ui3d = Interact3dUi.Instance; if (ui3d != null) { ui3d.UpdateItem(currentWaypoint); }
 				currentWaypoint.showing = false; // hide the waypoint button during drag
 			}
 		}
@@ -310,7 +310,7 @@ namespace NonStandard.Character {
 			if (showIt) {
 				currentWaypoint.showing = true;
 				currentWaypoint.transform.position = targetPosition;
-				Interact3dUi.Instance?.UpdateItem(currentWaypoint);
+				Interact3dUi ui3d = Interact3dUi.Instance; if (ui3d != null) { ui3d.UpdateItem(currentWaypoint); }
 			}
 		}
 		public void AddWaypointHere() {

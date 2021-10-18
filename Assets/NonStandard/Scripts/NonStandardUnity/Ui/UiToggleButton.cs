@@ -12,7 +12,7 @@ namespace NonStandard.Ui {
 		[TextArea(1, 5)] public string alternateText;
 		public void ClickButton() {
 			Button b = GetComponent<Button>();
-			b?.onClick.Invoke();
+			if (b != null) { b.onClick.Invoke(); }
 		}
 		public void DoActivateTrigger() {
 			//Debug.Log("doactivate " + this);

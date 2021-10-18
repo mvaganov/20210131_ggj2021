@@ -12,7 +12,7 @@ namespace NonStandard.Data.Parse {
 			String, Char, Number, Hexadecimal, Boolean, Expression, SquareBrace, GenericArgs, CodeBody,
 			CodeInString, Sum, Difference, Product, Quotient, Modulus, Power, LogicalAnd, LogicalOr,
 			Assignment, Equal, LessThan, GreaterThan, LessThanOrEqual, GreaterThanOrEqual, MembershipOperator,
-			IfStatement, NotEqual, XmlCommentLine, CommentLine, CommentBlock, Default, CommandLine;
+			IfStatement, MaybeModifier, NotModifier, NotEqual, XmlCommentLine, CommentLine, CommentBlock, Default, CommandLine;
 
 		public static Delim[] _string_delimiter = new Delim[] { new DelimCtx("\"", ctx: "string", start: true, end: true), };
 		public static Delim[] _char_delimiter = new Delim[] { new DelimCtx("\'", ctx: "char", start: true, end: true), };
@@ -26,7 +26,7 @@ namespace NonStandard.Data.Parse {
 			//new DelimCtx("\"", ctx: "codeInString", s: true, e: true), 
 			new Delim("{{",parseRule:(str,i)=>new ParseResult(2,"{")),
 			new Delim("}}",parseRule:(str,i)=>new ParseResult(2,"}")),
-			new DelimCtx("{", ctx: "{}", start: true), 
+			new DelimCtx("{", ctx: "{}", start: true),
 			new DelimCtx("}", ctx: "{}", end: true) };
 		public static Delim[] _square_brace_delimiter = new Delim[] { new DelimCtx("[", ctx: "[]", start: true), new DelimCtx("]", ctx: "[]", end: true) };
 		public static Delim[] _triangle_brace_delimiter = new Delim[] { new DelimCtx("<", ctx: "<>", start: true), new DelimCtx(">", ctx: "<>", end: true) };
@@ -42,6 +42,12 @@ namespace NonStandard.Data.Parse {
 		};
 		public static Delim[] _conditional_operator = new Delim[] {
 			new DelimOp("if", "if statement",syntax:CodeRules.syntax_if_,resolve:CodeRules.op_if_statement, order:10, breaking:false),
+		};
+		public static Delim[] _maybe_operator = new Delim[] {
+			new DelimOp("maybe", "maybe modifier",syntax:CodeRules.syntax_mayB,resolve:CodeRules.op_mayB, order:210, breaking:false),
+		};
+		public static Delim[] _not_operator = new Delim[] {
+			new DelimOp("not", "not modifier",syntax:CodeRules.syntax_not,resolve:CodeRules.op_not, order:220, breaking:false),
 		};
 		public static Delim[] _prefix_unary_operator = new Delim[] { "++", "--", "!", "-", "~" };
 		public static Delim[] _postfix_unary_operator = new Delim[] { "++", "--" };
@@ -88,7 +94,7 @@ namespace NonStandard.Data.Parse {
 		public static Delim[] _block_comment_delimiter = new Delim[] { new DelimCtx("/*", ctx: "/**/", start: true), new DelimCtx("*/", ctx: "/**/", end: true) };
 		public static Delim[] _line_comment_delimiter = new Delim[] { new DelimCtx("//", ctx: "//", start: true) };
 		public static Delim[] _XML_line_comment_delimiter = new Delim[] { new DelimCtx("///", ctx: "///", start: true) };
-		public static Delim[] _end_of_line_comment = new Delim[] { new DelimCtx("\n", ctx: "//", end: true, printable: false), new DelimCtx("\r", ctx: "//", end: true,printable:false) };
+		public static Delim[] _end_of_line_comment = new Delim[] { new DelimCtx("\n", ctx: "//", end: true, printable: false), new DelimCtx("\r", ctx: "//", end: true, printable: false) };
 		public static Delim[] _erroneous_end_of_string = new Delim[] { new DelimCtx("\n", ctx: "string", end: true, printable: false), new DelimCtx("\r", ctx: "string", end: true, printable: false) };
 		public static Delim[] _end_of_XML_line_comment = new Delim[] { new DelimCtx("\n", ctx: "///", end: true, printable: false), new DelimCtx("\r", ctx: "///", end: true, printable: false) };
 		public static Delim[] _line_comment_continuation = new Delim[] { new Delim("\\", parseRule: CommentEscape) };
@@ -114,11 +120,11 @@ namespace NonStandard.Data.Parse {
 			_expression_delimiter, _code_body_delimiter, _square_brace_delimiter, _ternary_operator_delimiter,
 			_instruction_finished_delimiter, _list_item_delimiter, _membership_operator, _prefix_unary_operator,
 			_binary_operator, _binary_logic_operatpor, _assignment_operator, _lambda_operator, _math_operator,
-			_block_comment_delimiter, _line_comment_delimiter, _number, _boolean, _conditional_operator);
+			_block_comment_delimiter, _line_comment_delimiter, _number, _boolean, _conditional_operator, _maybe_operator, _not_operator);
 		public static Delim[] CommandLineDelimiters = CombineDelims(_string_delimiter, _char_delimiter,
 			_expression_delimiter, _code_body_delimiter, _square_brace_delimiter,//_ternary_operator_delimiter,
 			_instruction_finished_delimiter, _list_item_delimiter, //_membership_operator, _prefix_unary_operator,
-			//_binary_operator, _binary_logic_operatpor, _assignment_operator, _lambda_operator, //_math_operator,
+																   //_binary_operator, _binary_logic_operatpor, _assignment_operator, _lambda_operator, //_math_operator,
 			_block_comment_delimiter, _line_comment_delimiter //, _conditional_operator
 			);
 		public static Delim[] LineCommentDelimiters = CombineDelims(_line_comment_continuation, _end_of_line_comment);
@@ -153,6 +159,8 @@ namespace NonStandard.Data.Parse {
 			GreaterThan = new ParseRuleSet("greater than", CodeRules.None);
 			MembershipOperator = new ParseRuleSet("membership operator", CodeRules.None);
 			IfStatement = new ParseRuleSet("if statement", CodeRules.None);
+			MaybeModifier = new ParseRuleSet("maybe modifier", CodeRules.None);
+			NotModifier = new ParseRuleSet("not modifier", CodeRules.None);
 			LessThanOrEqual = new ParseRuleSet("less than or equal", CodeRules.None);
 			GreaterThanOrEqual = new ParseRuleSet("greater than or equal", CodeRules.None);
 			NotEqual = new ParseRuleSet("not equal", CodeRules.None);
@@ -168,7 +176,7 @@ namespace NonStandard.Data.Parse {
 			CommentLine.Whitespace = CodeRules.WhitespaceNone;
 			String.Whitespace = CodeRules.WhitespaceNone;
 			String.Delimiters = CodeRules.StringLiteralDelimiters;
-//			Boolean.Delimiters = CombineDelims(_boolean);
+			//			Boolean.Delimiters = CombineDelims(_boolean);
 			//Char.whitespace = CodeRules.WhitespaceNone;
 			//Char.delimiters = CodeRules.StringLiteralDelimiters;
 			Number.Whitespace = CodeRules.WhitespaceNone;
@@ -217,14 +225,21 @@ namespace NonStandard.Data.Parse {
 			return delims.ToArray();
 		}
 		private static readonly string[] _if_operand_names = new string[] { "syntax", "conditional perand", "true case" };
-		private static readonly string[] _ifelse_operand_names = new string[] { "syntax", "conditional perand", "true case", "else clause", "false case"};
+		private static readonly string[] _ifelse_operand_names = new string[] { "syntax", "conditional perand", "true case", "else clause", "false case" };
 		private static readonly string[] _binary_operand_names = new string[] { "left operand", "syntax", "right operand" };
+		private static readonly string[] _unary_operand_names = new string[] { "syntax", "operand" };
 		public static SyntaxTree syntax_IfStatementGeneral(List<Token> tokens, Tokenizer tok, int index, string contextName) {
-			if(tokens.Count > index+4 && tokens[index+3].StringifySmall() == "else") {
+			if (tokens.Count > index + 4 && tokens[index + 3].StringifySmall() == "else") {
 				return syntax_GenericOp(tokens, tok, index, contextName, 0, _ifelse_operand_names);
 			}
 			// TODO if there is an else, use _ifelse_operand_names
 			return syntax_GenericOp(tokens, tok, index, contextName, 0, _if_operand_names);
+		}
+		public static SyntaxTree syntax_Maybe(List<Token> tokens, Tokenizer tok, int index, string contextName) {
+			return syntax_GenericOp(tokens, tok, index, contextName, 0, _unary_operand_names);
+		}
+		public static SyntaxTree syntax_Not(List<Token> tokens, Tokenizer tok, int index, string contextName) {
+			return syntax_GenericOp(tokens, tok, index, contextName, 0, _unary_operand_names);
 		}
 		public static SyntaxTree syntax_BinaryOp(List<Token> tokens, Tokenizer tok, int index, string contextName) {
 			return syntax_GenericOp(tokens, tok, index, contextName, -1, _binary_operand_names);
@@ -239,11 +254,11 @@ namespace NonStandard.Data.Parse {
 				}
 				return syntax;
 			}
-			for(int i = 0; i < operandNames.Length; ++i) {
+			for (int i = 0; i < operandNames.Length; ++i) {
 				int id = whereContextBegins + i;
 				if (id == 0) { continue; }
 				id += index;
-				if (id < 0 || id >= tokens.Count) { tok.AddError(t, "missing "+operandNames[i]); return null; }
+				if (id < 0 || id >= tokens.Count) { tok.AddError(t, "missing " + operandNames[i]); return null; }
 			}
 			ParseRuleSet foundContext = ParseRuleSet.GetContext(contextName);
 			if (foundContext == null) { throw new Exception(tok.AddError(t, "context '" + contextName + "' does not exist").ToString()); }
@@ -278,6 +293,8 @@ namespace NonStandard.Data.Parse {
 		public static SyntaxTree syntax_gte(Tokenizer tok, List<Token> tokens, int index) { return syntax_BinaryOp(tokens, tok, index, "greater than or equal"); }
 		public static SyntaxTree syntax_mem(Tokenizer tok, List<Token> tokens, int index) { return syntax_BinaryOp(tokens, tok, index, "membership operator"); }
 		public static SyntaxTree syntax_if_(Tokenizer tok, List<Token> tokens, int index) { return syntax_IfStatementGeneral(tokens, tok, index, "if statement"); }
+		public static SyntaxTree syntax_mayB(Tokenizer tok, List<Token> tokens, int index) { return syntax_Maybe(tokens, tok, index, "maybe modifier"); }
+		public static SyntaxTree syntax_not(Tokenizer tok, List<Token> tokens, int index) { return syntax_Not(tokens, tok, index, "not modifier"); }
 
 		public static object SimplifySingleTermParenthesis(List<object> terms) {
 			if (terms != null) { switch (terms.Count) { case 0: return null; case 1: return terms[0]; } }
@@ -299,7 +316,7 @@ namespace NonStandard.Data.Parse {
 		/// <param name="simplify">if true, and the result is a list with one item, the list is stripped away and the single item is returned</param>
 		public static void op_ResolveToken(ITokenErrLog tok, Token token, object scope, out object value, out Type type, ResolvedEnoughDelegate isItResolvedEnough = null) {
 			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(token)) { value = token; type = token.GetType(); return; }
-//			Show.Log("resolving: " + token.ToString());
+			//			Show.Log("resolving: " + token.ToString());
 			value = token.Resolve(tok, scope, isItResolvedEnough);
 			type = (value != null) ? value.GetType() : null;
 			if (scope == null || type == null) { return; } // no scope, or no data, easy. we're done.
@@ -312,15 +329,15 @@ namespace NonStandard.Data.Parse {
 			if (syntax != null && syntax.IsTextLiteral()) { return; } // data is explicitly meant to be a string, done.
 			Type t;
 			object v;
-			if(op_SearchForMember(name, out v, out t, scope)) {
+			if (op_SearchForMember(name, out v, out t, scope)) {
 				value = v;
 				type = t;
 			}
 		}
 		public static bool op_SearchForMember(string name, out object value, out Type type, object scope) {
 			switch (name) { // TODO can this switch be removed because the tokens are in CodeRules?
-			case "null": value= null;  type = null;         return true;
-			case "True": value = true;  type = typeof(bool); return true;
+			case "null": value = null; type = null; return true;
+			case "True": value = true; type = typeof(bool); return true;
 			case "False": value = false; type = typeof(bool); return true;
 			}
 			type = typeof(string);
@@ -348,14 +365,14 @@ namespace NonStandard.Data.Parse {
 		public static void op_BinaryArgs(ITokenErrLog tok, SyntaxTree syntax, object scope, out object left, out object right, out Type lType, out Type rType) {
 			SingleArgPreferDouble(tok, syntax.tokens[0], scope, out left, out lType, null);
 			bool missingRightArgument = false;
-			if (syntax.TokenCount >= 3 && syntax.Length  > 3) {
+			if (syntax.TokenCount >= 3 && syntax.Length > 3) {
 				Token r = syntax.tokens[2];
 				if (r.IsContextEnding()) { missingRightArgument = true; } // prevent a right-parenthesis from being read as a valid token
 			} else {
 				missingRightArgument = true;
 			}
 			if (missingRightArgument) {
-				tok.AddError(syntax.tokens[1], "missing right argument for binary operator "+syntax.rules.name);
+				tok.AddError(syntax.tokens[1], "missing right argument for binary operator " + syntax.rules.name);
 				right = null;
 				rType = null;
 				return;
@@ -386,7 +403,7 @@ namespace NonStandard.Data.Parse {
 					string meaningfulString;
 					double meaningfulNumber;
 					if (lString) {
-						if(!CodeConvert.IsConvertable(rType)) { break; }
+						if (!CodeConvert.IsConvertable(rType)) { break; }
 						meaningfulString = left.ToString();
 						CodeConvert.TryConvert(ref right, typeof(double));
 						meaningfulNumber = (double)right;
@@ -467,8 +484,8 @@ namespace NonStandard.Data.Parse {
 				switch (c) {
 				case '{':
 					if (i + 1 >= str.Length) {
-						tok.AddError(startI+i, "unexpected end of format token"+
-							(tokenId<0?"": (" "+tokenId.ToString())));
+						tok.AddError(startI + i, "unexpected end of format token" +
+							(tokenId < 0 ? "" : (" " + tokenId.ToString())));
 						return -1;
 					}
 					if (str[i + 1] != '{') {
@@ -491,7 +508,7 @@ namespace NonStandard.Data.Parse {
 					}
 					break;
 				case '}':
-					if (started>=0) {
+					if (started >= 0) {
 						if (tokenId < 0) {
 							tok.AddError(startI + i, "token missing leading base 10 integer index" +
 								(tokenId < 0 ? "" : (" " + tokenId.ToString())));
@@ -502,7 +519,7 @@ namespace NonStandard.Data.Parse {
 				}
 			}
 			if (started >= 0) {
-				tok.AddError(startI+started, "expected end of format token" +
+				tok.AddError(startI + started, "expected end of format token" +
 					(tokenId < 0 ? "" : (" " + tokenId.ToString())));
 			}
 			return -1;
@@ -539,7 +556,7 @@ namespace NonStandard.Data.Parse {
 				if (lType == typeof(string)) {
 					string format = left as string;
 					List<object> args;
-					if(rType != typeof(List<object>)) {
+					if (rType != typeof(List<object>)) {
 						args = new List<object>();
 						args.Add(right);
 					} else {
@@ -575,7 +592,7 @@ namespace NonStandard.Data.Parse {
 		public static bool op_reduceToBoolean(object obj, Type type) {
 			if (obj == null) return false;
 			if (type == typeof(string)) return ((string)obj).Length != 0;
-			if(!CodeConvert.TryConvert(ref obj, typeof(double))) { return true; }
+			if (!CodeConvert.TryConvert(ref obj, typeof(double))) { return true; }
 			double d = (double)obj;
 			return d != 0;
 		}
@@ -583,6 +600,36 @@ namespace NonStandard.Data.Parse {
 			public object str;
 			public override string ToString() { return str.ToString(); }
 			public DefaultString(object str) { this.str = str; }
+		}
+		
+		/// <summary>
+		/// returns false if the operand is false or an error
+		/// </summary>
+		/// <param name="tok"></param>
+		/// <param name="syntax"></param>
+		/// <param name="scope"></param>
+		/// <param name="isItResolvedEnough"></param>
+		/// <returns></returns>
+		public static object op_mayB(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
+			Token operand = syntax.tokens[1];
+			//string what = operand.ToString();
+			//Show.Log(what);
+			op_ResolveToken(tok, operand, scope, out object result, out Type cType);
+			result = (result is bool tb && tb != false);
+			if (result is bool f && f == false) {
+				tok.ClearErrors();
+			}
+			return result;
+		}
+		public static object op_not(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
+			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
+			Token operand = syntax.tokens[1];
+			op_ResolveToken(tok, operand, scope, out object result, out Type cType);
+			if (result is bool boolean) {
+				result = !boolean;
+			}
+			return result;
 		}
 		public static object op_if_statement(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
 			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }
