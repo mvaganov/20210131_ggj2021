@@ -66,7 +66,7 @@ namespace NonStandard.Data.Parse {
 			do {
 				if (syntax != null && !Increment()) return false;
 				syntax = Current.Token.GetAsSyntaxNode();
-			} while (syntax != null && syntax.IsComment());
+			} while (syntax != null && syntax.IsComment);
 			return true;
 		}
 
@@ -228,7 +228,7 @@ namespace NonStandard.Data.Parse {
 			SyntaxTree syntax = memberToken.GetAsSyntaxNode();
 			if (syntax != null) {
 				if (dictionaryAdd == null) {
-					if (syntax.IsTextLiteral()) {
+					if (syntax.IsTextLiteral) {
 						memberId = syntax.GetText();
 					} else {
 						AddError("unable to parse token (" + syntax.rules.name + "), expected member name for " + resultType);
@@ -367,7 +367,7 @@ namespace NonStandard.Data.Parse {
 
 		private bool TryGetValue_Syntax(Token token, SyntaxTree syntax) {
 			bool subContextUsingSameList = syntax.tokens == Current.tokens;
-			if (syntax.IsTextLiteral()) {
+			if (syntax.IsTextLiteral) {
 				memberValue = syntax.GetText();
 			} else {
 				int index = Current.tokenIndex;

@@ -326,7 +326,7 @@ namespace NonStandard.Data.Parse {
 				return;
 			}
 			SyntaxTree syntax = token.GetAsSyntaxNode();
-			if (syntax != null && syntax.IsTextLiteral()) { return; } // data is explicitly meant to be a string, done.
+			if (syntax != null && syntax.IsTextLiteral) { return; } // data is explicitly meant to be a string, done.
 			Type t;
 			object v;
 			if (op_SearchForMember(name, out v, out t, scope)) {
@@ -692,16 +692,11 @@ namespace NonStandard.Data.Parse {
 					//if (SyntaxTree.TryExecuteFunction(left, variableName, arguments, out object funcResult, tok, isItResolvedEnough)) {
 					//	return funcResult;
 					//}
-					return new MethodCall(left, variableName);
+					return new Invocation(left, variableName);
 				}
 				val = syntax.tokens[0].ToString()+syntax.tokens[1]+syntax.tokens[2];
 			}
 			return val;
-		}
-		public class MethodCall {
-			public object target;
-			public object methodName;
-			public MethodCall(object target, object methodName) { this.target = target; this.methodName = methodName; }
 		}
 		public static object op_and(ITokenErrLog tok, SyntaxTree syntax, object scope, ResolvedEnoughDelegate isItResolvedEnough) {
 			if (isItResolvedEnough != null && isItResolvedEnough.Invoke(syntax)) { return syntax; }

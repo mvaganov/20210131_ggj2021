@@ -47,7 +47,7 @@ namespace NonStandard.Data.Parse {
 			if(d != null) { return d.ToString(); }
 			if(IsValid) return ToString(syntax.TextRaw);
 			string output = syntax.rules.name;
-			if (syntax.IsTextLiteral()) {
+			if (syntax.IsTextLiteral) {
 				output += "(" + syntax.GetText() + ")";
 			}
 			return output;
