@@ -22,8 +22,17 @@ namespace NonStandard.Data.Parse {
 		/// a token can be valid without meta data, as a simple marker. but if it has invalid marks, and no data, it's bad.
 		/// </summary>
 		public bool IsValid { get { return index >= 0 && length >= 0; } }
+		public bool IsSyntax => meta != null && meta.GetType() == typeof(SyntaxTree);
+		public bool IsSyntaxBoundary {
+			get {
+				/// <see cref="SyntaxTree"> boundaries, like "(" and ")" or "\"" or "{" and "}" have a valid index and length
+				if (!IsValid) return false;
+				/// and point at a <see cref="SyntaxTree"/> instead of at a string or <see cref="Delim"/> or <see cref="TokenSubstitution"/>
+				return IsSyntax;// meta != null && meta.GetType() == typeof(SyntaxTree);
+			}
+		}
 		public bool IsSimpleString { get { return index >= 0 && length >= 0 && 
-					(meta is string || meta is SyntaxTree pce && pce.TextRaw != null); } }
+					(meta is string || meta is SyntaxTree syntax && syntax.TextRaw != null); } }
 		public bool IsDelim { get { return meta is Delim; } }
 		public int GetBeginIndex() { return index; }
 		public int GetEndIndex() { return index + length; }
@@ -32,14 +41,14 @@ namespace NonStandard.Data.Parse {
 		public string Stringify() { return GetAsSmallText(); }
 		public override string ToString() { return GetAsBasicToken(); }
 		public string ToDebugString() {
-			SyntaxTree pce = meta as SyntaxTree;
-			if (pce == null) { return Resolve(null, null).ToString(); }
-			Delim d = pce.sourceMeta as Delim;
+			SyntaxTree syntax = meta as SyntaxTree;
+			if (syntax == null) { return Resolve(null, null).ToString(); }
+			Delim d = syntax.sourceMeta as Delim;
 			if(d != null) { return d.ToString(); }
-			if(IsValid) return ToString(pce.TextRaw);
-			string output = pce.rules.name;
-			if (pce.IsTextLiteral()) {
-				output += "(" + pce.GetText() + ")";
+			if(IsValid) return ToString(syntax.TextRaw);
+			string output = syntax.rules.name;
+			if (syntax.IsTextLiteral()) {
+				output += "(" + syntax.GetText() + ")";
 			}
 			return output;
 		}

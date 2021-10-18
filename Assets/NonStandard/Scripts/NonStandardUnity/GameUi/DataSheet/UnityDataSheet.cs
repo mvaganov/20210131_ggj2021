@@ -63,7 +63,7 @@ namespace NonStandard.GameUi.DataSheet {
 		/// </summary>
 		/// <param name="scope"></param>
 		public void OnClick() {
-			Show.Log(debugMetaData);
+			//Show.Log(debugMetaData);
 			//Show.Log("onClick " + scope + "." + script.Stringify());
 			TokenErrorLog tok = new TokenErrorLog();
 			if (script.meta != null) {
@@ -348,9 +348,9 @@ namespace NonStandard.GameUi.DataSheet {
 					fieldUi = Instantiate(prefab);
 				}
 
-				if (colS.data.onClick.IsSimpleString) {
-					UiClick.ClearOnClick(fieldUi);
+				if (colS.data.onClick.IsSyntax) {
 					ClickableScriptedCell clickable = fieldUi.GetComponent<ClickableScriptedCell>();
+					UiClick.ClearOnClick(fieldUi);
 					if (fieldUi != null) { Destroy(clickable); }
 					clickable = fieldUi.AddComponent<ClickableScriptedCell>();
 					clickable.Set(rowData.obj, colS.data.onClick);

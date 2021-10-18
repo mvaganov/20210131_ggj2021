@@ -14,9 +14,9 @@ namespace NonStandard.Data {
 	public class ScriptedDictionary : MonoBehaviour, IDictionary<string, object>
 	{
 		[SerializeField, HideInInspector] protected HashTable_stringobject dict = new HashTable_stringobject();
-#if UNITY_EDITOR
 		[TextArea(3, 10)]
 		public string values;
+#if UNITY_EDITOR
 		[TextArea(1, 10)]
 		public string parseResults;
 
@@ -41,16 +41,18 @@ namespace NonStandard.Data {
 			Debug.Log(outText);
 			textElement.text = outText;
 		}
-		void ShowChange() {
+#endif
+		public void UpdateValueStringWithDictionary() {
+#if UNITY_EDITOR
 			if (!validating) {
 				validating = true;
-				// TODO make this work better... current;y giving strings without quotes
-				Proc.Delay(0, () => { values = dict.Show(true); validating = false; });
-			}
-		}
-#else
-		void ShowChange(){}
 #endif
+				// TODO make this work better... currently giving strings without quotes
+				Proc.Delay(0, () => { values = dict.Show(true); validating = false; });
+#if UNITY_EDITOR
+			}
+#endif
+		}
 		public StringEvent dictionaryTostringChangeListener;
 		public ScriptedDictionary GetVars(string name) {
 			ScriptedDictionaryManager m = Global.Get<ScriptedDictionaryManager>();
@@ -62,10 +64,15 @@ namespace NonStandard.Data {
 
 		void Awake() {
 			Global.GetComponent<ScriptedDictionaryManager>().Register(this);
+			if (!string.IsNullOrEmpty(values)) {
+				Tokenizer tok = new Tokenizer();
+				CodeConvert.TryParse(values, out dict, null, tok);
+				if (tok.HasError()) { Show.Warning(tok.GetErrorString()); }
+			}
 		}
 		void Start() {
 #if UNITY_EDITOR
-			dict.onChange += (k, a, b) => { ShowChange(); };
+			dict.onChange += (k, a, b) => { UpdateValueStringWithDictionary(); };
 #endif
 			dict.onChange += (k, a, b) => {
 				if (dictionaryTostringChangeListener.GetPersistentEventCount() > 0) {

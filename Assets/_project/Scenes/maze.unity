@@ -2098,13 +2098,11 @@ MonoBehaviour:
   popup: {fileID: 1777391069}
   columnSetup: "{label:\"\", columnUi:\"braille\", valueScript:null, headerUi:refresh,
     widthOfColumn:30}\r\n{label:\"name\", columnUi:\"label\", valueScript:na\xA4,
-    headerUi:collabel, widthOfColumn:100}\r\n{l\xA4:\"speed\", c\xA4:\"txticon\",
-    v\xA4:(move.move.speed/5), h\xA4:collabel, w\xA4:30, d\xA4:0.0}\r\n{l\xA4:\"handicraft\",
-    c\xA4:\"input\", v\xA4:(data.handicraft), h\xA4:collabel, w\xA4:80, d\xA4:0.0}\r\n{l\xA4:\"activate\",
-    c\xA4:if(((data.GetVars(\"variables\")).(\"{0}Given\"%\"yellow\")) > 0){btn}else{none},
-    v\xA4:if(name==athlete){\"as\"+\"k for \\nhelp\"}else{0}, h\xA4:collabel, w\xA4:100,
-    onClick:{DoActivateTrigger()}}\n{l\xA4:\"+\", c\xA4:\"none\", v\xA4:null, h\xA4:addcol,
-    w\xA4:30,alwaysLast:1}\r"
+    headerUi:collabel, widthOfColumn:100}\r\n{l\xA4:\"activate\", \r\nc\xA4:if(data.cooperative){btn}else{none},
+    \r\n\tv\xA4:\"activate\", h\xA4:collabel, w\xA4:100, \r\n\tonClick:{DoActivateTrigger()}}\r\n{l\xA4:\"speed\",
+    c\xA4:\"txticon\", v\xA4:(move.move.speed/5), h\xA4:collabel, w\xA4:30, d\xA4:0.0}\r\n{l\xA4:\"handicraft\",
+    c\xA4:\"input\", v\xA4:(data.handicraft), h\xA4:collabel, w\xA4:80, d\xA4:0.0}\r\n{l\xA4:\"+\",
+    c\xA4:\"none\", v\xA4:null, h\xA4:addcol, w\xA4:30,alwaysLast:1}\r\n"
   dataPopulator:
     m_PersistentCalls:
       m_Calls:
@@ -3836,7 +3834,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2136581222}
   m_HandleRect: {fileID: 2136581221}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -11176,7 +11174,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1402369697}
   m_HandleRect: {fileID: 1402369696}
   m_Direction: 0
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -31951,14 +31949,12 @@ PrefabInstance:
     - target: {fileID: 2784749141738171664, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
       propertyPath: values
-      value: 'name"the player"
-
-        yellowGiven:0'
+      value: name"the player"
       objectReference: {fileID: 0}
     - target: {fileID: 2784749141738171664, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
       propertyPath: parseResults
-      value: "{\n  name : \"the player\",\n  yellowGiven : 0\n}"
+      value: "{\n  name : \"the player\"\n}"
       objectReference: {fileID: 0}
     - target: {fileID: 5045296447557990786, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
@@ -32014,6 +32010,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5049324865110904032, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
+        type: 3}
+      propertyPath: m_Name
+      value: body
       objectReference: {fileID: 0}
     - target: {fileID: 5049753555003703908, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
@@ -32134,6 +32135,20 @@ PrefabInstance:
         type: 3}
       propertyPath: m_SizeDelta.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5049753555989822290, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
+        type: 3}
+      propertyPath: values
+      value: 'name  : "player"
+
+        handicraft 2,
+
+        cooperative:True'
+      objectReference: {fileID: 0}
+    - target: {fileID: 5049753555989822290, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
+        type: 3}
+      propertyPath: parseResults
+      value: "{\n  name : \"player\",\n  handicraft : 2,\n  cooperative : True\n}"
       objectReference: {fileID: 0}
     - target: {fileID: 5049753556005701580, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}

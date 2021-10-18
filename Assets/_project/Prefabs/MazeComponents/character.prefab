@@ -208,7 +208,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   move: {fileID: 0}
-  dict: {fileID: 0}
+  data: {fileID: 0}
+  activateFunction:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &-9161983726472368407
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -223,8 +226,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dict:
     onAssignmentToFunction: 0
-  values: 
-  parseResults: null
+  values: cooperative:False
+  parseResults: "{\n  cooperative : False\n}"
   dictionaryTostringChangeListener:
     m_PersistentCalls:
       m_Calls: []

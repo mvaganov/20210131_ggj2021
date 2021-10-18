@@ -136,8 +136,7 @@ namespace NonStandard.Data.Parse {
 		public static void FindTerms(List<Token> tokens, int start, int length, List<int> found) {
 			for (int i = 0; i < length; ++i) {
 				Token t = tokens[start + i];
-				SyntaxTree e = t.GetAsSyntaxNode();
-				if (e != null && t.IsValid) { continue; } // skip entry tokens (count entry sub-lists
+				if (t.IsSyntaxBoundary) { continue; } // skip entry tokens (count sub-syntax trees)
 				found.Add(i);
 			}
 		}

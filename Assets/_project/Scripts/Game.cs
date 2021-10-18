@@ -198,6 +198,8 @@ public class Game : MonoBehaviour
 		InventoryCollector inv = npc.GetComponentInChildren<InventoryCollector>();
 		inv.inventory = InventoryManager.main;
 		inv.autoPickup = true;
+		ScriptedDictionary dict = npc.GetComponent<ScriptedDictionary>();
+		dict["cooperative"] = true;
 	}
 	public void GoalCheck(GameObject inventoryObject) {
 		if (idolCreator.idols == null) return;

@@ -9,6 +9,7 @@ using System.Text;
 using static NonStandard.Commands.Commander;
 using NonStandard.Cli;
 using Commander = NonStandard.Commands.Commander;
+using NonStandard.Data;
 
 namespace NonStandard.GameUi.Dialog {
 	public class DialogViewer : MonoBehaviour {
@@ -42,40 +43,14 @@ namespace NonStandard.GameUi.Dialog {
 		public ListItemUi AddDialogOption(Dialog.DialogOption option, bool scrollAllTheWayDown) {
 			if (!initialized) { Init(); }
 			ListItemUi li = null;
-			Tokenizer tok;
-			do {
-				Dialog.Choice c = option as Dialog.Choice;
-				if (c != null) {
-					li = listUi.AddItem(option, DialogManager.Instance.GetScriptScope().Format(c.text), () => {
-						//NonStandard.Show.Log("------- "+c.command);
-						Commander.Instance.ParseCommand(new Instruction(c.command, li), Print, out tok);
-						//NonStandard.Show.Log("/////// " + c.command);
-						if (tok?.HasError() ?? false) { Print(tok.GetErrorString()); }
-						PossiblyAddParseCommandOutputToDialog(option);
-					}, prefab_buttonUi);
-					currentChoices.Add(li);
-					break;
-				}
-				Dialog.Text t = option as Dialog.Text;
-				if (t != null) {
-					li = listUi.AddItem(option, DialogManager.Instance.GetScriptScope().Format(t.text), null, prefab_textUi);
-					break;
-				}
-				Dialog.Command cmd = option as Dialog.Command;
-				if (cmd != null) {
-					//NonStandard.Show.Log("executing command "+cmd.command);
-					Commander.Instance.ParseCommand(new Instruction(cmd.command, option), Print, out tok);
-					if (tok?.HasError() ?? false) { Print(Col.r()+tok.GetErrorString()); }
-					PossiblyAddParseCommandOutputToDialog(option);
-					break;
-				}
+			switch (option) {
+			case Dialog.Choice c: AddDialogOption_Choice(c, out li, option); break;
+			case Dialog.Text t: AddDialogOption_Text(t, out li, option); break;
+			case Dialog.Command cmd: AddDialogOption_Command(cmd, out li, option); break;
 			}
-			while (false);
 			if (li != null) {
 				Dialog.Text txt = option as Dialog.Text;
-				if (txt != null) {
-					li.TextAlignment = txt.anchorText;
-				}
+				if (txt != null) { li.TextAlignment = txt.anchorText; }
 			}
 			if (scrollAllTheWayDown && !goingToScrollAllTheWayDown) {
 				goingToScrollAllTheWayDown = true;
@@ -86,6 +61,30 @@ namespace NonStandard.GameUi.Dialog {
 				// 100ms (1/10th of a second) is not bad for UI lag, and should be enough time for the UI to update itself
 			}
 			return li;
+		}
+
+		private void AddDialogOption_Choice(Dialog.Choice c, out ListItemUi listItem, Dialog.DialogOption option) {
+			ListItemUi li = null;
+			li = listItem = listUi.AddItem(option, DialogManager.Instance.GetScriptScope().Format(c.text), () => {
+				//NonStandard.Show.Log("------- "+c.command);
+				Tokenizer tok = new Tokenizer();
+				Commander.Instance.ParseCommand(new Instruction(c.command, li), Print, out tok);
+				//NonStandard.Show.Log("/////// " + c.command);
+				if (tok?.HasError() ?? false) { Print(tok.GetErrorString()); }
+				PossiblyAddParseCommandOutputToDialog(option);
+			}, prefab_buttonUi);
+			currentChoices.Add(li);
+		}
+		private void AddDialogOption_Text(Dialog.Text t, out ListItemUi listItem, Dialog.DialogOption option) {
+			listItem = listUi.AddItem(option, DialogManager.Instance.GetScriptScope().Format(t.text), null, prefab_textUi);
+		}
+		private void AddDialogOption_Command(Dialog.Command cmd, out ListItemUi listItem, Dialog.DialogOption option) {
+			//NonStandard.Show.Log("executing command "+cmd.command);
+			Tokenizer tok = new Tokenizer();
+			Commander.Instance.ParseCommand(new Instruction(cmd.command, option), Print, out tok);
+			if (tok?.HasError() ?? false) { Print(Col.r() + tok.GetErrorString()); }
+			PossiblyAddParseCommandOutputToDialog(option);
+			listItem = null;
 		}
 		public void ShowErrors(List<ParseError> errors) {
 			if (errors.Count > 0) {
@@ -156,7 +155,8 @@ namespace NonStandard.GameUi.Dialog {
 				for (int i = 0; i < dialog.options.Length; ++i) {
 					Dialog.DialogOption opt = dialog.options[i];
 					//NonStandard.Show.Log("checking opt " + NonStandard.Show.Stringify(opt, false));
-					if (opt.Available(tok, Commander.Instance.GetScope())) {
+					ScriptedDictionaryManager m = Global.Get<ScriptedDictionaryManager>();
+					if (opt.Available(tok, m.Main)) {
 						AddDialogOption(opt, isScrolledAllTheWayDown);
 						//NonStandard.Show.Log("added" + NonStandard.Show.Stringify(opt, false));
 					} else {

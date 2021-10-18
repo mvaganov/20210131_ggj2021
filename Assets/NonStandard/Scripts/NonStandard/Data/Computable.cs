@@ -151,10 +151,13 @@ namespace NonStandard.Data {
 			pathNotes.Remove(t);
 		}
 		public override string ToString() { return key + ":" + val; }
-
+		public object Printable(object o) {
+			if (o is string s) { return "\"" + s.Escape() + "\""; }
+			return o.StringifySmall();
+		}
 		public string ToString(bool showDependencies, bool showDependents) {
 			StringBuilder sb = new StringBuilder();
-			sb.Append(key).Append(":").Append(val);
+			sb.Append(Printable(key)).Append(":").Append(Printable(val));
 			if (showDependencies) { showDependencies = reliesOn != null && reliesOn.Count != 0; }
 			if (showDependents) { showDependents = dependents != null && dependents.Count != 0; }
 			if (showDependencies || showDependents) {

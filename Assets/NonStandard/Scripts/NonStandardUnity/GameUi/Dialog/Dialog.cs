@@ -1,4 +1,5 @@
-﻿using NonStandard.Data;
+﻿using NonStandard.Commands;
+using NonStandard.Data;
 using NonStandard.Data.Parse;
 using NonStandard.Extension;
 using System;
@@ -23,6 +24,17 @@ namespace NonStandard.GameUi.Dialog {
 		}
 		[Serializable] public class Choice : Text { public string command; }
 		[Serializable] public class Command : DialogOption { public string command; }
+
+		/// <param name="tok"></param>
+		/// <param name="scope">Commander.Instance.GetScope()</param>
+		public void ExecuteCommands(Tokenizer tok, object scope) {
+			if (options == null) { return; }
+			for (int i = 0; i < options.Length; ++i) {
+				Command cmd = options[i] as Command;
+				if (cmd == null) { continue; }
+				Commander.Instance.ParseCommand(new Commander.Instruction(cmd.command, scope), null, out tok);
+			}
+		}
 	}
 	public class TemplatedDialog : Dialog {
 		public string template, parameters;
