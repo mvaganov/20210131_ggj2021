@@ -258,7 +258,7 @@ namespace NonStandard.Character {
 					delta.y = 0;
 					float hDist = delta.magnitude;
 					// estimate max jump distance TODO work out this math...
-					float height = mover.jump.maxJumpHeight;
+					float height = mover.jump.max;
 					float v = Mathf.Sqrt(height * 2);
 
 					float jDist = mover.MoveSpeed * height;

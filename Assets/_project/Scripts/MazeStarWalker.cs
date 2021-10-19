@@ -174,7 +174,7 @@ public class MazeStarWalker : MonoBehaviour {
 							switch (moveType) {
 							case MazeAStar.EdgeMoveType.Walk: follower.AddWaypoint(pos, false); break;
 							case MazeAStar.EdgeMoveType.Fall: follower.AddWaypoint(pos, false, 0, true); break;
-							case MazeAStar.EdgeMoveType.Jump: follower.AddWaypoint(pos, false, characterMover.jump.fullJumpPressDuration); break;
+							case MazeAStar.EdgeMoveType.Jump: follower.AddWaypoint(pos, false, characterMover.jump.fullPressDuration); break;
 							}
 						}
 						follower.SetCurrentTarget(pos);

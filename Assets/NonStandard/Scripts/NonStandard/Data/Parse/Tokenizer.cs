@@ -29,12 +29,9 @@ namespace NonStandard.Data.Parse {
 		public ParseError AddError(Token token, string message) { return AddError(token.index, message); }
 		public void AddError(ParseError error) { errors.Add(error); }
 		public string GetErrorString() { return errors.JoinToString("\n"); }
-		public bool ShowErrorTo(Show.PrintFunc show) {
-			if (errors.Count == 0) return false;
-			show.Invoke(GetErrorString()); return true;
-		}
 	}
 	public static class TokenizationErrorStorageExtension {
+		public static void Log(this ITokenErrLog self) { self.ShowErrorTo(NonStandard.Show.Log); }
 		public static ParseError AddError(this ITokenErrLog self, int index, string message) {
 			ParseError e = new ParseError(index, self.GetTextRows(), message); self.AddError(e); return e;
 		}

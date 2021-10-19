@@ -96,7 +96,7 @@ namespace NonStandard.Data {
 			public object SetFieldToken(Token value, ITokenErrLog errLog) {
 				_fieldToken = value;
 				RefreshEditPath(true, null, errLog);
-				if (errLog.HasError()) { return null; }
+				if (errLog != null && errLog.HasError()) { return null; } // TODO print errors from the RefreshEditPath function, no?
 				if (editPath != null && dataSheet.rows.Count > 0) {
 					return RefreshStrictlyTypedVariablePathBasedOnDataFromSpreadsheet(errLog);
 				}

@@ -28,7 +28,7 @@ namespace NonStandard.Character {
 		/// </summary>
 		public float JumpButtonTimed { get { return jump.TimedJumpPress; } set { jump.TimedJumpPress = value; } }
 		public float MoveSpeed { get { return move.speed; } set { move.speed = value; } }
-		public float JumpHeight { get { return jump.maxJumpHeight; } set { jump.maxJumpHeight = value; } }
+		public float JumpHeight { get { return jump.max; } set { jump.max = value; } }
 		private float lastJump = -1;
 		public float StrafeRightMovement { get { return move.strafeRightMovement; } set { move.strafeRightMovement = value; } }
 		public float MoveForwardMovement { get { return move.moveForwardMovement; } set { move.moveForwardMovement = value; } }
@@ -234,7 +234,7 @@ namespace NonStandard.Character {
 							oppositionDirection = surfaceNormal;
 						}
 						if(automaticMovement.jumpAtObstacle){
-							cm.jump.TimedJumpPress = cm.jump.fullJumpPressDuration;
+							cm.jump.TimedJumpPress = cm.jump.fullPressDuration;
 						}
 					}
 				}
@@ -318,17 +318,17 @@ namespace NonStandard.Character {
 			/// <summary>while this is true, the jump module is trying to jump</summary>
 			[HideInInspector] public bool pressed;
 			/// <summary>for debugging: shows the jump arc, and how it grows as Pressed is held</summary>
-			[HideInInspector] public bool showJumpArc = false;
+			public bool showJumpArc = false;
 			/// <summary>allows ret-con of a missed jump (user presses jump a bit late after walking off a ledge)</summary>
 			[HideInInspector] public bool forgiveLateJumps = true;
 			[Tooltip("Enable or disable jumping")]
 			public bool enabled = true;
 			[Tooltip("Tapping the jump button for the shortest amount of time possible will result in this height")]
-			public float minJumpHeight = .125f;
+			public float min = .125f;
 			[Tooltip("Holding the jump button for fullJumpPressDuration seconds will result in this height")]
-			public float maxJumpHeight = 1;
+			public float max = 1.5f;
 			[Tooltip("How long the jump button must be pressed to jump the maximum height")]
-			public float fullJumpPressDuration = .25f;
+			public float fullPressDuration = .25f;
 			[Tooltip("For double-jumping, put a 2 here. To eliminate jumping, put a 0 here.")]
 			public int doubleJumps = 0;
 			[Tooltip("Used for AI driven jumps of different height")]
@@ -423,9 +423,9 @@ namespace NonStandard.Character {
 			}
 			private void CalcJumpOverTime(ulong jumpMsSoFar, float gForce, out float yPos, out float yVel) {
 				float jumptiming = jumpMsSoFar / 1000f;
-				float jumpP = Mathf.Min(jumptiming / fullJumpPressDuration, 1);
+				float jumpP = Mathf.Min(jumptiming / fullPressDuration, 1);
 				if (jumpP >= 1) { heightSet = true; }
-				targetJumpHeight = (maxJumpHeight - minJumpHeight) * jumpP + minJumpHeight;
+				targetJumpHeight = (max - min) * jumpP + min;
 				float jVelocity = CalcJumpVelocity(targetJumpHeight, gForce);
 				float jtime = 500 * CalcStandardDuration_WithJumpVelocity(jVelocity, gForce);
 				peakTime = jumpTime + (uint)jtime;
