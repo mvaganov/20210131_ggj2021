@@ -19,6 +19,7 @@ namespace NonStandard.Ui.Mouse {
 		private Direction2D heldDir = Direction2D.None;
 
 		public UnityEvent_Vector2 onResize = new UnityEvent_Vector2();
+		public UnityEvent_Vector2 onDoubleClick = new UnityEvent_Vector2();
 
 		public static void ResizeRect(RectTransform rectTransform, Vector2 move, Direction2D dir) {
 			Vector2 min = rectTransform.offsetMin, max = rectTransform.offsetMax;
@@ -101,6 +102,9 @@ namespace NonStandard.Ui.Mouse {
 				heldDir = mouseCursorState;
 			}
 			data.Use();
+			if (data is PointerEventData  eventData && eventData.clickCount == 2) {
+				onDoubleClick?.Invoke(eventData.position);
+			}
 		}
 
 		public virtual void BeginDrag(BaseEventData data) {

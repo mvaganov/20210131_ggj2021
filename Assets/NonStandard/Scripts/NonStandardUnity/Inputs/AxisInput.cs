@@ -1,25 +1,22 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace NonStandard.Inputs {
 	public class AxisInput : MonoBehaviour {
 		public List<AxBind> AxisBinds = new List<AxBind>();
-		private void Start() { Init(AxisBinds); }
-		private void OnEnable() { Enable(AxisBinds); }
-		private void OnDisable() { Disable(AxisBinds); }
+
 		public static void Init(IList<AxBind> AxisBinds) {
 			if (AxisBinds.Count > 0) {
 				for (int i = 0; i < AxisBinds.Count; ++i) { AxisBinds[i].Init(); }
 			}
 		}
 
-		public static void Enable(IList<AxBind> AxisBinds) {
+		public static void OnEnable(IList<AxBind> AxisBinds) {
 			if (AxisBinds.Count > 0 && !AppInput.HasAxisBind(AxisBinds[0])) {
 				for (int i = 0; i < AxisBinds.Count; ++i) { AppInput.AddListener(AxisBinds[i]); }
 			}
 		}
-		public static void Disable(IList<AxBind> AxisBinds) {
+		public static void OnDisable(IList<AxBind> AxisBinds) {
 			if (AppInput.IsQuitting) return;
 			if (AxisBinds.Count > 0 && AppInput.HasAxisBind(AxisBinds[0])) {
 				for (int i = 0; i < AxisBinds.Count; ++i) { AppInput.RemoveListener(AxisBinds[i]); }
@@ -35,6 +32,9 @@ namespace NonStandard.Inputs {
 			if (kBind != null) { kBind.disable = !enable; return true; }
 			return false;
 		}
+		private void Start() { Init(AxisBinds); }
+		private void OnEnable() { OnEnable(AxisBinds); }
+		private void OnDisable() { OnDisable(AxisBinds); }
 		public bool RemoveBind(string name) { return RemoveBind(AxisBinds, name); }
 		public bool SetEnableBind(string name, bool enable) { return SetEnableBind(AxisBinds, name, enable); }
 	}

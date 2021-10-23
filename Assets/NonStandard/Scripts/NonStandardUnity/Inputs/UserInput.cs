@@ -16,8 +16,8 @@ namespace NonStandard.Inputs {
 		public List<AxBind> AxisBinds = new List<AxBind>();
 
 		private void Start() { KeyInput.Init(KeyBinds); AxisInput.Init(AxisBinds); }
-		private void OnEnable() { KeyInput.Enable(KeyBinds); AxisInput.Enable(AxisBinds); }
-		private void OnDisable() { KeyInput.Disable(KeyBinds); AxisInput.Disable(AxisBinds); }
+		private void OnEnable() { KeyInput.Enable(KeyBinds); AxisInput.OnEnable(AxisBinds); }
+		private void OnDisable() { KeyInput.Disable(KeyBinds); AxisInput.OnDisable(AxisBinds); }
 
 		public void KeyBind(KCode kCode, KModifier modifier, string name, string methodName, object value = null, object target = null) {
 			KeyInput.Bind(KeyBinds, kCode, modifier, name, methodName, value, target);

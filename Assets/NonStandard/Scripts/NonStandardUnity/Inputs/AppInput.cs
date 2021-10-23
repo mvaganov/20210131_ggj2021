@@ -1,10 +1,15 @@
-﻿using NonStandard.Process;
+﻿//#define USING_UNITY_INPUT_SYSTEM
+using NonStandard.Process;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
+#if USING_UNITY_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+#endif
 
 namespace NonStandard.Inputs {
 	public class AppInput : UserInput {
@@ -219,29 +224,91 @@ namespace NonStandard.Inputs {
 		//	_inputField.onDeselect.AddListener( s_EndIgnoreKeyBinding );
 		//}
 
-		public static Vector3 MousePosition { get { return Input.mousePosition; } }
-		public static Vector3 MousePositionDelta { get { return new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y")); } }
+		public static Vector3 MousePosition {
+			get {
+				#if USING_UNITY_INPUT_SYSTEM
+				return Mouse.current.position.ReadValue();
+				#else
+				return Input.mousePosition;
+				#endif
+			}
+		}
+
+		public static Vector3 MousePositionDelta {
+			get {
+				#if USING_UNITY_INPUT_SYSTEM
+				return Mouse.current.delta.ReadValue();
+				#else
+				return new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+				#endif
+			}
+		}
 
 		public static bool IsOldKeyCode(KCode code) { return Enum.IsDefined(typeof(KeyCode), (int)code); }
 
-		private static bool GetKey_internal(KCode key) {
-			bool v = false;
+#if USING_UNITY_INPUT_SYSTEM
+		private static bool GetKey_internal_InputSystem(KCode key) {
 			switch (key) {
-			case KCode.NoShift: v = !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift); break;
-			case KCode.NoCtrl: v = !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl); break;
-			case KCode.NoAlt: v = !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt); break;
-			case KCode.AnyAlt: v = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt); break;
-			case KCode.AnyCtrl: v = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl); break;
-			case KCode.AnyShift: v = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift); break;
-			case KCode.MouseWheelUp: v = Input.GetAxis("Mouse ScrollWheel") > 0; break;
-			case KCode.MouseWheelDown: v = Input.GetAxis("Mouse ScrollWheel") < 0; break;
-			case KCode.MouseXUp: v = Input.GetAxis("Mouse X") > 0; break;
-			case KCode.MouseXDown: v = Input.GetAxis("Mouse X") < 0; break;
-			case KCode.MouseYUp: v = Input.GetAxis("Mouse Y") > 0; break;
-			case KCode.MouseYDown: v = Input.GetAxis("Mouse Y") < 0; break;
+				case KCode.NoShift: return !Keyboard.current.leftShiftKey.isPressed && !Keyboard.current.rightShiftKey.isPressed;
+				case KCode.NoAlt: return !Keyboard.current.leftAltKey.isPressed && !Keyboard.current.rightAltKey.isPressed;
+				case KCode.NoCtrl: return !Keyboard.current.leftCtrlKey.isPressed && !Keyboard.current.rightCtrlKey.isPressed;
+				case KCode.AnyShift: return Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed;;
+				case KCode.AnyAlt: return Keyboard.current.leftAltKey.isPressed || Keyboard.current.rightAltKey.isPressed;
+				case KCode.AnyCtrl: return Keyboard.current.leftCtrlKey.isPressed || Keyboard.current.rightCtrlKey.isPressed;
+				case KCode.MouseWheelUp: return Mouse.current.scroll.y.ReadValue() > 0;
+				case KCode.MouseWheelDown: return Mouse.current.scroll.y.ReadValue() < 0;
+				case KCode.MouseXUp: return Mouse.current.delta.x.ReadValue() > 0;
+				case KCode.MouseXDown: return Mouse.current.delta.x.ReadValue() < 0;
+				case KCode.MouseYUp: return Mouse.current.delta.y.ReadValue() > 0;
+				case KCode.MouseYDown: return Mouse.current.delta.y.ReadValue() < 0;
+			}
+			return false;
+		}
+		private static bool TryGetMouseButton(KCode key, out ButtonControl buttonControl) {
+			switch (key) {
+				case KCode.Mouse0: buttonControl = Mouse.current.leftButton; return true;
+				case KCode.Mouse1: buttonControl = Mouse.current.rightButton; return true;
+				case KCode.Mouse2: buttonControl = Mouse.current.middleButton; return true;
+				case KCode.Mouse3: buttonControl = Mouse.current.forwardButton; return true; // TODO testme
+				case KCode.Mouse4: buttonControl = Mouse.current.backButton; return true; // TODO testme
+			}
+			buttonControl = null;
+			return false;
+		}
+		private static bool TryGetKeyButton(KCode key, out ButtonControl buttonControl) {
+			if (!KCodeExtensionUnity.kCodeToInputSystem.TryGetValue(key, out UnityEngine.InputSystem.Key k)) {
+				buttonControl = null;
+				return false;
+			}
+			buttonControl = Keyboard.current[k];
+			return true;
+		}
+#else
+		private static bool GetKey_internal_legacy(KCode key) {
+			switch (key) {
+				case KCode.NoShift: return !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift);
+				case KCode.NoCtrl: return !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl);
+				case KCode.NoAlt: return !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt);
+				case KCode.AnyAlt: return Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
+				case KCode.AnyCtrl: return Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+				case KCode.AnyShift: return Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+				case KCode.MouseWheelUp: return Input.GetAxis("Mouse ScrollWheel") > 0;
+				case KCode.MouseWheelDown: return Input.GetAxis("Mouse ScrollWheel") < 0;
+				case KCode.MouseXUp: return Input.GetAxis("Mouse X") > 0;
+				case KCode.MouseXDown: return Input.GetAxis("Mouse X") < 0;
+				case KCode.MouseYUp: return Input.GetAxis("Mouse Y") > 0;
+				case KCode.MouseYDown: return Input.GetAxis("Mouse Y") < 0;
 				// default: throw new Exception($"can't handle {key}");
 			}
-			return v;
+			return false;
+		}
+#endif
+		private static bool GetKey_internal(KCode key) {
+			#if USING_UNITY_INPUT_SYSTEM
+			return GetKey_internal_InputSystem(key);
+			#else
+			return GetKey_internal_legacy(key);
+			#endif
 		}
 
 		private List<KCode> advanceToPressed = new List<KCode>();
@@ -263,11 +330,19 @@ namespace NonStandard.Inputs {
 
 		public static bool GetKey(KCode key) {
 			bool pressed;
+			#if USING_UNITY_INPUT_SYSTEM
+			if (TryGetKeyButton(key, out ButtonControl keyControl) || TryGetMouseButton(key, out keyControl)) {
+				pressed = keyControl.isPressed;
+				if (pressed) { heldKeys.Add(key); }
+				return pressed;
+			}
+			#else
 			if (IsOldKeyCode(key)) {
-				pressed = UnityEngine.Input.GetKey((KeyCode)key);
+				pressed = UnityEngine.Input.GetKey((KeyCode) key);
 				if (pressed && (key < KCode.NoShift || key > KCode.NoAlt)) { heldKeys.Add(key); }
 				return pressed;
 			}
+			#endif
 			pressed = GetKey_internal(key);
 			if (pressed && (key < KCode.NoShift || key > KCode.NoAlt)) { heldKeys.Add(key); }
 			KState ks;
@@ -279,7 +354,14 @@ namespace NonStandard.Inputs {
 
 		public static bool GetKeyDown(KCode key) {
 			if (KeyRepeatRate.softwareEmulatedPress == key) return true;
+			#if USING_UNITY_INPUT_SYSTEM
+			if (TryGetKeyButton(key, out ButtonControl keyControl) || TryGetMouseButton(key, out keyControl)) {
+				//if (keyControl.wasPressedThisFrame) Debug.Log("checking "+key+" "+keyControl.wasPressedThisFrame+" "+keyControl.name+" "+keyControl.displayName+" "+keyControl.shortDisplayName);
+				return keyControl.wasPressedThisFrame;
+			}
+			#else
 			if (IsOldKeyCode(key)) { return UnityEngine.Input.GetKeyDown((KeyCode)key); }
+			#endif
 			KState ks;
 			_pressState.TryGetValue(key, out ks);
 			if (ks == KState.KeyHeld || ks == KState.KeyUp) { return false; }
@@ -289,7 +371,13 @@ namespace NonStandard.Inputs {
 		}
 
 		public static bool GetKeyUp(KCode key) {
+			#if USING_UNITY_INPUT_SYSTEM
+			if (TryGetKeyButton(key, out ButtonControl keyControl) || TryGetMouseButton(key, out keyControl)) {
+				return keyControl.wasReleasedThisFrame;
+			}
+			#else
 			if (IsOldKeyCode(key)) { return UnityEngine.Input.GetKeyUp((KeyCode)key); }
+			#endif
 			KState ks;
 			_pressState.TryGetValue(key, out ks);
 			if (ks == KState.KeyReleased || ks == KState.KeyDown) { return false; }
@@ -381,6 +469,7 @@ namespace NonStandard.Inputs {
 			bool KeyCheck(KBind kb, List<KeyTrigger> list, Func<KBind, bool> additionalFilter = null) {
 				KCombo kp = trigger.Invoke(kb);
 				if (kp != null && (additionalFilter == null || !additionalFilter.Invoke(kb))) {
+					//Debug.Log("triggered: " + kp + " -> " + kb.name);
 					list.Add(new KeyTrigger { kb = kb, kp = kp });
 					return true;
 				}

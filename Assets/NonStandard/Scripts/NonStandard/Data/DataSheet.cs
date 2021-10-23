@@ -197,7 +197,7 @@ namespace NonStandard.Data {
 				return true;
 			}
 			public static bool ResolveToNonIfStatement(object thing) {
-				if (thing is SyntaxTree syntax && syntax.rules == CodeRules.IfStatement) { return false; } // IfStatement code rules are not "resolved enough"
+				if (thing is SyntaxTree syntax && syntax.rules == CodeRules.IfStatement) { return false; } // IfStatement syntax is not "resolved enough"
 				return true; // get the first thing that isn't an if-statement
 			}
 			/// <summary>

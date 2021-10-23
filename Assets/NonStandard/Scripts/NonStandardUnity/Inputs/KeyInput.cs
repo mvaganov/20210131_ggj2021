@@ -1,4 +1,5 @@
-﻿using NonStandard.Utility.UnityEditor;
+﻿using System;
+using NonStandard.Utility.UnityEditor;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,15 +7,25 @@ namespace NonStandard.Inputs {
 	public class KeyInput : MonoBehaviour {
 		public List<KBind> KeyBinds = new List<KBind>();
 
-		private void Start() { Init(KeyBinds); }
-		private void OnEnable() { Enable(KeyBinds); }
-		private void OnDisable() { Disable(KeyBinds); }
 		public static void Init(IList<KBind> KeyBinds) {
 			if (KeyBinds.Count > 0) {
 				for (int i = 0; i < KeyBinds.Count; ++i) { KeyBinds[i].Init(); }
 			}
 		}
 
+		public int AddListener(KBind kBind) {
+			int index = KeyBinds.FindIndex(kb => kb.name == kBind.name);
+			if (index >= 0) {
+				KeyBinds[index] = kBind;
+			} else {
+				index = KeyBinds.Count;
+				KeyBinds.Add(kBind);
+			}
+			if (enabled) { AppInput.AddListener(kBind); }
+			return index;
+		}
+		public int AddListener(KCode key, Func<bool> whatToDo, string name) { return AddListener(new KBind(key, whatToDo, name)); }
+		
 		public static void Enable(IList<KBind> KeyBinds) {
 			if (KeyBinds.Count > 0 && !AppInput.HasKeyBind(KeyBinds[0])) {
 				for (int i = 0; i < KeyBinds.Count; ++i) { AppInput.AddListener(KeyBinds[i]); }
@@ -40,11 +51,14 @@ namespace NonStandard.Inputs {
 			return false;
 		}
 
+		private void Start() { Init(KeyBinds); }
+		private void OnEnable() { Enable(KeyBinds); }
+		private void OnDisable() { Disable(KeyBinds); }
 		public void KeyBind(KCode kCode, KModifier modifier, string name, string methodName, object value = null, object target = null) {
 			Bind(KeyBinds, kCode, modifier, name, methodName, value, target);
 		}
 		public bool RemoveBind(string name) { return RemoveBind(KeyBinds, name); }
 		public bool SetEnableBind(string name, bool enable) { return SetEnableBind(KeyBinds, name, enable); }
-		public void ClickButton(UnityEngine.UI.Button button) { button.onClick.Invoke(); }
+		public static void ClickButton(UnityEngine.UI.Button button) { button.onClick.Invoke(); }
 	}
 }
