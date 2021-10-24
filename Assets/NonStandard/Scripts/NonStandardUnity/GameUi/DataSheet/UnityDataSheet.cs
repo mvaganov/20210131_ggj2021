@@ -14,44 +14,36 @@ using UnityEngine.EventSystems;
 /// model/view controllers are tricky because cache invalidation is hard.
 /// </summary>
 namespace NonStandard.GameUi.DataSheet {
+	/// <summary>
+	/// the actual data structure that is used 
+	/// </summary>
 	public class UnityColumnData : ColumnData {
+		/// <summary>
+		/// what data goes into each cell of the column
+		/// </summary>
+		public Token valueScript;
 		/// <summary>
 		/// prefab used for the column data elements
 		/// </summary>
-		public Token uiPrefabName;
+		public Token columnUi;
 		/// <summary>
 		/// prefab used for the column header element
 		/// </summary>
-		public Token columnHeaderPrefabName;
+		public Token headerUi;
 		/// <summary>
 		/// a script to execute when this element is clicked. row object as scope
 		/// </summary>
 		public Token onClick;
+		public object defaultValue; // TODO make this a Token, like valueScript -> fieldToken
+		public Type typeOfValue;
 		/// <summary>
 		/// width of the column
 		/// </summary>
-		public float width;
+		public float widthOfColumn;
 		/// <summary>
 		/// if true, will move itself to far right end, even if new elements are added
 		/// </summary>
 		public bool alwaysLast;
-	}
-	/// <summary>
-	/// structure filled in by column setting script
-	/// </summary>
-	public class UnityDataSheetColumnInitStructure {
-		public Token label;
-		/// <summary>
-		/// could be a string, number, expression, TODO or conditional (like an if statement). in the case of a conditional, pick the right option!
-		/// </summary>
-		public Token valueScript;
-		public Token columnUi;
-		public Token headerUi;
-		public object defaultValue; // TODO make this a Token, like valueScript -> fieldToken
-		public Type typeOfValue;
-		public float widthOfColumn;
-		public bool alwaysLast;
-		public Token onClick = Token.None;
 	}
 	public class ClickableScriptedCell : MonoBehaviour {
 		public Token script;
@@ -80,9 +72,8 @@ namespace NonStandard.GameUi.DataSheet {
 		const int columnTitleIndex = 0, uiTypeIndex = 1, valueIndex = 2, headerUiType = 3, columnWidth = 4, defaultValueIndex = 5;
 		public RectTransform headerRectangle;
 		public RectTransform contentRectangle;
-		public GameObject prefab_dataRow;
 		public Udash data = new Udash();
-		public UiTypedEntryPrototype uiPrototypes;
+		public DataSheetStyleOptions uiPrototypes;
 		protected RectTransform rt;
 		internal TokenErrorLog errLog = new TokenErrorLog();
 		public UiHoverPopup popup;
@@ -112,7 +103,7 @@ namespace NonStandard.GameUi.DataSheet {
 		void InitColumnSettings(string columnSetup) {
 			//Show.Log(columnSetup);
 			Tokenizer tokenizer = new Tokenizer();
-			CodeConvert.TryParse(columnSetup, out UnityDataSheetColumnInitStructure[] columns, null, tokenizer);
+			CodeConvert.TryParse(columnSetup, out UnityColumnData[] columns, null, tokenizer);
 			if (tokenizer.HasError()) {
 				Show.Error("error parsing column structure: " + tokenizer.GetErrorString());
 				return;
@@ -120,15 +111,15 @@ namespace NonStandard.GameUi.DataSheet {
 			int index = 0;
 			//data.AddRange(list, tokenizer);
 			for (int i = 0; i < columns.Length; ++i) {
-				UnityDataSheetColumnInitStructure c = columns[i];
+				UnityColumnData c = columns[i];
 				c.typeOfValue = c.defaultValue != null ? c.defaultValue.GetType() : null;
 				Udash.ColumnSetting columnSetting = new Udash.ColumnSetting(data) {
 					//fieldToken = c.valueScript,
 					data = new UnityColumnData {
 						label = c.label,
-						uiPrefabName = c.columnUi,
-						columnHeaderPrefabName = c.headerUi,
-						width = -1,
+						columnUi = c.columnUi,
+						headerUi = c.headerUi,
+						widthOfColumn = -1,
 						onClick = c.onClick,
 						alwaysLast = c.alwaysLast
 					},
@@ -138,7 +129,7 @@ namespace NonStandard.GameUi.DataSheet {
 				columnSetting.SetFieldToken(c.valueScript, tokenizer);
 				data.SetColumn(index, columnSetting);
 				if (c.widthOfColumn > 0) {
-					data.columnSettings[index].data.width = c.widthOfColumn;
+					data.columnSettings[index].data.widthOfColumn = c.widthOfColumn;
 				}
 				++index;
 			}
@@ -215,7 +206,7 @@ namespace NonStandard.GameUi.DataSheet {
 			for (int i = 0; i < data.columnSettings.Count; ++i) {
 				Udash.ColumnSetting colS = data.columnSettings[i];
 				GameObject header = null;
-				string headerObjName = colS.data.columnHeaderPrefabName.ResolveString(errLog, this);
+				string headerObjName = colS.data.headerUi.ResolveString(errLog, this);
 				// check if the header we need is in the old header list
 				object headerTextResult = colS.data.label.Resolve(errLog, data);
 				if (errLog.HasError()) { popup.Set("err", null, errLog.GetErrorString()); return; }
@@ -242,11 +233,11 @@ namespace NonStandard.GameUi.DataSheet {
 				RectTransform rect = header.GetComponent<RectTransform>();
 				rect.anchoredPosition = cursor;
 				float w = rect.sizeDelta.x;
-				if (colS.data.width > 0) {
-					w = colS.data.width;
+				if (colS.data.widthOfColumn > 0) {
+					w = colS.data.widthOfColumn;
 					rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, w);
 				} else {
-					colS.data.width = w; // if the width isn't set, use the default width of the column header
+					colS.data.widthOfColumn = w; // if the width isn't set, use the default width of the column header
 				}
 				cursor.x += w * rt.localScale.x;
 			}
@@ -276,7 +267,10 @@ namespace NonStandard.GameUi.DataSheet {
 
 		private void Start() {
 			if (uiPrototypes == null) {
-				uiPrototypes = Global.GetComponent<UiTypedEntryPrototype>();
+				uiPrototypes = Global.GetComponent<DataSheetStyleOptions>();
+				if(uiPrototypes == null) {
+					throw new Exception("cannot create a data sheet without a style guide");
+				}
 			}
 			Init();
 			Proc.Enqueue(() => {
@@ -295,17 +289,17 @@ namespace NonStandard.GameUi.DataSheet {
 			popup.Hide();
 		}
 
-		RowObject CreateRow(RowData rowData, float yPosition = float.NaN) {
-			GameObject rowUi = Instantiate(prefab_dataRow.gameObject);
-			RowObject rObj = rowUi.GetComponent<RowObject>();
-			if (rObj == null) { throw new Exception("RowUI prefab must have " + nameof(RowObject) + " component"); }
+		DataSheetRow CreateRow(RowData rowData, float yPosition = float.NaN) {
+			GameObject rowUi = Instantiate(uiPrototypes.dataSheetRow.gameObject);
+			DataSheetRow rObj = rowUi.GetComponent<DataSheetRow>();
+			if (rObj == null) { throw new Exception("RowUI prefab must have " + nameof(DataSheetRow) + " component"); }
 			rObj.rowData = rowData;
 			if (rObj.rowData == null) { throw new Exception("something bad. where is the object that this row is for?"); }
 			rowUi.SetActive(true);
 			UpdateRowData(rObj, rowData, yPosition);
 			return rObj;
 		}
-		public GameObject UpdateRowData(RowObject rObj, RowData rowData, float yPosition = float.NaN) {
+		public GameObject UpdateRowData(DataSheetRow rObj, RowData rowData, float yPosition = float.NaN) {
 			object[] columns = rowData.columns;
 			Vector2 rowCursor = Vector2.zero;
 			RectTransform rect;
@@ -323,11 +317,11 @@ namespace NonStandard.GameUi.DataSheet {
 			for (int c = 0; c < data.columnSettings.Count; ++c) {
 				Udash.ColumnSetting colS = data.columnSettings[c];
 				GameObject fieldUi = null;
-				string columnUiName = colS.data.uiPrefabName.ResolveString(errLog, rowData.obj);
+				string columnUiName = colS.data.columnUi.ResolveString(errLog, rowData.obj);
 				if (columnUiName == null) {
-					string errorMessage = "could not resolve column UI name from " + colS.data.uiPrefabName+"\n"+errLog.GetErrorString();
+					string errorMessage = "could not resolve column UI name from " + colS.data.columnUi+"\n"+errLog.GetErrorString();
 					Show.Log(errorMessage);
-					columnUiName = colS.data.uiPrefabName.ResolveString(errLog, rowData.obj);
+					columnUiName = colS.data.columnUi.ResolveString(errLog, rowData.obj);
 					throw new Exception(errorMessage);
 				}
 				// check if there's a version of it from earlier
@@ -342,8 +336,9 @@ namespace NonStandard.GameUi.DataSheet {
 				if (fieldUi == null) {
 					GameObject prefab = uiPrototypes.GetElement(columnUiName);
 					if (prefab == null) {
+						columnUiName = colS.data.columnUi.ResolveString(errLog, rowData.obj);
 						throw new Exception("no such prefab \""+columnUiName+"\" in data sheet initialization script. valid values: ["+
-							uiPrototypes.transform.JoinToString()+"]");
+							uiPrototypes.transform.JoinToString()+"]\n---\n"+ colS.data.columnUi+"\n---\n"+columnSetup);
 					}
 					fieldUi = Instantiate(prefab);
 				}
@@ -372,8 +367,8 @@ namespace NonStandard.GameUi.DataSheet {
 				rect = fieldUi.GetComponent<RectTransform>();
 				rect.anchoredPosition = rowCursor;
 				float w = rect.sizeDelta.x;
-				if (colS.data.width > 0) {
-					w = colS.data.width;
+				if (colS.data.widthOfColumn > 0) {
+					w = colS.data.widthOfColumn;
 					rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, w);
 				}
 				rowCursor.x += w * rt.localScale.x;
@@ -414,10 +409,11 @@ namespace NonStandard.GameUi.DataSheet {
 			data.RefreshAll(errLog);
 			if(errLog.HasError()) { return; }
 			RefreshUi();
+			Proc.Enqueue(RefreshContentSize); // wait one frame, till after child UI components recalculate
 		}
 		public void ResizeColumnWidth(int column, float oldWidth, float newWidth) {
 			//Show.Log("TODO resize width of column "+column+" from "+oldWidth+" to "+newWidth);
-			data.columnSettings[column].data.width = newWidth;
+			data.columnSettings[column].data.widthOfColumn = newWidth;
 			RefreshUi();
 		}
 		public void MoveColumn(int oldIndex, int newIndex) {
@@ -450,30 +446,30 @@ namespace NonStandard.GameUi.DataSheet {
 		/// <summary>
 		/// uses a dictionary to quickly calculate UI elements for rows, and position them in the view
 		/// </summary>
-		public Dictionary<object, RowObject> RefreshRowUi() {
+		public Dictionary<object, DataSheetRow> RefreshRowUi() {
 			// map list elements to row UI
-			Dictionary<object, RowObject> srcToRowUiMap = new Dictionary<object, RowObject>();
+			Dictionary<object, DataSheetRow> srcToRowUiMap = new Dictionary<object, DataSheetRow>();
 			for (int i = 0; i < contentRectangle.childCount; ++i) {
-				RowObject rObj = contentRectangle.GetChild(i).GetComponent<RowObject>();
+				DataSheetRow rObj = contentRectangle.GetChild(i).GetComponent<DataSheetRow>();
 				if (rObj == null) { continue; }
 				if (rObj.obj == null) {
 					throw new Exception("found a row (" + rObj.transform.HierarchyPath() + ") without source object at index "+i);
 				}
-				if (srcToRowUiMap.TryGetValue(rObj.obj, out RowObject uiElement)) {
+				if (srcToRowUiMap.TryGetValue(rObj.obj, out DataSheetRow uiElement)) {
 					throw new Exception("multiple row elements for row " + i + ": " + rObj.obj);
 				}
 				srcToRowUiMap[rObj.obj] = rObj;
 			}
-			List<RowObject> unused = new List<RowObject>();
+			List<DataSheetRow> unused = new List<DataSheetRow>();
 			// check to see if any of the UI rows are not being used by the datasheet (should be removed or replaced)
-			Dictionary<object, RowObject> unusedMapping = srcToRowUiMap.Copy();
+			Dictionary<object, DataSheetRow> unusedMapping = srcToRowUiMap.Copy();
 			for (int i = 0; i < data.rows.Count; ++i) {
 				RowData rd = data.rows[i];
-				if (unusedMapping.TryGetValue(rd.obj, out RowObject found)) {
+				if (unusedMapping.TryGetValue(rd.obj, out DataSheetRow found)) {
 					unusedMapping.Remove(rd.obj);
 				}
 			}
-			foreach (KeyValuePair<object, RowObject> kvp in unusedMapping) {
+			foreach (KeyValuePair<object, DataSheetRow> kvp in unusedMapping) {
 				unused.Add(kvp.Value);
 				srcToRowUiMap.Remove(kvp.Key);
 			}
@@ -482,7 +478,7 @@ namespace NonStandard.GameUi.DataSheet {
 			for(int i = 0; i < data.rows.Count; ++i) {
 				RowData rd = data.rows[i];
 				// if this row data is missing a UI element
-				if (!srcToRowUiMap.TryGetValue(rd.obj, out RowObject rObj)) {
+				if (!srcToRowUiMap.TryGetValue(rd.obj, out DataSheetRow rObj)) {
 					// use one of the unused elements if there is one
 					if (unused.Count > 0) {
 						rObj = unused[unused.Count - 1];
@@ -505,12 +501,12 @@ namespace NonStandard.GameUi.DataSheet {
 			if (contentRectangle.childCount > data.rows.Count || unused.Count > 0) {
 				// remove them in reverse order, should be slightly faster
 				for(int i = contentRectangle.childCount-1; i >= data.rows.Count; --i) {
-					RowObject rObj = contentRectangle.GetChild(i).GetComponent<RowObject>();
+					DataSheetRow rObj = contentRectangle.GetChild(i).GetComponent<DataSheetRow>();
 					srcToRowUiMap.Remove(rObj.obj);
 					unused.Add(rObj);
 				}
 				Show.Log("deleting extra elements: " + unused.JoinToString(", ", go=> {
-					RowObject ro = go.GetComponent<RowObject>();
+					DataSheetRow ro = go.GetComponent<DataSheetRow>();
 					if (ro == null) return "<null>";
 					if (ro.obj == null) return "<null obj>";
 					return ro.obj.ToString();
@@ -534,7 +530,7 @@ namespace NonStandard.GameUi.DataSheet {
 			RefreshRowUi();
 			float y = 0;
 			for (int i = 0; i < data.rows.Count; ++i) {
-				RowObject rObj = contentRectangle.GetChild(i).GetComponent<RowObject>();
+				DataSheetRow rObj = contentRectangle.GetChild(i).GetComponent<DataSheetRow>();
 				UpdateRowData(rObj, data.rows[i], y);
 				y += rObj.GetComponent<RectTransform>().rect.height;
 			}
@@ -552,9 +548,9 @@ namespace NonStandard.GameUi.DataSheet {
 				fieldToken = new Token(""),
 				data = new UnityColumnData {
 					label = new Token("new data"),
-					uiPrefabName = new Token("input"),
-					columnHeaderPrefabName = new Token("collabel"),
-					width = -1,
+					columnUi = new Token("input"),
+					headerUi = new Token("collabel"),
+					widthOfColumn = -1,
 				},
 				type = typeof(string),
 				defaultValue = ""

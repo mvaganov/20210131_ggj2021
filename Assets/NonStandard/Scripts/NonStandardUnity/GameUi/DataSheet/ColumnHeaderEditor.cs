@@ -86,7 +86,7 @@ namespace NonStandard.GameUi.DataSheet {
 			columnLabel.text = labelText.StringifySmall();
 			EventBind.On(columnLabel.onValueChanged, this, OnLabelEdit);
 			// setup column width
-			columnWidth.text = cHeader.columnSetting.data.width.ToString();
+			columnWidth.text = cHeader.columnSetting.data.widthOfColumn.ToString();
 			EventBind.On(columnWidth.onValueChanged, this, OnColumnWidthEdit);
 			// setup column index
 			columnIndex.text = column.ToString();
@@ -101,7 +101,7 @@ namespace NonStandard.GameUi.DataSheet {
 				}
 				return new ModalConfirmation.Entry(dropdownLabel, null);
 			});
-			string textOfUiElement = cHeader.columnSetting.data.uiPrefabName.GetAsBasicToken();//ResolveString(errLog, null);
+			string textOfUiElement = cHeader.columnSetting.data.columnUi.GetAsBasicToken();//ResolveString(errLog, null);
 			int currentIndex = columnTypes.FindIndex(c=> textOfUiElement.StartsWith(c.uiField.name));
 			DropDownEvent.PopulateDropdown(fieldType, entries, this, SetFieldType, currentIndex);
 			if (currentIndex < 0) {
@@ -126,21 +126,24 @@ namespace NonStandard.GameUi.DataSheet {
 			popup.Hide();
 		}
 		public void OnSetFieldTypeText(string text) {
-			Show.Log("fieldTypeGettingSet? " + this.fieldType.itemText.text+ " " + text);
+			//Show.Log("fieldTypeGettingSet? " + this.fieldType.itemText.text+ " " + text);
 			if (!gameObject.activeInHierarchy) { return; }
-			if (SetFieldTypeText(text)) { uds.RefreshRowAndColumnUi(); }
+			if (SetFieldTypeText(text)) {
+				uds.RefreshRowAndColumnUi();
+			}
 		}
 		public bool SetFieldTypeText(string text) {
 			Tokenizer tokenizer = Tokenizer.Tokenize(text);
 			if (tokenizer.HasError()) { popup.Set("err", defaultValue.gameObject, tokenizer.GetErrorString() + Proc.Now); return false; }
 			Token t = Token.None;
-			switch (tokenizer.tokens.Count) {
+			List<Token> tokens = SyntaxTree.FindSubstantiveTerms(tokenizer.tokens); // ignore comments!
+			switch (tokens.Count) {
 			case 0: break;
-			case 1: t = tokenizer.tokens[0]; break;
-			default: t = tokenizer.GetMasterToken(); break;
+			case 1: t = tokens[0]; break;
+			default: t = Tokenizer.GetMasterToken(tokens, text); break;
 			}
-			Show.Log("SetFieldTypeText " + text+" -> "+t.GetAsBasicToken());
-			cHeader.columnSetting.data.uiPrefabName = t;
+			//Show.Log("SetFieldTypeText " + text+" -> "+t.GetAsBasicToken()+"\n"+tokenizer.GetMasterToken().Resolve(tokenizer, null).Stringify());
+			cHeader.columnSetting.data.columnUi = t;
 			popup.Hide();
 			return true;
 		}
@@ -155,7 +158,7 @@ namespace NonStandard.GameUi.DataSheet {
 		}
 		public void SetFieldType(int index) {
 			if (index >= 0 && columnTypes[index].uiField != null) {
-				cHeader.columnSetting.data.uiPrefabName = new Token(columnTypes[index].uiField.name);
+				cHeader.columnSetting.data.columnUi = new Token(columnTypes[index].uiField.name);
 			} else {
 				if(!SetFieldTypeText(UiText.GetText(fieldType.gameObject))) { return; }
 			}
@@ -178,7 +181,7 @@ namespace NonStandard.GameUi.DataSheet {
 			popup.Hide();
 		}
 		public void OnColumnWidthEdit(string text) {
-			float oldWidth = cHeader.columnSetting.data.width;
+			float oldWidth = cHeader.columnSetting.data.widthOfColumn;
 			if (float.TryParse(text, out float newWidth)) {
 				if (newWidth > 0 && newWidth < 2048) {
 					uds.ResizeColumnWidth(column, oldWidth, newWidth);

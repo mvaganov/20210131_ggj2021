@@ -96,7 +96,8 @@ namespace NonStandard.Ui.Mouse {
 		}
 
 
-		public virtual void PointerDown(BaseEventData data) {
+		public override void PointerDown(BaseEventData data) {
+			base.PointerDown(data);
 			pointerDown = true;
 			if (heldDir == Direction2D.None) {
 				heldDir = mouseCursorState;
@@ -121,7 +122,7 @@ namespace NonStandard.Ui.Mouse {
 			//isDragging = true;
 			PointerEventData data = basedata as PointerEventData;
 			if (heldDir == Direction2D.None) {
-				rt.localPosition += (Vector3)data.delta;
+				base.OnDrag(basedata);
 			} else {
 				ResizeRect(data.delta, heldDir);
 			}

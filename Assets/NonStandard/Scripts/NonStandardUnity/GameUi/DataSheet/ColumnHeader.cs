@@ -2,17 +2,31 @@
 using NonStandard.Ui;
 using UnityEngine;
 using TMPro;
-using NonStandard.Extension;
-using NonStandard.Process;
+using System.Collections.Generic;
 
 namespace NonStandard.GameUi.DataSheet {
 	public class ColumnHeader : MonoBehaviour {
-		Transform originalParent;
-		private void Awake() {
-			originalParent = editUi.transform.parent;
-		}
-		[ContextMenuItem("PopulateDropdown", "PopulateDropdown")] public GameObject editUi;
+		[SerializeField] private ColumnHeaderEditor editUiPrefab;
+		//[ContextMenuItem("PopulateDropdown", "PopulateDropdown")] public GameObject editUi;
 		public Udash.ColumnSetting columnSetting;
+		// multiple different column headers can exist, each with its own ColumheaderEditor
+		static Dictionary<ColumnHeaderEditor, ColumnHeaderEditor> instanceOfPrefab = 
+			new Dictionary<ColumnHeaderEditor, ColumnHeaderEditor>();
+		public ColumnHeaderEditor EditUi {
+			get {
+				if (!instanceOfPrefab.TryGetValue(editUiPrefab, out ColumnHeaderEditor found)) {
+					instanceOfPrefab[editUiPrefab] = found = Instantiate(editUiPrefab.gameObject).GetComponent<ColumnHeaderEditor>();
+					found.transform.SetParent(UDS().transform.parent);
+					found.transform.localPosition = Vector3.zero;
+				}
+				return found;
+			}
+		}
+		private void Start() {
+			if (editUiPrefab == null) {
+				editUiPrefab = transform.parent.GetComponentInChildren<ColumnHeaderEditor>();
+			}
+		}
 		int Col() { return transform.GetSiblingIndex(); }
 		TMP_Dropdown DD() { return GetComponent<TMP_Dropdown>(); }
 		UnityDataSheet UDS() { return GetComponentInParent<UnityDataSheet>(); }
@@ -23,12 +37,11 @@ namespace NonStandard.GameUi.DataSheet {
 			gameObject.SetActive(false);
 		}
 		public void ColumnEdit() {
-			editUi.SetActive(true);
+			EditUi.gameObject.SetActive(true);
 			//editUi.transform.SetParent(transform, false);
 			//Debug.Log("path is " + editUi.transform.HierarchyPath());
 			//editUi.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
-			ColumnHeaderEditor chEditor = editUi.GetComponent<ColumnHeaderEditor>();
-			chEditor.SetColumnHeader(this, UDS(), Col());
+			EditUi.SetColumnHeader(this, UDS(), Col());
 			//Proc.Enqueue(() => {
 			//	if (editUi != null) {
 			//		editUi.transform.SetParent(originalParent, true);

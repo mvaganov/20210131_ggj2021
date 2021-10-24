@@ -109,8 +109,9 @@ namespace NonStandard.Data.Parse {
 			this.tokenStrings = toCopy.tokenStrings.Copy();
 			this.rows = toCopy.rows.Copy();
 		}
-		public Token GetMasterToken() {
-			SyntaxTree syntax = new SyntaxTree(tokens, 0, tokens.Count);
+		public Token GetMasterToken() { return GetMasterToken(tokens, str); }
+		public static Token GetMasterToken(List<Token> tokens, string str) {
+			SyntaxTree syntax = new SyntaxTree(null, tokens, 0, tokens.Count, null);
 			Token t = new Token(syntax, 0, str.Length);
 			return t;
 		}

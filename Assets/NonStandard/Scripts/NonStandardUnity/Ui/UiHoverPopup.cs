@@ -8,9 +8,9 @@ public class UiHoverPopup : MonoBehaviour {
 	[HideInInspector] public Color defaultColor;
 	[System.Serializable] public class MessageType {
 		public string name;
-		public Color color;
+		public Color bgColor;
 		public MessageType(string n) : this(n, Color.clear) { }
-		public MessageType(string n, Color c) { name = n;color = c; }
+		public MessageType(string n, Color c) { name = n;bgColor = c; }
 	}
 	public List<MessageType> messageTypes = new List<MessageType>() {
 		new MessageType("pop"), new MessageType("err",new Color(1,.75f,.75f))
@@ -30,9 +30,9 @@ public class UiHoverPopup : MonoBehaviour {
 		UncolorLastInput();
 		if (errorInputObject != null) {
 			Image img = errorInputObject.GetComponent<Image>();
-			if (mt != null && img.color != mt.color) { defaultColor = img.color; }
+			if (mt != null && img.color != mt.bgColor) { defaultColor = img.color; }
 			if (mt != null) {
-				img.color = mt.color;
+				img.color = mt.bgColor;
 			} else {
 				img.color = defaultColor;
 			}

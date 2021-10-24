@@ -22,7 +22,7 @@ namespace NonStandard.GameUi.DataSheet {
 				rowRect = transform.parent.GetComponent<RectTransform>();
 				if (!ChangeIndexDuringDrag) {
 					UnityDataSheet uds = transform.GetComponentInParent<UnityDataSheet>();
-					GameObject rObj = Instantiate(uds.prefab_dataRow);
+					GameObject rObj = Instantiate(uds.uiPrototypes.dataSheetRow.gameObject);	
 					rObj.SetActive(true);
 					rObj.transform.SetParent(transform, false);
 					predictionRect = rObj.GetComponent<RectTransform>();

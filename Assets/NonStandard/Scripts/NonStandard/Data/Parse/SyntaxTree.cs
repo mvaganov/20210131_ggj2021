@@ -18,9 +18,9 @@ namespace NonStandard.Data.Parse {
 		/// how many tokens from the token list this container is claiming. they will be contiguous following <see cref="tokenStart"/>
 		/// </summary>
 		internal int tokenCount = -1;
-		public SyntaxTree(List<Token> tokenList, int indexStart, int count) {
-			tokens = tokenList; tokenStart = indexStart; tokenCount = count;
-		}
+		//public SyntaxTree(List<Token> tokenList, int indexStart, int count) {
+		//	tokens = tokenList; tokenStart = indexStart; tokenCount = count;
+		//}
 		public SyntaxTree(ParseRuleSet rule, List<Token> tokenList, int indexStart, int count, object meta) {
 			rules = rule; tokens = tokenList; tokenStart = indexStart; tokenCount = count; sourceMeta = meta;
 		}
@@ -32,7 +32,7 @@ namespace NonStandard.Data.Parse {
 		public object sourceMeta;
 		public int TokenCount => tokenCount;
 		public int Depth { get { SyntaxTree p = parent; int n = 0; while (p != null) { p = p.parent; ++n; } return n; } }
-		public readonly static SyntaxTree None = new SyntaxTree(null, 0, -1);
+		public readonly static SyntaxTree None = new SyntaxTree(null, null, 0, -1, null);
 		public SyntaxTree GetParent() { return parent; }
 		public void SetParent(SyntaxTree p) { parent = p; }
 		public static string PrintAll(List<Token> tokens) {
@@ -63,6 +63,9 @@ namespace NonStandard.Data.Parse {
 				int start = tokens[tokenStart].index;
 				int limit = tokens[tokenStart + tokenCount - 1].GetEndIndex();
 				//Show.Log(parseRules.name + " " +sourceMeta.GetType()+" "+start+", "+limit+" "+TextRaw);
+				if (TextRaw == null) {
+					throw new System.Exception("dunno how to print this...");
+				}
 				return TextRaw.Substring(start, limit - start);
 			}
 		}
@@ -75,7 +78,15 @@ namespace NonStandard.Data.Parse {
 					if (str == null) { d = e.sourceMeta as Delim; if (d != null) { str = d.text; } }
 					if (str == null) { e = e.sourceMeta as SyntaxTree; }
 				} while (str == null && e != null);
-				return (str != null) ? str : null;
+				if (str == null) {
+					for(int i = 0; i < tokens.Count; ++i) {
+						if (tokens[i].IsSimpleString) { str = tokens[i].meta.ToString(); break; }
+						SyntaxTree syntax = tokens[i].GetAsSyntaxNode();
+						str = syntax.TextRaw;
+						if (str != null) { break; }
+					}
+				}
+				return str;
 			}
 		}
 		public string GetText() { return Unescape(); }
@@ -119,14 +130,28 @@ namespace NonStandard.Data.Parse {
 		}
 
 		public static void FindTerms(List<Token> tokens, int start, int length, List<int> found) {
+			SyntaxTree syntax;
 			for (int i = 0; i < length; ++i) {
 				Token t = tokens[start + i];
-				if (t.IsSyntaxBoundary) { continue; } // skip entry tokens (count sub-syntax trees)
+				if (t.IsSyntaxBoundary || ((syntax = t.GetAsSyntaxNode()) != null && syntax.IsComment)) { continue; } // skip entry tokens (count sub-syntax trees)
 				found.Add(i);
 			}
 		}
 
-		//public int FindTerms() { return CountTerms(tokens, tokenStart, tokenCount); }
+		public static List<int> FindTermIndexes(List<Token> tokens, int start = 0, int length = -1) {
+			if(length < 0) { length = tokens.Count; }
+			List<int> tokenIndexes = new List<int>();
+			FindTerms(tokens, start, length, tokenIndexes);
+			return tokenIndexes;
+		}
+		public static List<Token> FindSubstantiveTerms(List<Token> tokens, int start = 0, int length = -1) {
+			List<int> tokenIndexes = FindTermIndexes(tokens, start, length);
+			List<Token> substantiveTokens = new List<Token>();
+			for(int i = 0; i < tokenIndexes.Count; ++i) {
+				substantiveTokens.Add(tokens[tokenIndexes[i]]);
+			}
+			return substantiveTokens;
+		}
 		public bool IsTextLiteral { get { return rules == CodeRules.String || rules == CodeRules.Char; } }
 		public bool IsEnclosure { get { return rules == CodeRules.Expression || rules == CodeRules.CodeBody || rules == CodeRules.SquareBrace; } }
 		public bool IsComment { get { return rules == CodeRules.CommentLine || rules == CodeRules.XmlCommentLine || rules == CodeRules.CommentBlock; } }

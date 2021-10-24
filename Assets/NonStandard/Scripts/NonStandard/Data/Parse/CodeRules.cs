@@ -165,8 +165,8 @@ namespace NonStandard.Data.Parse {
 			GreaterThanOrEqual = new ParseRuleSet("greater than or equal", CodeRules.None);
 			NotEqual = new ParseRuleSet("not equal", CodeRules.None);
 			XmlCommentLine = new ParseRuleSet("///");
-			CommentLine = new ParseRuleSet("//");
 			CommentBlock = new ParseRuleSet("/**/");
+			CommentLine = new ParseRuleSet("//");
 
 			CodeInString.Delimiters = CombineDelims(_string_code_body_delimiter);
 			CodeInString.Whitespace = CodeRules.WhitespaceNone;
@@ -180,6 +180,9 @@ namespace NonStandard.Data.Parse {
 			//Char.whitespace = CodeRules.WhitespaceNone;
 			//Char.delimiters = CodeRules.StringLiteralDelimiters;
 			Number.Whitespace = CodeRules.WhitespaceNone;
+			XmlCommentLine.Simplify = CodeRules.SimplifyComment;
+			CommentBlock.Simplify = CodeRules.SimplifyComment;
+			CommentLine.Simplify = CodeRules.SimplifyComment;
 			Expression.Simplify = CodeRules.SimplifySingleTermParenthesis;
 			CodeBody.Simplify = CodeRules.SimplifySingleTermParenthesis;
 			String.Simplify = CodeRules.SimplifyCompositeStringLiteral;
@@ -307,6 +310,7 @@ namespace NonStandard.Data.Parse {
 			return sb.ToString();
 
 		}
+		public static object SimplifyComment(List<object> terms) { return null; }
 
 		/// <param name="tok"></param>
 		/// <param name="token"></param>

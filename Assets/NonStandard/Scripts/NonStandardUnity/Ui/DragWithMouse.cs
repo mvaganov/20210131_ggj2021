@@ -7,10 +7,12 @@ namespace NonStandard.Ui {
 		protected RectTransform rt;
 		public bool disableDrag;
 		public static GameObject beingDragged = null;
+		protected Vector3 whereClickHappened;
 		protected virtual void Awake() {
 			rt = GetComponent<RectTransform>();
 			AddPointerEvent(EventTriggerType.Drag, this, OnDrag);
 			AddPointerEvent(EventTriggerType.PointerUp, this, PointerUp);
+			AddPointerEvent(EventTriggerType.PointerDown, this, PointerDown);
 		}
 
 		public void AddPointerEvent(EventTriggerType type, Object target, UnityAction<BaseEventData> pointerEvent) {
@@ -22,27 +24,38 @@ namespace NonStandard.Ui {
 				beingDragged = null;
 			}
 		}
+		public virtual void PointerDown(BaseEventData basedata) {
+			PointerEventData data = basedata as PointerEventData;
+			whereClickHappened = transform.InverseTransformPoint(data.position);
+			//Show.Log("clicked "+ data.position+" : "+whereClickHappened);
+		}
 		public virtual void OnDrag(BaseEventData basedata) {
 			if (disableDrag) return;
 			PointerEventData data = basedata as PointerEventData;
-			rt.localPosition += (Vector3)data.delta;
-			if(rt.parent != null) {
-				RectTransform parentRt = rt.parent.GetComponent<RectTransform>();
-				if (parentRt != null) {
-					KeepInBounds(parentRt.rect);
-				}
-			}
+			rt.localPosition = transform.parent.InverseTransformPoint(data.position) - whereClickHappened;
+			//rt.localPosition += (Vector3)data.delta;
+			//if(rt.parent != null) {
+			//	Vector3 move = (Vector3)data.delta;
+			//	move.Scale(rt.parent.lossyScale);
+			//	rt.anchoredPosition += (Vector2)move;
+			//	//	RectTransform canvasRt = rt.parent.GetComponentInParent<Canvas>().GetComponent<RectTransform>();
+			//	//	if (canvasRt != null) {
+			//	//		KeepInBounds(canvasRt);
+			//	//	}
+			//}
 			beingDragged = gameObject;
 		}
 
-		public void KeepInBounds(Rect p) {
-			Rect me = rt.rect;
-			Vector2 pos = rt.localPosition;
+		public void KeepInBounds(RectTransform canvasRt) {
+			Rect area = rt.rect;
+			Vector3 pos = canvasRt.TransformPoint(rt.position);//rt.localPosition;
+			Vector2 size = canvasRt.sizeDelta;
+			Show.Log(pos+" in "+area);
 			bool change = false;
-			if (me.yMin < p.yMin) { pos.y = 0; change = true; }
-			if (me.xMin < p.xMin) { pos.x = 0; change = true; }
-			if (me.yMax > p.yMax) { pos.y = 0; change = true; }
-			if (me.xMax > p.xMax) { pos.x = 0; change = true; }
+			if (area.yMin < 0) { pos.y = 0; change = true; }
+			if (area.xMin < 0) { pos.x = 0; change = true; }
+			if (area.yMax > size.y) { pos.y = 0; change = true; }
+			if (area.xMax > size.x) { pos.x = 0; change = true; }
 			if (change) {
 				rt.localPosition = pos;
 			}

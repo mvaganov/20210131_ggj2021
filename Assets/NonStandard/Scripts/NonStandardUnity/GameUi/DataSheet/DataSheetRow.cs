@@ -2,7 +2,7 @@
 using NonStandard.Extension;
 using UnityEngine;
 namespace NonStandard.GameUi.DataSheet {
-	public class RowObject : MonoBehaviour {
+	public class DataSheetRow : MonoBehaviour {
 		public RowData rowData;
 		private Vector3 targetLocalPosition;
 		public int Index => transform.GetSiblingIndex();
