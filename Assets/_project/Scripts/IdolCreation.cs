@@ -85,7 +85,7 @@ public class IdolCreation : MonoBehaviour
 		GameObject go = Instantiate(originalItem);
 		Idol idol = go.GetComponent<Idol>();
 		idol.intMetaData = new int[] { color, shape };
-		idol.typeName = mat.name;
+		idol.color = mat.name;
 		go.name = mat.name;
 		Renderer r = go.GetComponent<Renderer>();
 		r.material = mat;
@@ -93,7 +93,7 @@ public class IdolCreation : MonoBehaviour
 		string[] floatyTextOptions = null;
 		if (resourceNames == null || (resourceNames.TryGetValue(mat.name, out floatyTextOptions) && floatyTextOptions != null)) {
 			string floatyTextString = floatyTextOptions[shape];
-			idol.specificName = floatyTextString;
+			idol.kind = floatyTextString;
 			ii.itemName = floatyTextString;
 		}
 		if (onPickupAction != null && !onPickupAction.IsAlreadyBound(ii.addToInventoryEvent)) {

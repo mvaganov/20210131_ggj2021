@@ -11,6 +11,7 @@ namespace NonStandard.GameUi.Inventory {
 		public Inventory inventory;
 		public UnityEvent_GameObject addToInventoryEvent;
 		public UnityEvent_GameObject removeFromInventoryEvent;
+		public UnityEngine.Object data;
 
 		public void RemoveFromCurrentInventory() {
 			if (inventory == null) { return; }

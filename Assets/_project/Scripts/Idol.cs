@@ -5,7 +5,14 @@ using NonStandard.GameUi.Particles;
 using UnityEngine;
 
 public class Idol : MonoBehaviour {
-	public string typeName, specificName;
+	/// <summary>
+	/// what color something is. phylum -> class -> order -> family -> [genus] -> species
+	/// </summary>
+	public string color;
+	/// <summary>
+	/// what kind it is. phylum -> class -> order -> family -> genus -> [species]
+	/// </summary>
+	public string kind;
 	public int[] intMetaData;
 	public void PickUp(GameObject finder) {
 		//Show.Log(finder+" picked up "+specificName+"("+typeName+")");
@@ -13,7 +20,7 @@ public class Idol : MonoBehaviour {
 		Vector3 p = transform.position;
 		Material mat = GetComponent<Renderer>().material;
 		GameClock.Delay(0, () => { // make sure object creation happens on the main thread
-			FloatyText ft = FloatyTextManager.Create(p + (Vector3.up * game.maze.tileSize.y * game.maze.wallHeight), specificName);
+			FloatyText ft = FloatyTextManager.Create(p + (Vector3.up * game.maze.tileSize.y * game.maze.wallHeight), kind);
 			ft.TmpText.faceColor = mat.color;
 		});
 		// find which NPC wants this, and make them light up
@@ -22,7 +29,7 @@ public class Idol : MonoBehaviour {
 		CharacterRoot npc = game.npcCreator.npcs.Find(n => {
 			ps = n.GetComponentInChildren<ParticleSystem>();
 			//Show.Log(ps.name + " v " + typeName);
-			if (ps != null && ps.name == typeName) return true;
+			if (ps != null && ps.name == color) return true;
 			ps = null;
 			return false;
 		});
@@ -33,12 +40,12 @@ public class Idol : MonoBehaviour {
 	/// </summary>
 	/// <param name="count"></param>
 	public void AddColorToVariables(float count) {
-		string n = typeName;
-		if (string.IsNullOrEmpty(typeName)) {
+		string n = color;
+		if (string.IsNullOrEmpty(color)) {
 			Renderer r = GetComponent<Renderer>();
 			if (r != null) {
 				Material mat = r.material;
-				typeName = mat.name;
+				color = mat.name;
 			}
 		}
 		InventoryItem ii = GetComponent<InventoryItem>();

@@ -11,6 +11,9 @@ namespace NonStandard.GameUi.Inventory {
 		public UnityEvent_GameObject onAddItem;
 		public UnityEvent_GameObject onRemoveItem;
 		public List<GameObject> GetItems() { return items; }
+		public void DataPopulator(List<object> list) {
+			for(int i = 0; i < items.Count; ++i) { list.Add(items[i].GetComponent<InventoryItem>()); }
+		}
 		private void Awake() {
 			Global.GetComponent<InventoryManager>().Register(this);
 		}
