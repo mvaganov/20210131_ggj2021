@@ -4,21 +4,21 @@ using UnityEngine.UI;
 
 namespace NonStandard.Ui {
 	public class ListItemUi : MonoBehaviour {
-		[SerializeField] private GameObject _text;
+		[SerializeField] private Component _text;
 		public Button button;
 		public object item;
-		public GameObject text { get { if (_text != null) { return _text; } return _text = UiText.GetTextObject(gameObject); } }
+		public Component text { get { if (_text != null) { return _text; } return _text = UiText.GetTextComponent(gameObject); } }
 		public Color TextColor {
-			get { return UiText.GetColor(text); }
-			set { UiText.SetColor(text, value); }
+			get { UiText.TryGetColor(text, out Color c); return c; }
+			set { UiText.TrySetColor(text, value); }
 		}
 		public string Text {
-			get { return UiText.GetText(text); }
-			set { UiText.SetText(text, value); }
+			get { UiText.TryGetText(text, out string t); return t; }
+			set { UiText.TrySetText(text, value); }
 		}
 		public TextAnchor TextAlignment {
-			get { return UiText.GetAlignment(text); }
-			set { UiText.SetAlignment(text, value); }
+			get { UiText.TryGetAlignment(text, out TextAnchor a); return a; }
+			set { UiText.TrySetAlignment(text, value); }
 		}
 	}
 }

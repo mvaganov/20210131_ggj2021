@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
 using NonStandard.Data.Parse;
 
@@ -14,8 +12,8 @@ namespace NonStandard.Extension {
 			}
 			return true;
 		}
-		public static int IsSubstringAt(this string str, string[] substrings, int index) {
-			for (int i = 0; i < substrings.Length; ++i) {
+		public static int IsSubstringAt(this string str, IList<string> substrings, int index) {
+			for (int i = 0; i < substrings.Count; ++i) {
 				if (IsSubstringAt(str, substrings[i], index)) { return i; }
 			}
 			return -1;
@@ -99,37 +97,43 @@ namespace NonStandard.Extension {
 		}
 
 		public static string ForEachBetween(this string str, Func<string, string> manipulateSubstring, string delimiter = "\n") {
-			string[] lines = str.Split(delimiter);
+			List<string> lines = str.Split(delimiter);
 			StringBuilder sb = new StringBuilder();
-			for (int i = 0; i < lines.Length; ++i) {
+			for (int i = 0; i < lines.Count; ++i) {
 				if (i > 0) sb.Append(delimiter);
 				sb.Append(manipulateSubstring(lines[i]));
 			}
 			return sb.ToString();
 		}
 
-		public static string[] Split(this string str, string delimiter) {
+		public static List<string> Split(this string str, string delimiter) {
 			return Split(str, new string[] { delimiter });
 		}
-		public static string[] Split(this string str, string[] delimiters) {
-			List<int> lineEndings = GenerateIndexTable(str, delimiters);
-			string[] lines = new string[lineEndings.Count + 1];
-			int lineStart = 0;
+		public enum DelimiterOption { Omit, IncludeSeparate, Append, Prepend }
+		public static List<string> Split(this string str, IList<string> delimiters, DelimiterOption option = DelimiterOption.Omit, bool keepEmptyTokens = false) {
+			List<KeyValuePair<int,int>> lineEndings = GenerateIndexTable(str, delimiters);
+			List<string> lines = new List<string>();
+			if (lineEndings.Count == 0) { lines.Add(str); return lines; }
 			int delimLenMin = int.MaxValue, delimLenMax = int.MinValue;
-			for (int i = 0; i < delimiters.Length; ++i) {
-				delimLenMin = Math.Min(delimiters[i].Length, delimLenMin);
-				delimLenMax = Math.Max(delimiters[i].Length, delimLenMax);
-			}
 			for (int i = 0; i < lineEndings.Count; ++i) {
-				lines[i] = str.Substring(lineStart, lineEndings[i] - lineStart);
-				if (delimLenMin == delimLenMax) {
-					lineStart = lineEndings[i] + delimLenMin;
-				} else {
-					int delimIndex = str.IsSubstringAt(delimiters, lineEndings[i]);
-					lineStart = lineEndings[i] + delimiters[delimIndex].Length;
-				}
+				delimLenMin = Math.Min(delimiters[lineEndings[i].Value].Length, delimLenMin);
+				delimLenMax = Math.Max(delimiters[lineEndings[i].Value].Length, delimLenMax);
 			}
-			lines[lineEndings.Count] = str.Substring(lineStart, str.Length - lineStart);
+			int nextTokenStart = 0;
+			bool uniformDelimiterSize = delimLenMin == delimLenMax;
+			string token;
+			for (int i = 0; i < lineEndings.Count; ++i) {
+				int tokenStart = nextTokenStart;
+				int tokenLength = lineEndings[i].Key - tokenStart;
+				int delimLen = uniformDelimiterSize ? delimLenMin : delimiters[lineEndings[i].Value].Length;
+				nextTokenStart = lineEndings[i].Key + ((option != DelimiterOption.Prepend) ? delimLen : 0);
+				if (option == DelimiterOption.Append) { tokenLength += delimLen; }
+				token = str.Substring(tokenStart, tokenLength);
+				if (keepEmptyTokens || !string.IsNullOrEmpty(token)) { lines.Add(token); }
+				if (option == DelimiterOption.IncludeSeparate) { lines.Add(delimiters[lineEndings[i].Value]); }
+			}
+			token = str.Substring(nextTokenStart, str.Length - nextTokenStart);
+			if (keepEmptyTokens || !string.IsNullOrEmpty(token)) { lines.Add(token); }
 			return lines;
 		}
 
@@ -188,7 +192,7 @@ namespace NonStandard.Extension {
 		public static int CountNumericCharactersAt(this string str, int index, int numberBase, bool includeNegativeSign, bool includeSingleDecimal, out int foundDecimal) {
 			int numDigits = 0;
 			foundDecimal = -1;
-			bool stillGood = false;
+			bool stillGood;
 			while (index + numDigits < str.Length) {
 				char c = str[index + numDigits];
 				if (c.IsValidNumber(numberBase)) {
@@ -309,20 +313,20 @@ namespace NonStandard.Extension {
 			}
 		}
 
-		public static List<int> GenerateIndexTable(this string haystack, string needle = "\n") {
+		/// <returns>the indexes of the given substring in this string as the Key, and the substring's index as the Value</returns>
+		public static List<KeyValuePair<int, int>> GenerateIndexTable(this string haystack, string needle = "\n") {
 			return GenerateIndexTable(haystack, new string[] { needle });
 		}
 
-		/// <returns>the indexes of the given substring in this string</returns>
-		public static List<int> GenerateIndexTable(this string haystack, string[] needles) {
-			List<int> found = new List<int>();
+		/// <returns>the indexes of the given substring in this string as the Key, and the substring's index as the Value</returns>
+		public static List<KeyValuePair<int,int>> GenerateIndexTable(this string haystack, IList<string> needles) {
+			List<KeyValuePair<int, int>> found = new List<KeyValuePair<int, int>>();
 			//if (haystack == null || needle == null) return found;
 			int limit = haystack.Length;
 			for (int i = 0; i < limit; ++i) {
-				for (int n = 0; n < needles.Length; ++n) {
-					if (haystack.IsSubstringAt(needles[n], i)) {
-						found.Add(i);
-					}
+				int whichNeedleIsHere = IsSubstringAt(haystack, needles, i);
+				if (whichNeedleIsHere >= 0) {
+					found.Add(new KeyValuePair<int, int>(i, whichNeedleIsHere));
 				}
 			}
 			return found;

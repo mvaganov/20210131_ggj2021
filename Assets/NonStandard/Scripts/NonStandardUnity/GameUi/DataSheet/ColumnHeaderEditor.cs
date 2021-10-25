@@ -72,10 +72,12 @@ namespace NonStandard.GameUi.DataSheet {
 			TokenErrorLog errLog = new TokenErrorLog();
 			// setup script value
 			Token t = cHeader.columnSetting.fieldToken;
+			//string textA = t.GetAsSmallText();
+			//string textB = t.Stringify();
+			//string textC = t.StringifySmall();
+			//string textD = t.ToString();
 			string text = t.GetAsBasicToken();
-			string textA = t.GetAsSmallText();
-			string textB = t.Stringify();
-			string textC = t.StringifySmall();
+			//Show.Log("A: "+textA+"\nB:" + textB + "\nC:" + textC + "\nD:" + textD + "\nE:" + text);
 			scriptValue.text = text;
 			EventBind.On(scriptValue.onValueChanged, this, OnScriptValueEdit);
 			// implicitly setup value types dropdown
@@ -101,11 +103,14 @@ namespace NonStandard.GameUi.DataSheet {
 				}
 				return new ModalConfirmation.Entry(dropdownLabel, null);
 			});
-			string textOfUiElement = cHeader.columnSetting.data.columnUi.GetAsBasicToken();//ResolveString(errLog, null);
-			int currentIndex = columnTypes.FindIndex(c=> textOfUiElement.StartsWith(c.uiField.name));
-			DropDownEvent.PopulateDropdown(fieldType, entries, this, SetFieldType, currentIndex);
-			if (currentIndex < 0) {
-				UiText.SetText(fieldType.gameObject, textOfUiElement);
+
+			t = cHeader.columnSetting.data.columnUi;
+			string fieldTypeText = t.ToString();//cHeader.columnSetting.data.columnUi.GetAsBasicToken();//ResolveString(errLog, null);
+			int currentIndex = columnTypes.FindIndex(c=> fieldTypeText.StartsWith(c.uiField.name)) + 1;
+			Show.Log(currentIndex+" field  " + fieldTypeText);
+			DropDownEvent.PopulateDropdown(fieldType, entries, this, SetFieldType, currentIndex, true);
+			if (currentIndex == 0) {
+				DropDownEvent.SetCustomValue(fieldType.gameObject, fieldTypeText);
 			}
 			TMP_InputField elementUiInputField = fieldType.GetComponentInChildren<TMP_InputField>();
 			if (elementUiInputField != null) {
@@ -126,7 +131,7 @@ namespace NonStandard.GameUi.DataSheet {
 			popup.Hide();
 		}
 		public void OnSetFieldTypeText(string text) {
-			//Show.Log("fieldTypeGettingSet? " + this.fieldType.itemText.text+ " " + text);
+			Show.Log("fieldTypeGettingSet? " + this.fieldType.itemText.text+ " " + text);
 			if (!gameObject.activeInHierarchy) { return; }
 			if (SetFieldTypeText(text)) {
 				uds.RefreshRowAndColumnUi();
@@ -157,10 +162,11 @@ namespace NonStandard.GameUi.DataSheet {
 			popup.Hide();
 		}
 		public void SetFieldType(int index) {
-			if (index >= 0 && columnTypes[index].uiField != null) {
-				cHeader.columnSetting.data.columnUi = new Token(columnTypes[index].uiField.name);
-			} else {
-				if(!SetFieldTypeText(UiText.GetText(fieldType.gameObject))) { return; }
+			// initial value is for custom text
+			if (index == 0) {
+				if (!SetFieldTypeText(UiText.GetText(fieldType.gameObject))) { return; }
+			} else if (index >= 1 && columnTypes[index-1].uiField != null) {
+				cHeader.columnSetting.data.columnUi = new Token(columnTypes[index-1].uiField.name);
 			}
 			uds.RefreshRowAndColumnUi();
 		}
@@ -246,7 +252,7 @@ namespace NonStandard.GameUi.DataSheet {
 			if (sampleValueType == null) {
 				// set to read only
 				expectedValueType = null;
-				DropDownEvent.PopulateDropdown(valueType, new string[] { "read only" }, this, null, 0);
+				DropDownEvent.PopulateDropdown(valueType, new string[] { "read only" }, this, null, 0, false);
 			} else {
 				if (sampleValueType != expectedValueType) {
 					// set to specific type
@@ -263,10 +269,10 @@ namespace NonStandard.GameUi.DataSheet {
 							defaultChoice = defaultValueTypes.FindIndex(kvp => kvp.Key == typeof(string));
 						}
 						List<string> options = defaultValueTypes.ConvertAll(kvp => kvp.Value);
-						DropDownEvent.PopulateDropdown(valueType, options, this, SetEditType, defaultChoice);
+						DropDownEvent.PopulateDropdown(valueType, options, this, SetEditType, defaultChoice, true);
 						cHeader.columnSetting.type = defaultValueTypes[defaultChoice].Key;
 					} else {
-						DropDownEvent.PopulateDropdown(valueType, new string[] { sampleValueType.ToString() }, this, null, 0);
+						DropDownEvent.PopulateDropdown(valueType, new string[] { sampleValueType.ToString() }, this, null, 0, false);
 						cHeader.columnSetting.type = sampleValueType;
 					}
 					expectedValueType = sampleValueType;

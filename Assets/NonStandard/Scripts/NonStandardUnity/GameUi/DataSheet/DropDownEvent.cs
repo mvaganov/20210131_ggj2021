@@ -11,16 +11,19 @@ namespace NonStandard.Ui {
 		public List<ModalConfirmation.Entry> options;
 		[ContextMenuItem("PopulateDropdown", "PopulateDropdown")]
 		public bool initOptionsOnStart;
-		public bool connectUiText;
+		public bool initializeUiTextToDropdown;
 		int lastValue = -1;
+		const string CustomValueMarker = "";
 
 		void Start() {
 			if (initOptionsOnStart) { PopulateDropdown(); }
-			if (connectUiText) {
+			if (initializeUiTextToDropdown) {
 				UiText onSelection = GetComponent<UiText>();
 				if (onSelection != null && onSelection.OnSetText.GetPersistentEventCount() > 0) {
 					TMP_Dropdown dd = GetComponent<TMP_Dropdown>();
+					Show.Log("??start at " + dd.value);
 					BindDropdownAction(dd, this, HandleDropdown_OnSelection);
+					Show.Log("start at "+dd.value);
 					HandleDropdown_OnSelection(dd.value);
 				}
 			}
@@ -33,16 +36,12 @@ namespace NonStandard.Ui {
 			TMP_Dropdown dd = GetComponent<TMP_Dropdown>();
 			PopulateDropdown(dd, options, this, HandleDropdown_Options);
 		}
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="dd"></param>
-		/// <param name="options"></param>
-		/// <param name="ownerOfDropdownHandler"></param>
-		/// <param name="action"></param>
-		/// <param name="currentIndex">sets the dropdown to this value. if negative value, this is ignored</param>
-		public static void PopulateDropdown(TMP_Dropdown dd, IList<string> options, object ownerOfDropdownHandler, Action<int> action, int currentIndex = -1) {
-			PopulateDropdown(dd, () => options.Count, i => options[i], ownerOfDropdownHandler, action, currentIndex, null);
+		public static Component SetCustomValue(GameObject go, string value) {
+			DropDownEvent dde = go.GetComponentInChildren<DropDownEvent>();
+			if (dde != null) { dde.initializeUiTextToDropdown = false; }
+			TMP_Dropdown dd = go.GetComponentInChildren<TMP_Dropdown>();
+			if (dd != null) { dd.SetValueWithoutNotify(0); }
+			return UiText.SetText(go, value);
 		}
 		/// <summary>
 		/// 
@@ -52,8 +51,21 @@ namespace NonStandard.Ui {
 		/// <param name="ownerOfDropdownHandler"></param>
 		/// <param name="action"></param>
 		/// <param name="currentIndex">sets the dropdown to this value. if negative value, this is ignored</param>
-		public static void PopulateDropdown(TMP_Dropdown dd, IList<ModalConfirmation.Entry> options, object ownerOfDropdownHandler, Action<int> action, int currentIndex = -1) {
-			PopulateDropdown(dd, () => options.Count, i => options[i].text, ownerOfDropdownHandler, action, currentIndex, null);
+		public static void PopulateDropdown(TMP_Dropdown dd, IList<string> options, object ownerOfDropdownHandler, Action<int> action, int currentIndex = -1, bool customTextField = false) {
+			int o = (customTextField ? 1 : 0);
+			PopulateDropdown(dd, () => options.Count + o, i => (i >= o) ? options[i-o] : CustomValueMarker, ownerOfDropdownHandler, action, currentIndex, null);
+		}
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="dd"></param>
+		/// <param name="options"></param>
+		/// <param name="ownerOfDropdownHandler"></param>
+		/// <param name="action"></param>
+		/// <param name="currentIndex">sets the dropdown to this value. if negative value, this is ignored</param>
+		public static void PopulateDropdown(TMP_Dropdown dd, IList<ModalConfirmation.Entry> options, object ownerOfDropdownHandler, Action<int> action, int currentIndex = -1, bool customTextField = false) {
+			int o = (customTextField ? 1 : 0);
+			PopulateDropdown(dd, () => options.Count + o, i => (i >= o) ? options[i-o].text : CustomValueMarker, ownerOfDropdownHandler, action, currentIndex, null);
 		}
 		public static void PopulateDropdown(TMP_Dropdown dd, Func<int> getCount, Func<int,string> getText, object ownerOfDropdownHandler, Action<int> dropdownHandler, int currentIndex = -1, Func<int, Sprite> getImage = null) {
 			dd.ClearOptions();

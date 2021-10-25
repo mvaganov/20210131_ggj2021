@@ -23,32 +23,33 @@ namespace NonStandard.Ui {
 		}
 		public void SetImageByName(string name) { UiImage.SetSpriteByName(gameObject, name); }
 		public string GetImageName() { return UiImage.GetImageName(gameObject); }
-		public static bool HasText(GameObject go) { return GetTextObject(go) != null; }
-		public static GameObject GetTextObject(GameObject go) {
+		public static bool HasText(GameObject go) { return GetTextComponent(go) != null; }
+		public static Component GetTextComponent(GameObject go) {
 			UiText uit = go.GetComponentInChildren<UiText>();
-			if (uit != null) { return uit.gameObject; }
+			if (uit != null) { return uit; }
 			TMPro.TMP_InputField tif = go.GetComponentInChildren<TMPro.TMP_InputField>();
-			if (tif != null) { return tif.gameObject; }
+			if (tif != null) { return tif; }
 			TMPro.TMP_Text tmp = go.GetComponentInChildren<TMPro.TMP_Text>();
-			if (tmp != null) { return tmp.gameObject; }
+			if (tmp != null) { return tmp; }
 			InputField inf = go.GetComponentInChildren<InputField>();
-			if (inf != null) { return inf.gameObject; }
+			if (inf != null) { return inf; }
 			Text txt = go.GetComponentInChildren<Text>();
-			if (txt != null) { return txt.gameObject; }
+			if (txt != null) { return txt; }
 			return null;
 		}
-		public static void SetText(GameObject go, string value) {
+		public static Component SetText(GameObject go, string value) {
 			//Show.Log("setting "+go.name+" to \""+value+"\"");
 			UiText uit = go.GetComponentInChildren<UiText>();
-			if (uit != null) { uit.setText.Invoke(value); return; }
+			if (uit != null) { uit.setText.Invoke(value); return uit; }
 			TMPro.TMP_InputField tif = go.GetComponentInChildren<TMPro.TMP_InputField>();
-			if (tif != null) { tif.text = value; return; }
+			if (tif != null) { tif.text = value; return tif; }
 			TMPro.TMP_Text tmp = go.GetComponentInChildren<TMPro.TMP_Text>();
-			if (tmp != null) { tmp.text = value; return; }
+			if (tmp != null) { tmp.text = value; return tmp; }
 			InputField inf = go.GetComponentInChildren<InputField>();
-			if (inf != null) { inf.text = value; return; }
+			if (inf != null) { inf.text = value; return inf; }
 			Text txt = go.GetComponentInChildren<Text>();
-			if (txt != null) { txt.text = value; return; }
+			if (txt != null) { txt.text = value; return txt; }
+			return null;
 		}
 		public static string GetText(GameObject go) {
 			UiText uit = go.GetComponentInChildren<UiText>();
@@ -102,6 +103,57 @@ namespace NonStandard.Ui {
 			Text txt = go.GetComponentInChildren<Text>();
 			if (txt != null) { return txt.alignment = ta; }
 			return TextAnchor.MiddleCenter;
+		}
+		public static bool TryGetText(Component c, out string text) {
+			switch (c) {
+			case UiText uit: if (uit.getText == null) { text = null; return false; } text = uit.getText.Invoke(); return true;
+			case TMPro.TMP_InputField tif: text = tif.text; return true;
+			case TMPro.TMP_Text tmp: text = tmp.text; return true;
+			case InputField inf: text = inf.text; return true;
+			case Text txt: text = txt.text; return true;
+			}
+			text = null;
+			return false;
+		}
+		public static bool TrySetText(Component c, string text) {
+			switch (c) {
+			case UiText uit: if (uit.getText == null) { return false; } uit.setText.Invoke(text); return true;
+			case TMPro.TMP_InputField tif: tif.text = text; return true;
+			case TMPro.TMP_Text tmp: tmp.text = text; return true;
+			case InputField inf: inf.text = text; return true;
+			case Text txt: txt.text = text; return true;
+			}
+			return false;
+		}
+		public static bool TryGetColor(Component c, out Color color) {
+			switch (c) {
+			case TMPro.TMP_Text tmp: color = tmp.faceColor; return true;
+			case Text txt: color = txt.color; return true;
+			}
+			color = Color.magenta;
+			return false;
+		}
+		public static bool TrySetColor(Component c, Color color) {
+			switch (c) {
+			case TMPro.TMP_Text tmp: tmp.faceColor = color; return true;
+			case Text txt: txt.color = color; return true;
+			}
+			return false;
+		}
+		public static bool TryGetAlignment(Component c, out TextAnchor anchor) {
+			switch (c) {
+			case TMPro.TMP_Text tmp: anchor = ConvertTextAnchor(tmp.alignment); return true;
+			case Text txt: anchor = txt.alignment; return true;
+			}
+			anchor = TextAnchor.MiddleCenter;
+			return false;
+		}
+		public static bool TrySetAlignment(Component c, TextAnchor anchor) {
+			switch (c) {
+			case TMPro.TMP_Text tmp: tmp.alignment = ConvertTextAnchor(anchor); return true;
+			case Text txt: txt.alignment = anchor; return true;
+			}
+			return false;
 		}
 		public static TextAnchor ConvertTextAnchor(TMPro.TextAlignmentOptions ta) {
 			TextAnchor t = TextAnchor.MiddleCenter;

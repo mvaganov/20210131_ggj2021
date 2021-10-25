@@ -10,6 +10,7 @@ namespace NonStandard.GameUi.DataSheet {
 		public Sprite icon;
 		[SerializeField] private string title;
 		public UnityEvent_List_object dataPopulator;
+		[TextArea(1, 10)] public string columnSetup;
 		#endif
 		public Image iconObj;
 		public TMP_Text titleTextObj;
@@ -20,6 +21,7 @@ namespace NonStandard.GameUi.DataSheet {
 			titleTextObj.text = title;
 			iconObj.sprite = icon;
 			dataSheetObj.dataPopulator = dataPopulator;
+			dataSheetObj.columnSetup = columnSetup;
 		}
 		#endif
 
@@ -48,6 +50,15 @@ namespace NonStandard.GameUi.DataSheet {
 				dataPopulator = value;
 				#endif
 				dataSheetObj.dataPopulator = value;
+			}
+		}
+		public string ColumnSetup {
+			get => dataSheetObj.columnSetup;
+			set {
+				#if UNITY_EDITOR
+				columnSetup = value;
+				#endif
+				dataSheetObj.columnSetup = value;
 			}
 		}
 	}

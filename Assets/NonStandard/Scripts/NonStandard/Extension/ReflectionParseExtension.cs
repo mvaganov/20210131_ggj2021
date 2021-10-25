@@ -82,11 +82,11 @@ namespace NonStandard.Extension {
 			value = Enum.Parse(enumType, enumName);
 			return true;
 		}
-		public static object GetValue(object obj, object variableNameOrPath, object defaultValue, List<object> out_path = null) {
+		public static object GetValue(object obj, object variableNameOrPath, object defaultValue, List<object> out_path = null, string memberOperator = ".") {
 			//Show.Log(variableNamePath);
 			IList<object> vars;
 			switch (variableNameOrPath) {
-			case string s: vars = s.Split("."); break;
+			case string str: vars = str.Split(memberOperator).ConvertAll(s=>(object)s.Trim()); break;
 			case IList<object> list: vars = list; break;
 			default: vars = new object[] { variableNameOrPath }; break;
 			}

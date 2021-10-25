@@ -877,6 +877,14 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  columnSetup: "{label:\"\", columnUi:\"braille\", valueScript:null, headerUi:refresh,
+    widthOfColumn:30}\r\n{label:\"name\", columnUi:\"label\", valueScript:na\xA4,
+    headerUi:collabel, widthOfColumn:100}\r\n{l\xA4:\"activate\", \r\nc\xA4:if(maybe
+    data.cooperative){btn}else{none}, \r\nv\xA4:\"activate\", h\xA4:collabel, w\xA4:100,
+    \r\n\tonClick:{DoActivateTrigger()}}\r\n{l\xA4:\"speed\", c\xA4:\"txticon\",
+    v\xA4:(move.move.speed/5), h\xA4:collabel, w\xA4:30, d\xA4:0.0}\r\n{l\xA4:\"handicraft\",
+    c\xA4:\"input\", v\xA4:(data.handicraft), h\xA4:collabel, w\xA4:80, d\xA4:0.0}\r\n{l\xA4:\"+\",
+    c\xA4:\"none\", v\xA4:null, h\xA4:addcol, w\xA4:30,alwaysLast:1}\r\n"
   iconObj: {fileID: 131171265}
   titleTextObj: {fileID: 138456498}
   dataSheetObj: {fileID: 184047395}
@@ -1322,7 +1330,7 @@ MonoBehaviour:
   columnSetup: "{label:\"\", columnUi:\"braille\", valueScript:null, headerUi:refresh,
     widthOfColumn:30}\r\n{label:\"name\", columnUi:\"label\", valueScript:na\xA4,
     headerUi:collabel, widthOfColumn:100}\r\n{l\xA4:\"activate\", \r\nc\xA4:if(maybe
-    data.cooperative){btn}else{none}, \r\n\tv\xA4:\"activate\", h\xA4:collabel, w\xA4:100,
+    data.cooperative){btn}else{none}, \r\nv\xA4:\"activate\", h\xA4:collabel, w\xA4:100,
     \r\n\tonClick:{DoActivateTrigger()}}\r\n{l\xA4:\"speed\", c\xA4:\"txticon\",
     v\xA4:(move.move.speed/5), h\xA4:collabel, w\xA4:30, d\xA4:0.0}\r\n{l\xA4:\"handicraft\",
     c\xA4:\"input\", v\xA4:(data.handicraft), h\xA4:collabel, w\xA4:80, d\xA4:0.0}\r\n{l\xA4:\"+\",
@@ -11774,7 +11782,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1581107009
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19564,6 +19572,11 @@ PrefabInstance:
     - target: {fileID: 6027826901593700890, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
         type: 3}
       propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6027826901593700890, guid: 8d542b9fba148c245b1da48b5fd1ffb2,
+        type: 3}
+      propertyPath: m_AnchorMin.x
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7731634059116809492, guid: 8d542b9fba148c245b1da48b5fd1ffb2,

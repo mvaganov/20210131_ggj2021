@@ -33,7 +33,7 @@ public class DescriptionTextWithIcon : MonoBehaviour {
 	public Color32 SpriteColor { get => image != null ? image.color : Color.clear; set { if (image == null) { return; } image.color = value; } }
 	private void OnEnable() { Refresh(); }
 	public void Refresh() {
-		if (textObject == null) textObject = UiText.GetTextObject(textObject);
+		if (textObject == null) textObject = UiText.GetTextComponent(textObject).gameObject;
 		if (image == null) image = GetComponentInChildren<Image>();
 		UseImage = UseImage;
 	}
