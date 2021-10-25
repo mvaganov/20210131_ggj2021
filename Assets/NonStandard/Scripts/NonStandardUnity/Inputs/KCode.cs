@@ -1,4 +1,4 @@
-﻿//#define USING_UNITY_INPUT_SYSTEM
+﻿#define USING_UNITY_INPUT_SYSTEM
 #if USING_UNITY_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif

@@ -107,7 +107,7 @@ namespace NonStandard.GameUi.DataSheet {
 			t = cHeader.columnSetting.data.columnUi;
 			string fieldTypeText = t.ToString();//cHeader.columnSetting.data.columnUi.GetAsBasicToken();//ResolveString(errLog, null);
 			int currentIndex = columnTypes.FindIndex(c=> fieldTypeText.StartsWith(c.uiField.name)) + 1;
-			Show.Log(currentIndex+" field  " + fieldTypeText);
+			//Show.Log(currentIndex+" field  " + fieldTypeText);
 			DropDownEvent.PopulateDropdown(fieldType, entries, this, SetFieldType, currentIndex, true);
 			if (currentIndex == 0) {
 				DropDownEvent.SetCustomValue(fieldType.gameObject, fieldTypeText);
@@ -131,7 +131,7 @@ namespace NonStandard.GameUi.DataSheet {
 			popup.Hide();
 		}
 		public void OnSetFieldTypeText(string text) {
-			Show.Log("fieldTypeGettingSet? " + this.fieldType.itemText.text+ " " + text);
+			//Show.Log("fieldTypeGettingSet? " + this.fieldType.itemText.text+ " " + text);
 			if (!gameObject.activeInHierarchy) { return; }
 			if (SetFieldTypeText(text)) {
 				uds.RefreshRowAndColumnUi();

@@ -1,4 +1,5 @@
-﻿using NonStandard.Utility.UnityEditor;
+﻿using NonStandard.Inputs;
+using NonStandard.Utility.UnityEditor;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -22,7 +23,7 @@ namespace NonStandard.Ui {
 			if (DragWithMouse.beingDragged != null) { return true; }
 			if (!EventSystem.current.IsPointerOverGameObject()) return false;
 			PointerEventData pointerEventData = new PointerEventData(EventSystem.current);
-			pointerEventData.position = Input.mousePosition;
+			pointerEventData.position = AppInput.MousePosition;
 			List<RaycastResult> raycastResult = new List<RaycastResult>();
 			EventSystem.current.RaycastAll(pointerEventData, raycastResult);
 			for (int i = 0; i < raycastResult.Count; ++i) {

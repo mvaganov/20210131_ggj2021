@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using NonStandard.Inputs;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace NonStandard.TouchGui
@@ -24,19 +25,19 @@ namespace NonStandard.TouchGui
 		public int countTouch;
 		private Touch[] GetCurrentMouseTouches() {
 			Touch[] mouseTouches = null;
-			bool isDown = Input.GetMouseButtonDown(0);
-			bool isButton = Input.GetMouseButton(0);
+			bool isDown = AppInput.GetKeyDown(KCode.Mouse0);//Input.GetMouseButtonDown(0);
+			bool isButton = AppInput.GetKey(KCode.Mouse0); //Input.GetMouseButton(0);
 			if (isButton && (_currentTouches == null || _currentTouches.Length == 0)) {
 				isDown = true;
 			}
 			if (isButton || isDown) {
-				if (isDown) { mousePosition = Input.mousePosition; }
-				bool isStationary = mousePosition == Input.mousePosition;
-				mouseTouches = new Touch[] { new Touch { fingerId = 0, rawPosition = Input.mousePosition, position = Input.mousePosition,
-				deltaPosition = Input.mousePosition - mousePosition,
+				if (isDown) { mousePosition = AppInput.MousePosition; }
+				bool isStationary = mousePosition == AppInput.MousePosition;
+				mouseTouches = new Touch[] { new Touch { fingerId = 0, rawPosition = AppInput.MousePosition, position = AppInput.MousePosition,
+				deltaPosition = AppInput.MousePosition - mousePosition,
 				phase = (isDown) ? TouchPhase.Began : ((isStationary) ? TouchPhase.Stationary : TouchPhase.Moved),
 			}};
-				mousePosition = Input.mousePosition;
+				mousePosition = AppInput.MousePosition;
 			}
 			return mouseTouches;
 		}

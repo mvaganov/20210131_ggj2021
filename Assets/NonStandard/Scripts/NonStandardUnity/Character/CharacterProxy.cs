@@ -64,9 +64,9 @@ namespace NonStandard.Character {
 			if (camera == null) { camera = GetComponentInParent<CharacterCamera>(); }
 			UserInput mouseLook = userInput.AddComponent<UserInput>();
 			if (camera != null) {
-				mouseLook.AxisBinds.Add(new AxBind(new Axis("Mouse X", 5), "mouselook X",
+				mouseLook.AxisBinds.Add(new AxBind(new Axis(AppInput.StandardAxis.MouseX, 5), "mouselook X",
 					camera, "set_HorizontalRotateInput"));
-				mouseLook.AxisBinds.Add(new AxBind(new Axis("Mouse Y", 5), "mouselook Y",
+				mouseLook.AxisBinds.Add(new AxBind(new Axis(AppInput.StandardAxis.MouseY, 5), "mouselook Y",
 					camera, "set_VerticalRotateInput"));
 			}
 			mouseLook.enabled = false;
@@ -86,11 +86,11 @@ namespace NonStandard.Character {
 			userMoves.KeyBinds.Add(new KBind(KCode.Space, "jump",
 				pressFunc: new EventBind(this, "set_Jump", 1f),
 				releaseFunc: new EventBind(this, "set_Jump", 0f)));
-			userMoves.AxisBinds.Add(new AxBind(new Axis("Horizontal"), "strafe right/left",
+			userMoves.AxisBinds.Add(new AxBind(new Axis(AppInput.StandardAxis.Horizontal), "strafe right/left",
 				this, "set_StrafeRightMovement"));
-			userMoves.AxisBinds.Add(new AxBind(new Axis("Vertical"), "move forward/backward",
+			userMoves.AxisBinds.Add(new AxBind(new Axis(AppInput.StandardAxis.Vertical), "move forward/backward",
 				this, "set_MoveForwardMovement"));
-			userMoves.AxisBinds.Add(new AxBind(new Axis("Mouse ScrollWheel", -4), "zoom in/out",
+			userMoves.AxisBinds.Add(new AxBind(new Axis(AppInput.StandardAxis.MouseScrollY, -4), "zoom in/out",
 				camera, "AddToTargetDistance"));
 		}
 

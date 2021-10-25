@@ -1,12 +1,10 @@
 ﻿using NonStandard;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+using NonStandard.Inputs;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class PixelInteraction : MonoBehaviour {
-    public KeyCode key = KeyCode.Mouse0;
+    public KCode key = KCode.Mouse0;
     public RectTransform rect;
     //public RawImage rimg;
     //public Texture2D tex;
@@ -26,16 +24,16 @@ public class PixelInteraction : MonoBehaviour {
     void Update() {
         bool show = false, released = false;
         Vector3 s = transform.lossyScale;
-        if (Input.GetKeyDown(key)) {
-            pressStarted = Input.mousePosition;
+        if (AppInput.GetKeyDown(key)) {
+            pressStarted = AppInput.MousePosition;
             pressStarted.x /= s.x;
             pressStarted.y /= s.y;
         }
-        if (Input.GetKey(key) || Input.GetKeyUp(key)) {
-            currentPress = Input.mousePosition;
+        if (AppInput.GetKey(key) || AppInput.GetKeyUp(key)) {
+            currentPress = AppInput.MousePosition;
             currentPress.x /= s.x;
             currentPress.y /= s.y;
-            released = Input.GetKeyUp(key);
+            released = AppInput.GetKeyUp(key);
             show = lastPosition != currentPress || released;
         }
         if (show) {

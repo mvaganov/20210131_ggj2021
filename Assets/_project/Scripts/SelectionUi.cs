@@ -1,4 +1,5 @@
 ﻿using NonStandard.Character;
+using NonStandard.Inputs;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -57,7 +58,7 @@ public class SelectionUi : MonoBehaviour
 		if (selection.Count == 0 && c2m.characterToMove.Target != null) {
 			SetSelection(c2m.characterToMove.Target);
 		}
-		if (Input.GetKey(c2m.key)) {
+		if (AppInput.GetKey(c2m.key)) {
 			c2m.RaycastClick(rh => {
 				if (selection.Count == 0) { return; }
 				for (int i = 0; i < selection.Count; ++i) {
@@ -69,7 +70,7 @@ public class SelectionUi : MonoBehaviour
 				}
 			});
 		}
-		if (c2m.prefab_waypoint != null && Input.GetKeyUp(c2m.key)) {
+		if (c2m.prefab_waypoint != null && AppInput.GetKeyUp(c2m.key)) {
 			//if (follower != null) { follower.ShowCurrentWaypoint(); }
 			if (selection.Count > 0) {
 				for (int i = 0; i < selection.Count; ++i) {

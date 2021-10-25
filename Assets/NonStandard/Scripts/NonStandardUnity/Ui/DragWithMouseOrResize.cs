@@ -1,4 +1,5 @@
 ﻿using NonStandard.Data;
+using NonStandard.Inputs;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -175,7 +176,7 @@ namespace NonStandard.Ui.Mouse {
 			//Vector2 min = corners[1], max = corners[3];
 			//Vector2 mousePosition = Input.mousePosition; // data.position;
 			//mouseCursorState = CalculateEdgeDirection(mousePosition, min, max, resizeEdgeRadius);
-			Vector2 pos = Input.mousePosition;
+			Vector2 pos = AppInput.MousePosition;
 			if (data is PointerEventData ped) { pos = ped.position; }
 			mouseCursorState = CalculatePointerOutOfBounds(rt, pos, out Vector2 offset, -resizeEdgeRadius);
 			float r2 = resizeEdgeRadius * 2;

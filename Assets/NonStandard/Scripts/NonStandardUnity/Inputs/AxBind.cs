@@ -18,7 +18,7 @@ namespace NonStandard.Inputs {
 		/// <summary>
 		/// name of the axis, e.g.: Horizontal, Vertical
 		/// </summary>
-		public Axis[] axis = new Axis[] { new Axis("Horizontal") };
+		public Axis[] axis = new Axis[] { new Axis(AppInput.StandardAxis.Horizontal) };
 
 
 		[ContextMenuItem("DoActivateTrigger", "DoActivateTrigger")]
@@ -83,12 +83,12 @@ namespace NonStandard.Inputs {
 		/// <summary>
 		/// describes a function to execute when a specific key-combination is pressed
 		/// </summary>
-		public AxBind(string axis, Func<float, bool> onAxisEvent, string name = null) : this(axis, name, onAxisEvent) { }
+		public AxBind(AppInput.StandardAxis axis, Func<float, bool> onAxisEvent, string name = null) : this(axis, name, onAxisEvent) { }
 
 		/// <summary>
 		/// describes functions to execute when a specific key is pressed/held/released
 		/// </summary>
-		public AxBind(string axis, string name = null, Func<float, bool> onAxisEvent = null, Func<bool> additionalRequirement = null)
+		public AxBind(AppInput.StandardAxis axis, string name = null, Func<float, bool> onAxisEvent = null, Func<bool> additionalRequirement = null)
 			: this(new Axis(axis), name, onAxisEvent, additionalRequirement) {
 		}
 
@@ -137,7 +137,7 @@ namespace NonStandard.Inputs {
 			ax.Init();
 #if UNITY_EDITOR
 			if(ax.multiplier == 0) {
-				Debug.LogWarning("AxisBind->"+name+"->"+ax.name+" has a zero multiplier. Was this intentional?");
+				Debug.LogWarning("AxisBind->"+name+"->"+ax.axis+" has a zero multiplier. Was this intentional?");
 			}
 #endif
 		}); }
@@ -169,8 +169,8 @@ namespace NonStandard.Inputs {
 			AddEvents(onAxis);
 		}
 
-		public void AddAxis(string axisName, string nameToUse, Func<float, bool> onAxis = null) {
-			AddAxis(new Axis[] { new Axis(axisName) }, nameToUse, onAxis);
+		public void AddAxis(AppInput.StandardAxis axis, string nameToUse, Func<float, bool> onAxis = null) {
+			AddAxis(new Axis[] { new Axis(axis) }, nameToUse, onAxis);
 		}
 		public string ShortDescribe(string betweenKeyPresses = "\n") {
 			if (axis == null || axis.Length == 0) return "";
@@ -235,7 +235,8 @@ namespace NonStandard.Inputs {
 
 	[System.Serializable]
 	public class Axis : IComparable<Axis> {
-		public string name;
+		//public string name;
+		public AppInput.StandardAxis axis;
 		public float multiplier = 1;
 		private float knownValue = -1;
 		/// <summary>
@@ -250,7 +251,7 @@ namespace NonStandard.Inputs {
 
 		public KModifier[] modifiers;
 
-		public Axis(string name, float multiplier = 1) { this.name = name; this.multiplier = multiplier; }
+		public Axis(AppInput.StandardAxis axis, float multiplier = 1) { this.axis = axis; this.multiplier = multiplier; }
 
 		public bool IsValueChanged() {
 			bool isAllowed = modifiers == null || modifiers.Length == 0 || KCombo.IsSatisfiedHeld(modifiers);
@@ -264,13 +265,13 @@ namespace NonStandard.Inputs {
 
 		public void MarkValueAsKnown() { knownValue = cachedValue; }
 
-		public float GetValue() { return Input.GetAxis(name); }
-		public float GetValueRaw() { return Input.GetAxisRaw(name); }
+		public float GetValue() { return AppInput.GetStandardAxis(axis); } // TODO make an easing function over time
+		public float GetValueRaw() { return AppInput.GetStandardAxis(axis); }
 
-		public int CompareTo(Axis other) { return name.CompareTo(other.name); }
+		public int CompareTo(Axis other) { return axis.CompareTo(other.axis); }
 
 		public void Init() { }
 
-		public override string ToString() { return KCombo.ToString(modifiers)+name; }
+		public override string ToString() { return KCombo.ToString(modifiers)+axis.ToString(); }
 	}
 }

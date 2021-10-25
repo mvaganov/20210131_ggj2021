@@ -1,4 +1,4 @@
-﻿//#define USING_UNITY_INPUT_SYSTEM
+﻿#define USING_UNITY_INPUT_SYSTEM
 using NonStandard.Process;
 using System;
 using System.Collections.Generic;
@@ -243,7 +243,15 @@ namespace NonStandard.Inputs {
 				#endif
 			}
 		}
-
+		public static Vector3 MouseScrollDelta {
+			get {
+				#if USING_UNITY_INPUT_SYSTEM
+				return Mouse.current.scroll.ReadValue();
+				#else
+				return new Vector3(0, Input.GetAxis("Mouse ScrollWheel"));
+				#endif
+			}
+		}
 		public static bool IsOldKeyCode(KCode code) { return Enum.IsDefined(typeof(KeyCode), (int)code); }
 
 #if USING_UNITY_INPUT_SYSTEM
@@ -384,6 +392,40 @@ namespace NonStandard.Inputs {
 			bool pressed = GetKey_internal(key);
 			if (!pressed && ks == KState.KeyHeld) { _pressState[key] = KState.KeyReleased; }
 			return !pressed;
+		}
+
+		public enum StandardAxis { None, Horizontal, Vertical, MouseX, MouseY, MouseScrollY }
+		/// <summary>
+		/// TODO reimplement the input code to be truly event-driven, and remove the need for methods that do polling like these
+		/// </summary>
+		/// <param name="axis"></param>
+		/// <returns></returns>
+		public static float GetStandardAxis(StandardAxis axis) {
+			float v = 0;
+#if USING_UNITY_INPUT_SYSTEM
+			switch (axis) {
+			case StandardAxis.Horizontal:
+				if (GetKey(KCode.A) || GetKey(KCode.LeftArrow)) v += -1;
+				if (GetKey(KCode.D) || GetKey(KCode.RightArrow)) v += 1;
+				break;
+			case StandardAxis.Vertical:
+				if (GetKey(KCode.S) || GetKey(KCode.UpArrow)) v += -1;
+				if (GetKey(KCode.W) || GetKey(KCode.DownArrow)) v += 1;
+				break;
+			case StandardAxis.MouseX: v = MousePositionDelta.x; break;
+			case StandardAxis.MouseY: v = MousePositionDelta.y; break;
+			case StandardAxis.MouseScrollY: v = MouseScrollDelta.y; break;
+			}
+#else
+			switch (axis) {
+			case StandardAxis.Horizontal: v = Input.GetAxis("Horizontal");       break;
+			case StandardAxis.Vertical:   v = Input.GetAxis("Vertical");         break;
+			case StandardAxis.MouseX:     v = Input.GetAxis("Mouse X");          break;
+			case StandardAxis.MouseY:     v = Input.GetAxis("Mouse Y");          break;
+			case StandardAxis.MouseScroll:v = Input.GetAxis("Mouse ScrollWheel");break;
+			}
+#endif
+			return v;
 		}
 
 		public void Update() { DoUpdate(); }

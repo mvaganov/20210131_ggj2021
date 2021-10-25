@@ -1,4 +1,5 @@
 ﻿using NonStandard.GameUi;
+using NonStandard.Inputs;
 using NonStandard.Ui;
 using NonStandard.Ui.Mouse;
 using System;
@@ -7,7 +8,7 @@ using UnityEngine;
 namespace NonStandard.Character {
 	public class ClickToMove : MonoBehaviour {
 		public CharacterProxy characterToMove;
-		public KeyCode key = KeyCode.Mouse0;
+		public KCode key = KCode.Mouse0;
 		public Camera _camera;
 		[System.Serializable]
 		public class ClickSettings {
@@ -65,7 +66,7 @@ namespace NonStandard.Character {
 
 		public void RaycastClick(Action<RaycastHit> whatToDoOnSuccessfulClick) {
 			if (!UiClick.IsMouseOverUi()) {
-				Ray ray = _camera.ScreenPointToRay(Input.mousePosition);
+				Ray ray = _camera.ScreenPointToRay(AppInput.MousePosition);
 				Physics.Raycast(ray, out RaycastHit rh, float.PositiveInfinity, clickSettings.raycastLayer, clickSettings.raycastTriggerColliders);
 				if (rh.collider != null) {
 					whatToDoOnSuccessfulClick.Invoke(rh);
@@ -81,10 +82,10 @@ namespace NonStandard.Character {
 				SetFollower(characterToMove.Target.move);
 			}
 			if (follower == null) return;
-			if (Input.GetKey(key)) {
+			if (AppInput.GetKey(key)) {
 				RaycastClick(rh => ClickFor(follower, rh));
 			}
-			if (prefab_waypoint != null && Input.GetKeyUp(key)) {
+			if (prefab_waypoint != null && AppInput.GetKeyUp(key)) {
 				follower.ShowCurrentWaypoint();
 			}
 		}
