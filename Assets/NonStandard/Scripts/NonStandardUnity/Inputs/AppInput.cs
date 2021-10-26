@@ -9,6 +9,7 @@ using UnityEngine.EventSystems;
 #if USING_UNITY_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
 #endif
 
 namespace NonStandard.Inputs {
@@ -428,6 +429,18 @@ namespace NonStandard.Inputs {
 			return v;
 		}
 
+		// TODO use this to get inputs instead of the awkward polling mechanism
+		private void EventHandler(UnityEngine.InputSystem.LowLevel.InputEventPtr eventPtr, UnityEngine.InputSystem.InputDevice device) {
+			if (!eventPtr.IsA<UnityEngine.InputSystem.LowLevel.StateEvent>() && !eventPtr.IsA<UnityEngine.InputSystem.LowLevel.DeltaStateEvent>()) {
+				return;
+			}
+			foreach (UnityEngine.InputSystem.InputControl control in eventPtr.EnumerateChangedControls(device)) {
+				Debug.Log(control.displayName+" : "+control.ReadValueAsObject());
+			}
+		}
+		public void Start() {
+			UnityEngine.InputSystem.InputSystem.onEvent += EventHandler;
+		}
 		public void Update() { DoUpdate(); }
 
 		bool IsKeyBindAmbiguousWithTextInput(KBind kBind) {
