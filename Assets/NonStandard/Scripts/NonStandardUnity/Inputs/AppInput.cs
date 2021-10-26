@@ -54,7 +54,7 @@ namespace NonStandard.Inputs {
 					KCode thisHeldKey = KCode.None;
 					foreach (KCode k in heldKeys) { thisHeldKey = k; break; }
 					heldKeys.Clear();
-					if (thisHeldKey != KCode.None) {
+					if (thisHeldKey != KCode.None && (thisHeldKey < KCode.Mouse0 || thisHeldKey > KCode.Mouse6)) {
 						ulong now = Proc.Now;
 						if (thisHeldKey == lastHeldKey && lastKeyHeldTime != 0) {
 							heldDuration += now - lastKeyHeldTime;
