@@ -39,7 +39,7 @@ public class Map2dAStar : MazeAStar {
 		private float _f = -1, _g = -1; private Coord _from = Coord.NegativeOne; public int _edge = -1;
 		public Coord coord;
 		public GameObject debugVisibleObject;
-		public Lines.Wire fromArrow;
+		public Wire fromArrow;
 		public Map2dAStar astar;
 		public VisionMapping visMap;
 		public AStarData(Coord c, Map2dAStar a, VisionMapping vm, GameObject prefab_data_vis) { Reset(c, a, vm, prefab_data_vis); }

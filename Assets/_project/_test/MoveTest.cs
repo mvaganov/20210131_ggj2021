@@ -54,7 +54,7 @@ public class MoveTest : MonoBehaviour
 		/// <summary>How many double jumps have happend since being on the ground</summary>
 		[HideInInspector] public int usedDoubleJumps;
 		/// <summary>debug artifact, for seeing the jump arc</summary>
-		[HideInInspector] Lines.Wire jumpArc;
+		[HideInInspector] Wire jumpArc;
 		public bool Pressed {
 			get { return pressed; } set { if (value && !pressed) { timePressed = GameClock.Time; } pressed = value; }
 		}

@@ -126,7 +126,7 @@ namespace NonStandard.Character {
 		const float timeJump = 1f / 16;
 		const int maxPredictionsPerCycle = 16;
 		public List<Vector3> predictionPath = new List<Vector3>();
-		public Lines.Wire predictionLine, startArrow, endArrow;
+		public Wire predictionLine, startArrow, endArrow;
 
 		void PredictionPathAdd(Vector3 p) {
 			if (predictionPath.Count == 0) { predictionPath.Add(p); return; }
