@@ -1,12 +1,11 @@
-﻿#define USING_UNITY_INPUT_SYSTEM
-using NonStandard.Process;
+﻿using NonStandard.Process;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-#if USING_UNITY_INPUT_SYSTEM
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
@@ -227,7 +226,7 @@ namespace NonStandard.Inputs {
 
 		public static Vector3 MousePosition {
 			get {
-				#if USING_UNITY_INPUT_SYSTEM
+				#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 				return Mouse.current.position.ReadValue();
 				#else
 				return Input.mousePosition;
@@ -237,7 +236,7 @@ namespace NonStandard.Inputs {
 
 		public static Vector3 MousePositionDelta {
 			get {
-				#if USING_UNITY_INPUT_SYSTEM
+				#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 				return Mouse.current.delta.ReadValue();
 				#else
 				return new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
@@ -246,7 +245,7 @@ namespace NonStandard.Inputs {
 		}
 		public static Vector3 MouseScrollDelta {
 			get {
-				#if USING_UNITY_INPUT_SYSTEM
+				#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 				return Mouse.current.scroll.ReadValue();
 				#else
 				return new Vector3(0, Input.GetAxis("Mouse ScrollWheel"));
@@ -255,7 +254,7 @@ namespace NonStandard.Inputs {
 		}
 		public static bool IsOldKeyCode(KCode code) { return Enum.IsDefined(typeof(KeyCode), (int)code); }
 
-#if USING_UNITY_INPUT_SYSTEM
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 		private static bool GetKey_internal_InputSystem(KCode key) {
 			switch (key) {
 				case KCode.NoShift: return !Keyboard.current.leftShiftKey.isPressed && !Keyboard.current.rightShiftKey.isPressed;
@@ -313,7 +312,7 @@ namespace NonStandard.Inputs {
 		}
 #endif
 		private static bool GetKey_internal(KCode key) {
-			#if USING_UNITY_INPUT_SYSTEM
+			#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 			return GetKey_internal_InputSystem(key);
 			#else
 			return GetKey_internal_legacy(key);
@@ -339,7 +338,7 @@ namespace NonStandard.Inputs {
 
 		public static bool GetKey(KCode key) {
 			bool pressed;
-			#if USING_UNITY_INPUT_SYSTEM
+			#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 			if (TryGetKeyButton(key, out ButtonControl keyControl) || TryGetMouseButton(key, out keyControl)) {
 				pressed = keyControl.isPressed;
 				if (pressed) { heldKeys.Add(key); }
@@ -363,7 +362,7 @@ namespace NonStandard.Inputs {
 
 		public static bool GetKeyDown(KCode key) {
 			if (KeyRepeatRate.softwareEmulatedPress == key) return true;
-			#if USING_UNITY_INPUT_SYSTEM
+			#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 			if (TryGetKeyButton(key, out ButtonControl keyControl) || TryGetMouseButton(key, out keyControl)) {
 				//if (keyControl.wasPressedThisFrame) Debug.Log("checking "+key+" "+keyControl.wasPressedThisFrame+" "+keyControl.name+" "+keyControl.displayName+" "+keyControl.shortDisplayName);
 				return keyControl.wasPressedThisFrame;
@@ -380,7 +379,7 @@ namespace NonStandard.Inputs {
 		}
 
 		public static bool GetKeyUp(KCode key) {
-			#if USING_UNITY_INPUT_SYSTEM
+			#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 			if (TryGetKeyButton(key, out ButtonControl keyControl) || TryGetMouseButton(key, out keyControl)) {
 				return keyControl.wasReleasedThisFrame;
 			}
@@ -403,7 +402,7 @@ namespace NonStandard.Inputs {
 		/// <returns></returns>
 		public static float GetStandardAxis(StandardAxis axis) {
 			float v = 0;
-#if USING_UNITY_INPUT_SYSTEM
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 			switch (axis) {
 			case StandardAxis.Horizontal:
 				if (GetKey(KCode.A) || GetKey(KCode.LeftArrow)) v += -1;
