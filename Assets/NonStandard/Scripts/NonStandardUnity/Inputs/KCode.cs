@@ -1,5 +1,6 @@
 ﻿#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 #endif
 using System.Collections.Generic;
 
@@ -152,8 +153,41 @@ namespace NonStandard.Inputs {
 			//[KCode.OEM5] = Key.OEM5,
 			//[KCode.IMESelected] = Key.IMESelected,
 		};
+		public static Dictionary<Key, KCode> inputSystemKeyboardToKCode = new Dictionary<Key, KCode>();
+		public static Dictionary<AxisControl, KCode> inputSystemMouseAndAxisToKCode = null;
 
-		public static object GetInputController(KCode kcode) {
+		public static KCode GetInputCode(AxisControl controller) {
+			KeyControl kc = controller as KeyControl;
+			if (kc != null) {
+				if(inputSystemKeyboardToKCode.Count == 0) {
+					foreach(KeyValuePair<KCode,Key> kvp in kCodeToInputSystem) {
+						inputSystemKeyboardToKCode[kvp.Value] = kvp.Key;
+					}
+				}
+				if (inputSystemKeyboardToKCode.TryGetValue(kc.keyCode, out KCode v)) { return v; }
+				return KCode.NoOption;
+			}
+			if (inputSystemMouseAndAxisToKCode == null) {
+				Mouse mouse = Mouse.current;
+				inputSystemMouseAndAxisToKCode = new Dictionary<AxisControl, KCode>() {
+					[mouse.leftButton] = KCode.Mouse0,
+					[mouse.rightButton] = KCode.Mouse1,
+					[mouse.middleButton] = KCode.Mouse2,
+					[mouse.forwardButton] = KCode.Mouse3,
+					[mouse.backButton] = KCode.Mouse4,
+					[mouse.press] = KCode.Mouse5,
+					[mouse.pressure] = KCode.Mouse6,
+					[mouse.scroll.y] = mouse.scroll.y.ReadValue() <= 0 ? KCode.MouseWheelDown : KCode.MouseWheelUp,
+					[mouse.scroll.x] = mouse.scroll.x.ReadValue() <= 0 ? KCode.MouseWheelLeft : KCode.MouseWheelRight,
+					[mouse.delta.y] = mouse.delta.y.ReadValue() <= 0 ? KCode.MouseYDown : KCode.MouseYUp,
+					[mouse.delta.x] = mouse.delta.x.ReadValue() <= 0 ? KCode.MouseXDown : KCode.MouseXUp,
+				};
+				if (inputSystemMouseAndAxisToKCode.TryGetValue(controller, out KCode v)) { return v; }
+				return KCode.NoCtrl;
+			}
+			return KCode.None;
+		}
+		public static AxisControl GetInputController(KCode kcode) {
 			switch (kcode) {
 			case KCode.Space: return Keyboard.current.spaceKey;
 			case KCode.Return: return Keyboard.current.enterKey;

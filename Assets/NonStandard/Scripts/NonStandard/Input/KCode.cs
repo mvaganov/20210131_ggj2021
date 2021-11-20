@@ -20,7 +20,7 @@ namespace NonStandard.Inputs {
 			case KCode.LeftAlt:
 			case KCode.RightAlt:
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-			return "Option";
+				return "Option";
 #else
 				return "Alt";
 #endif
@@ -872,7 +872,11 @@ namespace NonStandard.Inputs {
 		/// </summary>
 		AltGr = 313, // 0x00000139
 
-		// UNUSED = 314, // 0x0000013A
+		/// <summary>
+		/// Using the mouse's scroll input to drag right
+		/// NEW
+		/// </summary>
+		MouseWheelRight = 314, // 0x0000013A
 
 		/// <summary>
 		/// Help key
@@ -895,8 +899,11 @@ namespace NonStandard.Inputs {
 		/// </summary>
 		Menu = 319, // 0x0000013F
 
-		// UNUSED320 = 320, // 0x00000140
-
+		/// <summary>
+		/// Using the mouse's scroll input to drag left
+		/// NEW
+		/// </summary>
+		MouseWheelLeft = 320, // 0x00000140
 		/// <summary>
 		/// Pushing the scroll wheel forward
 		/// NEW

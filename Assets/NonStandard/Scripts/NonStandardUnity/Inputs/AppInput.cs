@@ -22,8 +22,15 @@ namespace NonStandard.Inputs {
 		[HideInInspector] public bool debugPrintPossibleKeyConflicts = false;
 		[HideInInspector] public bool debugPrintActivatedEvents = false;
 		private KBindGroup[] keyBindGroups;
-		public int updates { get; protected set; }
+		public int UpdateCount { get; protected set; }
 		public static bool IsQuitting { get; private set; }
+
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+		/// <summary>
+		/// OOP wrapper around the new Input System, with dictionary convenience functionality
+		/// </summary>
+		InputSystemInterfaceLogic _isInterface;
+#endif
 
 		protected List<KBind> kBindPresses = new List<KBind>();
 		protected List<KBind> kBindHolds = new List<KBind>();
@@ -33,9 +40,6 @@ namespace NonStandard.Inputs {
 		/// not an array because all elements aren't managed by AppInput. Unity's KeyCode system does most of the work.
 		/// </summary>
 		private static readonly Dictionary<KCode, KState> _pressState = new Dictionary<KCode, KState>();
-
-		public static void Log(string text) { Debug.Log(text); }
-		public static void Log(object obj) { Log(obj.ToString()); }
 
 		public static HashSet<KCode> heldKeys = new HashSet<KCode>();
 		[Serializable] public class KeyRepeatRate {
@@ -185,7 +189,7 @@ namespace NonStandard.Inputs {
 			//if(kBind.keyCombinations != null && kBind.keyCombinations[0].modifiers != null)
 			//	Log(kBind.keyCombinations[0].modifiers[0]);
 			//Log(kBind);
-			EnsureInitializedKeyBindGroups();
+			EnsureInitializedKeyBinding();
 			if (change == KBindChange.Update) {
 				changeHappened |= UpdateKeyBindGroups(kBind, KBindChange.Remove);
 				change = KBindChange.Add;
@@ -226,30 +230,30 @@ namespace NonStandard.Inputs {
 
 		public static Vector3 MousePosition {
 			get {
-				#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 				return Mouse.current.position.ReadValue();
-				#else
+#else
 				return Input.mousePosition;
-				#endif
+#endif
 			}
 		}
 
 		public static Vector3 MousePositionDelta {
 			get {
-				#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 				return Mouse.current.delta.ReadValue();
-				#else
+#else
 				return new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
-				#endif
+#endif
 			}
 		}
 		public static Vector3 MouseScrollDelta {
 			get {
-				#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 				return Mouse.current.scroll.ReadValue();
-				#else
+#else
 				return new Vector3(0, Input.GetAxis("Mouse ScrollWheel"));
-				#endif
+#endif
 			}
 		}
 		public static bool IsOldKeyCode(KCode code) { return Enum.IsDefined(typeof(KeyCode), (int)code); }
@@ -257,28 +261,28 @@ namespace NonStandard.Inputs {
 #if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 		private static bool GetKey_internal_InputSystem(KCode key) {
 			switch (key) {
-				case KCode.NoShift: return !Keyboard.current.leftShiftKey.isPressed && !Keyboard.current.rightShiftKey.isPressed;
-				case KCode.NoAlt: return !Keyboard.current.leftAltKey.isPressed && !Keyboard.current.rightAltKey.isPressed;
-				case KCode.NoCtrl: return !Keyboard.current.leftCtrlKey.isPressed && !Keyboard.current.rightCtrlKey.isPressed;
-				case KCode.AnyShift: return Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed;;
-				case KCode.AnyAlt: return Keyboard.current.leftAltKey.isPressed || Keyboard.current.rightAltKey.isPressed;
-				case KCode.AnyCtrl: return Keyboard.current.leftCtrlKey.isPressed || Keyboard.current.rightCtrlKey.isPressed;
-				case KCode.MouseWheelUp: return Mouse.current.scroll.y.ReadValue() > 0;
-				case KCode.MouseWheelDown: return Mouse.current.scroll.y.ReadValue() < 0;
-				case KCode.MouseXUp: return Mouse.current.delta.x.ReadValue() > 0;
-				case KCode.MouseXDown: return Mouse.current.delta.x.ReadValue() < 0;
-				case KCode.MouseYUp: return Mouse.current.delta.y.ReadValue() > 0;
-				case KCode.MouseYDown: return Mouse.current.delta.y.ReadValue() < 0;
+			case KCode.NoShift: return !Keyboard.current.leftShiftKey.isPressed && !Keyboard.current.rightShiftKey.isPressed;
+			case KCode.NoAlt: return !Keyboard.current.leftAltKey.isPressed && !Keyboard.current.rightAltKey.isPressed;
+			case KCode.NoCtrl: return !Keyboard.current.leftCtrlKey.isPressed && !Keyboard.current.rightCtrlKey.isPressed;
+			case KCode.AnyShift: return Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed; ;
+			case KCode.AnyAlt: return Keyboard.current.leftAltKey.isPressed || Keyboard.current.rightAltKey.isPressed;
+			case KCode.AnyCtrl: return Keyboard.current.leftCtrlKey.isPressed || Keyboard.current.rightCtrlKey.isPressed;
+			case KCode.MouseWheelUp: return Mouse.current.scroll.y.ReadValue() > 0;
+			case KCode.MouseWheelDown: return Mouse.current.scroll.y.ReadValue() < 0;
+			case KCode.MouseXUp: return Mouse.current.delta.x.ReadValue() > 0;
+			case KCode.MouseXDown: return Mouse.current.delta.x.ReadValue() < 0;
+			case KCode.MouseYUp: return Mouse.current.delta.y.ReadValue() > 0;
+			case KCode.MouseYDown: return Mouse.current.delta.y.ReadValue() < 0;
 			}
 			return false;
 		}
 		private static bool TryGetMouseButton(KCode key, out ButtonControl buttonControl) {
 			switch (key) {
-				case KCode.Mouse0: buttonControl = Mouse.current.leftButton; return true;
-				case KCode.Mouse1: buttonControl = Mouse.current.rightButton; return true;
-				case KCode.Mouse2: buttonControl = Mouse.current.middleButton; return true;
-				case KCode.Mouse3: buttonControl = Mouse.current.forwardButton; return true; // TODO testme
-				case KCode.Mouse4: buttonControl = Mouse.current.backButton; return true; // TODO testme
+			case KCode.Mouse0: buttonControl = Mouse.current.leftButton; return true;
+			case KCode.Mouse1: buttonControl = Mouse.current.rightButton; return true;
+			case KCode.Mouse2: buttonControl = Mouse.current.middleButton; return true;
+			case KCode.Mouse3: buttonControl = Mouse.current.forwardButton; return true; // TODO testme
+			case KCode.Mouse4: buttonControl = Mouse.current.backButton; return true; // TODO testme
 			}
 			buttonControl = null;
 			return false;
@@ -312,11 +316,11 @@ namespace NonStandard.Inputs {
 		}
 #endif
 		private static bool GetKey_internal(KCode key) {
-			#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 			return GetKey_internal_InputSystem(key);
-			#else
+#else
 			return GetKey_internal_legacy(key);
-			#endif
+#endif
 		}
 
 		private List<KCode> advanceToPressed = new List<KCode>();
@@ -338,19 +342,19 @@ namespace NonStandard.Inputs {
 
 		public static bool GetKey(KCode key) {
 			bool pressed;
-			#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 			if (TryGetKeyButton(key, out ButtonControl keyControl) || TryGetMouseButton(key, out keyControl)) {
 				pressed = keyControl.isPressed;
 				if (pressed) { heldKeys.Add(key); }
 				return pressed;
 			}
-			#else
+#else
 			if (IsOldKeyCode(key)) {
 				pressed = UnityEngine.Input.GetKey((KeyCode) key);
 				if (pressed && (key < KCode.NoShift || key > KCode.NoAlt)) { heldKeys.Add(key); }
 				return pressed;
 			}
-			#endif
+#endif
 			pressed = GetKey_internal(key);
 			if (pressed && (key < KCode.NoShift || key > KCode.NoAlt)) { heldKeys.Add(key); }
 			KState ks;
@@ -362,14 +366,14 @@ namespace NonStandard.Inputs {
 
 		public static bool GetKeyDown(KCode key) {
 			if (KeyRepeatRate.softwareEmulatedPress == key) return true;
-			#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 			if (TryGetKeyButton(key, out ButtonControl keyControl) || TryGetMouseButton(key, out keyControl)) {
 				//if (keyControl.wasPressedThisFrame) Debug.Log("checking "+key+" "+keyControl.wasPressedThisFrame+" "+keyControl.name+" "+keyControl.displayName+" "+keyControl.shortDisplayName);
 				return keyControl.wasPressedThisFrame;
 			}
-			#else
+#else
 			if (IsOldKeyCode(key)) { return UnityEngine.Input.GetKeyDown((KeyCode)key); }
-			#endif
+#endif
 			KState ks;
 			_pressState.TryGetValue(key, out ks);
 			if (ks == KState.KeyHeld || ks == KState.KeyUp) { return false; }
@@ -379,13 +383,13 @@ namespace NonStandard.Inputs {
 		}
 
 		public static bool GetKeyUp(KCode key) {
-			#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 			if (TryGetKeyButton(key, out ButtonControl keyControl) || TryGetMouseButton(key, out keyControl)) {
 				return keyControl.wasReleasedThisFrame;
 			}
-			#else
+#else
 			if (IsOldKeyCode(key)) { return UnityEngine.Input.GetKeyUp((KeyCode)key); }
-			#endif
+#endif
 			KState ks;
 			_pressState.TryGetValue(key, out ks);
 			if (ks == KState.KeyReleased || ks == KState.KeyDown) { return false; }
@@ -409,8 +413,8 @@ namespace NonStandard.Inputs {
 				if (GetKey(KCode.D) || GetKey(KCode.RightArrow)) v += 1;
 				break;
 			case StandardAxis.Vertical:
-				if (GetKey(KCode.S) || GetKey(KCode.UpArrow)) v += -1;
-				if (GetKey(KCode.W) || GetKey(KCode.DownArrow)) v += 1;
+				if (GetKey(KCode.S) || GetKey(KCode.DownArrow)) v += -1;
+				if (GetKey(KCode.W) || GetKey(KCode.UpArrow)) v += 1;
 				break;
 			case StandardAxis.MouseX: v = MousePositionDelta.x; break;
 			case StandardAxis.MouseY: v = MousePositionDelta.y; break;
@@ -429,18 +433,20 @@ namespace NonStandard.Inputs {
 		}
 
 		// TODO use this to get inputs instead of the awkward polling mechanism
-		private void EventHandler(UnityEngine.InputSystem.LowLevel.InputEventPtr eventPtr, UnityEngine.InputSystem.InputDevice device) {
-			if (!eventPtr.IsA<UnityEngine.InputSystem.LowLevel.StateEvent>() && !eventPtr.IsA<UnityEngine.InputSystem.LowLevel.DeltaStateEvent>()) {
+		private void EventHandler(InputEventPtr eventPtr, InputDevice device) {
+			if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>()) {
 				return;
 			}
-			foreach (UnityEngine.InputSystem.InputControl control in eventPtr.EnumerateChangedControls(device)) {
-				Debug.Log(control.displayName+" : "+control.ReadValueAsObject());
+			foreach (InputControl control in eventPtr.EnumerateChangedControls(device)) {
+				Debug.Log(control.displayName + " : " + control.ReadValueAsObject());
 			}
 		}
-		public void Start() {
-			UnityEngine.InputSystem.InputSystem.onEvent += EventHandler;
+		//public void Start() {
+		//	UnityEngine.InputSystem.InputSystem.onEvent += EventHandler;
+		//}
+		public void Update() {
+			DoUpdate();
 		}
-		public void Update() { DoUpdate(); }
 
 		bool IsKeyBindAmbiguousWithTextInput(KBind kBind) {
 			for (int i = 0; i < kBind.keyCombinations.Length; ++i) {
@@ -457,7 +463,15 @@ namespace NonStandard.Inputs {
 		[Serializable]
 		public class KBindGroup {
 			public string name;
-			public List<KBind> keyBindList;
+			/// all key bindings
+			public List<KBind> allKeyBindings;
+			/// all key bindings organized by triggering key
+			public Dictionary<KCode, List<KBindTrigger>> bindingsByKey = new Dictionary<KCode, List<KBindTrigger>>();
+			public struct KBindTrigger : IComparable<KBindTrigger> {
+				public KCombo kCombo; public KBind kBind;
+				public int CompareTo(KBindTrigger other) { return kBind.CompareTo(other.kBind); }
+			}
+
 			public List<KeyTrigger> triggerList = new List<KeyTrigger>();
 			/// <summary>
 			/// could be <see cref="KBind.GetDown"/>, <see cref="KBind.GetHeld"/>, or <see cref="KBind.GetUp"/>
@@ -486,8 +500,15 @@ namespace NonStandard.Inputs {
 			}
 
 			public void Update(Func<KBind, bool> additionalFilter = null) {
-				for (int i = 0; i < keyBindList.Count; ++i) {
-					KeyCheck(keyBindList[i], triggerList, additionalFilter);
+				for (int i = 0; i < allKeyBindings.Count; ++i) {
+					KeyCheck(allKeyBindings[i], triggerList, additionalFilter);
+				}
+			}
+
+			public void Update(KCode specificKey, Func<KBind, bool> additionalFilter = null) {
+				if (!bindingsByKey.TryGetValue(specificKey, out List<KBindTrigger> kBindListing)) { return; }
+				for (int i = 0; i < kBindListing.Count; ++i) {
+					KeyCheck(kBindListing[i].kBind, triggerList, additionalFilter);
 				}
 			}
 
@@ -497,19 +518,35 @@ namespace NonStandard.Inputs {
 			public bool UpdateKeyBinding(KBind kBind, KBindChange kind) {
 				if (kind == KBindChange.Add && putInList != null && !putInList.Invoke(kBind)) { return false; }
 				bool changeHappened = false;
-				int index = keyBindList.IndexOf(kBind);
+				int index = allKeyBindings.IndexOf(kBind); // TODO get index from sorted list with IList extension?
 				switch (kind) {
 				case KBindChange.Add:
-					if (index >= 0) { Log("already added " + name + " " + kBind.name + "?"); }
+					if (index >= 0) { Show.Log("already added " + name + " " + kBind.name + "?"); }
 					if (index < 0) {
-						keyBindList.Add(kBind);
-						keyBindList.Sort();
+						allKeyBindings.Add(kBind); allKeyBindings.Sort(); // TODO insert sorted in IList extension?
+						for (int i = 0; i < kBind.keyCombinations.Length; ++i) {
+							KCombo kCombo = kBind.keyCombinations[i];
+							if (!bindingsByKey.TryGetValue(kCombo.key, out List<KBindTrigger> kBinds)) {
+								kBinds = new List<KBindTrigger>();
+								bindingsByKey[kCombo.key] = kBinds;
+							}
+							kBinds.Add(new KBindTrigger { kCombo = kCombo, kBind = kBind }); kBinds.Sort(); // TODO insert sorted in IList extension?
+						}
 						changeHappened = true;
 						//Log($"added {name} {kBind.name}");
-					} else { if (index >= 0) { Log("will not add duplicate " + name + " " + kBind.name); } }
+					} else { if (index >= 0) { Show.Log("will not add duplicate " + name + " " + kBind.name); } }
 					break;
 				case KBindChange.Remove:
-					if (index >= 0) { keyBindList.RemoveAt(index); changeHappened = true; }
+					if (index >= 0) {
+						allKeyBindings.RemoveAt(index); changeHappened = true;
+						for (int i = 0; i < kBind.keyCombinations.Length; ++i) {
+							KCombo kCombo = kBind.keyCombinations[i];
+							if (bindingsByKey.TryGetValue(kCombo.key, out List<KBindTrigger> kBinds)) {
+								int subIndex = kBinds.FindIndex(k => k.kBind == kBind); // TODO get index from sorted list with IList extension?
+								kBinds.RemoveAt(subIndex);
+							}
+						}
+					}
 					break;
 				case KBindChange.Update:
 					throw new Exception("Update is composed of a Remove and Add, should never be called directly like this.");
@@ -562,7 +599,7 @@ namespace NonStandard.Inputs {
 								if (showConflict) { debugOutput += "[REMOVED]"; }
 							}
 						}
-						if (showConflict) { Log(debugOutput); }
+						if (showConflict) { Show.Log(debugOutput); }
 					}
 				}
 
@@ -590,60 +627,94 @@ namespace NonStandard.Inputs {
 					}
 				}
 				if (logActivatedKeyBinds) {
-					Log(debugText);
+					Show.Log(debugText);
 				}
 				s_eventConsumed.Clear();
 				triggerList.Clear();
 			}
 		}
 		public void Awake() {
-			EnsureInitializedKeyBindGroups();
+			EnsureInitializedKeyBinding();
+		}
+		private void OnDestroy() {
+			_isInterface?.Release();
+			_isInterface = null;
 		}
 		void OnApplicationQuit() {
 			IsQuitting = true;
 			string c = "color", a = "#84f", b = "#48f";
-			Log("<" + c + "=" + a + ">AppInput</" + c + ">.IsQuitting = <" + c + "=" + b + ">true</" + c + ">;");
+			Debug.Log("<" + c + "=" + a + ">AppInput</" + c + ">.IsQuitting = <" + c + "=" + b + ">true</" + c + ">;");
 		}
 
-		public void EnsureInitializedKeyBindGroups() {
+		public void EnsureInitializedKeyBinding() {
 			if (keyBindGroups != null) return;
 			keyBindGroups = new KBindGroup[] {
-				new KBindGroup{name="Press",  keyBindList=kBindPresses, trigger=kb=>kb.GetDown(),action=kb=>kb.DoPress(),  putInList=kb=>kb.keyEvent.CountPress>0  },
-				new KBindGroup{name="Hold",   keyBindList=kBindHolds,   trigger=kb=>kb.GetHeld(),action=kb=>kb.DoHold(),   putInList=kb=>kb.keyEvent.CountHold>0   },
-				new KBindGroup{name="Release",keyBindList=kBindReleases,trigger=kb=>kb.GetUp(),  action=kb=>kb.DoRelease(),putInList=kb=>kb.keyEvent.CountRelease>0},
+				new KBindGroup{name="Press",  allKeyBindings=kBindPresses, trigger=kb=>kb.GetDown(),action=kb=>kb.DoPress(),  putInList=kb=>kb.keyEvent.CountPress>0  },
+				new KBindGroup{name="Hold",   allKeyBindings=kBindHolds,   trigger=kb=>kb.GetHeld(),action=kb=>kb.DoHold(),   putInList=kb=>kb.keyEvent.CountHold>0   },
+				new KBindGroup{name="Release",allKeyBindings=kBindReleases,trigger=kb=>kb.GetUp(),  action=kb=>kb.DoRelease(),putInList=kb=>kb.keyEvent.CountRelease>0},
 			};
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+			_isInterface = new InputSystemInterfaceLogic();
+			_isInterface.Initialize();
+			_isInterface.OnPressedAny = KeyPressed;
+			_isInterface.OnReleaseAny = KeyRelease;
+			_isInterface.OnPressingAny = KeyPressing;
+#endif
 		}
-
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+		private List<HashSet<KCode>> _currentKeyEvents = new List<HashSet<KCode>>(){
+			new HashSet<KCode>(), new HashSet<KCode>(), new HashSet<KCode>(),
+		};
+		public void KeyPressed(KCode kCode, object control) { _currentKeyEvents[0].Add(kCode); }
+		public void KeyPressing(KCode kCode, object control){ _currentKeyEvents[1].Add(kCode); }
+		public void KeyRelease(KCode kCode, object control) { _currentKeyEvents[2].Add(kCode); }
+#endif
 		public void DoUpdate() {
+#if !ENABLE_INPUT_SYSTEM || ENABLE_LEGACY_INPUT_MANAGER
+			// without the event-based input system, all keys need to be checked
 			if (!textInputHappening) {
 				Array.ForEach(keyBindGroups, ks => ks.Update());
 			} else {
 				Array.ForEach(keyBindGroups, ks => ks.Update(IsKeyBindAmbiguousWithTextInput));
 			}
+#else
+			_isInterface.Update(); // updates _pressed
+			// the input system collates the keys that have been pressed/released/held. all such logic happens here, in the main thread (?)
+			for(int i = 0; i < _currentKeyEvents.Count; ++i) {
+				HashSet<KCode> keyEvents = _currentKeyEvents[i];
+				foreach (KCode kCode in keyEvents) {
+					Func<KBind, bool> filter = null;
+					if (textInputHappening) { filter = IsKeyBindAmbiguousWithTextInput; }
+					keyBindGroups[i].Update(kCode, filter);
+				}
+				keyEvents.Clear();
+			}
+#endif
 			Array.ForEach(keyBindGroups, ks => ks.Resolve(debugPrintPossibleKeyConflicts, debugPrintActivatedEvents));
 			for (int i = 0; i < AxisBinds.Count; ++i) {
 				AxisBinds[i].Update();
 			}
-			++updates;
+			++UpdateCount;
 			keyRepeatRate.Update();
 		}
-		public void UpdateCurrentKeyBindText() {
-			EnsureInitializedKeyBindGroups();
+		public void UpdateCurrentKeyBindText() { CurrentKeyBindings = CalcualteCurrentKeyBindText(); }
+		public string CalcualteCurrentKeyBindText() {
+			EnsureInitializedKeyBinding();
 			StringBuilder sb = new StringBuilder();
 			for (int s = 0; s < keyBindGroups.Length; ++s) {
 				KBindGroup ks = keyBindGroups[s];
-				if (ks.keyBindList.Count == 0) continue;
+				if (ks.allKeyBindings.Count == 0) continue;
 				sb.Append("[" + ks.name + "]\n");
-				for (int i = 0; i < ks.keyBindList.Count; ++i) {
-					KBind kb = ks.keyBindList[i];
+				for (int i = 0; i < ks.allKeyBindings.Count; ++i) {
+					KBind kb = ks.allKeyBindings[i];
 					bool needsPriority = true;
 					bool hasKeys = true;
 					if (kb.keyCombinations.Length != 0 && (kb.keyCombinations.Length != 1 || kb.keyCombinations[0].key != KCode.None)) {
 						KCombo theseKeys = kb.keyCombinations[0];
 						bool hasPrev = i > 0;
-						bool hasNext = i < ks.keyBindList.Count - 1;
-						KBind prev = (hasPrev) ? ks.keyBindList[i - 1] : null;
-						KBind next = (hasNext) ? ks.keyBindList[i + 1] : null;
+						bool hasNext = i < ks.allKeyBindings.Count - 1;
+						KBind prev = (hasPrev) ? ks.allKeyBindings[i - 1] : null;
+						KBind next = (hasNext) ? ks.allKeyBindings[i + 1] : null;
 						KCombo prevKeys = hasPrev && prev.keyCombinations.Length > 0 ? prev.keyCombinations[0] : null;
 						KCombo nextKeys = hasNext && next.keyCombinations.Length > 0 ? next.keyCombinations[0] : null;
 						needsPriority = (prevKeys != null && prevKeys.CompareTo(theseKeys) == 0 ||
@@ -673,7 +744,7 @@ namespace NonStandard.Inputs {
 					sb.Append("\n");
 				}
 			}
-			CurrentKeyBindings = sb.ToString();
+			return sb.ToString();
 		}
 	}
 }
