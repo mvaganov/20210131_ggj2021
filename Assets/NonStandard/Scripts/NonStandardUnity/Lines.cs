@@ -2,28 +2,34 @@
 using System;
 using UnityEngine;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Debug = UnityEngine.Debug;
+using NonStandard.NumCs;
+#if UNITY_EDITOR
+using System.Diagnostics;
+#endif
 
 // author: mvaganov@hotmail.com
 // license: Copyfree, public domain. This is free code! Great artists, steal this code!
-// latest version at: https://pastebin.com/raw/8m69iTut -- last updated (2020/09/27)
+// latest version at: https://pastebin.com/raw/8m69iTut -- last updated (2021/11/19)
 namespace NonStandard {
 	/// <summary>static functions for Unity's LineRenderer. Creates visualizations for 3D Vector math.
 	/// This library isn't optimized for performance, it's built to make math less invisible, even at compiled runtime.
 	/// </summary>
 	public class Lines : MonoBehaviour {
+		/// <summary>
+		/// the ends of a line.
+		/// Normal is a simple rectangular end
+		/// Arrow ends in an arrow head
+		/// ArrowBothEnds starts and ends with an arrow head
+		/// </summary>
+		public enum End { Normal, Arrow, ArrowBothEnds };
+
 		public bool autoParentLinesToGlobalObject = true;
 
 		/// <summary>the dictionary of named lines. This structure allows Lines to create new lines without needing explicit variables</summary>
 		private static readonly Dictionary<string, GameObject> NamedObject = new Dictionary<string, GameObject>();
 		/// <summary>The singleton instance.</summary>
 		private static Lines _instance;
-
-		/// <summary>
-		/// how close two floating point values need to be before they are considered equal in this library
-		/// </summary>
-		public const float TOLERANCE = 1f / (1 << 23); // one sixteen-millionth
 
 		public const float ARROW_SIZE = 3, LINE_SIZE = 1f / 8, SAME_AS_START_SIZE = -1;
 
@@ -49,24 +55,6 @@ namespace NonStandard {
 				return lines.lineMaterial;
 			}
 		}
-
-		/// <summary>
-		/// intended for use when comparing whole numbers or fractional powers of 2
-		/// </summary>
-		/// <param name="a"></param>
-		/// <param name="b"></param>
-		/// <returns></returns>
-		public static bool EQ2(float a, float b) {
-			// ReSharper disable once CompareOfFloatsByEqualityOperator
-			return a == b;
-		}
-
-		/// <summary>
-		/// used to check equality of two floats that are not expected to be assigned as powers of 2
-		/// </summary>
-		/// <param name="delta">the difference between two floats</param>
-		/// <returns></returns>
-		public static bool EQ(float delta) { return Mathf.Abs(delta) < TOLERANCE; }
 
 		public static Lines Instance {
 			get {
@@ -124,20 +112,6 @@ namespace NonStandard {
 		}
 
 		/// <summary>
-		/// use this if name collisions are OK because instances are being managed
-		/// </summary>
-		/// <param name="name"></param>
-		/// <returns></returns>
-		public static Wire MakeForcedUnregistered(string name = "<unnamed>") {
-			GameObject go = null;
-			go = MakeLineRenderer(ref go).gameObject;
-			go.name = name;
-			Wire line = go.AddComponent<Wire>(); line.RefreshSource();
-			return line;
-		}
-
-		public enum End { Normal, Arrow, ArrowBothEnds };
-		/// <summary>
 		/// Make the specified Line.
 		/// example usage:
 		/// <para><code>
@@ -188,13 +162,8 @@ namespace NonStandard {
 			return lr;
 		}
 
-		public static LineRenderer MakeLine(ref GameObject go, Vector3[] points, Color color, float startSize,
-			float endSize, End lineEnds) {
-			LineRenderer lr = MakeLineRenderer(ref go);
-			return MakeLine(lr, points, color, startSize, endSize, lineEnds);
-		}
 		public static LineRenderer MakeLine(LineRenderer lr, IList<Vector3> points, Color color, float startSize, float endSize, End lineEnds) {
-			if (EQ2(endSize, SAME_AS_START_SIZE)) { endSize = startSize; }
+			if (Math3d.EQ2(endSize, SAME_AS_START_SIZE)) { endSize = startSize; }
 			if (points == null) { lr = Make(lr, null, 0, color, startSize, endSize); return lr; }
 			if (lineEnds == End.Arrow || lineEnds == End.ArrowBothEnds) {
 				Keyframe[] keyframes = CalculateArrowKeyframes(points, points.Count, out var line, startSize, endSize);
@@ -241,7 +210,7 @@ namespace NonStandard {
 
 		public static LineRenderer SetLine(LineRenderer lr, Color color, float startSize, float endSize) {
 			lr.startWidth = startSize;
-			if (EQ2(endSize, SAME_AS_START_SIZE)) { endSize = startSize; }
+			if (Math3d.EQ2(endSize, SAME_AS_START_SIZE)) { endSize = startSize; }
 			lr.endWidth = endSize;
 			SetColor(lr, color);
 			return lr;
@@ -273,98 +242,6 @@ namespace NonStandard {
 			lr.material.color = color;
 		}
 
-		/// <summary>Write 2D arc in 3D space, into given Vector3 array</summary>
-		/// <param name="points">Will host the list of coordinates</param>
-		/// <param name="pointCount">How many vertices to make &gt; 1</param>
-		/// <param name="normal">The surface-normal of the arc's plane</param>
-		/// <param name="firstPoint">Arc start, rotate about Vector3.zero</param>
-		/// <param name="angle">2D angle. Tip: Vector3.Angle(v1, v2)</param>
-		/// <param name="offset">How to translate the arc</param>
-		/// <param name="startIndex"></param>
-		public static void WriteArc(ref Vector3[] points, int pointCount,
-			Vector3 normal, Vector3 firstPoint, float angle = 360, Vector3 offset = default, int startIndex = 0) {
-			if (pointCount < 0) {
-				pointCount = (int)Mathf.Abs(24 * angle / 180f) + 1;
-			}
-			if (pointCount < 0 || pointCount >= 32767) { throw new Exception($"bad point count value: {pointCount}"); }
-			if (points == null) { points = new Vector3[pointCount]; }
-			if (startIndex >= points.Length) return;
-			points[startIndex] = firstPoint;
-			Quaternion q = Quaternion.AngleAxis(angle / (pointCount - 1), normal);
-			for (int i = startIndex + 1; i < startIndex + pointCount; ++i) { points[i] = q * points[i - 1]; }
-			if (offset != Vector3.zero)
-				for (int i = startIndex; i < startIndex + pointCount; ++i) { points[i] += offset; }
-		}
-
-		public static void WriteBezier(IList<Vector3> points, Vector3 start, Vector3 startControl, Vector3 endControl, Vector3 end, int startIndex = 0, int count = -1) {
-			if(count < 0) { count = points.Count - startIndex; }
-			float num = count - 1;
-			for(int i = 0; i < count; ++i) {
-				points[i+startIndex] = GetBezierPoint(start, startControl, endControl, end, i / num);
-			}
-		}
-
-		public static Vector3 GetBezierPoint(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t) {
-			t = Mathf.Clamp01(t); float o = 1 - t, tt = t*t, oo = o*o;
-			return  oo * o * p0 + 3 * oo * t * p1 + 3 * o * tt * p2 + t * tt * p3;
-		}
-
-		/// <summary>
-		/// Make the specified arc line in 3D space. Example usage: <para><code>
-		/// /* GameObject turnArc should be a member variable */
-		/// Lines.MakeArc(ref turnArc, Vector3.Angle(transform.forward, direction), 
-		/// 	10, Vector3.Cross(transform.forward, direction), 
-		/// 	transform.forward, transform.position, Color.green, 0.1f, 0);
-		/// // makes a curve showing the turn from transform.forward to direction
-		/// </code></para>
-		/// </summary>
-		/// <returns>The LineRenderer hosting the line</returns>
-		/// <param name="lineObj">GameObject host of the LineRenderer</param>
-		/// <param name="color">Color of the line</param>
-		/// <param name="center">Center of arc</param>
-		/// <param name="normal">surface-normal of arc's plane</param>
-		/// <param name="firstPoint">Arc start, rotate about Vector3.zero</param>
-		/// <param name="angle">2D angle. Tip: Vector3.Angle(v1, v2)</param>
-		/// <param name="pointCount">How many vertices to make &gt; 1</param>
-		/// <param name="startSize">How wide the line is at the start</param>
-		/// <param name="endSize">How wide the line is at the end</param>
-		public static LineRenderer MakeArc(ref GameObject lineObj,
-			float angle, int pointCount, Vector3 normal, Vector3 firstPoint,
-			Vector3 center = default, Color color = default, float startSize = LINE_SIZE, float endSize = SAME_AS_START_SIZE) {
-			Vector3[] points = null;
-			WriteArc(ref points, pointCount, normal, firstPoint, angle, center);
-			return Make(ref lineObj, points, pointCount, color, startSize, endSize);
-		}
-
-		public static LineRenderer MakeLineOnSphere(ref GameObject lineObj, Vector3 sphereCenter, Vector3 start, Vector3 end,
-			Color color = default, float startSize = LINE_SIZE, float endSize = SAME_AS_START_SIZE, int pointCount = 24) {
-			Vector3[] points = null;
-			WriteArcOnSphere(ref points, pointCount, sphereCenter, start, end);
-			return Make(ref lineObj, points, pointCount, color, startSize, endSize);
-		}
-
-		public static void WriteArcOnSphere(ref Vector3[] points, int pointCount, Vector3 sphereCenter, Vector3 start, Vector3 end) {
-			Vector3 axis;
-			if (start == -end) {
-				axis = (start != Vector3.up && end != Vector3.up) ? Vector3.up : Vector3.right;
-			} else {
-				axis = Vector3.Cross(start, end).normalized;
-			}
-			Vector3 a = start - sphereCenter, b = end - sphereCenter;
-			float aRad = a.magnitude, bRad = b.magnitude, angle = 0;
-			if (EQ2(aRad, 0) && EQ2(bRad, 0)) {
-				a /= aRad; b /= bRad;
-				angle = Vector3.Angle(a, b);
-				if (float.IsNaN(angle)) { angle = 0; }
-			}
-			WriteArc(ref points, pointCount, axis, a, angle, Vector3.zero);
-			float radDelta = bRad - aRad;
-			for (int i = 0; i < points.Length; ++i) {
-				points[i] = points[i] * ((i * radDelta / points.Length) + aRad);
-				points[i] += sphereCenter;
-			}
-		}
-
 		/// <summary>Makes a circle with a 3D line</summary>
 		/// <returns>The LineRenderer hosting the line</returns>
 		/// <param name="lineObj">GameObject host of the LineRenderer</param>
@@ -377,23 +254,10 @@ namespace NonStandard {
 		public static LineRenderer MakeCircle(ref GameObject lineObj, Vector3 center, Vector3 normal,
 			Color color = default, float radius = 1, int pointCount = 0, float lineSize = LINE_SIZE) {
 			Vector3[] points = null;
-			WriteCircle(ref points, center, normal, radius, pointCount);
+			Math3d.WriteCircle(ref points, center, normal, radius, pointCount);
 			LineRenderer lr = Lines.Make(ref lineObj, points, points.Length, color, lineSize, lineSize);
 			lr.loop = true;
 			return lr;
-		}
-
-		public static int WriteCircle(ref Vector3[] points, Vector3 center, Vector3 normal, float radius = 1, int pointCount = 0) {
-			if (pointCount == 0) {
-				pointCount = (int)Mathf.Round(24 * 3.14159f * radius + 0.5f);
-				if (points != null) {
-					pointCount = Mathf.Min(points.Length, pointCount);
-				}
-			}
-			Vector3 crossDir = (normal == Vector3.up || normal == Vector3.down) ? Vector3.forward : Vector3.up;
-			Vector3 r = Vector3.Cross(normal, crossDir).normalized;
-			WriteArc(ref points, pointCount, normal, r * radius, 360, center);
-			return pointCount;
 		}
 
 		public static LineRenderer MakeSphere(string name, float radius = 1,
@@ -410,10 +274,10 @@ namespace NonStandard {
 		public static LineRenderer MakeSphere(ref GameObject lineObj, float radius = 1,
 			Vector3 center = default, Color color = default, float lineSize = LINE_SIZE) {
 			Vector3[] circles = new Vector3[24 * 3];
-			Lines.WriteArc(ref circles, 24, Vector3.forward, Vector3.up, 360, center, 24 * 0);
-			Lines.WriteArc(ref circles, 24, Vector3.right, Vector3.up, 360, center, 24 * 1);
-			Lines.WriteArc(ref circles, 24, Vector3.up, Vector3.forward, 360, center, 24 * 2);
-			if (EQ2(radius, 1)) { for (int i = 0; i < circles.Length; ++i) { circles[i] *= radius; } }
+			Math3d.WriteArc(ref circles, 24, Vector3.forward, Vector3.up, 360, center, 24 * 0);
+			Math3d.WriteArc(ref circles, 24, Vector3.right, Vector3.up, 360, center, 24 * 1);
+			Math3d.WriteArc(ref circles, 24, Vector3.up, Vector3.forward, 360, center, 24 * 2);
+			if (Math3d.EQ2(radius, 1)) { for (int i = 0; i < circles.Length; ++i) { circles[i] *= radius; } }
 			return Lines.Make(ref lineObj, circles, circles.Length, color, lineSize, lineSize);
 		}
 
@@ -449,7 +313,7 @@ namespace NonStandard {
 				Vector3 pos = Vector3.zero, forward = Vector3.forward * size, right = Vector3.right * size, up = Vector3.up;
 				const float startAngle = (360.0f / 4) - (360.0f / 32);
 				Vector3 v = Quaternion.AngleAxis(startAngle, up) * forward;
-				Lines.WriteArc(ref _mapPinPointsBase, 32, up, v, 360, pos);
+				Math3d.WriteArc(ref _mapPinPointsBase, 32, up, v, 360, pos);
 				Vector3 tip = pos + forward * Mathf.Sqrt(2);
 				_mapPinPointsBase[0] = _mapPinPointsBase[_mapPinPointsBase.Length - 1];
 				int m = (32 * 5 / 8);
@@ -490,56 +354,6 @@ namespace NonStandard {
 			return line_;
 		}
 
-		public static Vector3 GetForwardVector(Quaternion q) {
-			return new Vector3(2 * (q.x * q.z + q.w * q.y),
-				2 * (q.y * q.z + q.w * q.x),
-				1 - 2 * (q.x * q.x + q.y * q.y));
-		}
-		public static Vector3 GetUpVector(Quaternion q) {
-			return new Vector3(2 * (q.x * q.y + q.w * q.z),
-				1 - 2 * (q.x * q.x + q.z * q.z),
-				2 * (q.y * q.z + q.w * q.x));
-		}
-		public static Vector3 GetRightVector(Quaternion q) {
-			return new Vector3(1 - 2 * (q.y * q.y + q.z * q.z),
-				2 * (q.x * q.y + q.w * q.z),
-				2 * (q.x * q.z + q.w * q.y));
-		}
-
-		/// <example>CreateSpiralSphere(transform.position, 0.5f, transform.up, transform.forward, 16, 8);</example>
-		/// <summary>creates a line spiraled onto a sphere</summary>
-		/// <param name="center"></param>
-		/// <param name="radius"></param>
-		/// <param name="rotation"></param>
-		/// <param name="sides"></param>
-		/// <param name="rotations"></param>
-		/// <returns></returns>
-		public static Vector3[] CreateSpiralSphere(Vector3 center = default, float radius = 1,
-			Quaternion rotation = default, float sides = 12, float rotations = 6) {
-			List<Vector3> points = new List<Vector3>(); // List instead of Array because sides and rotations are floats!
-			Vector3 axis = Vector3.up;
-			Vector3 axisFace = Vector3.right;
-			if (EQ2(sides, 0) && EQ2(rotations, 0)) {
-				float iter = 0;
-				float increment = 1f / (rotations * sides);
-				points.Add(center + axis * radius);
-				do {
-					iter += increment;
-					Quaternion faceTurn = Quaternion.AngleAxis(iter * 360 * rotations, axis);
-					Vector3 newFace = faceTurn * axisFace;
-					Quaternion q = Quaternion.LookRotation(newFace);
-					Vector3 right = GetUpVector(q);
-					Vector3 r = right * radius;
-					q = Quaternion.AngleAxis(iter * 180, newFace);
-					r = q * r;
-					r = rotation * r;
-					Vector3 newPoint = center + r;
-					points.Add(newPoint);
-				}
-				while (iter < 1);
-			}
-			return points.ToArray();
-		}
 
 		/// <returns>a line renderer in the shape of a spiraling sphere, spiraling about the Vector3.up axis</returns>
 		/// <param name="lineObj">Line object.</param>
@@ -550,7 +364,7 @@ namespace NonStandard {
 		/// <param name="lineSize">LineSize.</param>
 		public static LineRenderer MakeSpiralSphere(ref GameObject lineObj, float radius = 1,
 			Vector3 center = default, Quaternion rotation = default, Color color = default, float lineSize = LINE_SIZE) {
-			Vector3[] vertices = CreateSpiralSphere(center, radius, rotation, 24, 3);
+			Vector3[] vertices = Math3d.CreateSpiralSphere(center, radius, rotation, 24, 3);
 			return Make(ref lineObj, vertices, vertices.Length, color, lineSize, lineSize);
 		}
 
@@ -576,7 +390,7 @@ namespace NonStandard {
 		}
 
 		public static Keyframe[] CalculateArrowKeyframes(IList<Vector3> points, int pointCount, out Vector3[] line,
-			float startSize = LINE_SIZE, float endSize = SAME_AS_START_SIZE, float arrowHeadSize = ARROW_SIZE, Keyframe[] lineKeyFrames = null) {
+		float startSize = LINE_SIZE, float endSize = SAME_AS_START_SIZE, float arrowHeadSize = ARROW_SIZE, Keyframe[] lineKeyFrames = null) {
 			float arrowSize = endSize * arrowHeadSize;
 			int lastGoodIndex = 0;
 			Vector3 arrowheadBase = Vector3.zero;
@@ -675,7 +489,7 @@ namespace NonStandard {
 			if (arcPlaneNormal == default) { arcPlaneNormal = Vector3.up; }
 			if (center == default && firstPoint == default) { firstPoint = Vector3.right; }
 			Vector3[] points = null;
-			WriteArc(ref points, pointCount, arcPlaneNormal, firstPoint, angle, center);
+			Math3d.WriteArc(ref points, pointCount, arcPlaneNormal, firstPoint, angle, center);
 			return MakeArrow(ref lineObj, points, pointCount, color, startSize, endSize, arrowHeadSize);
 		}
 
@@ -704,7 +518,7 @@ namespace NonStandard {
 				float dist = delta.magnitude;
 				Vector3 dir = delta / dist;
 				Vector3 right = Vector3.Cross(upNormal, dir).normalized;
-				WriteArc(ref arc, pointCount, right, -upNormal, angle);
+				Math3d.WriteArc(ref arc, pointCount, right, -upNormal, angle);
 				Vector3 arcDelta = arc[arc.Length - 1] - arc[0];
 				float arcDist = arcDelta.magnitude;
 				float angleDiff = Vector3.Angle(arcDelta / arcDist, delta / dist);
@@ -720,106 +534,28 @@ namespace NonStandard {
 		public static void MakeQuaternion(ref GameObject axisObj, Wire[] childWire, Vector3 axis, float angle,
 			Vector3 position = default, Color color = default, Quaternion orientation = default,
 			int arcPoints = -1, float lineSize = LINE_SIZE, float arrowHeadSize = ARROW_SIZE, Vector3[] startPoint = null) {
-			if (childWire.Length != startPoint.Length) { throw new Exception("angleObj and startPoint should be parallel arrays"); }
+			if (childWire.Length != startPoint.Length) { throw new Exception("childWire and startPoint should be parallel arrays"); }
 			while (angle >= 180) { angle -= 360; }
 			while (angle < -180) { angle += 360; }
 			Vector3 axisRotated = orientation * axis;
 			MakeArrow(ref axisObj, position - axisRotated, position + axisRotated, color, lineSize, lineSize, arrowHeadSize);
 			for (int i = 0; i < childWire.Length; ++i) {
 				Wire aObj = childWire[i];
-				aObj.Arc(angle, axisRotated, startPoint[i], position, color, End.Arrow, arcPoints, lineSize);
+				aObj.Arc(angle, axisRotated, startPoint[i], position, color, Lines.End.Arrow, arcPoints, lineSize);
 				//MakeArcArrow(ref aObj, angle, arcPoints, axisRotated, startPoint[i], position, color, lineSize, lineSize, arrowHeadSize);
 				childWire[i] = aObj;
 			}
 		}
 
-		// code to draw quaternion with a single line renderer is commented out because it doesn't work right yet.
-		///// <summary>draws a quaternion with a single line renderer. the visual is very buggy for small angles. Keyframes are finicky.</summary>
-		///// <param name="lineObject"></param>
-		///// <param name="axis"></param>
-		///// <param name="angle"></param>
-		///// <param name="color"></param>
-		///// <param name="start"></param>
-		///// <param name="forwardNormal"></param>
-		///// <param name="startSize"></param>
-		///// <param name="endSize"></param>
-		///// <param name="arrowHeadSize"></param>
-		///// <param name="pointCount"></param>
-		///// <returns></returns>
-		//public static LineRenderer MakeQuaternion(ref GameObject lineObject, Vector3 axis, float angle = 90, Color color = default, 
-		//	Vector3 start = default, Vector3 forwardNormal = default,
-		//	float startSize = LINE_SIZE, float endSize = LINE_SIZE, float arrowHeadSize = ARROW_SIZE, int pointCount = 0) {
-		//	Vector3[] arc;
-		//	if(forwardNormal == default) {
-		//		if(axis == Vector3.forward || axis == Vector3.back) { forwardNormal = Vector3.up; }
-		//		else { forwardNormal = Vector3.forward; }
-		//	}
-		//	if(pointCount == 0) { pointCount = Mathf.Max((int)((angle * 24) / 180)+1, 2); }
-		//	//Debug.Log(angle + " " + pointCount);
-		//	arc = new Vector3[pointCount+6];
-		//	Vector3 right = Vector3.Cross(forwardNormal, axis).normalized;
-		//	WriteArc(ref arc, pointCount, axis, right, angle);
-		//	Array.Reverse(arc, 0, pointCount);
-		//	for(int i = 0; i < arc.Length; ++i) {
-		//		arc[i] = arc[i] * .5f + start;
-		//	}
-		//	const float epsilon = (1f / 256);
-		//	arc[pointCount + 0] = arc[pointCount - 1] + (arc[pointCount-1]-arc[pointCount-2]).normalized * epsilon;
-		//	arc[pointCount + 1] = start;
-		//	arc[pointCount + 2] = start - axis / 4;
-		//	arc[pointCount + 3] = start - axis /3;
-		//	arc[pointCount + 4] = start - axis /2;
-		//	arc[pointCount + 5] = start + axis /2;
-		//	LineRenderer lr = MakeArrowBothEnds(ref lineObject, arc, arc.Length, color, startSize, endSize, arrowHeadSize);
-		//	// calculate where to lower the width of the bridge connecting the axis and angle
-		//	float connectionSegmentStart = 0, connectionSegmentEnd = 0, totalDistance = 0;
-		//	int angleBeginIndex = arc.Length - 6;
-		//	int axisEndIndex = arc.Length - 3;
-		//	for(int i = 1; i < angleBeginIndex; ++i) {
-		//		float d = Vector3.Distance(arc[i], arc[i-1]);
-		//		connectionSegmentStart += d;
-		//	}
-		//	connectionSegmentEnd += connectionSegmentStart;
-		//	for(int i = angleBeginIndex; i < axisEndIndex; ++i) {
-		//		float d = Vector3.Distance(arc[i], arc[i-1]);
-		//		connectionSegmentEnd += d;
-		//	}
-		//	totalDistance += connectionSegmentEnd;
-		//	for(int i = axisEndIndex; i < arc.Length; ++i) {
-		//		float d = Vector3.Distance(arc[i], arc[i-1]);
-		//		totalDistance += d;
-		//	}
-		//	//Debug.Log(connectionSegmentStart+" < "+ connectionSegmentEnd+" < "+ totalDistance);
-		//	AnimationCurve ac = lr.widthCurve;
-		//	Keyframe endOfArc = new Keyframe((connectionSegmentStart - epsilon) / totalDistance, startSize);//, 0, -float.MaxValue);
-		//	Keyframe beginningOfBridge = new Keyframe((connectionSegmentStart + epsilon) / totalDistance, 0, -float.MaxValue, 0);
-		//	Keyframe endOfBridge = new Keyframe(connectionSegmentEnd / totalDistance, 0, 0, float.MaxValue);
-		//	Keyframe beginningOfAxis = new Keyframe(connectionSegmentEnd / totalDistance + epsilon, endSize);//, float.MaxValue, 0);
-		//	ac.AddKey(endOfArc);
-		//	ac.AddKey(beginningOfBridge);
-		//	ac.AddKey(endOfBridge);
-		//	ac.AddKey(beginningOfAxis);
-		//	lr.widthCurve = ac;
-		//	return lr;
-		//}
-		//public static LineRenderer MakeQuaternion(ref GameObject lineObject, Quaternion q, Color color = default, 
-		//	Vector3 start = default, Vector3 forwardNormal = default,
-		//	float startSize = LINE_SIZE, float endSize = LINE_SIZE, float arrowHeadSize = ARROW_SIZE, int pointCount = 0) {
-		//	Vector3 axis;
-		//	float angle;
-		//	q.ToAngleAxis(out angle, out axis);
-		//	return MakeQuaternion(ref lineObject, axis, angle, color, start, forwardNormal, startSize, endSize, arrowHeadSize, pointCount);
-		//}
-
-		public static int CartesianPlaneChildCount(float extents, float increment, out int linesPerDomainHalf) {
+		internal static int _CartesianPlaneChildCount(float extents, float increment, out int linesPerDomainHalf) {
 			linesPerDomainHalf = (int)(extents / increment);
-			if (Mathf.Abs(linesPerDomainHalf - (extents / increment)) < Lines.TOLERANCE) --linesPerDomainHalf;
+			if (Mathf.Abs(linesPerDomainHalf - (extents / increment)) < Math3d.TOLERANCE) --linesPerDomainHalf;
 			return 2 + linesPerDomainHalf * 4;
 		}
 		public static void MakeCartesianPlane(Vector3 center, Vector3 up, Vector3 right, Wire[] wires, Color color = default, float lineWidth = LINE_SIZE,
 			float size = .5f, float increments = 0.125f, Vector3 offset = default) {
 			// prep data structures
-			int wireCount = CartesianPlaneChildCount(size, increments, out int thinLines);
+			int wireCount = _CartesianPlaneChildCount(size, increments, out int thinLines);
 			while (wires.Length < wireCount) { throw new Exception($"can't make {wireCount} wires with {wires.Length} slots"); }
 			Vector3[] endPoints = new Vector3[2];
 			// prep math
@@ -960,6 +696,509 @@ namespace NonStandard {
 					texture.SetPixel(x0, y0, color);
 				}
 			}
+		}
+	}
+}
+
+namespace NonStandard.NumCs {
+	public static class Math3d {
+
+		/// <summary>
+		/// how close two floating point values need to be before they are considered equal in this library
+		/// </summary>
+		public const float TOLERANCE = 1f / (1 << 23); // one sixteen-millionth
+
+		/// <summary>
+		/// used to check equality of two floats that are not expected to be assigned as powers of 2
+		/// </summary>
+		/// <param name="delta">the difference between two floats</param>
+		/// <returns></returns>
+		public static bool EQ(float delta) { return Mathf.Abs(delta) < Math3d.TOLERANCE; }
+
+		/// <summary>
+		/// intended for use when comparing whole numbers or fractional powers of 2
+		/// </summary>
+		/// <param name="a"></param>
+		/// <param name="b"></param>
+		/// <returns></returns>
+		public static bool EQ2(float a, float b) {
+			// ReSharper disable once CompareOfFloatsByEqualityOperator
+			return a == b;
+		}
+
+		public static Vector3 GetForwardVector(Quaternion q) {
+			return new Vector3(2 * (q.x * q.z + q.w * q.y), 2 * (q.y * q.z + q.w * q.x), 1 - 2 * (q.x * q.x + q.y * q.y));
+		}
+		public static Vector3 GetUpVector(Quaternion q) {
+			return new Vector3(2 * (q.x * q.y + q.w * q.z), 1 - 2 * (q.x * q.x + q.z * q.z), 2 * (q.y * q.z + q.w * q.x));
+		}
+		public static Vector3 GetRightVector(Quaternion q) {
+			return new Vector3(1 - 2 * (q.y * q.y + q.z * q.z), 2 * (q.x * q.y + q.w * q.z), 2 * (q.x * q.z + q.w * q.y));
+		}
+
+		/// <summary>Write 2D arc in 3D space, into given Vector3 array</summary>
+		/// <param name="points">Will host the list of coordinates</param>
+		/// <param name="pointCount">How many vertices to make &gt; 1</param>
+		/// <param name="normal">The surface-normal of the arc's plane</param>
+		/// <param name="firstPoint">Arc start, rotate about Vector3.zero</param>
+		/// <param name="angle">2D angle. Tip: Vector3.Angle(v1, v2)</param>
+		/// <param name="offset">How to translate the arc</param>
+		/// <param name="startIndex"></param>
+		public static void WriteArc(ref Vector3[] points, int pointCount,
+			Vector3 normal, Vector3 firstPoint, float angle = 360, Vector3 offset = default, int startIndex = 0) {
+			if (pointCount < 0) {
+				pointCount = (int)Mathf.Abs(24 * angle / 180f) + 1;
+			}
+			if (pointCount < 0 || pointCount >= 32767) { throw new Exception($"bad point count value: {pointCount}"); }
+			if (points == null) { points = new Vector3[pointCount]; }
+			if (startIndex >= points.Length) return;
+			points[startIndex] = firstPoint;
+			Quaternion q = Quaternion.AngleAxis(angle / (pointCount - 1), normal);
+			for (int i = startIndex + 1; i < startIndex + pointCount; ++i) { points[i] = q * points[i - 1]; }
+			if (offset != Vector3.zero)
+				for (int i = startIndex; i < startIndex + pointCount; ++i) { points[i] += offset; }
+		}
+
+		public static void WriteBezier(IList<Vector3> points, Vector3 start, Vector3 startControl, Vector3 endControl, Vector3 end, int startIndex = 0, int count = -1) {
+			if (count < 0) { count = points.Count - startIndex; }
+			float num = count - 1;
+			for (int i = 0; i < count; ++i) {
+				points[i + startIndex] = GetBezierPoint(start, startControl, endControl, end, i / num);
+			}
+		}
+
+		public static Vector3 GetBezierPoint(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t) {
+			t = Mathf.Clamp01(t); float o = 1 - t, tt = t * t, oo = o * o;
+			return oo * o * p0 + 3 * oo * t * p1 + 3 * o * tt * p2 + t * tt * p3;
+		}
+
+		public static void WriteArcOnSphere(ref Vector3[] points, int pointCount, Vector3 sphereCenter, Vector3 start, Vector3 end) {
+			Vector3 axis;
+			if (start == -end) {
+				axis = (start != Vector3.up && end != Vector3.up) ? Vector3.up : Vector3.right;
+			} else {
+				axis = Vector3.Cross(start, end).normalized;
+			}
+			Vector3 a = start - sphereCenter, b = end - sphereCenter;
+			float aRad = a.magnitude, bRad = b.magnitude, angle = 0;
+			if (EQ2(aRad, 0) && EQ2(bRad, 0)) {
+				a /= aRad; b /= bRad;
+				angle = Vector3.Angle(a, b);
+				if (float.IsNaN(angle)) { angle = 0; }
+			}
+			WriteArc(ref points, pointCount, axis, a, angle, Vector3.zero);
+			float radDelta = bRad - aRad;
+			for (int i = 0; i < points.Length; ++i) {
+				points[i] = points[i] * ((i * radDelta / points.Length) + aRad);
+				points[i] += sphereCenter;
+			}
+		}
+
+		public static int WriteCircle(ref Vector3[] points, Vector3 center, Vector3 normal, float radius = 1, int pointCount = 0) {
+			if (pointCount == 0) {
+				pointCount = (int)Mathf.Round(24 * 3.14159f * radius + 0.5f);
+				if (points != null) {
+					pointCount = Mathf.Min(points.Length, pointCount);
+				}
+			}
+			Vector3 crossDir = (normal == Vector3.up || normal == Vector3.down) ? Vector3.forward : Vector3.up;
+			Vector3 r = Vector3.Cross(normal, crossDir).normalized;
+			WriteArc(ref points, pointCount, normal, r * radius, 360, center);
+			return pointCount;
+		}
+
+		/// <example>CreateSpiralSphere(transform.position, 0.5f, transform.up, transform.forward, 16, 8);</example>
+		/// <summary>creates a line spiraled onto a sphere</summary>
+		/// <param name="center"></param>
+		/// <param name="radius"></param>
+		/// <param name="rotation"></param>
+		/// <param name="sides"></param>
+		/// <param name="rotations"></param>
+		/// <returns></returns>
+		public static Vector3[] CreateSpiralSphere(Vector3 center = default, float radius = 1,
+			Quaternion rotation = default, float sides = 12, float rotations = 6) {
+			List<Vector3> points = new List<Vector3>(); // List instead of Array because sides and rotations are floats!
+			Vector3 axis = Vector3.up;
+			Vector3 axisFace = Vector3.right;
+			if (EQ2(sides, 0) && EQ2(rotations, 0)) {
+				float iter = 0;
+				float increment = 1f / (rotations * sides);
+				points.Add(center + axis * radius);
+				do {
+					iter += increment;
+					Quaternion faceTurn = Quaternion.AngleAxis(iter * 360 * rotations, axis);
+					Vector3 newFace = faceTurn * axisFace;
+					Quaternion q = Quaternion.LookRotation(newFace);
+					Vector3 right = GetUpVector(q);
+					Vector3 r = right * radius;
+					q = Quaternion.AngleAxis(iter * 180, newFace);
+					r = q * r;
+					r = rotation * r;
+					Vector3 newPoint = center + r;
+					points.Add(newPoint);
+				}
+				while (iter < 1);
+			}
+			return points.ToArray();
+		}
+	}
+}
+
+namespace NonStandard {
+	/// <summary>cached calculations. used to validate if a line needs to be re-calculated</summary>
+	public class Wire : MonoBehaviour {
+		public enum Kind { None, Line, Arc, Orbital, SpiralSphere, Box, Quaternion, CartesianPlane, Rectangle, Disabled }
+		private Kind _kind;
+		private Vector3[] _points;
+		private Vector3 _normal;
+		private Quaternion _rotation;
+		private int _count;
+		private float _startSize, _endSize, _angle;
+		private Lines.End _lineEnds;
+		public LineRenderer lr;
+#if UNITY_EDITOR
+		/// <summary>
+		/// Where the code is that created this <see cref="Wire"/>. Not present in deployed builds.
+		/// </summary>
+		// ReSharper disable once NotAccessedField.Global
+		public string sourceCode;
+#endif
+		public int NumCapVertices {
+			get => lr.numCapVertices;
+			set => lr.numCapVertices = value;
+		}
+
+		public void RefreshSource() {
+#if UNITY_EDITOR
+			StackTrace stackTrace = new StackTrace(true);
+			StackFrame f = stackTrace.GetFrame(2);
+			string path = f.GetFileName();
+			if (path == null) return;
+			int fileIndex = path.LastIndexOf(System.IO.Path.DirectorySeparatorChar);
+			sourceCode = $"{path.Substring(fileIndex + 1)}:{f.GetFileLineNumber().ToString()}";
+#endif
+		}
+
+		public Kind kind {
+			get => _kind;
+			set {
+				// special cleanup for Quaternions
+				if (_kind == Kind.Quaternion && value != Kind.Quaternion) {
+					DisposeOfChildWires();
+				}
+				// special cleanup for CartesianPlanes
+				if (_kind == Kind.CartesianPlane && value != Kind.CartesianPlane) {
+					DisposeOfChildWires();
+				}
+				// special cleanup for Rectangles
+				if (_kind == Kind.Rectangle && value != Kind.Rectangle) {
+					DisposeOfChildWires();
+				}
+				_kind = value;
+			}
+		}
+
+		private void DisposeOfChildWires() {
+			Wire[] obj = ChildWires(_count, false);
+			if (obj != null) {
+				Array.ForEach(obj, w => { w.transform.SetParent(null); Destroy(w.gameObject); });
+			}
+		}
+
+		private static bool SameArrayOfVectors(IList<Vector3> a, IList<Vector3> b) {
+			if (ReferenceEquals(a, b)) { return true; }
+			if (a == null || b == null || a.Count != b.Count) { return false; }
+			for (int i = 0; i < a.Count; ++i) { if (a[i] != b[i]) return false; }
+			return true;
+		}
+		private bool IsLine(IList<Vector3> points, float startSize, float endSize, Lines.End lineEnds) {
+			return kind == Kind.Line && SameArrayOfVectors(_points, points)
+				&& Math3d.EQ(startSize - _startSize) && Math3d.EQ(endSize - _endSize) && _lineEnds == lineEnds;
+		}
+		private void SetLine(IList<Vector3> points, float startSize, float endSize, Lines.End lineEnds) {
+			kind = Kind.Line;
+			if (points != null) {
+				_points = new Vector3[points.Count];
+				for (int i = 0; i < _points.Length; ++i) { _points[i] = points[i]; }
+			}
+			//_points = null; // commented this out. was it here for a reason?
+			_startSize = startSize; _endSize = endSize; _lineEnds = lineEnds;
+		}
+		private bool IsArc(Vector3 start, Vector3 normal, Vector3 center, float angle, float startSize, float endSize, Lines.End lineEnds, int pointCount) {
+			return kind == Kind.Arc && _points != null && _points.Length == 1 && _points[0] == start && _count == pointCount
+				&& _normal == normal && Math3d.EQ(startSize - _startSize) && Math3d.EQ(endSize - _endSize) && _lineEnds == lineEnds
+				&& transform.position == center && _normal == normal && Math3d.EQ(_angle - angle);
+		}
+		private void SetArc(Vector3 start, Vector3 normal, Vector3 center, float angle, float startSize, float endSize, Lines.End lineEnds, int pointCount) {
+			kind = Kind.Arc;
+			_points = new Vector3[] { start }; _count = pointCount;
+			_startSize = startSize; _endSize = endSize; _lineEnds = lineEnds;
+			transform.position = center; _normal = normal; _angle = angle;
+		}
+		private bool IsOrbital(Vector3 start, Vector3 end, Vector3 center, float startSize, float endSize, Lines.End lineEnds, int pointCount) {
+			return kind == Kind.Orbital && _points != null && _points.Length == 2 && _count == pointCount
+				&& _points[0] == start && _points[1] == end
+				&& Math3d.EQ(startSize - _startSize) && Math3d.EQ(endSize - _endSize) && _lineEnds == lineEnds
+				&& transform.position == center;
+		}
+		private void SetOrbital(Vector3 start, Vector3 end, Vector3 center = default, float startSize = Lines.LINE_SIZE, float endSize = Lines.SAME_AS_START_SIZE,
+			Lines.End lineEnds = default, int pointCount = -1) {
+			kind = Kind.Orbital;
+			_points = new Vector3[] { start, end }; _count = pointCount;
+			_startSize = startSize; _endSize = endSize; _lineEnds = lineEnds;
+			transform.position = center;
+		}
+		private bool IsSpiralSphere(Vector3 center, float radius, float lineSize, Quaternion rotation) {
+			return kind == Kind.SpiralSphere
+				&& Math3d.EQ(_startSize - lineSize) && Math3d.EQ(_endSize - lineSize)
+				&& transform.position == center && Math3d.EQ(_angle - radius)
+				&& (_rotation.Equals(rotation) || _rotation == rotation);
+		}
+		private void SetSpiralSphere(Vector3 center, float radius, float lineSize, Quaternion rotation) {
+			kind = Kind.SpiralSphere;
+			_startSize = _endSize = lineSize;
+			transform.position = center; _angle = radius; _rotation = rotation;
+		}
+		private bool IsBox(Vector3 center, Vector3 size, Quaternion rotation, float lineSize) {
+			Transform t = transform;
+			return kind == Kind.Box
+				&& Math3d.EQ(_startSize - lineSize) && Math3d.EQ(_endSize - lineSize)
+				&& t.position == center
+				&& t.localScale == size && t.rotation == rotation;
+		}
+		private void SetBox(Vector3 center, Vector3 size, Quaternion rotation, float lineSize) {
+			Transform t = transform;
+			kind = Kind.Box;
+			_startSize = _endSize = lineSize;
+			t.position = center;
+			t.localScale = size;
+			t.rotation = rotation;
+		}
+		private bool IsQuaternion(float an, Vector3 ax, Vector3 position, Vector3[] startPoints, Quaternion orientation, float lineSize) {
+			return kind == Kind.Quaternion && SameArrayOfVectors(_points, startPoints)
+				&& Math3d.EQ(_startSize - lineSize) && Math3d.EQ(_endSize - lineSize)
+				&& transform.position == position && _normal == ax && Math3d.EQ(_angle - an) && _count == startPoints.Length
+				&& (_rotation.Equals(orientation) || _rotation == orientation); // quaternions can't easily be tested for equality because of floating point errors
+		}
+		private void SetQuaternion(float an, Vector3 ax, Vector3 position, Vector3[] startPoints, Quaternion orientation, float lineSize) {
+			kind = Kind.Quaternion;
+			if (ReferenceEquals(startPoints, DefaultQuaternionVisualizationPoints)) {
+				_points = DefaultQuaternionVisualizationPoints;
+			} else {
+				_points = new Vector3[startPoints.Length]; Array.Copy(startPoints, _points, startPoints.Length);
+			}
+			_startSize = _endSize = lineSize;
+			transform.position = position; _normal = ax; _angle = an; _count = startPoints.Length;
+			_rotation = orientation;
+		}
+		private bool IsCartesianPlane(Vector3 center, Quaternion rotation, float lineSize, float extents, float increment) {
+			return kind == Kind.CartesianPlane && Math3d.EQ(_startSize - extents) && Math3d.EQ(_endSize - lineSize) && Math3d.EQ(_angle - increment) && (_rotation.Equals(rotation) || _rotation == rotation) && transform.position == center;
+		}
+		private void SetCartesianPlane(Vector3 center, Quaternion rotation, float lineSize, float extents, float increment) {
+			kind = Kind.CartesianPlane; _startSize = extents; _endSize = lineSize; _angle = increment;
+			_rotation = rotation; transform.position = center;
+			_count = Lines._CartesianPlaneChildCount(extents, increment, out _);
+		}
+		private bool IsRectangle(Vector3 origin, Vector2 offset2d, Vector2 halfSize, float lineSize, Quaternion rotation) {
+			return kind == Kind.Rectangle && origin == transform.position && Math3d.EQ(_startSize - lineSize) && (_rotation.Equals(rotation) || _rotation == rotation) && Math3d.EQ(_normal.x - offset2d.x) && Math3d.EQ(_normal.y - offset2d.y) && Math3d.EQ(_normal.z - halfSize.x) && Math3d.EQ(_endSize - halfSize.y);
+		}
+		private void SetRectangle(Vector3 origin, Vector2 offset2d, Vector2 halfSize, float lineSize, Quaternion rotation) {
+			kind = Kind.Rectangle; transform.position = origin; _startSize = lineSize; _rotation = rotation;
+			_normal.x = offset2d.x; _normal.y = offset2d.y; _normal.z = halfSize.x; _endSize = halfSize.y; _count = 4;
+		}
+
+		public Wire Line(Vector3 start, Vector3 end, Color color = default, float startSize = Lines.LINE_SIZE, float endSize = Lines.SAME_AS_START_SIZE) {
+			return Line(new Vector3[] { start, end }, color, Lines.End.Normal, startSize, endSize);
+		}
+		public Wire Arrow(Vector3 start, Vector3 end, Color color = default, float startSize = Lines.LINE_SIZE, float endSize = Lines.SAME_AS_START_SIZE) {
+			return Line(new Vector3[] { start, end }, color, Lines.End.Arrow, startSize, endSize);
+		}
+		public Wire Arrow(Vector3 vector, Color color = default, float startSize = Lines.LINE_SIZE, float endSize = Lines.SAME_AS_START_SIZE) {
+			return Line(new Vector3[] { Vector3.zero, vector }, color, Lines.End.Arrow, startSize, endSize);
+		}
+		public Wire Arrow(Ray ray, Color color = default, float startSize = Lines.LINE_SIZE, float endSize = Lines.SAME_AS_START_SIZE) {
+			return Line(new Vector3[] { ray.origin, ray.origin + ray.direction }, color, Lines.End.Arrow, startSize, endSize);
+		}
+		public Wire Bezier(Vector3 start, Vector3 startControl, Vector3 endControl, Vector3 end, Color color = default, Lines.End cap = Lines.End.Normal, float startSize = Lines.LINE_SIZE, int bezierPointCount = 25, float endSize = Lines.SAME_AS_START_SIZE) {
+			Vector3[] bezier = new Vector3[bezierPointCount];
+			Math3d.WriteBezier(bezier, start, startControl, endControl, end);
+			return Line(bezier, color, cap, startSize, endSize);
+		}
+		public Wire Line(Vector3 vector, Color color = default, float startSize = Lines.LINE_SIZE, float endSize = Lines.SAME_AS_START_SIZE) {
+			return Line(new Vector3[] { Vector3.zero, vector }, color, Lines.End.Normal, startSize, endSize);
+		}
+		public Wire Line(IList<Vector3> points, Color color = default, Lines.End lineEnds = default, float startSize = Lines.LINE_SIZE, float endSize = Lines.SAME_AS_START_SIZE) {
+			if (!IsLine(points, startSize, endSize, lineEnds)) {
+				SetLine(points, startSize, endSize, lineEnds);
+				if (!lr) { lr = Lines.MakeLineRenderer(gameObject); }
+				lr = Lines.MakeLine(lr, points, color, startSize, endSize, lineEnds);
+			} //else { Debug.Log("don't need to recalculate line "+name); }
+			if (lr) { Lines.SetColor(lr, color); }
+			return this;
+		}
+		public Wire Arc(float angle, Vector3 normal, Vector3 firstPoint, Vector3 center = default, Color color = default,
+			Lines.End lineEnds = default, int pointCount = -1, float startSize = Lines.LINE_SIZE, float endSize = Lines.SAME_AS_START_SIZE) {
+			if (pointCount < 0) { pointCount = (int)(24 * angle / 180f) + 1; }
+			if (!IsArc(firstPoint, normal, center, angle, startSize, endSize, Lines.End.Normal, pointCount)) {
+				SetArc(firstPoint, normal, center, angle, startSize, endSize, Lines.End.Normal, pointCount);
+				if (!lr) { lr = Lines.MakeLineRenderer(gameObject); }
+				Vector3[] linePoints = null;
+				Math3d.WriteArc(ref linePoints, pointCount, normal, firstPoint, angle, center);
+				lr = Lines.MakeLine(lr, linePoints, color, startSize, endSize, lineEnds);
+			} //else { Debug.Log("don't need to recalculate arc "+name);  }
+			if (Math3d.EQ2(angle, 360)) { lr.loop = true; }
+			Lines.SetColor(lr, color);
+			return this;
+		}
+		public Wire Circle(Vector3 center = default, Vector3 normal = default, Color color = default,
+			float radius = 1, float lineSize = Lines.LINE_SIZE, int pointCount = -1) {
+			if (Math3d.EQ2(radius, 0)) { return Line(null, color, Lines.End.Normal, lineSize, lineSize); }
+			if (normal == default) { normal = Vector3.up; }
+			Vector3 firstPoint = Vector3.zero;
+			if (kind == Kind.Arc && this._normal == normal && _points != null && _points.Length > 0) {
+				float firstRad = _points[0].magnitude;
+				if (Math3d.EQ2(firstRad, radius)) {
+					firstPoint = _points[0];
+				} else {
+					firstPoint = _points[0] * (radius / firstRad);
+				}
+			}
+			if (firstPoint == Vector3.zero) {
+				firstPoint = Vector3.right;
+				if (normal != Vector3.up && normal != Vector3.forward && normal != Vector3.back) {
+					firstPoint = Vector3.Cross(normal, Vector3.forward).normalized;
+				}
+				firstPoint *= radius;
+			}
+			return Arc(360, normal, firstPoint, center, color, Lines.End.Normal, pointCount, lineSize, lineSize);
+		}
+
+		/// <summary>
+		/// draw line that orbits a sphere with the given center, from the given start to the given end
+		/// </summary>
+		/// <param name="sphereCenter"></param>
+		/// <param name="start"></param>
+		/// <param name="end"></param>
+		/// <param name="color"></param>
+		/// <param name="lineEnds"></param>
+		/// <param name="startSize"></param>
+		/// <param name="endSize"></param>
+		/// <param name="pointCount"></param>
+		/// <returns></returns>
+		public Wire Orbital(Vector3 sphereCenter, Vector3 start, Vector3 end,
+			Color color = default, Lines.End lineEnds = default, float startSize = Lines.LINE_SIZE, float endSize = Lines.SAME_AS_START_SIZE, int pointCount = -1) {
+			if (!IsOrbital(start, end, sphereCenter, startSize, endSize, lineEnds, pointCount)) {
+				SetOrbital(start, end, sphereCenter, startSize, endSize, lineEnds, pointCount);
+				Vector3[] linePoints = null;
+				Math3d.WriteArcOnSphere(ref linePoints, pointCount, sphereCenter, start, end);
+				if (!lr) { lr = Lines.MakeLineRenderer(gameObject); }
+				lr = Lines.MakeLine(lr, linePoints, color, startSize, endSize, lineEnds);
+			} //else { Debug.Log("don't need to recalculate orbital " + name); }
+			Lines.SetColor(lr, color);
+			return this;
+		}
+		public Wire SpiralSphere(Color color = default, Vector3 center = default, float radius = 1, Quaternion rotation = default, float lineSize = Lines.LINE_SIZE) {
+			GameObject go = gameObject;
+			if (!IsSpiralSphere(center, radius, lineSize, rotation)) {
+				SetSpiralSphere(center, radius, lineSize, rotation);
+				lr = Lines.MakeSpiralSphere(ref go, radius, center, rotation, color, lineSize);
+			} //else { Debug.Log("don't need to recalculate spiral sphere " + name); }
+			Lines.SetColor(lr, color);
+			return this;
+		}
+		public Wire Box(Vector3 size, Vector3 center = default, Quaternion rotation = default, Color color = default, float lineSize = Lines.LINE_SIZE) {
+			GameObject go = gameObject;
+			if (!IsBox(center, size, rotation, lineSize)) {
+				SetBox(center, size, rotation, lineSize);
+				lr = Lines.MakeBox(ref go, center, size, rotation, color, lineSize);
+			} //else { Debug.Log("don't need to recalculate box " + name); }
+			Lines.SetColor(lr, color);
+			return this;
+		}
+		private static readonly Vector3[] DefaultQuaternionVisualizationPoints = new Vector3[] { Vector3.forward, Vector3.up };
+		public Wire Quaternion(Quaternion q, Color color, Vector3 position = default, Vector3[] startPoints = null,
+			Quaternion orientation = default, int arcPoints = -1, float lineSize = Lines.LINE_SIZE) {
+			GameObject go = gameObject;
+			q.ToAngleAxis(out float an, out Vector3 ax);
+			if (startPoints == null) { startPoints = DefaultQuaternionVisualizationPoints; }
+			if (!IsQuaternion(an, ax, position, startPoints, orientation, lineSize)) {
+				SetQuaternion(an, ax, position, startPoints, orientation, lineSize);
+				Wire[] childWires = ChildWires(startPoints.Length, true);
+				Lines.MakeQuaternion(ref go, childWires, ax, an, position, color, orientation, arcPoints, lineSize, Lines.ARROW_SIZE, startPoints);
+				lr = go.GetComponent<LineRenderer>();
+			} //else { Debug.Log("don't need to recalculate quaternion " + name); }
+			Lines.SetColor(lr, color);
+			return this;
+		}
+		private Wire[] ChildWires(int objectCount, bool createIfNoneExist) {
+			Wire[] wireObjs = null;
+			const string _name = "__";
+			if (transform.childCount >= objectCount) {
+				int childrenWithWire = 0;
+				Transform[] children = new Transform[transform.childCount];
+				for (int i = 0; i < children.Length; ++i) { children[i] = transform.GetChild(i); }
+				Array.ForEach(children, (child) => {
+					if (child.name.Contains(_name) && child.GetComponent<Wire>() != null) { ++childrenWithWire; }
+				});
+				if (childrenWithWire >= objectCount) {
+					wireObjs = new Wire[objectCount];
+					int validLine = 0;
+					for (int i = 0; i < children.Length && validLine < wireObjs.Length; ++i) {
+						Wire w;
+						if (children[i].name.Contains(_name) && (w = children[i].GetComponent<Wire>()) != null)
+							wireObjs[validLine++] = w;
+					}
+				}
+			}
+			if (wireObjs == null && createIfNoneExist) {
+				wireObjs = new Wire[objectCount];
+				for (int i = 0; i < wireObjs.Length; ++i) {
+					Wire wireObject = Lines.MakeWire();
+					wireObject.name = _name + name + i;
+					wireObject.transform.SetParent(transform);
+					wireObjs[i] = wireObject;
+				}
+			}
+			return wireObjs;
+		}
+		public Wire CartesianPlane(Vector3 center, Quaternion rotation, Color color = default, float lineSize = Lines.LINE_SIZE, float extents = 1, float increment = 0.25f) {
+			bool colorIsSet = false;
+			if (!IsCartesianPlane(center, rotation, lineSize, extents, increment)) {
+				SetCartesianPlane(center, rotation, lineSize, extents, increment);
+				Vector3 up = rotation * Vector3.up;
+				Vector3 right = rotation * Vector3.right;
+				Wire[] wires = ChildWires(_count, true);
+				Lines.MakeCartesianPlane(center, up, right, wires, color, lineSize, extents, increment);
+				colorIsSet = true;
+				Vector3 normal = Vector3.Cross(right, up).normalized;
+				if (!lr) { lr = Lines.MakeLineRenderer(gameObject); }
+				Vector3[] points = new Vector3[] { center, center + normal * increment };
+				lr = Lines.MakeLine(lr, points, color, lineSize, lineSize, Lines.End.Arrow);
+			} //else { Debug.Log("don't need to recalculate quaternion " + name); }
+			if (!colorIsSet) {
+				Lines.SetColor(lr, color);
+				Wire[] wires = ChildWires(_count, true);
+				Array.ForEach(wires, w => Lines.SetColor(w.lr, color));
+			}
+			return this;
+		}
+		public Wire Rectangle(Vector3 origin, Vector2 halfSize, Color a_color = default, Quaternion rotation = default, Vector2 offset2d = default, float lineSize = Lines.LINE_SIZE) {
+			//if(halfSize == default) { halfSize = Vector2.one / 2; }
+			bool colorIsSet = false;
+			if (!IsRectangle(origin, offset2d, halfSize, lineSize, rotation)) {
+				SetRectangle(origin, offset2d, halfSize, lineSize, rotation);
+				Wire[] wires = ChildWires(_count, true);
+				Lines.MakeRectangle(wires, origin, offset2d, halfSize, lineSize, a_color, rotation);
+				colorIsSet = true;
+				if (!lr) { lr = Lines.MakeLineRenderer(gameObject); }
+				lr.startWidth = lr.endWidth = 0;
+			} //else { Debug.Log("don't need to recalculate quaternion " + name); }
+			if (!colorIsSet) {
+				//SetColor(lr, a_color);
+				Wire[] wires = ChildWires(_count, true);
+				Array.ForEach(wires, w => Lines.SetColor(w.lr, a_color));
+			}
+			return this;
 		}
 	}
 }
